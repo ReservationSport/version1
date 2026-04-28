@@ -326,41 +326,38 @@ window.handleExtraAction = (el, time, slot) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // 1. Klasse IMMER frisch aus dem HTML lesen (Sicherheit für Sonderzeichen)
+    // 1. Bestehende Daten sichern
     const klasse = parent.querySelector('.klasse').innerText.trim();
+    // Wir holen uns das Kürzel der Lehrperson (steht meist in einem <small> oder unter der Klasse)
+    const lehrpersonElem = parent.querySelector('small');
+    const lehrperson = lehrpersonElem ? lehrpersonElem.innerText.trim() : "";
     
-    // 2. Aktuelle Daten aus dem Speicher holen
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let hasU21 = fullString.includes("U21");
     
-    // Bestehenden Kommentar extrahieren
     let parts = fullString.split('|').map(s => s.trim());
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     
     let neueHalle = parent.querySelector('.res').innerText.trim();
     let finalVal = "";
 
-    // 3. LOGIK-WEICHE
+    // 2. LOGIK-WEICHE
     if (action === "outdoor") {
         neueHalle = "Outdoor";
         parent.classList.remove('ausfall-mode');
         parent.classList.add('outdoor-mode');
-        parent.style.backgroundColor = "";
     } 
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.remove('outdoor-mode');
         parent.classList.add('ausfall-mode');
-        parent.style.backgroundColor = "";
     } 
     else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
-        
         if (text !== null) {
             let oldStift = parent.querySelector('.stift');
             if (oldStift) oldStift.remove();
-
             if (text.trim() !== "") {
                 commentPart = "KOMMENTAR:" + text.trim();
                 let span = document.createElement('span');
@@ -373,54 +370,49 @@ window.handleExtraAction = (el, time, slot) => {
             }
         } else {
             closeAllExtraMenus();
-            return; // Abbrechen
+            return;
         }
-        neueHalle = parent.querySelector('.res').innerText.trim();
     } 
     else if (action === "delete_comment") {
         commentPart = undefined;
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
-        neueHalle = parent.querySelector('.res').innerText.trim();
     } 
     else if (action === "" || action === "---") {
-        // --- AKTIVES ZURÜCKSETZEN / LÖSCHEN ---
+        // AKTIVES LÖSCHEN
         neueHalle = "";
-        hasU21 = false; // U21 aktiv entfernen
+        hasU21 = false;
         parent.classList.remove('outdoor-mode', 'ausfall-mode');
         parent.style.backgroundColor = "";
     }
 
-    // 4. UI UPDATE DER ZELLE
+    // 3. UI UPDATE (Was der User in der Box sieht)
     parent.querySelector('.res').innerText = neueHalle;
+    // Falls die Lehrperson durch das innerHTML-Überschreiben verloren ginge, 
+    // stellen wir hier sicher, dass sie bleibt (optional, falls dein Code das macht):
+    // parent.querySelector('.klasse').innerHTML = `${klasse}<br><small>${lehrperson}</small>`;
 
-    // 5. FINALEN STRING BAUEN
-    // Wir bauen den String immer mit Trenner "|", damit die Automatik gestoppt wird
+    // 4. DATEN-STRING BAUEN (Was ans Sheet gesendet wird)
     let finalParts = [klasse];
-    
     if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
     if (hasU21) finalParts.push("U21");
     if (commentPart) finalParts.push(commentPart);
 
-    // Falls alles leer ist, senden wir "Klasse |" als Signal an das Sheet
+    // Der Trick für das Sheet:
     if (finalParts.length === 1) {
+        // Nur Klasse vorhanden -> wir senden "Klasse |" ans Sheet (Automatik-Stopp)
         finalVal = klasse + " |";
     } else {
         finalVal = finalParts.join(" | ");
     }
 
-    // 6. SPEICHERN REGISTRIEREN
+    // 5. SPEICHERN
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
-    
-    // Änderung in die Liste für den Server schreiben
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    
-    // Button anzeigen
     document.getElementById('saveBtn').style.display = 'block';
 
     closeAllExtraMenus();
-    // el.value = ""; // Optional: Select wieder auf neutral setzen
 };
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
