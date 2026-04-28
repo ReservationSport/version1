@@ -528,6 +528,17 @@ function closeAllExtraMenus() {
         // sel.value = ""; 
     });
 }
+
+function checkLogin() {
+    // Falls deine Funktion bisher nur login() hieß, 
+    // leiten wir den Aufruf einfach weiter:
+    if (typeof login === "function") {
+        login();
+    } else {
+        console.error("Die Funktion login() wurde nicht gefunden!");
+    }
+}
+
         
     </script>
 </body>
