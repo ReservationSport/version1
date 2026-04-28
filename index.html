@@ -2,6 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reservation Sport</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -19,57 +20,37 @@
         
         .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: #e67e22; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; border-radius: 4px; margin-left: 10px; }
         .refresh-btn:hover { background: #444; color: #ff9f43; }
-        .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
-        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .box { border: 1px solid #444; padding: 5px; background: #262626; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; cursor: pointer; overflow: hidden; }
         .box.empty { pointer-events: none; opacity: 0.5; }
-        
         .box.not-mine { pointer-events: none !important; } 
         .box.is-mine { border: 2px solid #e67e22 !important; z-index: 10; box-shadow: inset 0 0 10px rgba(230,126,34,0.3); }
 
         .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
-        .box.ausfall-mode .klasse { color: #777777; }
-        .box.ausfall-mode .res { color: #555555; }
-        .box.ausfall-mode .lehrer-info { display: none; }
-
         .box.outdoor-mode { background-color: #27ae60 !important; color: white !important; }
-        .box.outdoor-mode .res { font-weight: bold; }
 
-        .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; display: inline-block; font-size: 22px; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,1); transition: transform 0.2s ease; }
-        .stift:hover { transform: scale(1.2); color: #ff9f43; }
-
+        .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; font-size: 20px; text-shadow: 0 0 5px rgba(0,0,0,1); }
         .zeit-box { background: #333; font-weight: bold; cursor: default; }
         .header-row { grid-column: span 6; background: #333; font-size: 14px; font-weight: bold; position: relative; display: flex; align-items: center; justify-content: center; height: 50px; }
         .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
         
         #loginOverlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            width: 100%; 
-            height: 100%; 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
-            background-size: cover;
-            background-position: center;
-            z-index: 2000; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: center; 
-            align-items: center; 
+            background-size: cover; background-position: center; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; 
         }
-        #loginOverlay h2 { color: #e67e22; font-size: 2.2em; margin-bottom: 30px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-        #loginOverlay input { padding: 15px; margin: 8px; background: rgba(34, 34, 34, 0.85); border: 1px solid #444; color: white; border-radius: 8px; width: 280px; font-size: 16px; outline: none; backdrop-filter: blur(5px); }
-        #loginOverlay input:focus { border-color: #e67e22; }
-        #loginOverlay button { padding: 15px; margin-top: 15px; background: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 310px; font-size: 18px; transition: background 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        #loginOverlay button:hover { background: #d35400; }
+        #loginOverlay h2 { color: #e67e22; font-size: 2.2em; margin-bottom: 30px; font-weight: bold; }
+        #loginOverlay input { padding: 15px; margin: 8px; background: rgba(34, 34, 34, 0.85); border: 1px solid #444; color: white; border-radius: 8px; width: 280px; }
+        #loginOverlay button { padding: 15px; margin-top: 15px; background: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 310px; font-size: 18px; }
         
         .klasse { font-weight: bold; }
-        .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
-        .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
+        .lehrer-info { font-size: 9px; color: #aaa; }
+        .res { font-style: italic; font-size: 9px; margin-top: 2px; }
         select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
+        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
+        
         .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
-        .save-btn { padding: 8px 20px; background: #e67e22; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: none; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .save-btn { padding: 8px 20px; background: #e67e22; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: none; }
         .save-btn.success { background: #27ae60; } 
         .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
         .sport-loader.active { visibility: visible; }
@@ -77,14 +58,13 @@
         
         .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
         .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
-        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
     </style>
 </head>
 <body onclick="closeAllExtraMenus()">
     <div id="loginOverlay">
         <h2>Reservation Sport</h2>
-        <input type="text" id="kuerzelInput" placeholder="Kürzel" oninput="document.getElementById('loginError').innerText=''">
-        <input type="password" id="pwInput" placeholder="Passwort" oninput="document.getElementById('loginError').innerText=''">
+        <input type="text" id="kuerzelInput" placeholder="Kürzel">
+        <input type="password" id="pwInput" placeholder="Passwort">
         <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
         <div id="loginBall" class="sport-loader" style="margin-top: 10px;">🏀</div>
         <p id="loginError" style="color: #e74c3c; margin-top: 10px;"></p>
@@ -98,12 +78,10 @@
         </div>
         <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
         <input type="date" id="datePicker" onchange="loadPlan()">
-        <div class="nav-group" style="display: flex; align-items: center;">
+        <div class="nav-group">
             <button class="nav-btn" onclick="changeDate(1)">▶</button>
             <button class="nav-btn" onclick="changeDate(7)">⏭</button>
-            <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
-                <i class="fas fa-sync-alt"></i>
-            </button>
+            <button class="refresh-btn" onclick="loadPlan()"><i class="fas fa-sync-alt"></i></button>
         </div>
     </div>
     <div class="grid" id="plan"></div>
@@ -113,433 +91,198 @@
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
 
-        window.addEventListener('beforeunload', (e) => {
-            if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
-        });
-
-        function updateNavButtons() {
-            const dp = document.getElementById('datePicker');
-            const currentDate = new Date(dp.value); currentDate.setHours(12, 0, 0, 0);
-            const heute = new Date(); heute.setHours(12, 0, 0, 0);
-            const yesterday = new Date(currentDate); yesterday.setDate(yesterday.getDate() - 1);
-            const lastWeek = new Date(currentDate); lastWeek.setDate(lastWeek.getDate() - 7);
-            document.getElementById('btnPrevDay').style.visibility = (yesterday < heute) ? 'hidden' : 'visible';
-            document.getElementById('btnPrevWeek').style.visibility = (lastWeek < heute) ? 'hidden' : 'visible';
-        }
-
-        function closeAllExtraMenus() {
-            document.querySelectorAll('.extra-select').forEach(sel => {
-                sel.style.zIndex = "-1";
-                sel.style.pointerEvents = "none";
-                sel.style.opacity = "0";
-            });
-        }
-
+        // Login Logik
         async function checkLogin() {
             const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
             const pwVal = document.getElementById('pwInput').value;
             const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
-            if(!kuerzelVal) { document.getElementById('loginError').innerText = "Kürzel fehlt!"; return; }
+            
+            if(!kuerzelVal || !pwVal) { document.getElementById('loginError').innerText = "Daten unvollständig!"; return; }
+            
             btn.style.display = 'none'; ball.classList.add('active');
             try {
                 const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
                 const json = await res.json();
-                if (json.error === "Falsches Passwort") {
-                    document.getElementById('loginError').innerText = "Falsches Passwort!";
+                if (json.error) {
+                    document.getElementById('loginError').innerText = json.error;
                     btn.style.display = 'block'; ball.classList.remove('active');
                 } else {
-                    userPw = pwVal;
-                    userKuerzel = kuerzelVal;
+                    userPw = pwVal; userKuerzel = kuerzelVal;
                     document.getElementById('loginOverlay').style.display = 'none';
                     loadPlan();
                 }
-            } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
+            } catch(e) { 
+                document.getElementById('loginError').innerText = "Verbindung fehlgeschlagen."; 
+                btn.style.display = 'block'; ball.classList.remove('active'); 
+            }
         }
 
+        // Plan laden
         async function loadPlan() {
             const dp = document.getElementById('datePicker');
-            if (pendingChanges.length > 0) {
-                if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
-                    dp.value = lastStableDate; 
-                    return;
-                }
+            if (pendingChanges.length > 0 && !confirm("Ungespeicherte Änderungen gehen verloren!")) {
+                dp.value = lastStableDate; return;
             }
             const dateVal = dp.value;
             if (!userPw || !dateVal) return;
-            lastStableDate = dateVal; 
-            updateNavButtons();
+            lastStableDate = dateVal;
+            
             const container = document.getElementById('plan');
             container.innerHTML = ""; 
             document.getElementById('globalLoader').style.display = 'block';
-            const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
-            const heute = new Date(); heute.setHours(12,0,0,0);
-            const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
-            
-            if (dateObj < heute) { container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            if (dateObj > vierWochen) { container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
             
             try {
                 const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
                 const json = await res.json();
                 if (json.error === "SPERRE") {
                     container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
-                    document.getElementById('globalLoader').style.display = 'none';
-                    return;
+                } else {
+                    currentPlanData = json.data;
+                    myClasses = json.userClasses || [];
+                    allClassTeachers = json.allClassTeachers || {};
+                    configFarben = {}; json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
+                    renderGrid(json.data, json.options);
                 }
-                container.innerHTML = ""; pendingChanges = [];
-                currentPlanData = json.data; 
-                myClasses = json.userClasses || [];
-                allClassTeachers = json.allClassTeachers || {};
-                const data = json.data, options = json.options;
-                configFarben = {}; options.forEach(opt => configFarben[opt[0]] = opt[1]);
-                const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-                const [y, m, d] = dateVal.split('-').map(Number);
-                
-                data.forEach((row, rowIndex) => {
-                    if (rowIndex === 0) {
-                        container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SPEICHERN</button></div></div>`;
-                    } else {
-                        if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
-                        if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
-                        container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
-                        
-                        for(let i = 1; i <= 5; i++) {
-                            let belegteHallenInZeileOhneMich = [];
-                            for (let k = 1; k <= 5; k++) {
-                                if (k === i) continue; 
-                                let otherVal = String(row[k] || "").trim();
-                                if (otherVal !== "") {
-                                    let resPart = otherVal.split(' | ')[1] || "";
-                                    if (resPart && resPart !== "Ausfall" && resPart !== "Outdoor") {
-                                        belegteHallenInZeileOhneMich.push(resPart);
-                                    }
-                                }
-                            }
-
-                            let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
-                            let isAusfall = (res === "Ausfall");
-                            let isOutdoor = (res === "Outdoor");
-                            let canEdit = myClasses.some(c => klasse.trim() === c.trim());
-                            let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
-                            let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
-
-                            container.innerHTML += `
-                            <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''} ${isOutdoor ? 'outdoor-mode' : ''}" 
-                                   data-row="${rowIndex}" data-col="${i}"
-                                   oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()" style="background-color: ${ (isAusfall || isOutdoor) ? '' : configFarben[res] || ''}">
-                                   ${stiftHtml}
-                                   <div class="klasse">${klasse}</div>
-                                   <div class="lehrer-info">${teacher}</div>
-                                   <div class="res">${res}</div>
-                                   ${canEdit ? `
-                                   <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-                                       <option value="">---</option>
-                                       ${options.filter(o => {
-                                           const optName = o[0];
-                                           if (res === optName) return true;
-                                           let istGesperrt = belegteHallenInZeileOhneMich.some(belegt => {
-                                               let belegtParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                               let optParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                               return optParts.some(p => belegtParts.includes(p));
-                                           });
-                                           return !istGesperrt;
-                                       }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                                   </select>
-                                   <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-                                       <option value="">---</option>
-                                       <option value="outdoor">🌳 Outdoor</option>
-                                       <option value="ausfall">❌ Ausfall</option>
-                                       <option value="kommentar">📝 Notiz hinzufügen</option>
-                                       <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-                                   </select>` : ''}
-                            </div>`;
-                        }
-                    }
-                });
             } catch(e) { console.error(e); }
             document.getElementById('globalLoader').style.display = 'none';
         }
 
-        function getExistingComment(r, c) {
-            let val = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-            let teile = val.split(' | ');
-            return (teile[2] && teile[2].startsWith("KOMMENTAR:")) ? teile[2] : "";
+        function renderGrid(data, options) {
+            const container = document.getElementById('plan');
+            const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+            const dateObj = new Date(document.getElementById('datePicker').value);
+            
+            data.forEach((row, rowIndex) => {
+                if (rowIndex === 0) {
+                    container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${dateObj.toLocaleDateString('de-CH')}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SPEICHERN</button></div></div>`;
+                } else {
+                    if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
+                    if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
+                    container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
+                    
+                    for(let i = 1; i <= 5; i++) {
+                        let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
+                        let canEdit = myClasses.includes(klasse.trim());
+                        let isAusfall = (res === "Ausfall"), isOutdoor = (res === "Outdoor");
+                        let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
+                        let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
+
+                        container.innerHTML += `
+                        <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''} ${isOutdoor ? 'outdoor-mode' : ''}" 
+                             data-row="${rowIndex}" data-col="${i}" oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()"
+                             style="background-color: ${(isAusfall || isOutdoor) ? '' : configFarben[res] || ''}">
+                            ${stiftHtml}
+                            <div class="klasse">${klasse}</div>
+                            <div class="lehrer-info">${teacher}</div>
+                            <div class="res">${res}</div>
+                            ${canEdit ? `
+                            <select onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                                <option value="">---</option>
+                                ${options.map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+                            </select>
+                            <select class="extra-select" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+                                <option value="">---</option>
+                                <option value="outdoor">🌳 Outdoor</option>
+                                <option value="ausfall">❌ Ausfall</option>
+                                <option value="kommentar">📝 Notiz hinzufügen</option>
+                                <option value="delete_comment">🗑️ Notiz löschen</option>
+                            </select>` : ''}
+                        </div>`;
+                    }
+                }
+            });
         }
 
-        // Hilfsfunktion: Baut den String sauber zusammen, egal was sich ändert
-function buildFinalValue(r, c, neueHalle, neuerKommentar) {
-    const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
-    const klasse = parent.querySelector('.klasse').innerText.trim();
-    
-    let hasU21 = false;
-    // NUR wenn wir NICHT gerade die Halle auf "---" (leer) setzen, 
-    // prüfen wir, ob U21 erhalten bleiben soll.
-    if (neueHalle !== "" && neueHalle !== "---") {
-        let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-        hasU21 = fullString.includes("U21");
-    }
+        // Hilfsfunktion Stringbau
+        function buildFinalValue(r, c, neueHalle, neuerKommentar) {
+            const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
+            const klasse = parent.querySelector('.klasse').innerText.trim();
+            let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+            let hasU21 = fullString.includes("U21");
+            let commentPart = neuerKommentar !== undefined ? neuerKommentar : (fullString.split('|')[2]?.trim() || "");
 
-    let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
+            let finalParts = [klasse];
+            if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
+            if (hasU21) finalParts.push("U21");
+            if (commentPart && commentPart.startsWith("KOMMENTAR:")) finalParts.push(commentPart);
 
-    // Zusammenbau
-    let finalVal = klasse;
-    
-    // Wenn IRGENDWAS ausgewählt wurde (Halle, U21 oder Kommentar), 
-    // hängen wir einen Trenner an.
-    if ((neueHalle && neueHalle !== "") || hasU21 || commentPart) {
-        finalVal += " |";
-        if (neueHalle && neueHalle !== "") finalVal += " " + neueHalle;
-        if (hasU21) finalVal += " | U21";
-        if (commentPart) finalVal += " | " + commentPart;
-    } else {
-        // WICHTIG: Wenn alles gelöscht wurde, schicken wir "Klasse |"
-        // Der Trenner am Ende signalisiert dem Script: "Nicht mehr automatisch befüllen!"
-        finalVal += " |"; 
-    }
+            return finalParts.length === 1 ? klasse + " |" : finalParts.join(" | ");
+        }
 
-    return finalVal;
-}
+        window.addChange = (el, time, slot, klasse) => { 
+            const res = el.value, parent = el.parentElement, r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
+            parent.classList.remove('ausfall-mode', 'outdoor-mode');
+            parent.querySelector('.res').innerText = res;
+            parent.style.backgroundColor = configFarben[res] || ""; 
+            const finalVal = buildFinalValue(r, c, res, undefined);
+            currentPlanData[r][c] = finalVal;
+            pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+            document.getElementById('saveBtn').style.display = 'block';
+        };
 
-window.addChange = (el, time, slot, klasse) => { 
-    let res = el.value; 
-    const parent = el.parentElement;
-    const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
-    
-    // Visuelles Update
-    parent.classList.remove('ausfall-mode', 'outdoor-mode');
-    parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
-    parent.style.backgroundColor = configFarben[res] || ""; 
+        window.handleExtraAction = (el, time, slot) => {
+            const action = el.value, parent = el.parentElement, r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
+            let neueHalle = parent.querySelector('.res').innerText.trim();
+            let neuerKommentar = undefined;
 
-    // String bauen (Kommentar bleibt wie er ist)
-    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
-
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
-    document.getElementById('saveBtn').style.display = 'block';
-};
-
-window.handleExtraAction = (el, time, slot) => {
-    const action = el.value;
-    const parent = el.parentElement;
-    const r = parent.getAttribute('data-row');
-    const c = parent.getAttribute('data-col');
-    
-    // 1. Bestehende Daten sichern
-    const klasse = parent.querySelector('.klasse').innerText.trim();
-    // Wir holen uns das Kürzel der Lehrperson (steht meist in einem <small> oder unter der Klasse)
-    const lehrpersonElem = parent.querySelector('small');
-    const lehrperson = lehrpersonElem ? lehrpersonElem.innerText.trim() : "";
-    
-    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    let hasU21 = fullString.includes("U21");
-    
-    let parts = fullString.split('|').map(s => s.trim());
-    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-    
-    let neueHalle = parent.querySelector('.res').innerText.trim();
-    let finalVal = "";
-
-    // 2. LOGIK-WEICHE
-    if (action === "outdoor") {
-        neueHalle = "Outdoor";
-        parent.classList.remove('ausfall-mode');
-        parent.classList.add('outdoor-mode');
-    } 
-    else if (action === "ausfall") {
-        neueHalle = "Ausfall";
-        parent.classList.remove('outdoor-mode');
-        parent.classList.add('ausfall-mode');
-    } 
-    else if (action === "kommentar") {
-        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
-        const text = prompt("Notiz eingeben:", existingText);
-        if (text !== null) {
-            let oldStift = parent.querySelector('.stift');
-            if (oldStift) oldStift.remove();
-            if (text.trim() !== "") {
-                commentPart = "KOMMENTAR:" + text.trim();
-                let span = document.createElement('span');
-                span.className = 'stift';
-                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
-                parent.appendChild(span);
-            } else {
-                commentPart = undefined;
+            if (action === "outdoor") { neueHalle = "Outdoor"; parent.className = "box is-mine outdoor-mode"; }
+            else if (action === "ausfall") { neueHalle = "Ausfall"; parent.className = "box is-mine ausfall-mode"; }
+            else if (action === "kommentar") {
+                const text = prompt("Notiz:");
+                if (text !== null) neuerKommentar = text.trim() ? "KOMMENTAR:" + text.trim() : "";
             }
-        } else {
+            else if (action === "delete_comment") { neuerKommentar = ""; }
+
+            const finalVal = buildFinalValue(r, c, neueHalle, neuerKommentar);
+            currentPlanData[r][c] = finalVal;
+            pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+            document.getElementById('saveBtn').style.display = 'block';
             closeAllExtraMenus();
-            return;
+            setTimeout(loadPlan, 500); // UI Refresh
+        };
+
+        // UI Helpers
+        window.closeAllExtraMenus = () => {
+            document.querySelectorAll('.extra-select').forEach(sel => {
+                sel.style.opacity = "0"; sel.style.pointerEvents = "none"; sel.style.zIndex = "-1";
+            });
+        };
+
+        function openExtraMenu(el) {
+            closeAllExtraMenus();
+            const sel = el.querySelector('.extra-select');
+            sel.style.zIndex = "100"; sel.style.pointerEvents = "all"; sel.style.opacity = "1";
+            if (sel.showPicker) sel.showPicker();
         }
-    } 
-    else if (action === "delete_comment") {
-        commentPart = undefined;
-        let stift = parent.querySelector('.stift');
-        if (stift) stift.remove();
-    } 
-    else if (action === "" || action === "---") {
-        // AKTIVES LÖSCHEN
-        neueHalle = "";
-        hasU21 = false;
-        parent.classList.remove('outdoor-mode', 'ausfall-mode');
-        parent.style.backgroundColor = "";
-    }
-
-    // 3. UI UPDATE (Was der User in der Box sieht)
-    parent.querySelector('.res').innerText = neueHalle;
-    // Falls die Lehrperson durch das innerHTML-Überschreiben verloren ginge, 
-    // stellen wir hier sicher, dass sie bleibt (optional, falls dein Code das macht):
-    // parent.querySelector('.klasse').innerHTML = `${klasse}<br><small>${lehrperson}</small>`;
-
-    // 4. DATEN-STRING BAUEN (Was ans Sheet gesendet wird)
-    let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart) finalParts.push(commentPart);
-
-    // Der Trick für das Sheet:
-    if (finalParts.length === 1) {
-        // Nur Klasse vorhanden -> wir senden "Klasse |" ans Sheet (Automatik-Stopp)
-        finalVal = klasse + " |";
-    } else {
-        finalVal = finalParts.join(" | ");
-    }
-
-    // 5. FINALEN STRING BAUEN (Für das Google Sheet)
-    let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart) finalParts.push(commentPart);
-
-    // Der "Geheimcode" für das Sheet, damit die Automatik stoppt
-    if (finalParts.length === 1) {
-        finalVal = klasse + " |"; // Der Strich stoppt die Automatik im Code.gs
-    } else {
-        finalVal = finalParts.join(" | ");
-    }
-
-    // 6. SPEICHERN & UI-SCHUTZ
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal; // Wir speichern den Strich im Speicher
-    
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    document.getElementById('saveBtn').style.display = 'block';
-
-    // WICHTIG: Wir aktualisieren NUR das Hallen-Feld, 
-    // damit die Klasse und die Lehrperson unberührt bleiben!
-    parent.querySelector('.res').innerText = neueHalle;
-    
-    // Falls ein U21-Label existiert, das wir ein/ausblenden müssen:
-    // (Je nachdem wie dein CSS/HTML aufgebaut ist)
-    if (!hasU21) {
-       // Code zum Entfernen eines U21-Labels im UI, falls vorhanden
-    }
-
-    closeAllExtraMenus();
-};
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
         window.clearTimer = () => clearTimeout(pressTimer);
-        window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
-        function openExtraMenu(el) { 
-    closeAllExtraMenus();
-    const sel = el.querySelector('.extra-select'); 
-    const hatStift = el.querySelector('.stift') !== null;
-    const delOpt = sel.querySelector('.del-opt');
-    if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
+        window.handleContextMenu = (e, el) => { e.preventDefault(); openExtraMenu(el); };
 
-    // NEU: Dropdown auf den aktuellen Stand der Box setzen
-    const aktuelleRes = el.querySelector('.res').innerText.trim();
-    if (aktuelleRes === "Outdoor") {
-        sel.value = "outdoor";
-    } else if (aktuelleRes === "Ausfall") {
-        sel.value = "ausfall";
-    } else {
-        sel.value = ""; // Entspricht "---"
-    }
-
-    sel.style.zIndex = "100"; 
-    sel.style.pointerEvents = "all"; 
-    sel.style.opacity = "1"; 
-    setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
-}
-        
-        window.saveChanges = async () => { 
-            const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
+        window.saveChanges = async () => {
+            const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader');
             btn.style.display = 'none'; ball.classList.add('active');
-            try { 
-                const response = await fetch(url, { 
-                    method: "POST", 
-                    body: JSON.stringify({ 
-                        date: document.getElementById('datePicker').value, 
-                        changes: pendingChanges, 
-                        pw: userPw,
-                        kuerzel: userKuerzel
-                    }) 
-                }); 
-                const result = await response.json();
-                if (result.status === "success") {
-                    pendingChanges = []; 
-                    ball.classList.remove('active'); 
-                    btn.innerText = "Check! ✅"; 
-                    btn.classList.add('success'); 
-                    btn.style.display = 'block'; 
-                    setTimeout(() => { 
-                        btn.style.display = 'none'; 
-                        btn.classList.remove('success'); 
-                        btn.innerText = "SPEICHERN"; 
-                    }, 1000); 
-                } else { throw new Error(); }
-            } catch (e) { 
-                ball.classList.remove('active'); 
-                btn.style.display = 'block'; 
-                btn.innerText = "Fehler!"; 
-            }
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    body: JSON.stringify({ date: document.getElementById('datePicker').value, changes: pendingChanges, pw: userPw, kuerzel: userKuerzel })
+                });
+                const res = await response.json();
+                if(res.status === "success") {
+                    pendingChanges = [];
+                    btn.innerText = "Check! ✅"; btn.classList.add('success'); btn.style.display = 'block';
+                    ball.classList.remove('active');
+                    setTimeout(() => { btn.style.display = 'none'; btn.classList.remove('success'); btn.innerText = "SPEICHERN"; }, 1500);
+                }
+            } catch(e) { alert("Fehler beim Speichern!"); btn.style.display = 'block'; }
         };
 
         window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
-        window.goToToday = () => {
-            const dp = document.getElementById('datePicker');
-            const today = new Date();
-            const offset = today.getTimezoneOffset();
-            today.setMinutes(today.getMinutes() - offset);
-            const dateStr = today.toISOString().split('T')[0];
-            dp.value = dateStr;
-            loadPlan();
-        };
+        window.goToToday = () => { const dp = document.getElementById('datePicker'); dp.valueAsDate = new Date(); loadPlan(); };
 
         document.addEventListener('DOMContentLoaded', () => { 
-            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset); 
-            const dateStr = today.toISOString().split('T')[0];
-            document.getElementById('datePicker').value = dateStr;
-            lastStableDate = dateStr;
+            document.getElementById('datePicker').valueAsDate = new Date();
         });
-
-function closeAllExtraMenus() {
-    // Alle Dropdowns im Dokument finden
-    const allSelects = document.querySelectorAll('.extra-select');
-    allSelects.forEach(sel => {
-        sel.style.opacity = "0";
-        sel.style.pointerEvents = "none";
-        sel.style.zIndex = "-1";
-        // Optional: Den Wert zurücksetzen, damit beim nächsten Öffnen 
-        // der onchange-Event sauber feuert (wird aber durch openExtraMenu überschrieben)
-        // sel.value = ""; 
-    });
-}
-
-function checkLogin() {
-    // Falls deine Funktion bisher nur login() hieß, 
-    // leiten wir den Aufruf einfach weiter:
-    if (typeof login === "function") {
-        login();
-    } else {
-        console.error("Die Funktion login() wurde nicht gefunden!");
-    }
-}
-
-        
     </script>
 </body>
 </html>
