@@ -269,25 +269,33 @@
 
         // Hilfsfunktion: Baut den String sauber zusammen, egal was sich ändert
 function buildFinalValue(r, c, neueHalle, neuerKommentar) {
-    const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
-    const klasse = parent.querySelector('.klasse').innerText.trim();
+    let current = currentPlanData[r][c] || "", teile = current.split(' | ');
+    let klasse = teile[0];
+    let warU21 = current.includes("U21");
+    let istU21 = warU21; // Standardmäßig beibehalten
     
-    // Aktuellen Speicherstand holen
-    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    
-    // U21 Status merken (bleibt immer erhalten, wenn er einmal da war)
-    let hasU21 = fullString.includes("U21");
-    
-    // Kommentar bestimmen
-    let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
+    // Falls die Halle auf "---" (leer) gesetzt wird, deaktivieren wir U21 für diesen Slot
+    if (neueHalle === "") {
+        istU21 = false;
+    }
 
-    // String-Teile sammeln
-    let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "" && neueHalle !== "---") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart && commentPart !== "") finalParts.push(commentPart);
+    let halle = neueHalle !== undefined ? neueHalle : (teile[1] && !teile[1].startsWith("KOMMENTAR") && teile[1] !== "U21" ? teile[1] : "");
+    let komm = neuerKommentar !== undefined ? neuerKommentar : (current.split('KOMMENTAR:')[1] || "");
 
-    return finalParts.join(" | ");
+    let parts = [klasse];
+    
+    // Wenn es gelöscht wurde (halle leer UND war vorher U21), 
+    // schreiben wir ein spezielles Zeichen ins Sheet, damit die Automatik nicht feuert
+    if (halle === "" && warU21 && neueHalle === "") {
+        parts.push(" "); // Ein Leerzeichen verhindert oft schon das Auto-Refill im Sheet
+    } else if (halle && halle !== "" && halle !== "---") {
+        parts.push(halle);
+    }
+
+    if (istU21) parts.push("U21");
+    if (komm.trim() !== "") parts.push("KOMMENTAR:" + komm.trim());
+    
+    return parts.join(" | ");
 }
 
 window.addChange = (el, time, slot, klasse) => { 
