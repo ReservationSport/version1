@@ -272,22 +272,33 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
     const klasse = parent.querySelector('.klasse').innerText.trim();
     
-    // Aktuellen Speicherstand holen
-    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    
-    // U21 Status merken (bleibt immer erhalten, wenn er einmal da war)
-    let hasU21 = fullString.includes("U21");
-    
-    // Kommentar bestimmen
+    let hasU21 = false;
+    // NUR wenn wir NICHT gerade die Halle auf "---" (leer) setzen, 
+    // prüfen wir, ob U21 erhalten bleiben soll.
+    if (neueHalle !== "" && neueHalle !== "---") {
+        let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+        hasU21 = fullString.includes("U21");
+    }
+
     let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
 
-    // String-Teile sammeln
-    let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "" && neueHalle !== "---") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart && commentPart !== "") finalParts.push(commentPart);
+    // Zusammenbau
+    let finalVal = klasse;
+    
+    // Wenn IRGENDWAS ausgewählt wurde (Halle, U21 oder Kommentar), 
+    // hängen wir einen Trenner an.
+    if ((neueHalle && neueHalle !== "") || hasU21 || commentPart) {
+        finalVal += " |";
+        if (neueHalle && neueHalle !== "") finalVal += " " + neueHalle;
+        if (hasU21) finalVal += " | U21";
+        if (commentPart) finalVal += " | " + commentPart;
+    } else {
+        // WICHTIG: Wenn alles gelöscht wurde, schicken wir "Klasse |"
+        // Der Trenner am Ende signalisiert dem Script: "Nicht mehr automatisch befüllen!"
+        finalVal += " |"; 
+    }
 
-    return finalParts.join(" | ");
+    return finalVal;
 }
 
 window.addChange = (el, time, slot, klasse) => { 
@@ -315,88 +326,101 @@ window.handleExtraAction = (el, time, slot) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // 1. Basis-Infos sammeln
+    // 1. Klasse IMMER frisch aus dem HTML lesen (Sicherheit für Sonderzeichen)
     const klasse = parent.querySelector('.klasse').innerText.trim();
+    
+    // 2. Aktuelle Daten aus dem Speicher holen
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let hasU21 = fullString.includes("U21");
     
-    // Aktuellen Kommentar aus dem Speicher-String extrahieren
+    // Bestehenden Kommentar extrahieren
     let parts = fullString.split('|').map(s => s.trim());
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     
     let neueHalle = parent.querySelector('.res').innerText.trim();
+    let finalVal = "";
 
-    // 2. Aktionen verarbeiten
+    // 3. LOGIK-WEICHE
     if (action === "outdoor") {
         neueHalle = "Outdoor";
         parent.classList.remove('ausfall-mode');
         parent.classList.add('outdoor-mode');
-    } else if (action === "ausfall") {
+        parent.style.backgroundColor = "";
+    } 
+    else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.remove('outdoor-mode');
         parent.classList.add('ausfall-mode');
-    } else if (action === "kommentar") {
-        // Bestehenden Text für den Prompt vorbereiten
+        parent.style.backgroundColor = "";
+    } 
+    else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         
         if (text !== null) {
-            // Alten Stift entfernen
             let oldStift = parent.querySelector('.stift');
             if (oldStift) oldStift.remove();
 
             if (text.trim() !== "") {
                 commentPart = "KOMMENTAR:" + text.trim();
-                // Neuen Stift erstellen und hinzufügen
                 let span = document.createElement('span');
                 span.className = 'stift';
                 span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { 
-                    e.stopPropagation(); 
-                    alert('Notiz: ' + text.trim()); 
-                };
+                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
             } else {
-                commentPart = undefined; // Notiz wurde gelöscht
+                commentPart = undefined;
             }
         } else {
-            // User hat Abbrechen gedrückt: Menü schließen und raus
             closeAllExtraMenus();
-            return;
+            return; // Abbrechen
         }
-    } else if (action === "delete_comment") {
+        neueHalle = parent.querySelector('.res').innerText.trim();
+    } 
+    else if (action === "delete_comment") {
         commentPart = undefined;
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
-    } else if (action === "" || action === "---") {
-        // ZURÜCKSETZEN auf Standard
+        neueHalle = parent.querySelector('.res').innerText.trim();
+    } 
+    else if (action === "" || action === "---") {
+        // --- AKTIVES ZURÜCKSETZEN / LÖSCHEN ---
         neueHalle = "";
+        hasU21 = false; // U21 aktiv entfernen
         parent.classList.remove('outdoor-mode', 'ausfall-mode');
+        parent.style.backgroundColor = "";
     }
 
-    // 3. UI-Updates (Farben & Texte)
-    if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
-        parent.style.backgroundColor = configFarben[neueHalle] || "";
-    } else {
-        parent.style.backgroundColor = ""; // Klassen-Styles regeln Outdoor/Ausfall
-    }
+    // 4. UI UPDATE DER ZELLE
     parent.querySelector('.res').innerText = neueHalle;
 
-    // 4. Den neuen String für die Datenbank zusammenbauen
+    // 5. FINALEN STRING BAUEN
+    // Wir bauen den String immer mit Trenner "|", damit die Automatik gestoppt wird
     let finalParts = [klasse];
+    
     if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
     if (hasU21) finalParts.push("U21");
     if (commentPart) finalParts.push(commentPart);
-    
-    let finalVal = finalParts.join(" | ");
 
-    // 5. Änderungen im Speicher registrieren und Save-Button aktivieren
+    // Falls alles leer ist, senden wir "Klasse |" als Signal an das Sheet
+    if (finalParts.length === 1) {
+        finalVal = klasse + " |";
+    } else {
+        finalVal = finalParts.join(" | ");
+    }
+
+    // 6. SPEICHERN REGISTRIEREN
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
+    
+    // Änderung in die Liste für den Server schreiben
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    
+    // Button anzeigen
     document.getElementById('saveBtn').style.display = 'block';
 
     closeAllExtraMenus();
+    // el.value = ""; // Optional: Select wieder auf neutral setzen
 };
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
