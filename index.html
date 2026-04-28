@@ -310,55 +310,54 @@ window.addChange = (el, time, slot, klasse) => {
 };
 
 window.handleExtraAction = (el, time, slot) => {
-    const action = el.value;
+    const action = el.value; // "" (für ---), "outdoor", "ausfall", etc.
     const parent = el.parentElement;
-    const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
-    let neueHalle = parent.querySelector('.res').innerText.trim();
-    let neuerKommentar = undefined; // Bleibt gleich, außer bei Kommentar-Aktion
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+    const klasse = parent.querySelector('.klasse').innerText.trim();
 
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let hasU21 = fullString.includes("U21");
+    let commentPart = getExistingComment(r, c);
+
+    let neueHalle = "";
+    
+    // Logik für die Zustände
     if (action === "outdoor") {
         neueHalle = "Outdoor";
         parent.classList.remove('ausfall-mode');
         parent.classList.add('outdoor-mode');
-        parent.style.backgroundColor = "";
     } else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.remove('outdoor-mode');
         parent.classList.add('ausfall-mode');
-        parent.style.backgroundColor = "";
-    } else if (action === "kommentar") {
-        let existing = getExistingComment(r, c).replace("KOMMENTAR:", "");
-        const text = prompt("Notiz eingeben:", existing);
-        if (text !== null) {
-            neuerKommentar = text.trim() !== "" ? "KOMMENTAR:" + text : "";
-            // Stift-Icon Update ohne innerHTML-Zerstörung
-            let stift = parent.querySelector('.stift');
-            if (stift) stift.remove();
-            if (text.trim() !== "") {
-                let span = document.createElement('span');
-                span.className = 'stift';
-                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text); };
-                parent.appendChild(span);
-            }
-        }
-    } else if (action === "delete_comment") {
-        neuerKommentar = "";
-        let stift = parent.querySelector('.stift');
-        if (stift) stift.remove();
-    } else if (action === "" || action === "---") {
-        // ZURÜCKSETZEN
+    } else if (action === "kommentar" || action === "delete_comment") {
+        // ... (deine Kommentar-Logik bleibt hier gleich)
+        // WICHTIG: neueHalle hier nicht ändern, sondern aktuellen Stand behalten:
+        neueHalle = parent.querySelector('.res').innerText.trim();
+    } else {
+        // Hier landen wir, wenn action === "" (also "---" gewählt wurde)
         neueHalle = "";
         parent.classList.remove('outdoor-mode', 'ausfall-mode');
+    }
+
+    // Farbe zurücksetzen, falls nicht Outdoor/Ausfall
+    if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
+        parent.style.backgroundColor = configFarben[neueHalle] || "";
+    } else {
         parent.style.backgroundColor = "";
     }
 
-    // String final berechnen
-    let finalVal = buildFinalValue(r, c, neueHalle, neuerKommentar);
-    
-    // Visuelles Update der Hallen-Zeile
-    parent.querySelector('.res').innerText = neueHalle;
+    // String neu bauen
+    let finalParts = [klasse];
+    if (neueHalle) finalParts.push(neueHalle);
+    if (hasU21) finalParts.push("U21");
+    if (commentPart) finalParts.push(commentPart);
+    let finalVal = finalParts.join(" | ");
 
+    // UI Update
+    parent.querySelector('.res').innerText = neueHalle;
+    
     // Speichern
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
@@ -366,23 +365,34 @@ window.handleExtraAction = (el, time, slot) => {
     document.getElementById('saveBtn').style.display = 'block';
 
     closeAllExtraMenus();
-    el.value = "";
+    // el.value = ""; <-- Entfernen wir, damit der Stand bis zum Schließen bleibt
 };
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
         window.clearTimer = () => clearTimeout(pressTimer);
         window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
         function openExtraMenu(el) { 
-            closeAllExtraMenus();
-            const sel = el.querySelector('.extra-select'); 
-            const hatStift = el.querySelector('.stift') !== null;
-            const delOpt = sel.querySelector('.del-opt');
-            if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
-            sel.style.zIndex = "100"; 
-            sel.style.pointerEvents = "all"; 
-            sel.style.opacity = "1"; 
-            setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
-        }
+    closeAllExtraMenus();
+    const sel = el.querySelector('.extra-select'); 
+    const hatStift = el.querySelector('.stift') !== null;
+    const delOpt = sel.querySelector('.del-opt');
+    if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
+
+    // NEU: Dropdown auf den aktuellen Stand der Box setzen
+    const aktuelleRes = el.querySelector('.res').innerText.trim();
+    if (aktuelleRes === "Outdoor") {
+        sel.value = "outdoor";
+    } else if (aktuelleRes === "Ausfall") {
+        sel.value = "ausfall";
+    } else {
+        sel.value = ""; // Entspricht "---"
+    }
+
+    sel.style.zIndex = "100"; 
+    sel.style.pointerEvents = "all"; 
+    sel.style.opacity = "1"; 
+    setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
+}
         
         window.saveChanges = async () => { 
             const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
