@@ -515,6 +515,20 @@ window.handleExtraAction = (el, time, slot) => {
             document.getElementById('datePicker').value = dateStr;
             lastStableDate = dateStr;
         });
+
+function closeAllExtraMenus() {
+    // Alle Dropdowns im Dokument finden
+    const allSelects = document.querySelectorAll('.extra-select');
+    allSelects.forEach(sel => {
+        sel.style.opacity = "0";
+        sel.style.pointerEvents = "none";
+        sel.style.zIndex = "-1";
+        // Optional: Den Wert zurücksetzen, damit beim nächsten Öffnen 
+        // der onchange-Event sauber feuert (wird aber durch openExtraMenu überschrieben)
+        // sel.value = ""; 
+    });
+}
+        
     </script>
 </body>
 </html>
