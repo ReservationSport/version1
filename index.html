@@ -268,29 +268,37 @@
         }
 
         window.addChange = (el, time, slot, klasse) => { 
-            let res = el.value; const parent = el.parentElement;
-            const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
-            parent.classList.remove('ausfall-mode', 'outdoor-mode');
-            parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
-            parent.style.backgroundColor = configFarben[res] || ""; 
-            
-            // Bestehende Infos aus currentPlanData holen
-            let existingVal = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-            let comment = getExistingComment(r, c);
-            let hasU21 = existingVal.includes("| U21");
+    let res = el.value; 
+    const parent = el.parentElement;
+    const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
+    
+    // WICHTIG: Wir holen die Klasse direkt aus dem HTML-Element, 
+    // um sicherzustellen, dass Sonderzeichen wie "\" exakt so bleiben wie sie sind.
+    const displayKlasse = parent.querySelector('.klasse').innerText.trim();
 
-            let finalVal = (res === "" || res === "---") ? klasse : klasse + " | " + res;
-            
-            // U21 erhalten, falls vorhanden
-            if (hasU21) finalVal += " | U21";
-            // Kommentar erhalten, falls vorhanden
-            if (comment) finalVal += " | " + comment;
+    parent.classList.remove('ausfall-mode', 'outdoor-mode');
+    parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
+    parent.style.backgroundColor = configFarben[res] || ""; 
+    
+    // Bestehende Infos aus currentPlanData holen
+    let existingVal = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let comment = getExistingComment(r, c);
+    let hasU21 = existingVal.includes("| U21");
 
-            if (!currentPlanData[r]) currentPlanData[r] = [];
-            currentPlanData[r][c] = finalVal;
-            pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
-            document.getElementById('saveBtn').style.display = 'block';
-        };
+    // Wir nutzen hier displayKlasse statt der übergebenen Variable klasse
+    let finalVal = (res === "" || res === "---") ? displayKlasse : displayKlasse + " | " + res;
+    
+    // U21 erhalten, falls vorhanden
+    if (hasU21) finalVal += " | U21";
+    // Kommentar erhalten, falls vorhanden
+    if (comment) finalVal += " | " + comment;
+
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+    document.getElementById('saveBtn').style.display = 'block';
+};
 
         window.handleExtraAction = (el, time, slot) => {
             const action = el.value, parent = el.parentElement, klasse = parent.querySelector('.klasse').innerText;
