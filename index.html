@@ -118,34 +118,35 @@
         }
 
         // Plan laden
-        async function loadPlan() {
-            const dp = document.getElementById('datePicker');
-            if (pendingChanges.length > 0 && !confirm("Ungespeicherte Änderungen gehen verloren!")) {
-                dp.value = lastStableDate; return;
-            }
-            const dateVal = dp.value;
-            if (!userPw || !dateVal) return;
-            lastStableDate = dateVal;
-            
-            const container = document.getElementById('plan');
-            container.innerHTML = ""; 
-            document.getElementById('globalLoader').style.display = 'block';
-            
-            try {
-                const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
-                const json = await res.json();
-                if (json.error === "SPERRE") {
-                    container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
-                } else {
-                    currentPlanData = json.data;
-                    myClasses = json.userClasses || [];
-                    allClassTeachers = json.allClassTeachers || {};
-                    configFarben = {}; json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
-                    renderGrid(json.data, json.options);
-                }
-            } catch(e) { console.error(e); }
-            document.getElementById('globalLoader').style.display = 'none';
+        async function checkLogin() {
+    const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
+    const errorDisplay = document.getElementById('loginError');
+    const pwVal = document.getElementById('pwInput').value;
+    const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
+    
+    if(!kuerzelVal || !pwVal) { errorDisplay.innerText = "Daten unvollständig!"; return; }
+    
+    btn.style.display = 'none'; ball.classList.add('active');
+    errorDisplay.innerText = ""; // Alten Fehler löschen
+
+    try {
+        const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
+        const json = await res.json();
+        
+        if (json.error) {
+            // Zeigt jetzt "Kein Master vorhanden" oder "Falsches Passwort" direkt an
+            errorDisplay.innerText = json.msg || json.error; 
+            btn.style.display = 'block'; ball.classList.remove('active');
+        } else {
+            userPw = pwVal; userKuerzel = kuerzelVal;
+            document.getElementById('loginOverlay').style.display = 'none';
+            loadPlan();
         }
+    } catch(e) { 
+        errorDisplay.innerText = "Server nicht erreichbar."; 
+        btn.style.display = 'block'; ball.classList.remove('active'); 
+    }
+}
 
         function renderGrid(data, options) {
             const container = document.getElementById('plan');
