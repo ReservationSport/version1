@@ -24,11 +24,17 @@
 
         .box { border: 1px solid #444; padding: 5px; background: #262626; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; cursor: pointer; overflow: hidden; }
         .box.empty { pointer-events: none; opacity: 0.5; }
+        
         .box.not-mine { pointer-events: none !important; } 
         .box.is-mine { border: 2px solid #e67e22 !important; z-index: 10; box-shadow: inset 0 0 10px rgba(230,126,34,0.3); }
 
         .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
+        .box.ausfall-mode .klasse { color: #777777; }
+        .box.ausfall-mode .res { color: #555555; }
+        .box.ausfall-mode .lehrer-info { display: none; }
+
         .box.outdoor-mode { background-color: #27ae60 !important; color: white !important; }
+        .box.outdoor-mode .res { font-weight: bold; }
 
         .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; display: inline-block; font-size: 22px; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,1); transition: transform 0.2s ease; }
         .stift:hover { transform: scale(1.2); color: #ff9f43; }
@@ -38,21 +44,30 @@
         .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
         
         #loginOverlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
             background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
-            background-size: cover; background-position: center; z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; 
+            background-size: cover;
+            background-position: center;
+            z-index: 2000; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
         }
         #loginOverlay h2 { color: #e67e22; font-size: 2.2em; margin-bottom: 30px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
         #loginOverlay input { padding: 15px; margin: 8px; background: rgba(34, 34, 34, 0.85); border: 1px solid #444; color: white; border-radius: 8px; width: 280px; font-size: 16px; outline: none; backdrop-filter: blur(5px); }
+        #loginOverlay input:focus { border-color: #e67e22; }
         #loginOverlay button { padding: 15px; margin-top: 15px; background: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 310px; font-size: 18px; transition: background 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #loginOverlay button:hover { background: #d35400; }
         
         .klasse { font-weight: bold; }
         .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
         .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
-        
         select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
-        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; transition: opacity 0.2s; }
-
         .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
         .save-btn { padding: 8px 20px; background: #e67e22; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: none; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .save-btn.success { background: #27ae60; } 
@@ -62,10 +77,10 @@
         
         .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
         .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
+        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
     </style>
 </head>
 <body onclick="closeAllExtraMenus()">
-
     <div id="loginOverlay">
         <h2>Reservation Sport</h2>
         <input type="text" id="kuerzelInput" placeholder="Kürzel" oninput="document.getElementById('loginError').innerText=''">
@@ -83,7 +98,7 @@
         </div>
         <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
         <input type="date" id="datePicker" onchange="loadPlan()">
-        <div class="nav-group">
+        <div class="nav-group" style="display: flex; align-items: center;">
             <button class="nav-btn" onclick="changeDate(1)">▶</button>
             <button class="nav-btn" onclick="changeDate(7)">⏭</button>
             <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
@@ -91,7 +106,6 @@
             </button>
         </div>
     </div>
-
     <div class="grid" id="plan"></div>
 
     <script>
@@ -99,7 +113,6 @@
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
 
-        // Browser-Warnung bei ungespeicherten Änderungen
         window.addEventListener('beforeunload', (e) => {
             if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
         });
@@ -131,204 +144,337 @@
             try {
                 const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
                 const json = await res.json();
-                if (json.error) {
-                    document.getElementById('loginError').innerText = json.msg || "Fehler!";
+                if (json.error === "Falsches Passwort") {
+                    document.getElementById('loginError').innerText = "Falsches Passwort!";
                     btn.style.display = 'block'; ball.classList.remove('active');
                 } else {
-                    userPw = pwVal; userKuerzel = kuerzelVal;
+                    userPw = pwVal;
+                    userKuerzel = kuerzelVal;
                     document.getElementById('loginOverlay').style.display = 'none';
                     loadPlan();
                 }
-            } catch(e) { document.getElementById('loginError').innerText = "Verbindungsfehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
+            } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
         }
 
         async function loadPlan() {
             const dp = document.getElementById('datePicker');
             if (pendingChanges.length > 0) {
-                if (!confirm("Ungespeicherte Änderungen gehen verloren! Fortfahren?")) {
-                    dp.value = lastStableDate; return;
+                if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
+                    dp.value = lastStableDate; 
+                    return;
                 }
             }
             const dateVal = dp.value;
             if (!userPw || !dateVal) return;
             lastStableDate = dateVal; 
             updateNavButtons();
-            
             const container = document.getElementById('plan');
             container.innerHTML = ""; 
             document.getElementById('globalLoader').style.display = 'block';
-            
             const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
             const heute = new Date(); heute.setHours(12,0,0,0);
             const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
             
-            if (dateObj < heute) { container.innerHTML = `<div class="box info-box">Vergangenheit ist schreibgeschützt.</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            if (dateObj > vierWochen) { container.innerHTML = `<div class="box info-box">Planung nur 4 Wochen im Voraus möglich.</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { container.innerHTML = `<div class="box info-box">Wochenende! Geniess die Pause...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+            if (dateObj < heute) { container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+            if (dateObj > vierWochen) { container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+            if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
             
             try {
                 const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
                 const json = await res.json();
                 if (json.error === "SPERRE") {
                     container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
-                } else {
-                    currentPlanData = json.data;
-                    myClasses = json.userClasses || [];
-                    allClassTeachers = json.allClassTeachers || {};
-                    configFarben = {}; json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
-                    renderGrid(json.data, json.options, dateObj);
-                    pendingChanges = [];
+                    document.getElementById('globalLoader').style.display = 'none';
+                    return;
                 }
+                container.innerHTML = ""; pendingChanges = [];
+                currentPlanData = json.data; 
+                myClasses = json.userClasses || [];
+                allClassTeachers = json.allClassTeachers || {};
+                const data = json.data, options = json.options;
+                configFarben = {}; options.forEach(opt => configFarben[opt[0]] = opt[1]);
+                const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+                const [y, m, d] = dateVal.split('-').map(Number);
+                
+                data.forEach((row, rowIndex) => {
+                    if (rowIndex === 0) {
+                        container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SPEICHERN</button></div></div>`;
+                    } else {
+                        if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
+                        if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
+                        container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
+                        
+                        for(let i = 1; i <= 5; i++) {
+                            let belegteHallenInZeileOhneMich = [];
+                            for (let k = 1; k <= 5; k++) {
+                                if (k === i) continue; 
+                                let otherVal = String(row[k] || "").trim();
+                                if (otherVal !== "") {
+                                    let resPart = otherVal.split(' | ')[1] || "";
+                                    if (resPart && resPart !== "Ausfall" && resPart !== "Outdoor") {
+                                        belegteHallenInZeileOhneMich.push(resPart);
+                                    }
+                                }
+                            }
+
+                            let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
+                            let isAusfall = (res === "Ausfall");
+                            let isOutdoor = (res === "Outdoor");
+                            let canEdit = myClasses.some(c => klasse.trim() === c.trim());
+                            let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
+                            let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
+
+                            container.innerHTML += `
+                            <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''} ${isOutdoor ? 'outdoor-mode' : ''}" 
+                                   data-row="${rowIndex}" data-col="${i}"
+                                   oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()" style="background-color: ${ (isAusfall || isOutdoor) ? '' : configFarben[res] || ''}">
+                                   ${stiftHtml}
+                                   <div class="klasse">${klasse}</div>
+                                   <div class="lehrer-info">${teacher}</div>
+                                   <div class="res">${res}</div>
+                                   ${canEdit ? `
+                                   <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                                       <option value="">---</option>
+                                       ${options.filter(o => {
+                                           const optName = o[0];
+                                           if (res === optName) return true;
+                                           let istGesperrt = belegteHallenInZeileOhneMich.some(belegt => {
+                                               let belegtParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                               let optParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                               return optParts.some(p => belegtParts.includes(p));
+                                           });
+                                           return !istGesperrt;
+                                       }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+                                   </select>
+                                   <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+                                       <option value="">---</option>
+                                       <option value="outdoor">🌳 Outdoor</option>
+                                       <option value="ausfall">❌ Ausfall</option>
+                                       <option value="kommentar">📝 Notiz hinzufügen</option>
+                                       <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+                                   </select>` : ''}
+                            </div>`;
+                        }
+                    }
+                });
             } catch(e) { console.error(e); }
             document.getElementById('globalLoader').style.display = 'none';
         }
 
-        function renderGrid(data, options, dateObj) {
-            const container = document.getElementById('plan');
-            const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-            const [y, m, d] = document.getElementById('datePicker').value.split('-').map(Number);
-            
-            data.forEach((row, rowIndex) => {
-                if (rowIndex === 0) {
-                    container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SPEICHERN</button></div></div>`;
-                } else {
-                    if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
-                    if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
-                    container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
-                    
-                    for(let i = 1; i <= 5; i++) {
-                        // Sperr-Logik: Hallen-Überschneidungen prüfen
-                        let belegteHallen = [];
-                        for (let k = 1; k <= 5; k++) {
-                            if (k === i) continue; 
-                            let otherVal = String(row[k] || "").split(' | ')[1] || "";
-                            if (otherVal && !["Ausfall", "Outdoor"].includes(otherVal)) belegteHallen.push(otherVal);
-                        }
-
-                        let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", extra = teile[2] || "";
-                        let isAusfall = (res === "Ausfall"), isOutdoor = (res === "Outdoor"), isU21 = val.includes("U21");
-                        let canEdit = myClasses.some(c => klasse.trim() === c.trim());
-                        let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
-                        let stiftHtml = extra.startsWith("KOMMENTAR:") ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${extra.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
-
-                        container.innerHTML += `
-                        <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''} ${isOutdoor ? 'outdoor-mode' : ''}" 
-                               data-row="${rowIndex}" data-col="${i}" oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" 
-                               ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()"
-                               style="background-color: ${ (isAusfall || isOutdoor) ? '' : configFarben[res] || ''}">
-                            ${stiftHtml}
-                            <div class="klasse">${klasse}</div>
-                            <div class="lehrer-info">${teacher}</div>
-                            <div class="res">${res} ${isU21 ? '(U21)' : ''}</div>
-                            ${canEdit ? `
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-                                <option value="">---</option>
-                                ${options.filter(o => {
-                                    if (res === o[0]) return true;
-                                    let optParts = o[0].split(/[\s+]+/).filter(p => p && p !== "Halle");
-                                    return !belegteHallen.some(b => b.split(/[\s+]+/).some(bp => optParts.includes(bp)));
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                            </select>
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-                                <option value="">---</option>
-                                <option value="outdoor">🌳 Outdoor</option>
-                                <option value="ausfall">❌ Ausfall</option>
-                                <option value="kommentar">📝 Notiz hinzufügen</option>
-                                <option value="delete_comment">🗑️ Notiz löschen</option>
-                            </select>` : ''}
-                        </div>`;
-                    }
-                }
-            });
+        function getExistingComment(r, c) {
+            let val = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+            let teile = val.split(' | ');
+            return (teile[2] && teile[2].startsWith("KOMMENTAR:")) ? teile[2] : "";
         }
 
-        function buildFinalValue(r, c, neueHalle, neuerKommentar) {
-            let current = currentPlanData[r][c] || "", teile = current.split(' | ');
-            let klasse = teile[0], istU21 = current.includes("U21");
-            let halle = neueHalle !== undefined ? neueHalle : (teile[1] && !teile[1].startsWith("KOMMENTAR") && teile[1] !== "U21" ? teile[1] : "");
-            let komm = neuerKommentar !== undefined ? neuerKommentar : (current.split('KOMMENTAR:')[1] || "");
+        // Hilfsfunktion: Baut den String sauber zusammen, egal was sich ändert
+function buildFinalValue(r, c, neueHalle, neuerKommentar) {
+    const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
+    const klasse = parent.querySelector('.klasse').innerText.trim();
+    
+    // Aktuellen Speicherstand holen
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    
+    // U21 Status merken (bleibt immer erhalten, wenn er einmal da war)
+    let hasU21 = fullString.includes("U21");
+    
+    // Kommentar bestimmen
+    let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
 
-            let parts = [klasse];
-            if (halle && halle !== "" && halle !== "---") parts.push(halle);
-            if (istU21) parts.push("U21");
-            if (komm.trim() !== "") parts.push("KOMMENTAR:" + komm.trim());
-            return parts.join(" | ");
-        }
+    // String-Teile sammeln
+    let finalParts = [klasse];
+    if (neueHalle && neueHalle !== "" && neueHalle !== "---") finalParts.push(neueHalle);
+    if (hasU21) finalParts.push("U21");
+    if (commentPart && commentPart !== "") finalParts.push(commentPart);
 
-        window.addChange = (el, time, slot, klasse) => {
-            const r = el.parentElement.getAttribute('data-row'), c = el.parentElement.getAttribute('data-col');
-            let res = el.value === "---" ? "" : el.value;
-            let finalVal = buildFinalValue(r, c, res, undefined);
-            registerChange(r, c, time, slot, finalVal);
-        };
+    return finalParts.join(" | ");
+}
 
-        window.handleExtraAction = (el, time, slot) => {
-            const r = el.parentElement.getAttribute('data-row'), c = el.parentElement.getAttribute('data-col');
-            let action = el.value, finalVal = "";
-            
-            if (action === "outdoor") finalVal = buildFinalValue(r, c, "Outdoor", undefined);
-            else if (action === "ausfall") finalVal = buildFinalValue(r, c, "Ausfall", undefined);
-            else if (action === "kommentar") {
-                let existing = (currentPlanData[r][c].split('KOMMENTAR:')[1] || "").trim();
-                let txt = prompt("Notiz eingeben:", existing);
-                if (txt !== null) finalVal = buildFinalValue(r, c, undefined, txt);
-            } 
-            else if (action === "delete_comment") finalVal = buildFinalValue(r, c, undefined, "");
-            
-            if (finalVal) registerChange(r, c, time, slot, finalVal);
+window.addChange = (el, time, slot, klasse) => { 
+    let res = el.value; 
+    const parent = el.parentElement;
+    const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
+    
+    // Visuelles Update
+    parent.classList.remove('ausfall-mode', 'outdoor-mode');
+    parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
+    parent.style.backgroundColor = configFarben[res] || ""; 
+
+    // String bauen (Kommentar bleibt wie er ist)
+    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
+
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+    document.getElementById('saveBtn').style.display = 'block';
+};
+
+window.handleExtraAction = (el, time, slot) => {
+    const action = el.value;
+    const parent = el.parentElement;
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+    
+    // 1. Basis-Infos sammeln
+    const klasse = parent.querySelector('.klasse').innerText.trim();
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let hasU21 = fullString.includes("U21");
+    
+    // Aktuellen Kommentar aus dem Speicher-String extrahieren
+    let parts = fullString.split('|').map(s => s.trim());
+    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+    
+    let neueHalle = parent.querySelector('.res').innerText.trim();
+
+    // 2. Aktionen verarbeiten
+    if (action === "outdoor") {
+        neueHalle = "Outdoor";
+        parent.classList.remove('ausfall-mode');
+        parent.classList.add('outdoor-mode');
+    } else if (action === "ausfall") {
+        neueHalle = "Ausfall";
+        parent.classList.remove('outdoor-mode');
+        parent.classList.add('ausfall-mode');
+    } else if (action === "kommentar") {
+        // Bestehenden Text für den Prompt vorbereiten
+        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
+        const text = prompt("Notiz eingeben:", existingText);
+        
+        if (text !== null) {
+            // Alten Stift entfernen
+            let oldStift = parent.querySelector('.stift');
+            if (oldStift) oldStift.remove();
+
+            if (text.trim() !== "") {
+                commentPart = "KOMMENTAR:" + text.trim();
+                // Neuen Stift erstellen und hinzufügen
+                let span = document.createElement('span');
+                span.className = 'stift';
+                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
+                span.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    alert('Notiz: ' + text.trim()); 
+                };
+                parent.appendChild(span);
+            } else {
+                commentPart = undefined; // Notiz wurde gelöscht
+            }
+        } else {
+            // User hat Abbrechen gedrückt: Menü schließen und raus
             closeAllExtraMenus();
-        };
-
-        function registerChange(r, c, time, slot, val) {
-            currentPlanData[r][c] = val;
-            pendingChanges.push({ time, slotIndex: slot, val: val });
-            document.getElementById('saveBtn').style.display = 'block';
-            // Kleiner UI Refresh ohne kompletten Fetch
-            const dp = document.getElementById('datePicker');
-            renderGrid(currentPlanData, Object.entries(configFarben), new Date(dp.value));
-            document.getElementById('saveBtn').style.display = 'block';
+            return;
         }
+    } else if (action === "delete_comment") {
+        commentPart = undefined;
+        let stift = parent.querySelector('.stift');
+        if (stift) stift.remove();
+    } else if (action === "" || action === "---") {
+        // ZURÜCKSETZEN auf Standard
+        neueHalle = "";
+        parent.classList.remove('outdoor-mode', 'ausfall-mode');
+    }
 
-        window.saveChanges = async () => {
-            const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader');
-            btn.style.display = 'none'; ball.classList.add('active');
-            try {
-                const response = await fetch(url, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        date: document.getElementById('datePicker').value,
-                        changes: pendingChanges,
-                        pw: userPw,
-                        kuerzel: userKuerzel
-                    })
-                });
-                const res = await response.json();
-                if (res.status === "success") {
-                    pendingChanges = []; ball.classList.remove('active');
-                    btn.innerText = "Check! ✅"; btn.classList.add('success'); btn.style.display = 'block';
-                    setTimeout(() => { 
-                        btn.style.display = 'none'; btn.innerText = "SPEICHERN"; btn.classList.remove('success'); 
-                    }, 1500);
-                }
-            } catch (e) { ball.classList.remove('active'); btn.style.display = 'block'; btn.innerText = "Fehler!"; }
-        };
+    // 3. UI-Updates (Farben & Texte)
+    if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
+        parent.style.backgroundColor = configFarben[neueHalle] || "";
+    } else {
+        parent.style.backgroundColor = ""; // Klassen-Styles regeln Outdoor/Ausfall
+    }
+    parent.querySelector('.res').innerText = neueHalle;
 
-        window.startTimer = (el) => { pressTimer = setTimeout(() => openExtraMenu(el), 500); };
+    // 4. Den neuen String für die Datenbank zusammenbauen
+    let finalParts = [klasse];
+    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
+    if (hasU21) finalParts.push("U21");
+    if (commentPart) finalParts.push(commentPart);
+    
+    let finalVal = finalParts.join(" | ");
+
+    // 5. Änderungen im Speicher registrieren und Save-Button aktivieren
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    document.getElementById('saveBtn').style.display = 'block';
+
+    closeAllExtraMenus();
+};
+
+        window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
         window.clearTimer = () => clearTimeout(pressTimer);
         window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
-        
         function openExtraMenu(el) { 
-            closeAllExtraMenus();
-            const sel = el.querySelector('.extra-select');
-            if (sel) {
-                sel.style.zIndex = "100"; sel.style.pointerEvents = "all"; sel.style.opacity = "1";
-                setTimeout(() => { if (sel.showPicker) sel.showPicker(); else sel.click(); }, 50);
+    closeAllExtraMenus();
+    const sel = el.querySelector('.extra-select'); 
+    const hatStift = el.querySelector('.stift') !== null;
+    const delOpt = sel.querySelector('.del-opt');
+    if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
+
+    // NEU: Dropdown auf den aktuellen Stand der Box setzen
+    const aktuelleRes = el.querySelector('.res').innerText.trim();
+    if (aktuelleRes === "Outdoor") {
+        sel.value = "outdoor";
+    } else if (aktuelleRes === "Ausfall") {
+        sel.value = "ausfall";
+    } else {
+        sel.value = ""; // Entspricht "---"
+    }
+
+    sel.style.zIndex = "100"; 
+    sel.style.pointerEvents = "all"; 
+    sel.style.opacity = "1"; 
+    setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
+}
+        
+        window.saveChanges = async () => { 
+            const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
+            btn.style.display = 'none'; ball.classList.add('active');
+            try { 
+                const response = await fetch(url, { 
+                    method: "POST", 
+                    body: JSON.stringify({ 
+                        date: document.getElementById('datePicker').value, 
+                        changes: pendingChanges, 
+                        pw: userPw,
+                        kuerzel: userKuerzel
+                    }) 
+                }); 
+                const result = await response.json();
+                if (result.status === "success") {
+                    pendingChanges = []; 
+                    ball.classList.remove('active'); 
+                    btn.innerText = "Check! ✅"; 
+                    btn.classList.add('success'); 
+                    btn.style.display = 'block'; 
+                    setTimeout(() => { 
+                        btn.style.display = 'none'; 
+                        btn.classList.remove('success'); 
+                        btn.innerText = "SPEICHERN"; 
+                    }, 1000); 
+                } else { throw new Error(); }
+            } catch (e) { 
+                ball.classList.remove('active'); 
+                btn.style.display = 'block'; 
+                btn.innerText = "Fehler!"; 
             }
-        }
+        };
 
         window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
-        window.goToToday = () => { const dp = document.getElementById('datePicker'); dp.valueAsDate = new Date(); loadPlan(); };
-        document.addEventListener('DOMContentLoaded', () => { document.getElementById('datePicker').valueAsDate = new Date(); });
+        window.goToToday = () => {
+            const dp = document.getElementById('datePicker');
+            const today = new Date();
+            const offset = today.getTimezoneOffset();
+            today.setMinutes(today.getMinutes() - offset);
+            const dateStr = today.toISOString().split('T')[0];
+            dp.value = dateStr;
+            loadPlan();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset); 
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('datePicker').value = dateStr;
+            lastStableDate = dateStr;
+        });
     </script>
 </body>
 </html>
