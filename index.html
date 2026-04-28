@@ -406,11 +406,35 @@ window.handleExtraAction = (el, time, slot) => {
         finalVal = finalParts.join(" | ");
     }
 
-    // 5. SPEICHERN
+    // 5. FINALEN STRING BAUEN (Für das Google Sheet)
+    let finalParts = [klasse];
+    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
+    if (hasU21) finalParts.push("U21");
+    if (commentPart) finalParts.push(commentPart);
+
+    // Der "Geheimcode" für das Sheet, damit die Automatik stoppt
+    if (finalParts.length === 1) {
+        finalVal = klasse + " |"; // Der Strich stoppt die Automatik im Code.gs
+    } else {
+        finalVal = finalParts.join(" | ");
+    }
+
+    // 6. SPEICHERN & UI-SCHUTZ
     if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
+    currentPlanData[r][c] = finalVal; // Wir speichern den Strich im Speicher
+    
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     document.getElementById('saveBtn').style.display = 'block';
+
+    // WICHTIG: Wir aktualisieren NUR das Hallen-Feld, 
+    // damit die Klasse und die Lehrperson unberührt bleiben!
+    parent.querySelector('.res').innerText = neueHalle;
+    
+    // Falls ein U21-Label existiert, das wir ein/ausblenden müssen:
+    // (Je nachdem wie dein CSS/HTML aufgebaut ist)
+    if (!hasU21) {
+       // Code zum Entfernen eines U21-Labels im UI, falls vorhanden
+    }
 
     closeAllExtraMenus();
 };
