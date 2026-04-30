@@ -103,6 +103,8 @@
         <p id="loginError" style="color: #e74c3c; margin-top: 10px;"></p>
     </div>
 
+    <!-- Die Steuerleiste bleibt oben -->
+<div class="header-sticky-wrapper">
     <div class="date-control">
         <div id="globalLoader" class="global-loader"></div>
         <div class="nav-group">
@@ -111,7 +113,7 @@
         </div>
         <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
         <input type="date" id="datePicker" onchange="loadPlan()">
-        <div class="nav-group" style="display: flex; align-items: center;">
+        <div class="nav-group">
             <button class="nav-btn" onclick="changeDate(1)">▶</button>
             <button class="nav-btn" onclick="changeDate(7)">⏭</button>
             <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
@@ -119,7 +121,11 @@
             </button>
         </div>
     </div>
-    <div class="grid" id="plan"></div>
+</div>
+
+<div class="grid" id="plan">
+    <!-- Hier wird das Grid dynamisch geladen -->
+</div>
 
     <script>
         const url = "https://script.google.com/macros/s/AKfycby5fws9jLlFg5wNEpWDeelYNhbLnIXDIAjiaOXabdnCyturNTXcAEmWJsZySjI4p_5hkQ/exec"; 
