@@ -372,7 +372,7 @@ window.handleExtraAction = (el, time, slot) => {
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
     // --- LOGIK FÜR PERMANENTES LÖSCHEN MIT PASSWORT-SCHUTZ ---
-   if (action === "perma_delete") {
+  if (action === "perma_delete") {
         if (!klasse || klasse === "") {
             alert("Keine Klasse zum Löschen gefunden.");
             el.value = "";
@@ -380,19 +380,23 @@ window.handleExtraAction = (el, time, slot) => {
             return;
         }
 
-        // 1. Stufe: Normale Bestätigung
         if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
-            
-            // Neues Modal anzeigen
             const modal = document.getElementById('pwModal');
             const input = document.getElementById('modalPwInput');
             const btn = document.getElementById('confirmPwBtn');
             
             modal.style.display = 'flex';
-            input.value = ''; // Feld leeren
+            input.value = '';
             input.focus();
 
-            // Klick-Event für den Button im Modal
+            // ENTER-TASTE FIX:
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Verhindert ungewolltes Neuladen der Seite
+                    btn.click();
+                }
+            };
+
             btn.onclick = () => {
                 if (input.value === userPw) {
                     modal.style.display = 'none';
