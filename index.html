@@ -381,10 +381,10 @@ window.handleExtraAction = (el, time, slot) => {
         }
 
         // 1. Stufe: Normale Bestätigung
-        if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet und der Slot für alle kommenden Wochen freigegeben werden?`)) {
+        if (confirm(`Soll die Klasse ab heute wirklich aus dem Stundenplan verschwinden?`)) {
             
             // 2. Stufe: Passwort-Abfrage
-            const pwCheck = prompt("Bitte gib das Admin-Passwort ein, um das Schuljahr für diese Klasse final zu beenden:");
+            const pwCheck = prompt("Damit die Klasse gelöscht werden kann, musst du das Passwort eingeben:");
             
             if (pwCheck === userPw) { // Wir nutzen das Passwort, mit dem der User eingeloggt ist
                 permaDeleteClass(klasse, slot); 
