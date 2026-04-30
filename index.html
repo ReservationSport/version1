@@ -606,9 +606,10 @@ document.getElementById('modalPwInput').addEventListener('keypress', function (e
         <p style="color: #aaa; font-size: 14px; margin-bottom: 20px; font-family: sans-serif;">Gib das Passwort ein, um die Klasse virtuell abzukleben:</p>
         
         <!-- Eingabefeld -->
-        <input type="password" id="modalPwInput" placeholder="Passwort eingeben..." 
-               style="width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; text-align: center; outline: none; box-sizing: border-box;">
-        
+       <input type="password" id="modalPwInput" placeholder="Passwort eingeben..." 
+       onkeypress="if(event.key === 'Enter') document.getElementById('confirmPwBtn').click();"
+       style="width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; text-align: center; outline: none; box-sizing: border-box;">
+       
         <!-- Buttons -->
         <div style="display: flex; gap: 15px;">
             <button onclick="closePwModal()" 
