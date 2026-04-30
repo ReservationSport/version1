@@ -350,11 +350,20 @@ window.addChange = (el, time, slot, klasse) => {
 
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
+    if (!action || action === "---") {
+        closeAllExtraMenus();
+        return;
+    }
+
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    const klasse = parent.querySelector('.klasse').innerText.trim();
+    // Die Klasse sicher aus dem HTML-Element holen
+    const klasseElem = parent.querySelector('.klasse');
+    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
+    
+    // Bestehende Daten aus dem Speicher holen
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let hasU21 = fullString.includes("U21");
     
@@ -363,16 +372,25 @@ window.handleExtraAction = (el, time, slot) => {
     
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
+    // --- NEU: LOGIK FÜR PERMANENTES LÖSCHEN ---
     if (action === "perma_delete") {
-        if (confirm(`Möchtest du die Klasse ${klasse} ab diesem Datum für alle folgenden Wochen komplett aus dem Plan löschen?`)) {
-            permaDeleteClass(klasse, slot); 
-            return; 
-        } else {
+        if (!klasse || klasse === "") {
+            alert("Keine Klasse zum Löschen gefunden.");
             el.value = "";
             closeAllExtraMenus();
             return;
         }
+
+        if (confirm(`Möchtest du die Klasse "${klasse}" ab diesem Datum für alle folgenden Wochen komplett aus dem Plan löschen?`)) {
+            // Aufruf der AJAX-Funktion zum Löschen in Google Sheets
+            permaDeleteClass(klasse, slot); 
+        }
+        
+        el.value = "";
+        closeAllExtraMenus();
+        return; // Funktion hier beenden, da keine weiteren Änderungen am aktuellen Element nötig
     }
+    // ------------------------------------------
     
     if (action === "outdoor") {
         neueHalle = "Outdoor";
@@ -404,43 +422,38 @@ window.handleExtraAction = (el, time, slot) => {
                 commentPart = undefined;
             }
         } else {
+            el.value = "";
             closeAllExtraMenus();
             return;
         }
-    // ... innerhalb von handleExtraAction ...
     } else if (action === "delete_comment") {
-        commentPart = ""; // WICHTIG: Leerstring statt undefined, um aktiv zu löschen
+        commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
-// ... danach folgt der Aufruf von buildFinalValue ...
-    } else if (action === "" || action === "---") {
-        neueHalle = "";
-        hasU21 = false; // Bei Reset auch U21 entfernen
-        parent.classList.remove('outdoor-mode', 'ausfall-mode');
     }
 
+    // Optische Anpassung der Zelle
     if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else {
         parent.style.backgroundColor = "";
     }
-    parent.querySelector('.res').innerText = neueHalle;
-
-    let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart) finalParts.push(commentPart);
     
-    // ... (vorheriger Code in handleExtraAction bleibt gleich bis zur Definition von finalVal)
+    const resElem = parent.querySelector('.res');
+    if (resElem) resElem.innerText = neueHalle;
 
-    // Neues, sauberes Zusammenbauen für den Export:
+    // Finalen Wert für den Export bauen
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
 
+    // Daten im lokalen Speicher aktualisieren
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
+    
+    // Änderung in die Liste für den "Speichern"-Button aufnehmen
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     document.getElementById('saveBtn').style.display = 'block';
 
+    el.value = ""; // Dropdown Auswahl optisch zurücksetzen
     closeAllExtraMenus();
 };
 
