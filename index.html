@@ -271,26 +271,36 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
     const klasse = parent.querySelector('.klasse').innerText.trim();
     
-    // Wir nehmen den aktuellen String aus dem Speicher
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    
-    // U21 Status extrahieren
     let hasU21 = fullString.includes("U21");
 
-    // WICHTIG: Wenn die Halle auf leer ("---" oder "") gesetzt wird, 
-    // entfernen wir den U21 Status zwingend.
+    // Wenn die Halle gelöscht wird, fällt U21 weg
     if (neueHalle === "" || neueHalle === "---" || neueHalle === null) {
         hasU21 = false;
-        neueHalle = ""; // Sicherstellen, dass es leer ist
+        neueHalle = ""; 
     }
     
+    // Kommentar-Logik: Entweder der neue oder der bestehende
     let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
 
+    // WICHTIG: Die Reihenfolge muss exakt stimmen für die Anzeige-Logik
+    // Teil 0: Klasse
+    // Teil 1: Halle (evtl. mit U21)
+    // Teil 2: Kommentar
+    
+    let hallenTeil = neueHalle;
+    if (hasU21 && hallenTeil !== "") {
+        hallenTeil += " | U21"; // U21 wird an die Halle geklebt
+    } else if (hasU21 && hallenTeil === "") {
+        // Sonderfall: U21 ohne Halle (sollte durch unsere neue Logik vermieden werden)
+        hallenTeil = "U21"; 
+    }
+
     let finalParts = [klasse];
-    // Nur hinzufügen, wenn wirklich Text da ist
-    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart && commentPart !== "") finalParts.push(commentPart);
+    finalParts.push(hallenTeil || ""); // Muss existieren, auch wenn leer, damit Kommentar Index 2 bleibt
+    if (commentPart && commentPart !== "") {
+        finalParts.push(commentPart);
+    }
 
     return finalParts.join(" | ");
 }
