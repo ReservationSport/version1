@@ -392,7 +392,10 @@ window.handleExtraAction = (el, time, slot) => {
     if (hasU21) finalParts.push("U21");
     if (commentPart) finalParts.push(commentPart);
     
-    let finalVal = finalParts.join(" | ");
+    // ... (vorheriger Code in handleExtraAction bleibt gleich bis zur Definition von finalVal)
+
+    // Neues, sauberes Zusammenbauen für den Export:
+    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
 
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
