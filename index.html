@@ -267,21 +267,20 @@
             return (teile[2] && teile[2].startsWith("KOMMENTAR:")) ? teile[2] : "";
         }
 
-        // Hilfsfunktion: Baut den String sauber zusammen, egal was sich ändert
 function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
     const klasse = parent.querySelector('.klasse').innerText.trim();
     
-    // Aktuellen Speicherstand holen
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     
-    // U21 Status merken (bleibt immer erhalten, wenn er einmal da war)
+    // U21 Status merken - aber nur wenn eine neue Halle gesetzt wird
     let hasU21 = fullString.includes("U21");
+    if (neueHalle === "" || neueHalle === "---") {
+        hasU21 = false; // U21 entfernen, wenn Halle gelöscht wird
+    }
     
-    // Kommentar bestimmen
     let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
 
-    // String-Teile sammeln
     let finalParts = [klasse];
     if (neueHalle && neueHalle !== "" && neueHalle !== "---") finalParts.push(neueHalle);
     if (hasU21) finalParts.push("U21");
@@ -295,12 +294,10 @@ window.addChange = (el, time, slot, klasse) => {
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
     
-    // Visuelles Update
     parent.classList.remove('ausfall-mode', 'outdoor-mode');
     parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
     parent.style.backgroundColor = configFarben[res] || ""; 
 
-    // String bauen (Kommentar bleibt wie er ist)
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
     if (!currentPlanData[r]) currentPlanData[r] = [];
@@ -315,18 +312,15 @@ window.handleExtraAction = (el, time, slot) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // 1. Basis-Infos sammeln
     const klasse = parent.querySelector('.klasse').innerText.trim();
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let hasU21 = fullString.includes("U21");
     
-    // Aktuellen Kommentar aus dem Speicher-String extrahieren
     let parts = fullString.split('|').map(s => s.trim());
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // 2. Aktionen verarbeiten
     if (action === "outdoor") {
         neueHalle = "Outdoor";
         parent.classList.remove('ausfall-mode');
@@ -336,18 +330,15 @@ window.handleExtraAction = (el, time, slot) => {
         parent.classList.remove('outdoor-mode');
         parent.classList.add('ausfall-mode');
     } else if (action === "kommentar") {
-        // Bestehenden Text für den Prompt vorbereiten
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         
         if (text !== null) {
-            // Alten Stift entfernen
             let oldStift = parent.querySelector('.stift');
             if (oldStift) oldStift.remove();
 
             if (text.trim() !== "") {
                 commentPart = "KOMMENTAR:" + text.trim();
-                // Neuen Stift erstellen und hinzufügen
                 let span = document.createElement('span');
                 span.className = 'stift';
                 span.innerHTML = '<i class="fas fa-comment-dots"></i>';
@@ -357,10 +348,9 @@ window.handleExtraAction = (el, time, slot) => {
                 };
                 parent.appendChild(span);
             } else {
-                commentPart = undefined; // Notiz wurde gelöscht
+                commentPart = undefined;
             }
         } else {
-            // User hat Abbrechen gedrückt: Menü schließen und raus
             closeAllExtraMenus();
             return;
         }
@@ -369,20 +359,18 @@ window.handleExtraAction = (el, time, slot) => {
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
     } else if (action === "" || action === "---") {
-        // ZURÜCKSETZEN auf Standard
         neueHalle = "";
+        hasU21 = false; // Bei Reset auch U21 entfernen
         parent.classList.remove('outdoor-mode', 'ausfall-mode');
     }
 
-    // 3. UI-Updates (Farben & Texte)
     if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else {
-        parent.style.backgroundColor = ""; // Klassen-Styles regeln Outdoor/Ausfall
+        parent.style.backgroundColor = "";
     }
     parent.querySelector('.res').innerText = neueHalle;
 
-    // 4. Den neuen String für die Datenbank zusammenbauen
     let finalParts = [klasse];
     if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
     if (hasU21) finalParts.push("U21");
@@ -390,7 +378,6 @@ window.handleExtraAction = (el, time, slot) => {
     
     let finalVal = finalParts.join(" | ");
 
-    // 5. Änderungen im Speicher registrieren und Save-Button aktivieren
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
@@ -403,27 +390,26 @@ window.handleExtraAction = (el, time, slot) => {
         window.clearTimer = () => clearTimeout(pressTimer);
         window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
         function openExtraMenu(el) { 
-    closeAllExtraMenus();
-    const sel = el.querySelector('.extra-select'); 
-    const hatStift = el.querySelector('.stift') !== null;
-    const delOpt = sel.querySelector('.del-opt');
-    if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
+            closeAllExtraMenus();
+            const sel = el.querySelector('.extra-select'); 
+            const hatStift = el.querySelector('.stift') !== null;
+            const delOpt = sel.querySelector('.del-opt');
+            if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
 
-    // NEU: Dropdown auf den aktuellen Stand der Box setzen
-    const aktuelleRes = el.querySelector('.res').innerText.trim();
-    if (aktuelleRes === "Outdoor") {
-        sel.value = "outdoor";
-    } else if (aktuelleRes === "Ausfall") {
-        sel.value = "ausfall";
-    } else {
-        sel.value = ""; // Entspricht "---"
-    }
+            const aktuelleRes = el.querySelector('.res').innerText.trim();
+            if (aktuelleRes === "Outdoor") {
+                sel.value = "outdoor";
+            } else if (aktuelleRes === "Ausfall") {
+                sel.value = "ausfall";
+            } else {
+                sel.value = ""; 
+            }
 
-    sel.style.zIndex = "100"; 
-    sel.style.pointerEvents = "all"; 
-    sel.style.opacity = "1"; 
-    setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
-}
+            sel.style.zIndex = "100"; 
+            sel.style.pointerEvents = "all"; 
+            sel.style.opacity = "1"; 
+            setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
+        }
         
         window.saveChanges = async () => { 
             const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
