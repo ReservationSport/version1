@@ -40,7 +40,20 @@
         .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
         .zeit-box { background: #333; font-weight: bold; cursor: default; }
-        .header-row { grid-column: span 6; background: #333; font-size: 14px; font-weight: bold; position: relative; display: flex; align-items: center; justify-content: center; height: 50px; }
+       .header-row { 
+    grid-column: span 6; 
+    background: #333; 
+    font-size: 14px; 
+    font-weight: bold; 
+    position: sticky; /* Der Header bleibt beim Scrollen kleben */
+    top: 0;           /* Direkt am oberen Rand */
+    z-index: 1000;    /* Sicherstellen, dass er über den Zellen liegt */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 50px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5); /* Optional: Ein Schatten für bessere Abhebung */
+}
         .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
         
         #loginOverlay { 
