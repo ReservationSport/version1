@@ -363,6 +363,17 @@ window.handleExtraAction = (el, time, slot) => {
     
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
+    if (action === "perma_delete") {
+        if (confirm(`Möchtest du die Klasse ${klasse} ab diesem Datum für alle folgenden Wochen komplett aus dem Plan löschen?`)) {
+            permaDeleteClass(klasse, slot); 
+            return; 
+        } else {
+            el.value = "";
+            closeAllExtraMenus();
+            return;
+        }
+    }
+    
     if (action === "outdoor") {
         neueHalle = "Outdoor";
         parent.classList.remove('ausfall-mode');
@@ -508,6 +519,34 @@ window.handleExtraAction = (el, time, slot) => {
             document.getElementById('datePicker').value = dateStr;
             lastStableDate = dateStr;
         });
+
+        async function permaDeleteClass(klasse, slotIndex) {
+    const ball = document.getElementById('globalLoader'); // Nutzt den vorhandenen Loader
+    ball.style.display = 'block';
+    
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify({
+                mode: "permaDelete",
+                klasse: klasse,
+                slot: slotIndex,
+                startDate: document.getElementById('datePicker').value,
+                pw: userPw,
+                kuerzel: userKuerzel
+            })
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+            alert("Erfolg: Die Klasse wurde für alle zukünftigen Termine entfernt.");
+            loadPlan(); // Plan neu laden, damit die Lücken sofort sichtbar sind
+        }
+    } catch (e) {
+        alert("Fehler beim dauerhaften Löschen. Bitte Verbindung prüfen.");
+    } finally {
+        ball.style.display = 'none';
+    }
+}
     </script>
 </body>
 </html>
