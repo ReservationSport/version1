@@ -271,18 +271,24 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
     const klasse = parent.querySelector('.klasse').innerText.trim();
     
+    // Wir nehmen den aktuellen String aus dem Speicher
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     
-    // U21 Status merken - aber nur wenn eine neue Halle gesetzt wird
+    // U21 Status extrahieren
     let hasU21 = fullString.includes("U21");
-    if (neueHalle === "" || neueHalle === "---") {
-        hasU21 = false; // U21 entfernen, wenn Halle gelöscht wird
+
+    // WICHTIG: Wenn die Halle auf leer ("---" oder "") gesetzt wird, 
+    // entfernen wir den U21 Status zwingend.
+    if (neueHalle === "" || neueHalle === "---" || neueHalle === null) {
+        hasU21 = false;
+        neueHalle = ""; // Sicherstellen, dass es leer ist
     }
     
     let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
 
     let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "" && neueHalle !== "---") finalParts.push(neueHalle);
+    // Nur hinzufügen, wenn wirklich Text da ist
+    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
     if (hasU21) finalParts.push("U21");
     if (commentPart && commentPart !== "") finalParts.push(commentPart);
 
