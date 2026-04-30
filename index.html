@@ -371,7 +371,7 @@ window.handleExtraAction = (el, time, slot) => {
     
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // --- NEU: LOGIK FÜR PERMANENTES LÖSCHEN ---
+    // --- LOGIK FÜR PERMANENTES LÖSCHEN MIT PASSWORT-SCHUTZ ---
     if (action === "perma_delete") {
         if (!klasse || klasse === "") {
             alert("Keine Klasse zum Löschen gefunden.");
@@ -380,14 +380,22 @@ window.handleExtraAction = (el, time, slot) => {
             return;
         }
 
-        if (confirm(`Möchtest du die Klasse "${klasse}" ab diesem Datum für alle folgenden Wochen komplett aus dem Plan löschen?`)) {
-            // Aufruf der AJAX-Funktion zum Löschen in Google Sheets
-            permaDeleteClass(klasse, slot); 
+        // 1. Stufe: Normale Bestätigung
+        if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet und der Slot für alle kommenden Wochen freigegeben werden?`)) {
+            
+            // 2. Stufe: Passwort-Abfrage
+            const pwCheck = prompt("Bitte gib das Admin-Passwort ein, um das Schuljahr für diese Klasse final zu beenden:");
+            
+            if (pwCheck === userPw) { // Wir nutzen das Passwort, mit dem der User eingeloggt ist
+                permaDeleteClass(klasse, slot); 
+            } else if (pwCheck !== null) {
+                alert("Falsches Passwort! Der Vorgang wurde abgebrochen.");
+            }
         }
         
         el.value = "";
         closeAllExtraMenus();
-        return; // Funktion hier beenden, da keine weiteren Änderungen am aktuellen Element nötig
+        return; 
     }
     // ------------------------------------------
     
