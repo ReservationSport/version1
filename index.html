@@ -2,12 +2,13 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport</title>
+    <title>Reservation Sport111</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; }
-       .date-control { 
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 0; margin: 0; }
+        .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; padding: 20px; }
+        
+        .date-control { 
             text-align: center; 
             display: flex; 
             justify-content: center; 
@@ -15,12 +16,17 @@
             gap: 15px; 
             position: sticky; 
             top: 0; 
-            z-index: 1000; 
+            left: 0;
+            right: 0;
+            z-index: 2000; 
             background: #1a1a1a; 
-            padding: 10px 0;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #333;
+            padding: 15px 0;
+            margin: 0;
+            border-bottom: 2px solid #333;
+            width: 100%;
+            box-sizing: border-box;
         }
+        
         .global-loader { position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
@@ -52,19 +58,7 @@
         .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
         .zeit-box { background: #333; font-weight: bold; cursor: default; }
-     .header-row { 
-            grid-column: span 6; 
-            background: #333; 
-            font-size: 14px; 
-            font-weight: bold; 
-            position: sticky; 
-            top: 60px; /* Höhe der .date-control + Padding */
-            z-index: 999; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 50px; 
-        }
+        .header-row { grid-column: span 6; background: #333; font-size: 14px; font-weight: bold; position: relative; display: flex; align-items: center; justify-content: center; height: 50px; }
         .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
         
         #loginOverlay { 
@@ -76,7 +70,7 @@
             background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)), url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
             background-size: cover;
             background-position: center;
-            z-index: 2000; 
+            z-index: 3000; 
             display: flex; 
             flex-direction: column; 
             justify-content: center; 
@@ -298,30 +292,22 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let hasU21 = fullString.includes("U21");
 
-    // Wenn die Halle gelöscht wird, fällt U21 weg
     if (neueHalle === "" || neueHalle === "---" || neueHalle === null) {
         hasU21 = false;
         neueHalle = ""; 
     }
     
-    // Kommentar-Logik: Entweder der neue oder der bestehende
     let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
-
-    // WICHTIG: Die Reihenfolge muss exakt stimmen für die Anzeige-Logik
-    // Teil 0: Klasse
-    // Teil 1: Halle (evtl. mit U21)
-    // Teil 2: Kommentar
     
     let hallenTeil = neueHalle;
     if (hasU21 && hallenTeil !== "") {
-        hallenTeil += " | U21"; // U21 wird an die Halle geklebt
+        hallenTeil += " | U21"; 
     } else if (hasU21 && hallenTeil === "") {
-        // Sonderfall: U21 ohne Halle (sollte durch unsere neue Logik vermieden werden)
         hallenTeil = "U21"; 
     }
 
     let finalParts = [klasse];
-    finalParts.push(hallenTeil || ""); // Muss existieren, auch wenn leer, damit Kommentar Index 2 bleibt
+    finalParts.push(hallenTeil || ""); 
     if (commentPart && commentPart !== "") {
         finalParts.push(commentPart);
     }
@@ -394,15 +380,13 @@ window.handleExtraAction = (el, time, slot) => {
             closeAllExtraMenus();
             return;
         }
-    // ... innerhalb von handleExtraAction ...
     } else if (action === "delete_comment") {
-        commentPart = ""; // WICHTIG: Leerstring statt undefined, um aktiv zu löschen
+        commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
-// ... danach folgt der Aufruf von buildFinalValue ...
     } else if (action === "" || action === "---") {
         neueHalle = "";
-        hasU21 = false; // Bei Reset auch U21 entfernen
+        hasU21 = false; 
         parent.classList.remove('outdoor-mode', 'ausfall-mode');
     }
 
@@ -413,14 +397,6 @@ window.handleExtraAction = (el, time, slot) => {
     }
     parent.querySelector('.res').innerText = neueHalle;
 
-    let finalParts = [klasse];
-    if (neueHalle && neueHalle !== "") finalParts.push(neueHalle);
-    if (hasU21) finalParts.push("U21");
-    if (commentPart) finalParts.push(commentPart);
-    
-    // ... (vorheriger Code in handleExtraAction bleibt gleich bis zur Definition von finalVal)
-
-    // Neues, sauberes Zusammenbauen für den Export:
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
 
     if (!currentPlanData[r]) currentPlanData[r] = [];
