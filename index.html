@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport1</title>
+    <title>Reservation Sport</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
@@ -370,10 +370,12 @@ window.handleExtraAction = (el, time, slot) => {
             closeAllExtraMenus();
             return;
         }
+    // ... innerhalb von handleExtraAction ...
     } else if (action === "delete_comment") {
-        commentPart = undefined;
+        commentPart = ""; // WICHTIG: Leerstring statt undefined, um aktiv zu löschen
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
+// ... danach folgt der Aufruf von buildFinalValue ...
     } else if (action === "" || action === "---") {
         neueHalle = "";
         hasU21 = false; // Bei Reset auch U21 entfernen
