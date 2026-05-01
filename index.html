@@ -37,6 +37,871 @@
         .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
         @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+        .box { border: 1px solid #444; padding: 5px; background: #262626; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; cursor: pointer; overflow: hidden; }
+        .box.empty { pointer-events: none; opacity: 0.5; }
+        
+       /* Deine Zellen behalten immer den Rahmen (hast du ja schon im Code) */
+.box.is-mine { 
+    border: 2px solid #e67e22 !important; 
+    z-index: 10; 
+}
+
+/* Die neue, zusätzliche Interaktion beim Hovern */
+.box.is-mine:hover {
+    /* 1. Ein sanftes Pulsieren des Hintergrunds */
+    background-color: rgba(230, 126, 34, 0.2) !important;
+    
+    /* 2. Ein "innerer Glanz", der die Zelle wertiger erscheinen lässt */
+    box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
+    
+    /* 3. Minimale Skalierung, damit sie "lebendig" wirkt */
+    transform: scale(1.03);
+    
+    /* 4. Der Cursor zeigt sofort: Hier kann man klicken */
+    cursor: pointer;
+    
+    /* Stellt sicher, dass die Zelle beim Hovern über den Linien der Nachbarzellen liegt */
+    z-index: 100;
+}
+        .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
+        .box.ausfall-mode .klasse { color: #777777; }
+        .box.ausfall-mode .res { color: #555555; }
+        .box.ausfall-mode .lehrer-info { display: none; }
+
+        .box.outdoor-mode { background-color: #27ae60 !important; color: white !important; }
+        .box.outdoor-mode .res { font-weight: bold; }
+
+        .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; display: inline-block; font-size: 22px; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,1); transition: transform 0.2s ease; }
+        .stift:hover { transform: scale(1.2); color: #ff9f43; }
+
+        .zeit-box { background: #333; font-weight: bold; cursor: default; }
+     .header-row { 
+            grid-column: span 6; 
+            background: #333; 
+            font-size: 14px; 
+            font-weight: bold; 
+            position: sticky; 
+            top: 60px; /* Höhe der .date-control + Padding */
+            z-index: 999; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 50px; 
+        }
+        .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
+
+#loginError {
+    color: #ff4757;
+    margin-top: 15px;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 20px;
+    transition: opacity 0.3s ease; /* Macht das Verschwinden geschmeidiger */
+}
+        
+/* Profi-Login-Design */
+#loginOverlay { 
+        position: fixed; 
+        top: 0; left: 0; width: 100%; height: 100%; 
+        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
+                    url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
+        background-size: cover;
+        background-position: center;
+        z-index: 20000; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        backdrop-filter: blur(18px); /* Stärkerer Fokus auf die Card */
+        font-family: 'Inter', sans-serif; /* Hier ist die moderne Schrift */
+    }
+
+    .login-card {
+        background: rgba(20, 20, 20, 0.7); 
+        padding: 50px 40px;
+        border-radius: 28px;
+        /* Subtile Lichtkante oben für High-End Look */
+        border: 1px solid rgba(255, 255, 255, 0.08); 
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+    }
+
+  .login-card h2 { 
+    color: #ffffff; /* Beides in reinem Weiß */
+    font-size: 30px; 
+    margin-bottom: 35px; 
+    font-weight: 800; /* Die schwere Inter-Schrift wirkt in Weiß extrem edel */
+    letter-spacing: -1.5px;
+    /* Subtiler, dunkler Schatten für bessere Lesbarkeit auf dem Logo-Hintergrund */
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Falls du das span im HTML noch hast, setzen wir es auch auf weiß */
+.login-card h2 span {
+    background: none;
+    -webkit-text-fill-color: #ffffff;
+    color: #ffffff;
+}
+
+    .login-card input { 
+        padding: 16px 20px; 
+        margin: 10px 0; 
+        background: rgba(0, 0, 0, 0.4); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        color: #fff; 
+        border-radius: 14px; 
+        width: 100%; 
+        font-size: 16px; 
+        outline: none; 
+        box-sizing: border-box;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+   .login-card input:focus { 
+    border-color: #e67e22; 
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 20px rgba(230, 126, 34, 0.2);
+    /* Ein leichter Glow-Effekt lässt das Feld "aktiv" wirken */
+}
+
+  #loginBtn { 
+    padding: 18px; 
+    margin-top: 25px; 
+    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
+    color: white; 
+    border: none; 
+    border-radius: 16px; 
+    cursor: pointer; 
+    width: 100%; 
+    
+    /* Schrift-Styling: Oswald & Sport-Vibe */
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px; 
+    font-weight: 700;
+    text-transform: uppercase; 
+    letter-spacing: 1.5px;
+    
+    /* Tiefe & Interaktion */
+    box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    
+    /* Der "Käfig" für die Effekte */
+    position: relative;
+    overflow: hidden; 
+    z-index: 1;
+}
+
+#loginBtn:hover { 
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6);
+    filter: brightness(1.1);
+}
+
+#loginBtn:active { 
+    transform: translateY(-1px);
+    box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
+}
+
+/* 1. Statischer Glanz-Effekt (Obere Hälfte des Buttons) */
+#loginBtn::before {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 2. Dynamischer Blitz (Speed-Line) */
+#loginBtn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%; /* Start weit links außen */
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent
+    );
+    transform: skewX(-25deg); 
+    transition: 0.6s ease-in-out;
+    z-index: 3;
+}
+
+/* Blitz-Animation bei Hover */
+#loginBtn:hover::after {
+    left: 150%; /* Jagt durch den Button nach rechts außen */
+}
+        
+        .klasse { font-weight: bold; }
+        .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
+        .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
+        select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
+        .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
+        
+        .save-btn {
+    display: none; 
+    padding: 10px 28px;
+    /* Ein satterer Verlauf für mehr Plastizität */
+    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
+    color: white;
+    border: none;
+    border-radius: 30px; 
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    cursor: pointer;
+    
+    /* Ein weicherer, tieferer Schatten */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(230, 126, 34, 0.4);
+    
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* 1. Die Lichtkante (Glossy-Effekt oben) */
+.save-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0));
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 2. Der dynamische Blitz beim Hovern */
+.save-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent
+    );
+    transform: skewX(-25deg);
+    transition: 0.6s ease-in-out;
+    z-index: 3;
+}
+
+/* Interaktionen */
+.save-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
+    filter: brightness(1.1);
+}
+
+.save-btn:hover::after {
+    left: 150%;
+}
+
+.save-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Erfolg-Status */
+.save-btn.success {
+    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+}
+        
+        
+        .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
+        .sport-loader.active { visibility: visible; }
+        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+        
+        .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
+        .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
+        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
+    </style>
+</head>
+<body onclick="closeAllExtraMenus()">
+    <div id="loginOverlay">
+    <div class="login-card">
+        <h2>Reservation <span>Sport</span></h2>
+        
+    <!-- Kürzel Feld -->
+<input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off"
+       onfocus="document.getElementById('loginError').innerText=''"
+       oninput="document.getElementById('loginError').innerText=''">
+
+<!-- Passwort Feld -->
+<input type="password" id="passwordInput" placeholder="Passwort" 
+       onfocus="document.getElementById('loginError').innerText=''"
+       oninput="document.getElementById('loginError').innerText=''"
+       onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
+
+<button id="loginBtn" onclick="checkLogin()">
+    On your marks...    
+</button>
+        
+        <!-- Basketball als dezenter, moderner Loader -->
+        <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px; filter: grayscale(0.2);">🏀</div>
+        <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px;"></p>
+    </div>
+</div>
+    <div class="date-control">
+        <div id="globalLoader" class="global-loader"></div>
+        <div class="nav-group">
+            <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)">⏮</button>
+            <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)">◀</button>
+        </div>
+        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
+        <input type="date" id="datePicker" onchange="loadPlan()">
+        <div class="nav-group" style="display: flex; align-items: center;">
+            <button class="nav-btn" onclick="changeDate(1)">▶</button>
+            <button class="nav-btn" onclick="changeDate(7)">⏭</button>
+            <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+    <div class="grid" id="plan"></div>
+
+    <script>
+        const url = "https://script.google.com/macros/s/AKfycbwkY51NzhNJJc3bU-bYd7Q1bl5d9bTtuT9lUJ4er33Ul2PUZJ3qERFUaGlrGpEjRO_y/exec"; 
+        let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
+        let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
+
+        window.addEventListener('beforeunload', (e) => {
+            if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
+        });
+
+        function updateNavButtons() {
+            const dp = document.getElementById('datePicker');
+            const currentDate = new Date(dp.value); currentDate.setHours(12, 0, 0, 0);
+            const heute = new Date(); heute.setHours(12, 0, 0, 0);
+            const yesterday = new Date(currentDate); yesterday.setDate(yesterday.getDate() - 1);
+            const lastWeek = new Date(currentDate); lastWeek.setDate(lastWeek.getDate() - 7);
+            document.getElementById('btnPrevDay').style.visibility = (yesterday < heute) ? 'hidden' : 'visible';
+            document.getElementById('btnPrevWeek').style.visibility = (lastWeek < heute) ? 'hidden' : 'visible';
+        }
+
+        function closeAllExtraMenus() {
+            document.querySelectorAll('.extra-select').forEach(sel => {
+                sel.style.zIndex = "-1";
+                sel.style.pointerEvents = "none";
+                sel.style.opacity = "0";
+            });
+        }
+
+        async function checkLogin() {
+            const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
+            const pwVal = document.getElementById('passwordInput').value;
+            const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
+            if(!kuerzelVal) { document.getElementById('loginError').innerText = "Kürzel fehlt!"; return; }
+            btn.style.display = 'none'; ball.classList.add('active');
+            try {
+                const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
+                const json = await res.json();
+                if (json.error === "Falsches Passwort") {
+                    document.getElementById('loginError').innerText = "Falsches Passwort!";
+                    btn.style.display = 'block'; ball.classList.remove('active');
+                } else {
+                    userPw = pwVal;
+                    userKuerzel = kuerzelVal;
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    loadPlan();
+                }
+            } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
+        }
+
+        async function loadPlan() {
+            const dp = document.getElementById('datePicker');
+            if (pendingChanges.length > 0) {
+                if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
+                    dp.value = lastStableDate; 
+                    return;
+                }
+            }
+            const dateVal = dp.value;
+            if (!userPw || !dateVal) return;
+            lastStableDate = dateVal; 
+            updateNavButtons();
+            const container = document.getElementById('plan');
+            container.innerHTML = ""; 
+            document.getElementById('globalLoader').style.display = 'block';
+            const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
+            const heute = new Date(); heute.setHours(12,0,0,0);
+            const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
+            
+            if (dateObj < heute) { container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+            if (dateObj > vierWochen) { container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+            if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+            
+            try {
+                const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
+                const json = await res.json();
+                if (json.error === "SPERRE") {
+                    container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
+                    document.getElementById('globalLoader').style.display = 'none';
+                    return;
+                }
+                container.innerHTML = ""; pendingChanges = [];
+                currentPlanData = json.data; 
+                myClasses = json.userClasses || [];
+                allClassTeachers = json.allClassTeachers || {};
+                const data = json.data, options = json.options;
+                configFarben = {}; options.forEach(opt => configFarben[opt[0]] = opt[1]);
+                const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+                const [y, m, d] = dateVal.split('-').map(Number);
+                
+                data.forEach((row, rowIndex) => {
+                    if (rowIndex === 0) {
+                        container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SAVE</button></div></div>`;
+                    } else {
+                        if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
+                        if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
+                        container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
+                        
+                        for(let i = 1; i <= 5; i++) {
+                            let belegteHallenInZeileOhneMich = [];
+                            for (let k = 1; k <= 5; k++) {
+                                if (k === i) continue; 
+                                let otherVal = String(row[k] || "").trim();
+                                if (otherVal !== "") {
+                                    let resPart = otherVal.split(' | ')[1] || "";
+                                    if (resPart && resPart !== "Ausfall" && resPart !== "Outdoor") {
+                                        belegteHallenInZeileOhneMich.push(resPart);
+                                    }
+                                }
+                            }
+
+                            let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
+                            let isAusfall = (res === "Ausfall");
+                            let isOutdoor = (res === "Outdoor");
+                            let canEdit = myClasses.some(c => klasse.trim() === c.trim());
+                            let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
+                            let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
+
+                            container.innerHTML += `
+                            <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''} ${isOutdoor ? 'outdoor-mode' : ''}" 
+                                   data-row="${rowIndex}" data-col="${i}"
+                                   oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()" style="background-color: ${ (isAusfall || isOutdoor) ? '' : configFarben[res] || ''}">
+                                   ${stiftHtml}
+                                   <div class="klasse">${klasse}</div>
+                                   <div class="lehrer-info">${teacher}</div>
+                                   <div class="res">${res}</div>
+                                   ${canEdit ? `
+                                   <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                                       <option value="">---</option>
+                                       ${options.filter(o => {
+                                           const optName = o[0];
+                                           if (res === optName) return true;
+                                           let istGesperrt = belegteHallenInZeileOhneMich.some(belegt => {
+                                               let belegtParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                               let optParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                               return optParts.some(p => belegtParts.includes(p));
+                                           });
+                                           return !istGesperrt;
+                                       }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+                                   </select>
+                                   <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+    <option value="">---</option>
+    <option value="outdoor">🌳 Outdoor</option>
+    <option value="ausfall">❌ Ausfall</option>
+    <option value="perma_delete">🏆 Schuljahr beendet</option>
+    <option value="kommentar">📝 Notiz hinzufügen</option>
+    <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+</select>` : ''}
+                            </div>`;
+                        }
+                    }
+                });
+            } catch(e) { console.error(e); }
+            document.getElementById('globalLoader').style.display = 'none';
+        }
+
+        function getExistingComment(r, c) {
+            let val = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+            let teile = val.split(' | ');
+            return (teile[2] && teile[2].startsWith("KOMMENTAR:")) ? teile[2] : "";
+        }
+
+function buildFinalValue(r, c, neueHalle, neuerKommentar) {
+    const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
+    const klasse = parent.querySelector('.klasse').innerText.trim();
+    
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let hasU21 = fullString.includes("U21");
+
+    // Wenn die Halle gelöscht wird, fällt U21 weg
+    if (neueHalle === "" || neueHalle === "---" || neueHalle === null) {
+        hasU21 = false;
+        neueHalle = ""; 
+    }
+    
+    // Kommentar-Logik: Entweder der neue oder der bestehende
+    let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
+
+    // WICHTIG: Die Reihenfolge muss exakt stimmen für die Anzeige-Logik
+    // Teil 0: Klasse
+    // Teil 1: Halle (evtl. mit U21)
+    // Teil 2: Kommentar
+    
+    let hallenTeil = neueHalle;
+    if (hasU21 && hallenTeil !== "") {
+        hallenTeil += " | U21"; // U21 wird an die Halle geklebt
+    } else if (hasU21 && hallenTeil === "") {
+        // Sonderfall: U21 ohne Halle (sollte durch unsere neue Logik vermieden werden)
+        hallenTeil = "U21"; 
+    }
+
+    let finalParts = [klasse];
+    finalParts.push(hallenTeil || ""); // Muss existieren, auch wenn leer, damit Kommentar Index 2 bleibt
+    if (commentPart && commentPart !== "") {
+        finalParts.push(commentPart);
+    }
+
+    return finalParts.join(" | ");
+}
+
+window.addChange = (el, time, slot, klasse) => { 
+    let res = el.value; 
+    const parent = el.parentElement;
+    const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
+    
+    parent.classList.remove('ausfall-mode', 'outdoor-mode');
+    parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
+    parent.style.backgroundColor = configFarben[res] || ""; 
+
+    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
+
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+    document.getElementById('saveBtn').style.display = 'block';
+};
+
+window.handleExtraAction = (el, time, slot) => {
+    const action = el.value;
+    if (!action || action === "---") {
+        closeAllExtraMenus();
+        return;
+    }
+
+    const parent = el.parentElement;
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+    
+    // Die Klasse sicher aus dem HTML-Element holen
+    const klasseElem = parent.querySelector('.klasse');
+    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
+    
+    // Bestehende Daten aus dem Speicher holen
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let hasU21 = fullString.includes("U21");
+    
+    let parts = fullString.split('|').map(s => s.trim());
+    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+    
+    let neueHalle = parent.querySelector('.res').innerText.trim();
+
+    // --- LOGIK FÜR PERMANENTES LÖSCHEN MIT PASSWORT-SCHUTZ ---
+  if (action === "perma_delete") {
+        if (!klasse || klasse === "") {
+            alert("Keine Klasse zum Löschen gefunden.");
+            el.value = "";
+            closeAllExtraMenus();
+            return;
+        }
+
+        if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
+            const modal = document.getElementById('pwModal');
+            const input = document.getElementById('modalPwInput');
+            const btn = document.getElementById('confirmPwBtn');
+            
+            modal.style.display = 'flex';
+            input.value = '';
+            input.focus();
+
+            // ENTER-TASTE FIX:
+            input.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault(); // Verhindert ungewolltes Neuladen der Seite
+                    btn.click();
+                }
+            };
+
+            btn.onclick = () => {
+                if (input.value === userPw) {
+                    modal.style.display = 'none';
+                    permaDeleteClass(klasse, slot);
+                } else {
+                    alert("Falsches Passwort!");
+                }
+            };
+        }
+        
+        el.value = "";
+        closeAllExtraMenus();
+        return;
+    }
+    // ------------------------------------------
+    
+    if (action === "outdoor") {
+        neueHalle = "Outdoor";
+        parent.classList.remove('ausfall-mode');
+        parent.classList.add('outdoor-mode');
+    } else if (action === "ausfall") {
+        neueHalle = "Ausfall";
+        parent.classList.remove('outdoor-mode');
+        parent.classList.add('ausfall-mode');
+    } else if (action === "kommentar") {
+        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
+        const text = prompt("Notiz eingeben:", existingText);
+        
+        if (text !== null) {
+            let oldStift = parent.querySelector('.stift');
+            if (oldStift) oldStift.remove();
+
+            if (text.trim() !== "") {
+                commentPart = "KOMMENTAR:" + text.trim();
+                let span = document.createElement('span');
+                span.className = 'stift';
+                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
+                span.onclick = (e) => { 
+                    e.stopPropagation(); 
+                    alert('Notiz: ' + text.trim()); 
+                };
+                parent.appendChild(span);
+            } else {
+                commentPart = undefined;
+            }
+        } else {
+            el.value = "";
+            closeAllExtraMenus();
+            return;
+        }
+    } else if (action === "delete_comment") {
+        commentPart = ""; 
+        let stift = parent.querySelector('.stift');
+        if (stift) stift.remove();
+    }
+
+    // Optische Anpassung der Zelle
+    if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
+        parent.style.backgroundColor = configFarben[neueHalle] || "";
+    } else {
+        parent.style.backgroundColor = "";
+    }
+    
+    const resElem = parent.querySelector('.res');
+    if (resElem) resElem.innerText = neueHalle;
+
+    // Finalen Wert für den Export bauen
+    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+
+    // Daten im lokalen Speicher aktualisieren
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    
+    // Änderung in die Liste für den "Speichern"-Button aufnehmen
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    document.getElementById('saveBtn').style.display = 'block';
+
+    el.value = ""; // Dropdown Auswahl optisch zurücksetzen
+    closeAllExtraMenus();
+};
+
+        window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
+        window.clearTimer = () => clearTimeout(pressTimer);
+        window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
+        function openExtraMenu(el) { 
+            closeAllExtraMenus();
+            const sel = el.querySelector('.extra-select'); 
+            const hatStift = el.querySelector('.stift') !== null;
+            const delOpt = sel.querySelector('.del-opt');
+            if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
+
+            const aktuelleRes = el.querySelector('.res').innerText.trim();
+            if (aktuelleRes === "Outdoor") {
+                sel.value = "outdoor";
+            } else if (aktuelleRes === "Ausfall") {
+                sel.value = "ausfall";
+            } else {
+                sel.value = ""; 
+            }
+
+            sel.style.zIndex = "100"; 
+            sel.style.pointerEvents = "all"; 
+            sel.style.opacity = "1"; 
+            setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
+        }
+        
+        window.saveChanges = async () => { 
+            const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
+            btn.style.display = 'none'; ball.classList.add('active');
+            try { 
+                const response = await fetch(url, { 
+                    method: "POST", 
+                    body: JSON.stringify({ 
+                        date: document.getElementById('datePicker').value, 
+                        changes: pendingChanges, 
+                        pw: userPw,
+                        kuerzel: userKuerzel
+                    }) 
+                }); 
+                const result = await response.json();
+                if (result.status === "success") {
+                    pendingChanges = []; 
+                    ball.classList.remove('active'); 
+                    btn.innerText = "OK! ✔"; 
+                    btn.classList.add('success'); 
+                    btn.style.display = 'block'; 
+                    setTimeout(() => { 
+                        btn.style.display = 'none'; 
+                        btn.classList.remove('success'); 
+                        btn.innerText = "SAVE"; 
+                    }, 1000); 
+                } else { throw new Error(); }
+            } catch (e) { 
+                ball.classList.remove('active'); 
+                btn.style.display = 'block'; 
+                btn.innerText = "Fehler!"; 
+            }
+        };
+
+        window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
+        window.goToToday = () => {
+            const dp = document.getElementById('datePicker');
+            const today = new Date();
+            const offset = today.getTimezoneOffset();
+            today.setMinutes(today.getMinutes() - offset);
+            const dateStr = today.toISOString().split('T')[0];
+            dp.value = dateStr;
+            loadPlan();
+        };
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset); 
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('datePicker').value = dateStr;
+            lastStableDate = dateStr;
+        });
+
+        async function permaDeleteClass(klasse, slotIndex) {
+    const ball = document.getElementById('globalLoader'); // Nutzt den vorhandenen Loader
+    ball.style.display = 'block';
+    
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify({
+                mode: "permaDelete",
+                klasse: klasse,
+                slot: slotIndex,
+                startDate: document.getElementById('datePicker').value,
+                pw: userPw,
+                kuerzel: userKuerzel
+            })
+        });
+        const result = await response.json();
+        if (result.status === "success") {
+            alert("Erfolg: Die Klasse wurde für alle zukünftigen Termine entfernt.");
+            loadPlan(); // Plan neu laden, damit die Lücken sofort sichtbar sind
+        }
+    } catch (e) {
+        alert("Fehler beim dauerhaften Löschen. Bitte Verbindung prüfen.");
+    } finally {
+        ball.style.display = 'none';
+    }
+}
+
+        function closePwModal() {
+    document.getElementById('pwModal').style.display = 'none';
+}
+
+        
+    </script>
+
+    <!-- Eigenes Passwort-Modal -->
+<!-- Passwort-Modal im App-Design -->
+<div id="pwModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; justify-content:center; align-items:center; backdrop-filter: blur(5px);">
+    <div style="background: #1e1e1e; padding: 30px; border-radius: 20px; border: 1px solid #333; text-align: center; min-width: 320px; box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
+        
+        <!-- Icon & Titel -->
+        <div style="font-size: 40px; margin-bottom: 10px;">🏆</div>
+        <h2 style="color: #fff; margin: 0 0 10px 0; font-family: sans-serif; font-weight: 600;">Safety-Check</h2>
+        <p style="color: #aaa; font-size: 14px; margin-bottom: 20px; font-family: sans-serif;">Gib das Passwort ein, um die Klasse virtuell abzukleben:</p>
+        
+        <!-- Eingabefeld -->
+       <input type="password" id="modalPwInput" 
+       placeholder="Passwort eingeben..." 
+       onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('confirmPwBtn').click(); }"
+       style="width: 100%; padding: 12px; margin-bottom: 25px; border-radius: 10px; border: 1px solid #444; background: #2a2a2a; color: #fff; font-size: 16px; text-align: center; outline: none; box-sizing: border-box;">
+       
+        <!-- Buttons -->
+        <div style="display: flex; gap: 15px;">
+            <button onclick="closePwModal()" 
+                    style="flex: 1; background: #333; color: #ccc; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s;">
+                Abbrechen
+            </button>
+            <button id="confirmPwBtn" 
+                    style="flex: 2; background: #e67e22; color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: bold; box-shadow: 0 4px 15px rgba(230, 126, 34, 0.3); transition: 0.3s;">
+                Bestätigen
+            </button>
+        </div>
+    </div>
+</div>
+    
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Reservation Sport</title>
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Schriftart -->
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; }
+       .date-control { 
+            text-align: center; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 15px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            background: #1a1a1a; 
+            padding: 10px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .global-loader { position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .nav-group { display: flex; gap: 5px; }
+        #datePicker { padding: 10px; background: #333; color: white; border: 1px solid #444; height: 40px; box-sizing: border-box; cursor: pointer; border-radius: 4px; }
+        .nav-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border-radius: 4px; }
+        .nav-btn:hover { background: #444; }
+        
+        .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: #e67e22; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; border-radius: 4px; margin-left: 10px; }
+        .refresh-btn:hover { background: #444; color: #ff9f43; }
+        .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
+        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
        /* Grundzustand der Box: Sauber & Dunkel */
 .box { 
     border: 1px solid #333; 
