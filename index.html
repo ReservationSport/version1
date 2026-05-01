@@ -2,8 +2,11 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport1111</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>Reservation Sport222</title>
+<!-- Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<!-- Schriftart -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
         .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; }
@@ -69,91 +72,86 @@
         
 /* Profi-Login-Design */
 #loginOverlay { 
-    position: fixed; 
-    top: 0; left: 0; width: 100%; height: 100%; 
-    background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%), 
-                url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
-    background-size: cover;
-    background-position: center;
-    z-index: 20000; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    backdrop-filter: blur(15px); /* Stärkerer Blur für mehr Tiefe */
-    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif; /* Modernere Font-Fallback-Kette */
-}
+        position: fixed; 
+        top: 0; left: 0; width: 100%; height: 100%; 
+        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
+                    url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
+        background-size: cover;
+        background-position: center;
+        z-index: 20000; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        backdrop-filter: blur(18px); /* Stärkerer Fokus auf die Card */
+        font-family: 'Inter', sans-serif; /* Hier ist die moderne Schrift */
+    }
 
-.login-card {
-    background: rgba(28, 28, 28, 0.75); /* Subtile Transparenz */
-    padding: 50px 40px;
-    border-radius: 24px;
-    /* Die "Lichtkante": Ein hauchdünner Rand oben macht den Unterschied */
-    border: 1px solid rgba(255, 255, 255, 0.1); 
-    /* Profi-Schatten: Mehrstufig für echtes Volumen */
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 20px 40px -10px rgba(0,0,0,0.6); 
-    width: 360px;
-    text-align: center;
-}
+    .login-card {
+        background: rgba(20, 20, 20, 0.7); 
+        padding: 50px 40px;
+        border-radius: 28px;
+        /* Subtile Lichtkante oben für High-End Look */
+        border: 1px solid rgba(255, 255, 255, 0.08); 
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
+        width: 100%;
+        max-width: 360px;
+        text-align: center;
+    }
 
-.login-card h2 { 
-    color: #ffffff; 
-    font-size: 26px; 
-    margin-bottom: 35px; 
-    font-weight: 700; 
-    letter-spacing: -0.5px;
-}
+    .login-card h2 { 
+        color: #ffffff; 
+        font-size: 30px; 
+        margin-bottom: 35px; 
+        font-weight: 800; /* Extra Fett für Modernität */
+        letter-spacing: -1.5px; /* Engeres Letter-Spacing ist typisch modern */
+    }
 
-.login-card h2 span {
-    color: #e67e22; /* Kontrastfarbe nur für den Akzent */
-}
+    .login-card h2 span {
+        background: linear-gradient(135deg, #f39c12, #e67e22);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent; /* Text-Gradient Effekt */
+    }
 
-.login-card input { 
-    padding: 14px 18px; 
-    margin: 8px 0; 
-    background: rgba(15, 15, 15, 0.6); 
-    border: 1px solid rgba(255, 255, 255, 0.05); 
-    color: #fff; 
-    border-radius: 12px; 
-    width: 100%; 
-    font-size: 15px; 
-    outline: none; 
-    box-sizing: border-box;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
+    .login-card input { 
+        padding: 16px 20px; 
+        margin: 10px 0; 
+        background: rgba(0, 0, 0, 0.4); 
+        border: 1px solid rgba(255, 255, 255, 0.1); 
+        color: #fff; 
+        border-radius: 14px; 
+        width: 100%; 
+        font-size: 16px; 
+        outline: none; 
+        box-sizing: border-box;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-/* Der Fokus-Effekt: Nicht nur Farbe, sondern leichtes "Glühen" */
-.login-card input:focus { 
-    border-color: rgba(230, 126, 34, 0.5); 
-    background: rgba(15, 15, 15, 0.9);
-    box-shadow: 0 0 0 3px rgba(230, 126, 34, 0.15);
-}
+    .login-card input:focus { 
+        border-color: #e67e22; 
+        background: rgba(0, 0, 0, 0.6);
+        box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); /* Sanfter Glow beim Tippen */
+    }
 
-.login-card button { 
-    padding: 16px; 
-    margin-top: 25px; 
-    /* Gradient statt flacher Farbe wirkt massiver */
-    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); 
-    color: white; 
-    border: none; 
-    border-radius: 12px; 
-    cursor: pointer; 
-    font-weight: 600; 
-    width: 100%; 
-    font-size: 16px; 
-    letter-spacing: 0.5px;
-    transition: all 0.3s ease; 
-    box-shadow: 0 10px 15px -3px rgba(230, 126, 34, 0.3);
-}
+    #loginBtn { 
+        padding: 18px; 
+        margin-top: 25px; 
+        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); 
+        color: white; 
+        border: none; 
+        border-radius: 14px; 
+        cursor: pointer; 
+        font-weight: 700; 
+        width: 100%; 
+        font-size: 17px; 
+        transition: all 0.3s ease; 
+        box-shadow: 0 10px 20px rgba(230, 126, 34, 0.3);
+    }
 
-.login-card button:hover { 
-    transform: translateY(-1px);
-    box-shadow: 0 20px 25px -5px rgba(230, 126, 34, 0.4);
-    filter: brightness(1.05);
-}
-
-.login-card button:active {
-    transform: translateY(0);
-}
+    #loginBtn:hover { 
+        transform: translateY(-2px);
+        box-shadow: 0 15px 30px rgba(230, 126, 34, 0.4);
+        filter: brightness(1.1);
+    }
         
         .klasse { font-weight: bold; }
         .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
@@ -174,18 +172,18 @@
 <body onclick="closeAllExtraMenus()">
     <div id="loginOverlay">
     <div class="login-card">
-        <h2>Reservation Sport</h2>
+        <h2>Reservation <span>Sport</span></h2>
         
-        <input type="text" id="kuerzelInput" placeholder="Kürzel" 
-               oninput="document.getElementById('loginError').innerText=''">
+        <input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off">
         
         <input type="password" id="passwordInput" placeholder="Passwort" 
                onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
         
         <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
         
-        <div id="loginBall" class="sport-loader" style="margin-top: 20px;">🏀</div>
-        <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; min-height: 20px;"></p>
+        <!-- Basketball als dezenter, moderner Loader -->
+        <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px; filter: grayscale(0.2);">🏀</div>
+        <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px;"></p>
     </div>
 </div>
     <div class="date-control">
