@@ -762,13 +762,13 @@ window.handleExtraAction = (el, time, slot) => {
                 if (result.status === "success") {
                     pendingChanges = []; 
                     ball.classList.remove('active'); 
-                    btn.innerText = "Check! ✅"; 
+                    btn.innerText = "✅"; 
                     btn.classList.add('success'); 
                     btn.style.display = 'block'; 
                     setTimeout(() => { 
                         btn.style.display = 'none'; 
                         btn.classList.remove('success'); 
-                        btn.innerText = "SPEICHERN"; 
+                        btn.innerText = "SAVE"; 
                     }, 1000); 
                 } else { throw new Error(); }
             } catch (e) { 
