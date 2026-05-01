@@ -145,7 +145,7 @@
     /* Ein leichter Glow-Effekt lässt das Feld "aktiv" wirken */
 }
 
-   #loginBtn { 
+  #loginBtn { 
     padding: 18px; 
     margin-top: 25px; 
     background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
@@ -153,18 +153,23 @@
     border: none; 
     border-radius: 16px; 
     cursor: pointer; 
-    font-weight: 700; 
     width: 100%; 
-    text-transform: none; 
+    
+    /* Schrift-Styling: Oswald & Sport-Vibe */
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px; 
+    font-weight: 700;
+    text-transform: uppercase; 
+    letter-spacing: 1.5px;
+    
+    /* Tiefe & Interaktion */
     box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    
+    /* Der "Käfig" für die Effekte */
     position: relative;
-    font-family: 'Oswald', sans-serif;
-    font-size: 20px; /* Oswald darf ruhig etwas größer sein */
-    text-transform: uppercase; /* In Großbuchstaben wirkt Oswald am stärksten */
-    letter-spacing: 1.5px;
-}
-    overflow: hidden; /* Wichtig, damit die Linie nicht über den Rand hinausragt */
+    overflow: hidden; 
+    z-index: 1;
 }
 
 #loginBtn:hover { 
@@ -178,23 +183,26 @@
     box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
 }
 
-/* 1. Statischer Glanz-Effekt (oben) */
+/* 1. Statischer Glanz-Effekt (Obere Hälfte des Buttons) */
 #loginBtn::before {
     content: '';
     position: absolute;
-    top: 0; left: 0; width: 100%; height: 50%;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 50%;
     background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
     pointer-events: none;
-    z-index: 1;
+    z-index: 2;
 }
 
-/* 2. Dynamische Speed-Line (flitzt beim Hover durch) */
+/* 2. Dynamischer Blitz (Speed-Line) */
 #loginBtn::after {
     content: '';
     position: absolute;
     top: 0;
-    left: -100%; 
-    width: 50%;
+    left: -150%; /* Start weit links außen */
+    width: 60%;
     height: 100%;
     background: linear-gradient(
         90deg, 
@@ -203,12 +211,13 @@
         transparent
     );
     transform: skewX(-25deg); 
-    transition: 0.5s ease-in-out;
-    z-index: 2;
+    transition: 0.6s ease-in-out;
+    z-index: 3;
 }
 
+/* Blitz-Animation bei Hover */
 #loginBtn:hover::after {
-    left: 150%; 
+    left: 150%; /* Jagt durch den Button nach rechts außen */
 }
         
         .klasse { font-weight: bold; }
@@ -244,7 +253,7 @@
        onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
 
 <button id="loginBtn" onclick="checkLogin()">
-    Achtung, fertig, los!    
+    On your marks...    
 </button>
         
         <!-- Basketball als dezenter, moderner Loader -->
