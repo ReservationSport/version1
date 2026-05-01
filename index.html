@@ -106,18 +106,22 @@
 </head>
 <body onclick="closeAllExtraMenus()">
     <div id="loginOverlay">
-        <h2>Reservation Sport</h2>
-        <input type="text" id="kuerzelInput" placeholder="Kürzel" oninput="document.getElementById('loginError').innerText=''">
-        <input type="password" 
-       id="passwordInput" 
-       onkeydown="if(event.key === 'Enter') document.getElementById('loginBtn').click();"
-       placeholder="Passwort..." 
-       style="...">
-        <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
-        <div id="loginBall" class="sport-loader" style="margin-top: 10px;">🏀</div>
-        <p id="loginError" style="color: #e74c3c; margin-top: 10px;"></p>
-    </div>
-
+    <h2>Reservation Sport</h2>
+    
+    <input type="text" id="kuerzelInput" placeholder="Kürzel" 
+           oninput="document.getElementById('loginError').innerText=''">
+    
+    <input type="password" 
+           id="passwordInput" 
+           placeholder="Passwort..." 
+           onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }"
+           style="...">
+           
+    <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
+    
+    <div id="loginBall" class="sport-loader" style="margin-top: 10px;">🏀</div>
+    <p id="loginError" style="color: #e74c3c; margin-top: 10px;"></p>
+</div>
     <div class="date-control">
         <div id="globalLoader" class="global-loader"></div>
         <div class="nav-group">
