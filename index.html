@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport444</title>
+    <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -90,6 +90,11 @@
         }
         .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
 
+.box.u21-pattern {
+    background-image: linear-gradient(45deg, rgba(255,255,255,0.05) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.05) 75%, transparent 75%, transparent);
+    background-size: 10px 10px; /* Erzeugt feine diagonale Streifen */
+}
+        
 #loginError {
     color: #ff4757;
     margin-top: 15px;
@@ -483,6 +488,9 @@
                                 }
                             }
 
+                            let extraClass = "";
+                                if (klasse.includes("U21")) extraClass += " u21-pattern";
+                            
                             let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                             let isAusfall = (res === "Ausfall");
                             let isOutdoor = (res === "Outdoor");
