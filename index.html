@@ -37,31 +37,69 @@
         .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
         @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .box { border: 1px solid #444; padding: 5px; background: #262626; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; cursor: pointer; overflow: hidden; }
-        .box.empty { pointer-events: none; opacity: 0.5; }
-        
-       /* Deine Zellen behalten immer den Rahmen (hast du ja schon im Code) */
+       /* Grundzustand der Box: Sauber & Dunkel */
+.box { 
+    border: 1px solid #333; 
+    padding: 5px; 
+    background: #1e1e1e !important; /* Einheitliches Dunkel */
+    min-height: 55px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    text-align: center; 
+    font-size: 11px; 
+    position: relative; 
+    cursor: pointer; 
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+/* Der Akzentstreifen links (Nur wenn .active vorhanden) */
+.box.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background-color: var(--cell-color);
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+}
+
+/* Spezial-Zustand: Meine Reservierung */
 .box.is-mine { 
     border: 2px solid #e67e22 !important; 
     z-index: 10; 
 }
 
-/* Die neue, zusätzliche Interaktion beim Hovern */
-.box.is-mine:hover {
-    /* 1. Ein sanftes Pulsieren des Hintergrunds */
-    background-color: rgba(230, 126, 34, 0.2) !important;
-    
-    /* 2. Ein "innerer Glanz", der die Zelle wertiger erscheinen lässt */
-    box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
-    
-    /* 3. Minimale Skalierung, damit sie "lebendig" wirkt */
-    transform: scale(1.03);
-    
-    /* 4. Der Cursor zeigt sofort: Hier kann man klicken */
-    cursor: pointer;
-    
-    /* Stellt sicher, dass die Zelle beim Hovern über den Linien der Nachbarzellen liegt */
-    z-index: 100;
+/* Text-Farben innerhalb der aktiven Box */
+.box.active .res {
+    color: var(--cell-color);
+    filter: brightness(1.3);
+    font-weight: bold;
+    font-style: normal;
+    margin-top: 3px;
+}
+
+/* Deine bestehenden Modi bleiben kompatibel */
+.box.ausfall-mode { 
+    background-color: #000 !important; 
+    opacity: 0.6;
+    background-image: linear-gradient(45deg, #333 25%, transparent 25%, transparent 50%, #333 50%, #333 75%, transparent 75%, transparent);
+    background-size: 4px 4px;
+}
+
+.box.outdoor-mode {
+    /* Optional: Hier könntest du auch auf den Streifen-Look setzen, 
+       indem du die Farbe einfach in der Konfiguration auf Grün setzt */
+}
+
+/* Hover-Effekt für mehr Feedback */
+.box:hover:not(.empty) {
+    background: #252525 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.5);
 }
         .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
         .box.ausfall-mode .klasse { color: #777777; }
@@ -75,7 +113,7 @@
         .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
         .zeit-box { background: #333; font-weight: bold; cursor: default; }
-     .header-row { 
+        .header-row { 
             grid-column: span 6; 
             background: #333; 
             font-size: 14px; 
@@ -462,26 +500,45 @@
                 const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
                 const [y, m, d] = dateVal.split('-').map(Number);
                 
-                data.forEach((row, rowIndex) => {
-                    if (rowIndex === 0) {
-                        container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SAVE</button></div></div>`;
-                    } else {
-                        if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
-                        if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
-                        container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
-                        
-                        for(let i = 1; i <= 5; i++) {
-                            let belegteHallenInZeileOhneMich = [];
-                            for (let k = 1; k <= 5; k++) {
-                                if (k === i) continue; 
-                                let otherVal = String(row[k] || "").trim();
-                                if (otherVal !== "") {
-                                    let resPart = otherVal.split(' | ')[1] || "";
-                                    if (resPart && resPart !== "Ausfall" && resPart !== "Outdoor") {
-                                        belegteHallenInZeileOhneMich.push(resPart);
-                                    }
-                                }
-                            }
+                for(let i = 1; i <= 5; i++) {
+    let belegteHallenInZeileOhneMich = [];
+    for (let k = 1; k <= 5; k++) {
+        if (k === i) continue; 
+        let otherVal = String(row[k] || "").trim();
+        if (otherVal !== "") {
+            let resPart = otherVal.split(' | ')[1] || "";
+            if (resPart && resPart !== "Ausfall" && resPart !== "Outdoor") {
+                belegteHallenInZeileOhneMich.push(resPart);
+            }
+        }
+    }
+
+    // --- NEU: Akzent-Logik ---
+    let val = String(row[i] || "").trim();
+    let parts = val.split(' | ');
+    let klasse = parts[0] || "";
+    let halle = parts[1] || "";
+
+    // Farbe aus Konfiguration holen
+    let accentColor = configFarben[halle] || ""; 
+    let styleAttr = accentColor ? `style="--cell-color: ${accentColor};"` : "";
+    let activeClass = accentColor ? "active" : "";
+
+    // Klassen für Spezialmodi (deine bisherigen)
+    let extraClass = "";
+    if (myClasses.includes(klasse)) extraClass += " is-mine";
+    if (halle === "Outdoor") extraClass += " outdoor-mode";
+    if (halle === "Ausfall") extraClass += " ausfall-mode";
+    if (val === "") extraClass += " empty";
+
+    // Box zusammenbauen
+    container.innerHTML += `
+        <div class="box ${activeClass}${extraClass}" ${styleAttr} onclick="openMenu(${rowIndex}, ${i}, this)">
+            <div class="klasse">${klasse}</div>
+            <div class="res">${halle}</div>
+            ${(myClasses.includes(klasse) && val !== "") ? '<span class="stift"><i class="fas fa-pen-to-square"></i></span>' : ''}
+        </div>`;
+}
 
                             let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                             let isAusfall = (res === "Ausfall");
