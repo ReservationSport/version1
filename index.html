@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport1</title>
+    <title>Reservation Sport1111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -138,11 +138,12 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .login-card input:focus { 
-        border-color: #e67e22; 
-        background: rgba(0, 0, 0, 0.6);
-        box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); /* Sanfter Glow beim Tippen */
-    }
+   .login-card input:focus { 
+    border-color: #e67e22; 
+    background: rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 20px rgba(230, 126, 34, 0.2);
+    /* Ein leichter Glow-Effekt lässt das Feld "aktiv" wirken */
+}
 
     #loginBtn { 
         padding: 18px; 
@@ -196,6 +197,8 @@
        onfocus="document.getElementById('loginError').innerText=''"
        oninput="document.getElementById('loginError').innerText=''"
        onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
+
+<button id="loginBtn" onclick="checkLogin()">Anmelden</button>
         
         <!-- Basketball als dezenter, moderner Loader -->
         <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px; filter: grayscale(0.2);">🏀</div>
