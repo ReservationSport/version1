@@ -139,14 +139,15 @@
 
         // Wartet, bis die Seite geladen ist
 document.addEventListener('DOMContentLoaded', () => {
-    const pwInput = document.getElementById('passwordInput'); // ID deines Passwort-Feldes
-    const loginBtn = document.getElementById('loginBtn');  // ID deines Login-Buttons
+    const pwInput = document.getElementById('passwordInput'); 
+    const loginBtn = document.getElementById('loginBtn'); 
 
-    if (pwInput && loginButton) {
+    // Hier war der Fehler: loginButton statt loginBtn
+    if (pwInput && loginBtn) {
         pwInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
-                e.preventDefault(); // Verhindert ein Neuladen der Seite
-                loginButton.click();
+                e.preventDefault(); 
+                loginBtn.click(); // Jetzt passt der Name!
             }
         });
     }
