@@ -2,192 +2,193 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport</title>
+    <title>Reservation Sport222</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-    /* 1. DIE PROFI-BASIS (Keine bestehende Logik entfernt) */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-
-    body { font-family: 'Inter', 'Segoe UI', sans-serif; background: #121212; color: white; padding: 20px; margin: 0; }
-    
-    /* DEIN GRID - Unverändert */
-    .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; }
-    
-    .date-control { 
-    text-align: center; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    gap: 15px; 
-    position: sticky; 
-    top: 0; 
-    z-index: 1000; 
-    background: #1a1a1a; /* Dein altes Dunkelgrau */
-    padding: 10px 0;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #333;
-}
-
-    /* DEINE BOOTSTRAP-ARTIGEN KOMPONENTEN - Behalten & Poliert */
-    .global-loader { position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
-    .nav-group { display: flex; gap: 8px; }
-    #datePicker { 
-    padding: 10px; 
-    background: #333; 
-    color: white; 
-    border: 1px solid #444; 
-    height: 40px; 
-    box-sizing: border-box; 
-    cursor: pointer; 
-    border-radius: 4px; /* Dein alter Radius */
-}
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; }
+       .date-control { 
+            text-align: center; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 15px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000; 
+            background: #1a1a1a; 
+            padding: 10px 0;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+        }
+        .global-loader { position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         
-    .nav-btn { 
-    height: 40px; 
-    width: 40px; 
-    background: #333; 
+        .nav-group { display: flex; gap: 5px; }
+        #datePicker { padding: 10px; background: #333; color: white; border: 1px solid #444; height: 40px; box-sizing: border-box; cursor: pointer; border-radius: 4px; }
+        .nav-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border-radius: 4px; }
+        .nav-btn:hover { background: #444; }
+        
+        .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: #e67e22; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; border-radius: 4px; margin-left: 10px; }
+        .refresh-btn:hover { background: #444; color: #ff9f43; }
+        .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
+        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .box { border: 1px solid #444; padding: 5px; background: #262626; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; cursor: pointer; overflow: hidden; }
+        .box.empty { pointer-events: none; opacity: 0.5; }
+        
+        .box.not-mine { pointer-events: none !important; } 
+        .box.is-mine { border: 2px solid #e67e22 !important; z-index: 10; box-shadow: inset 0 0 10px rgba(230,126,34,0.3); }
+
+        .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
+        .box.ausfall-mode .klasse { color: #777777; }
+        .box.ausfall-mode .res { color: #555555; }
+        .box.ausfall-mode .lehrer-info { display: none; }
+
+        .box.outdoor-mode { background-color: #27ae60 !important; color: white !important; }
+        .box.outdoor-mode .res { font-weight: bold; }
+
+        .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; display: inline-block; font-size: 22px; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,1); transition: transform 0.2s ease; }
+        .stift:hover { transform: scale(1.2); color: #ff9f43; }
+
+        .zeit-box { background: #333; font-weight: bold; cursor: default; }
+     .header-row { 
+            grid-column: span 6; 
+            background: #333; 
+            font-size: 14px; 
+            font-weight: bold; 
+            position: sticky; 
+            top: 60px; /* Höhe der .date-control + Padding */
+            z-index: 999; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            height: 50px; 
+        }
+        .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
+        
+       /* Nur das Design für das Login-Fenster */
+#loginOverlay { 
+    position: fixed; 
+    top: 0; left: 0; width: 100%; height: 100%; 
+    background: linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.6)), 
+                url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
+    background-size: cover;
+    background-position: center;
+    z-index: 20000; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    backdrop-filter: blur(12px); /* Erzeugt den edlen Glaseffekt */
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.login-card {
+    background: rgba(30, 30, 30, 0.85);
+    padding: 40px;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    width: 320px;
+    text-align: center;
+}
+
+.login-card h2 { 
+    color: #e67e22; 
+    font-size: 2.2em; 
+    margin-bottom: 25px; 
+    font-weight: bold; 
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); 
+}
+
+.login-card input { 
+    padding: 15px; 
+    margin: 10px 0; 
+    background: rgba(20, 20, 20, 0.8); 
     border: 1px solid #444; 
     color: white; 
-    cursor: pointer; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
+    border-radius: 8px; 
+    width: 100%; 
     font-size: 16px; 
-    border-radius: 4px; 
+    outline: none; 
+    box-sizing: border-box;
 }
-    .nav-btn:hover, .refresh-btn:hover { background: #3a3a3a; border-color: #e67e22; }
-    .refresh-btn { color: #e67e22; margin-left: 10px; }
 
-    /* DEINE BOX-STYLES - Exakt übernommen */
-    .box { 
-    border: 1px solid #444; 
-    padding: 5px; 
-    background: #262626; 
-    min-height: 50px; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center; 
-    font-size: 11px; 
-    position: relative; 
+.login-card input:focus { border-color: #e67e22; }
+
+.login-card button { 
+    padding: 15px; 
+    margin-top: 15px; 
+    background: #e67e22; 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
     cursor: pointer; 
-    overflow: hidden; 
-    /* Kein border-radius, kein transform: scale */
+    font-weight: bold; 
+    width: 100%; 
+    font-size: 18px; 
+    transition: background 0.2s; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3); 
 }
-    .box:hover { transform: scale(1.02); z-index: 5; }
-    .box.empty { pointer-events: none; opacity: 0.3; }
-    .box.not-mine { pointer-events: none !important; } 
-    .box.is-mine { border: 2px solid #e67e22 !important; z-index: 10; box-shadow: 0 0 15px rgba(230,126,34,0.2); }
 
-    /* MODI - Unverändert übernommen */
-    .box.ausfall-mode { background-color: #000 !important; color: #777 !important; background-image: linear-gradient(to top right, transparent 49%, #333 50%, transparent 51%), linear-gradient(to top left, transparent 49%, #333 50%, transparent 51%); }
-    .box.outdoor-mode { background-color: #219150 !important; color: white !important; }
-    
-    .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; font-size: 20px; text-shadow: 0 0 8px rgba(0,0,0,0.8); }
-
-    /* NEUES MODERNES LOGIN OVERLAY (Die "Pflanze") */
-    #loginOverlay { 
-        position: fixed; 
-        top: 0; left: 0; width: 100%; height: 100%; 
-        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
-                    url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
-        background-size: cover;
-        background-position: center;
-        z-index: 20000; 
-        display: flex; 
-        flex-direction: column; 
-        justify-content: center; 
-        align-items: center; 
-        backdrop-filter: blur(12px);
-    }
-
-    .login-card {
-        background: rgba(25, 25, 25, 0.85);
-        padding: 50px 40px;
-        border-radius: 30px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
-        width: 100%;
-        max-width: 360px;
-        text-align: center;
-    }
-
-    #loginOverlay h2 { 
-        color: white; font-size: 28px; margin-bottom: 30px; font-weight: 700; letter-spacing: -1px;
-    }
-    #loginOverlay h2 span { color: #e67e22; }
-
-    #loginOverlay input { 
-        padding: 15px; margin: 10px 0; 
-        background: rgba(255, 255, 255, 0.05); 
-        border: 1px solid #444; color: white; 
-        border-radius: 12px; width: 100%; font-size: 16px; 
-        outline: none; box-sizing: border-box;
-        transition: all 0.3s;
-    }
-    #loginOverlay input:focus { border-color: #e67e22; background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 15px rgba(230,126,34,0.2); }
-
-    #loginOverlay button { 
-        padding: 15px; margin-top: 15px; 
-        background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); 
-        color: white; border: none; border-radius: 12px; 
-        cursor: pointer; font-weight: 700; width: 100%; 
-        font-size: 18px; transition: all 0.3s; 
-        box-shadow: 0 10px 20px rgba(230, 126, 34, 0.3); 
-    }
-    #loginOverlay button:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(230, 126, 34, 0.4); }
-
-    /* HELPER KLASSEN - Beibehalten */
-    .klasse { font-weight: bold; }
-    .lehrer-info { font-size: 9px; color: #aaa; }
-    .res { font-style: italic; font-size: 9px; margin-top: 2px; }
-    .header-row { grid-column: span 6; background: #2a2a2a; font-weight: bold; position: sticky; top: 72px; z-index: 999; display: flex; align-items: center; justify-content: center; height: 45px; border-radius: 4px; }
-    
-    .sport-loader { font-size: 24px; visibility: hidden; display: inline-block; animation: bounce 0.6s infinite alternate; }
-    .sport-loader.active { visibility: visible; }
-    @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
-</style>
-
+.login-card button:hover { background: #d35400; }
+        #loginOverlay h2 { color: #e67e22; font-size: 2.2em; margin-bottom: 30px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        #loginOverlay input { padding: 15px; margin: 8px; background: rgba(34, 34, 34, 0.85); border: 1px solid #444; color: white; border-radius: 8px; width: 280px; font-size: 16px; outline: none; backdrop-filter: blur(5px); }
+        #loginOverlay input:focus { border-color: #e67e22; }
+        #loginOverlay button { padding: 15px; margin-top: 15px; background: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 310px; font-size: 18px; transition: background 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        #loginOverlay button:hover { background: #d35400; }
+        
+        .klasse { font-weight: bold; }
+        .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
+        .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
+        select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
+        .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
+        .save-btn { padding: 8px 20px; background: #e67e22; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; display: none; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .save-btn.success { background: #27ae60; } 
+        .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
+        .sport-loader.active { visibility: visible; }
+        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+        
+        .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
+        .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
+        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
+    </style>
+</head>
 <body onclick="closeAllExtraMenus()">
-
-    <!-- MODERNES LOGIN OVERLAY -->
     <div id="loginOverlay">
-        <div class="login-card">
-            <h2>Reservation <span>Sport</span></h2>
-            
-            <input type="text" id="kuerzelInput" placeholder="Kürzel" 
-                   oninput="document.getElementById('loginError').innerText=''">
-            
-            <input type="password" id="passwordInput" placeholder="Passwort" 
-                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
-            
-            <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
-            
-            <div id="loginBall" class="sport-loader" style="margin-top: 20px;">🏀</div>
-            <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; min-height: 20px;"></p>
-        </div>
+    <div class="login-card">
+        <h2>Reservation Sport</h2>
+        
+        <input type="text" id="kuerzelInput" placeholder="Kürzel" 
+               oninput="document.getElementById('loginError').innerText=''">
+        
+        <input type="password" id="passwordInput" placeholder="Passwort" 
+               onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
+        
+        <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
+        
+        <div id="loginBall" class="sport-loader" style="margin-top: 20px;">🏀</div>
+        <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; min-height: 20px;"></p>
     </div>
-
-    <!-- MAIN INTERFACE -->
+</div>
     <div class="date-control">
         <div id="globalLoader" class="global-loader"></div>
         <div class="nav-group">
             <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)">⏮</button>
             <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)">◀</button>
         </div>
-        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute">🏠</button>
+        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
         <input type="date" id="datePicker" onchange="loadPlan()">
-        <div class="nav-group">
+        <div class="nav-group" style="display: flex; align-items: center;">
             <button class="nav-btn" onclick="changeDate(1)">▶</button>
             <button class="nav-btn" onclick="changeDate(7)">⏭</button>
-            <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">🔄</button>
+            <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
+                <i class="fas fa-sync-alt"></i>
+            </button>
         </div>
     </div>
-
     <div class="grid" id="plan"></div>
+
     <script>
         const url = "https://script.google.com/macros/s/AKfycbwkY51NzhNJJc3bU-bYd7Q1bl5d9bTtuT9lUJ4er33Ul2PUZJ3qERFUaGlrGpEjRO_y/exec"; 
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
