@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport</title>
+    <title>Reservation Sport555</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -41,7 +41,30 @@
         .box.empty { pointer-events: none; opacity: 0.5; }
         
         .box.not-mine { pointer-events: none !important; } 
-        .box.is-mine { border: 2px solid #e67e22 !important; z-index: 10; box-shadow: inset 0 0 10px rgba(230,126,34,0.3); }
+        /* Nur Interaktion für DEINE Zellen */
+.box.is-mine:hover {
+    /* Ein satterer Glow-Effekt nach außen */
+    box-shadow: 0 0 15px rgba(230, 126, 34, 0.5), inset 0 0 10px rgba(230, 126, 34, 0.2);
+    
+    /* Ganz leichtes Aufhellen für das Feedback */
+    filter: brightness(1.2);
+    
+    /* Die Zelle hebt sich minimal ab */
+    transform: translateY(-2px);
+    
+    /* Der Rahmen wird noch etwas kräftiger */
+    border-color: #ff9f43 !important;
+    
+    /* Stellt sicher, dass die Zelle über den anderen liegt, falls sie sich überlappen */
+    z-index: 100;
+}
+
+/* Optional: Den Stift (Edit-Icon) beim Hovern deiner Zelle zusätzlich betonen */
+.box.is-mine:hover .stift {
+    transform: scale(1.3);
+    color: #ffffff;
+    text-shadow: 0 0 8px #e67e22;
+}
 
         .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
         .box.ausfall-mode .klasse { color: #777777; }
