@@ -169,7 +169,7 @@
 
         async function checkLogin() {
             const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
-            const pwVal = document.getElementById('pwInput').value;
+            const pwVal = document.getElementById('passwordInput').value;
             const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
             if(!kuerzelVal) { document.getElementById('loginError').innerText = "Kürzel fehlt!"; return; }
             btn.style.display = 'none'; ball.classList.add('active');
