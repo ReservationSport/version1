@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport222</title>
+    <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -177,11 +177,14 @@
     <div class="login-card">
         <h2>Reservation <span>Sport</span></h2>
         
-        <input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off">
-        
-        <input type="password" id="passwordInput" placeholder="Passwort" 
-               onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
-        
+     <!-- Kürzel Feld -->
+<input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off"
+       oninput="document.getElementById('loginError').innerText=''">
+
+<!-- Passwort Feld -->
+<input type="password" id="passwordInput" placeholder="Passwort" 
+       oninput="document.getElementById('loginError').innerText=''"
+       onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
         <button id="loginBtn" onclick="checkLogin()">Anmelden</button>
         
         <!-- Basketball als dezenter, moderner Loader -->
