@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport1111</title>
+    <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -146,25 +146,47 @@
 }
 
     #loginBtn { 
-        padding: 18px; 
-        margin-top: 25px; 
-        background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); 
-        color: white; 
-        border: none; 
-        border-radius: 14px; 
-        cursor: pointer; 
-        font-weight: 700; 
-        width: 100%; 
-        font-size: 17px; 
-        transition: all 0.3s ease; 
-        box-shadow: 0 10px 20px rgba(230, 126, 34, 0.3);
-    }
+    padding: 18px; 
+    margin-top: 25px; 
+    /* Ein satter Verlauf: Oben etwas heller, unten das kräftige Orange */
+    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
+    color: white; 
+    border: none; 
+    border-radius: 16px; /* Weichere Rundung für den Premium-Look */
+    cursor: pointer; 
+    font-weight: 700; 
+    width: 100%; 
+    font-size: 17px; 
+    letter-spacing: 0.5px;
+    text-transform: none; /* "Anmelden" sieht in gemischter Schreibweise moderner aus */
+    
+    /* Der "Glow-Schatten": Nutzt die Farbe des Buttons für die Tiefe */
+    box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
+    
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); /* Seidig weiche Bewegung */
+    position: relative;
+    overflow: hidden;
+}
 
-    #loginBtn:hover { 
-        transform: translateY(-2px);
-        box-shadow: 0 15px 30px rgba(230, 126, 34, 0.4);
-        filter: brightness(1.1);
-    }
+#loginBtn:hover { 
+    transform: translateY(-3px); /* Er hebt sich dem User entgegen */
+    box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6);
+    filter: brightness(1.1);
+}
+
+#loginBtn:active { 
+    transform: translateY(-1px); /* Feedback beim Klicken */
+    box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
+}
+
+/* Der absolute Profi-Trick: Ein ganz dezenter Glanz-Effekt oben drauf */
+#loginBtn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
+    pointer-events: none;
+}
         
         .klasse { font-weight: bold; }
         .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
