@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport</title>
+    <title>Reservation Sport1111</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
@@ -140,22 +140,6 @@
         const url = "https://script.google.com/macros/s/AKfycbwkY51NzhNJJc3bU-bYd7Q1bl5d9bTtuT9lUJ4er33Ul2PUZJ3qERFUaGlrGpEjRO_y/exec"; 
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
-
-        // Wartet, bis die Seite geladen ist
-document.addEventListener('DOMContentLoaded', () => {
-    const pwInput = document.getElementById('passwordInput'); 
-    const loginBtn = document.getElementById('loginBtn'); 
-
-    // Hier war der Fehler: loginButton statt loginBtn
-    if (pwInput && loginBtn) {
-        pwInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault(); 
-                loginBtn.click(); // Jetzt passt der Name!
-            }
-        });
-    }
-});
 
         window.addEventListener('beforeunload', (e) => {
             if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
@@ -610,24 +594,6 @@ window.handleExtraAction = (el, time, slot) => {
 document.getElementById('modalPwInput').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') {
         document.getElementById('confirmPwBtn').click();
-    }
-});
-
-// Stelle sicher, dass dieser Block ganz unten steht
-window.addEventListener('load', () => {
-    const pwInput = document.getElementById('passwordInput');
-    const loginBtn = document.getElementById('loginBtn');
-
-    if (pwInput && loginBtn) {
-        pwInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                loginBtn.click();
-            }
-        });
-        console.log("Enter-Taste für Login aktiviert.");
-    } else {
-        console.warn("Login-Elemente wurden nicht gefunden. IDs prüfen!");
     }
 });
         
