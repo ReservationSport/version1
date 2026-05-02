@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport111</title>
+    <title>Reservation Sport555</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -342,49 +342,64 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
 </head>
 
-
+<!-- 1. Hauptcontainer mit globalem Klick-Schutz -->
 <body onclick="closeAllExtraMenus()">
+
+    <!-- 2. LOGIN OVERLAY (Erscheint beim Start) -->
     <div id="loginOverlay">
-    <div class="login-card">
-        <h2>Reservation <span>Sport</span></h2>
-        
-    <!-- Kürzel Feld -->
-<input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off"
-       onfocus="document.getElementById('loginError').innerText=''"
-       oninput="document.getElementById('loginError').innerText=''">
+        <div class="login-card">
+            <h2>Reservation <span>Sport</span></h2>
+            
+            <input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off"
+                   onfocus="document.getElementById('loginError').innerText=''"
+                   oninput="document.getElementById('loginError').innerText=''">
 
-<!-- Passwort Feld -->
-<input type="password" id="passwordInput" placeholder="Passwort" 
-       onfocus="document.getElementById('loginError').innerText=''"
-       oninput="document.getElementById('loginError').innerText=''"
-       onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
+            <input type="password" id="passwordInput" placeholder="Passwort" 
+                   onfocus="document.getElementById('loginError').innerText=''"
+                   oninput="document.getElementById('loginError').innerText=''"
+                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
 
-<button id="loginBtn" onclick="checkLogin()">
-    On your marks...    
-</button>
-        
-        <!-- Basketball als dezenter, moderner Loader -->
-        <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px; filter: grayscale(0.2);">🏀</div>
-        <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px;"></p>
-    </div>
-</div>
-    <div class="date-control">
-        <div id="globalLoader" class="global-loader"></div>
-        <div class="nav-group">
-            <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)">⏮</button>
-            <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)">◀</button>
+            <button id="loginBtn" onclick="checkLogin()">
+                On your marks...    
+            </button>
+            
+            <!-- Visuelles Feedback während des Logins -->
+            <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px; filter: grayscale(0.2);">🏀</div>
+            <p id="loginError"></p>
         </div>
-        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
+    </div>
+
+    <!-- 3. KOPFZEILE: STEUERUNG & NAVIGATION -->
+    <div class="date-control">
+        <!-- Lädt-Anzeige -->
+        <div id="globalLoader" class="global-loader"></div>
+        
+        <!-- Zurück-Buttons -->
+        <div class="nav-group">
+            <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)" title="Eine Woche zurück">⏮</button>
+            <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)" title="Ein Tag zurück">◀</button>
+        </div>
+
+        <!-- Heute & Kalender-Wahl -->
+        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute">
+            <i class="fas fa-house"></i>
+        </button>
         <input type="date" id="datePicker" onchange="loadPlan()">
+
+        <!-- Vorwärts & Refresh -->
         <div class="nav-group" style="display: flex; align-items: center;">
-            <button class="nav-btn" onclick="changeDate(1)">▶</button>
-            <button class="nav-btn" onclick="changeDate(7)">⏭</button>
+            <button class="nav-btn" onclick="changeDate(1)" title="Ein Tag vor">▶</button>
+            <button class="nav-btn" onclick="changeDate(7)" title="Eine Woche vor">⏭</button>
             <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
                 <i class="fas fa-sync-alt"></i>
             </button>
         </div>
     </div>
+
+    <!-- 4. TABELLEN-BEREICH (Wird dynamisch befüllt) -->
     <div class="grid" id="plan"></div>
+
+</body>
 
     <script>
         const url = "https://script.google.com/macros/s/AKfycbwkY51NzhNJJc3bU-bYd7Q1bl5d9bTtuT9lUJ4er33Ul2PUZJ3qERFUaGlrGpEjRO_y/exec"; 
