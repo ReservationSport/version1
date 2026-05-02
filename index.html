@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport444</title>
+    <title>Reservation Sport33333</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -28,6 +28,9 @@
         max-width: 1000px; 
         margin: auto; 
     }
+
+        .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
+
 
     /* ============================================================
        2. NAVIGATION & DATUMSKONTROLLE (STICKY)
@@ -60,8 +63,14 @@
         justify-content: center; border-radius: 4px; 
     }
 
+ 	.nav-btn:hover { background: #444; }
+
+
     .refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
     .refresh-btn:hover { color: #ff9f43; background: #444; }
+ .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
+        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
 
     /* ============================================================
        3. ZELLEN-STYLING (BOXES)
@@ -106,8 +115,6 @@
                           linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); 
     }
     
-    /* Hinweis: .outdoor-mode wurde entfernt, da die Farbe nun dynamisch kommt */
-
     /* ============================================================
        5. LOGIN-OVERLAY & CARD-DESIGN (PROFI-LOOK)
        ============================================================ */
@@ -116,7 +123,7 @@
         background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
                     url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
         background-size: cover; background-position: center; z-index: 20000; 
-        display: flex; justify-content: center; align-items: center; backdrop-filter: blur(18px); 
+        display: flex; justify-content: center; align-items: center; font-family: 'Inter', sans-serif; backdrop-filter: blur(18px); 
     }
 
     .login-card {
@@ -125,15 +132,15 @@
         width: 100%; max-width: 360px; text-align: center;
     }
 
-    .login-card h2 { color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; letter-spacing: -1.5px; }
+    .login-card h2 { color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; letter-spacing: -1.5px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
 
     .login-card input { 
         padding: 16px 20px; margin: 10px 0; background: rgba(0, 0, 0, 0.4); 
         border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 14px; 
-        width: 100%; font-size: 16px; outline: none; transition: all 0.3s;
+        width: 100%; font-size: 16px; outline: none; box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .login-card input:focus { border-color: #e67e22; box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); }
+    .login-card input:focus { border-color: #e67e22; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); }
 
     /* ============================================================
        6. BUTTONS (LOGIN & SPEICHERN) MIT BLITZ-EFFEKT
@@ -143,21 +150,48 @@
         cursor: pointer; width: 100%; font-family: 'Oswald', sans-serif; 
         font-size: 20px; font-weight: 700; text-transform: uppercase; 
         color: white; background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
-        position: relative; overflow: hidden; transition: all 0.3s;
+        position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); letter-spacing: 1.5px; box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5); z-index: 1;
     }
 
-    #loginBtn:hover, .save-btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+    #loginBtn:hover, .save-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6); filter: brightness(1.1); }
 
     /* Dynamischer Blitz-Effekt für Buttons */
     #loginBtn::after, .save-btn::after {
         content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-        transform: skewX(-25deg); transition: 0.6s;
+        transform: skewX(-25deg); transition: 0.6s ease-in-out; z-index: 3;
     }
+
+#loginBtn:active { 
+    transform: translateY(-1px);
+    box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
+}
+
+#loginBtn::before {
+    content: '';
+    position: absolute;
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
+    pointer-events: none;
+    z-index: 2;
+}
+
 
     #loginBtn:hover::after, .save-btn:hover::after { left: 150%; }
 
-    .save-btn.success { background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%); }
+    .save-btn.success { background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3); }
+
+#loginError {
+    color: #ff4757;
+    margin-top: 15px;
+    font-size: 14px;
+    font-weight: 600;
+    min-height: 20px;
+    transition: opacity 0.3s ease; /* Macht das Verschwinden geschmeidiger */
+}
 
     /* ============================================================
        7. ELEMENTE INNERHALB DER BOXEN & LOADER
@@ -166,6 +200,10 @@
     .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
     .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
     
+select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
+
+        .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
+        
     .stift { 
         position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; 
         font-size: 22px; transition: transform 0.2s ease; 
@@ -178,8 +216,16 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+.sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
+        .sport-loader.active { visibility: visible; }
+        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
+
+
     .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
     .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
+
+.extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
+
 </style>
 
 
