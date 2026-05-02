@@ -625,7 +625,6 @@ window.handleExtraAction = (el, time, slot) => {
         closeAllExtraMenus();
         return;
         }
-    }
 
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row');
@@ -651,7 +650,8 @@ window.handleExtraAction = (el, time, slot) => {
             el.value = "";
             closeAllExtraMenus();
             return;
-        }
+            }
+        
 
         if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
             const modal = document.getElementById('pwModal');
@@ -748,7 +748,7 @@ window.handleExtraAction = (el, time, slot) => {
 
     el.value = ""; // Dropdown Auswahl optisch zurücksetzen
     closeAllExtraMenus();
-
+}
 
 
 
