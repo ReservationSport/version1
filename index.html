@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport444</title>
+    <title>Reservation Sport111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -386,6 +386,10 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     </div>
     <div class="grid" id="plan"></div>
 
+
+
+
+
     <script>
         const url = "https://script.google.com/macros/s/AKfycbwkY51NzhNJJc3bU-bYd7Q1bl5d9bTtuT9lUJ4er33Ul2PUZJ3qERFUaGlrGpEjRO_y/exec"; 
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
@@ -434,111 +438,119 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
             } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
         }
 
+
+
+
         async function loadPlan() {
-            const dp = document.getElementById('datePicker');
-            if (pendingChanges.length > 0) {
-                if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
-                    dp.value = lastStableDate; 
-                    return;
-                }
-            }
-            const dateVal = dp.value;
-            if (!userPw || !dateVal) return;
-            lastStableDate = dateVal; 
-            updateNavButtons();
-            const container = document.getElementById('plan');
-            container.innerHTML = ""; 
-            document.getElementById('globalLoader').style.display = 'block';
-            const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
-            const heute = new Date(); heute.setHours(12,0,0,0);
-            const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
-            
-            if (dateObj < heute) { container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            if (dateObj > vierWochen) { container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
-            
-            try {
-                const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
-                const json = await res.json();
-                if (json.error === "SPERRE") {
-                    container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
-                    document.getElementById('globalLoader').style.display = 'none';
-                    return;
-                }
-                container.innerHTML = ""; pendingChanges = [];
-                currentPlanData = json.data; 
-                myClasses = json.userClasses || [];
-                allClassTeachers = json.allClassTeachers || {};
-                const data = json.data, options = json.options;
-                configFarben = {}; options.forEach(opt => configFarben[opt[0]] = opt[1]);
-                const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-                const [y, m, d] = dateVal.split('-').map(Number);
+    const dp = document.getElementById('datePicker');
+    if (pendingChanges.length > 0) {
+        if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
+            dp.value = lastStableDate; 
+            return;
+        }
+    }
+    const dateVal = dp.value;
+    if (!userPw || !dateVal) return;
+    lastStableDate = dateVal; 
+    updateNavButtons();
+    const container = document.getElementById('plan');
+    container.innerHTML = ""; 
+    document.getElementById('globalLoader').style.display = 'block';
+    const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
+    const heute = new Date(); heute.setHours(12,0,0,0);
+    const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
+    
+    if (dateObj < heute) { container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+    if (dateObj > vierWochen) { container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; document.getElementById('globalLoader').style.display = 'none'; return; }
+    
+    try {
+        const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
+        const json = await res.json();
+        if (json.error === "SPERRE") {
+            container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
+            document.getElementById('globalLoader').style.display = 'none';
+            return;
+        }
+        container.innerHTML = ""; pendingChanges = [];
+        currentPlanData = json.data; 
+        myClasses = json.userClasses || [];
+        allClassTeachers = json.allClassTeachers || {};
+        const data = json.data, options = json.options;
+        configFarben = {}; options.forEach(opt => configFarben[opt[0]] = opt[1]);
+        const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+        const [y, m, d] = dateVal.split('-').map(Number);
+        
+        data.forEach((row, rowIndex) => {
+            if (rowIndex === 0) {
+                container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SAVE</button></div></div>`;
+            } else {
+                if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
+                if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
+                container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
                 
-                data.forEach((row, rowIndex) => {
-                    if (rowIndex === 0) {
-                        container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span><div class="save-container"><div id="sport-loader" class="sport-loader">🏀</div><button id="saveBtn" class="save-btn" onclick="saveChanges()">SAVE</button></div></div>`;
-                    } else {
-                        if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
-                        if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
-                        container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
-                        
-                        for(let i = 1; i <= 5; i++) {
-                            let belegteHallenInZeileOhneMich = [];
-                            for (let k = 1; k <= 5; k++) {
-                                if (k === i) continue; 
-                                let otherVal = String(row[k] || "").trim();
-                                if (otherVal !== "") {
-                                    let resPart = otherVal.split(' | ')[1] || "";
-                                    if (resPart && resPart !== "Ausfall" && resPart !== "Outdoor") {
-                                        belegteHallenInZeileOhneMich.push(resPart);
-                                    }
-                                }
+                for(let i = 1; i <= 5; i++) {
+                    let belegteHallenInZeileOhneMich = [];
+                    for (let k = 1; k <= 5; k++) {
+                        if (k === i) continue; 
+                        let otherVal = String(row[k] || "").trim();
+                        if (otherVal !== "") {
+                            let resPart = otherVal.split(' | ')[1] || "";
+                            // "Outdoor" hier entfernt, damit es die Hallenbelegung nicht mehr beeinflusst
+                            if (resPart && resPart !== "Ausfall") {
+                                belegteHallenInZeileOhneMich.push(resPart);
                             }
-
-                            let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
-                            let isAusfall = (res === "Ausfall");
-                            let isOutdoor = (res === "Outdoor");
-                            let canEdit = myClasses.some(c => klasse.trim() === c.trim());
-                            let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
-                            let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
-
-                            container.innerHTML += `
-                            <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''} ${isOutdoor ? 'outdoor-mode' : ''}" 
-                                   data-row="${rowIndex}" data-col="${i}"
-                                   oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()" style="background-color: ${ (isAusfall || isOutdoor) ? '' : configFarben[res] || ''}">
-                                   ${stiftHtml}
-                                   <div class="klasse">${klasse}</div>
-                                   <div class="lehrer-info">${teacher}</div>
-                                   <div class="res">${res}</div>
-                                   ${canEdit ? `
-                                   <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-                                       <option value="">---</option>
-                                       ${options.filter(o => {
-                                           const optName = o[0];
-                                           if (res === optName) return true;
-                                           let istGesperrt = belegteHallenInZeileOhneMich.some(belegt => {
-                                               let belegtParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                               let optParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                               return optParts.some(p => belegtParts.includes(p));
-                                           });
-                                           return !istGesperrt;
-                                       }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                                   </select>
-                                   <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-    <option value="">---</option>
-    <option value="outdoor">🌳 Outdoor</option>
-    <option value="ausfall">❌ Ausfall</option>
-    <option value="perma_delete">🏆 Schuljahr beendet</option>
-    <option value="kommentar">📝 Notiz hinzufügen</option>
-    <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-</select>` : ''}
-                            </div>`;
                         }
                     }
-                });
-            } catch(e) { console.error(e); }
-            document.getElementById('globalLoader').style.display = 'none';
-        }
+
+                    let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
+                    let isAusfall = (res === "Ausfall");
+                    let canEdit = myClasses.some(c => klasse.trim() === c.trim());
+                    let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
+                    let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
+
+                    container.innerHTML += `
+                    <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
+                           data-row="${rowIndex}" data-col="${i}"
+                           oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()" style="background-color: ${ (isAusfall) ? '' : configFarben[res] || ''}">
+                           ${stiftHtml}
+                           <div class="klasse">${klasse}</div>
+                           <div class="lehrer-info">${teacher}</div>
+                           <div class="res">${res}</div>
+                           ${canEdit ? `
+                           <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                               <option value="">---</option>
+                               ${options.filter(o => {
+                                   const optName = o[0];
+                                   if (res === optName) return true;
+                                   let istGesperrt = belegteHallenInZeileOhneMich.some(belegt => {
+                                       let belegtParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                       let optParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                       return optParts.some(p => belegtParts.includes(p));
+                                   });
+                                   return !istGesperrt;
+                               }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+                           </select>
+
+                           <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+                                <option value="">---</option>
+                                <option value="ausfall">❌ Ausfall</option>
+                                <option value="perma_delete">🏆 Schuljahr beendet</option>
+                                <option value="kommentar">📝 Notiz hinzufügen</option>
+         <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+                           </select>` : ''}
+                    </div>`;
+                }
+            }
+        });
+    } catch(e) { console.error(e); }
+    document.getElementById('globalLoader').style.display = 'none';
+}
+
+
+
+
+
 
         function getExistingComment(r, c) {
             let val = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
@@ -875,3 +887,7 @@ window.handleExtraAction = (el, time, slot) => {
     
 </body>
 </html>
+
+
+
+
