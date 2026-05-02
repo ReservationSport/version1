@@ -56,7 +56,7 @@
 
    .nav-btn, .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-sizing: border-box; /* Auch hier für absolute Symmetrie */ } 
 
- 	.nav-btn:hover { background: #444; }
+     .nav-btn:hover { background: #444; }
 
 
     .refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
@@ -496,7 +496,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
                         let otherVal = String(row[k] || "").trim();
                         if (otherVal !== "") {
                             let resPart = otherVal.split(' | ')[1] || "";
-                            // "Outdoor" hier entfernt, damit es die Hallenbelegung nicht mehr beeinflusst
+                           
                             if (resPart && resPart !== "Ausfall") {
                                 belegteHallenInZeileOhneMich.push(resPart);
                             }
@@ -601,7 +601,6 @@ window.addChange = (el, time, slot, klasse) => {
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
     
-    // 'outdoor-mode' hier entfernt
     parent.classList.remove('ausfall-mode');
     
     parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
@@ -688,8 +687,6 @@ window.handleExtraAction = (el, time, slot) => {
     
 
 
-
-   // Zweig für "Outdoor" komplett entfernt
     if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
@@ -725,7 +722,7 @@ window.handleExtraAction = (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // Optische Anpassung der Zelle (Outdoor-Prüfung entfernt)
+
     if (neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else {
@@ -755,6 +752,11 @@ window.handleExtraAction = (el, time, slot) => {
 
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
+        window.clearTimer = () => clearTimeout(pressTimer);
+        window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); 
+
+
+window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
 window.clearTimer = () => clearTimeout(pressTimer);
 window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
 
@@ -769,7 +771,6 @@ function openExtraMenu(el) {
 
     const aktuelleRes = el.querySelector('.res').innerText.trim();
     
-    // Outdoor-Abfrage hier entfernt
     if (aktuelleRes === "Ausfall") {
         sel.value = "ausfall";
     } else {
@@ -820,6 +821,8 @@ window.saveChanges = async () => {
         btn.innerText = "Fehler!"; 
     }
 };
+
+
 
         window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
         window.goToToday = () => {
@@ -906,3 +909,4 @@ window.saveChanges = async () => {
     
 </body>
 </html>
+
