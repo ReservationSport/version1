@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport1111112</title>
+    <title>Reservation Sport123</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -621,8 +621,8 @@ window.addChange = (el, time, slot, klasse) => {
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
     
-    // WICHTIG: Die Prüfung wurde angepasst, damit "---" nicht sofort abbricht, 
-    // sondern weiter unten als "Lösch-Befehl" verarbeitet wird.
+    // NUR abbrechen, wenn gar nichts ausgewählt wurde (null/undefined)
+    // "---" lassen wir durch, damit es unten verarbeitet wird!
     if (!action) {
         closeAllExtraMenus();
         return;
@@ -631,7 +631,7 @@ window.handleExtraAction = (el, time, slot) => {
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
-    
+        
     const klasseElem = parent.querySelector('.klasse');
     const klasse = klasseElem ? klasseElem.innerText.trim() : "";
     
