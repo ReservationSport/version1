@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport123</title>
+    <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -665,12 +665,45 @@ window.handleExtraAction = (el, time, slot) => {
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
     if (action === "perma_delete") {
-        // ... dein bestehender Passwort-Lösch-Code ...
+        // 1. Die Browser-Abfrage (dein Screenshot)
         if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
-             // Modal-Logik hier lassen
+            
+            // 2. Das Modal-Element aus deinem HTML holen
+            const modal = document.getElementById('pwModal');
+            const input = document.getElementById('modalPwInput');
+            const btn = document.getElementById('confirmPwBtn');
+
+            if (modal && input && btn) {
+                // Modal anzeigen
+                modal.style.display = 'flex';
+                input.value = '';
+                input.focus();
+
+                // 3. Logik für den "Bestätigen"-Button im Modal
+                btn.onclick = () => {
+                    if (input.value === userPw) {
+                        modal.style.display = 'none';
+                        
+                        // Hier wird die eigentliche Lösch-Funktion aufgerufen
+                        if (typeof permaDeleteClass === "function") {
+                            permaDeleteClass(klasse, slot);
+                        } else {
+                            alert("Klasse wird gelöscht... (Funktion permaDeleteClass nicht gefunden)");
+                        }
+                    } else {
+                        alert("Falsches Passwort!");
+                        input.value = '';
+                        input.focus();
+                    }
+                };
+            }
         }
-        el.value = ""; closeAllExtraMenus(); return;
-    } 
+        // Dropdown und Menüs immer schließen
+        el.value = ""; 
+        closeAllExtraMenus(); 
+        return;
+    }
+        
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
