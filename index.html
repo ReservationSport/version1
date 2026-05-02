@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport0222</title>
+    <title>Reservation Sport111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -755,62 +755,71 @@ window.handleExtraAction = (el, time, slot) => {
 
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
-        window.clearTimer = () => clearTimeout(pressTimer);
-        window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
-        function openExtraMenu(el) { 
-            closeAllExtraMenus();
-            const sel = el.querySelector('.extra-select'); 
-            const hatStift = el.querySelector('.stift') !== null;
-            const delOpt = sel.querySelector('.del-opt');
-            if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
+window.clearTimer = () => clearTimeout(pressTimer);
+window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
 
-            const aktuelleRes = el.querySelector('.res').innerText.trim();
-            if (aktuelleRes === "Outdoor") {
-                sel.value = "outdoor";
-            } else if (aktuelleRes === "Ausfall") {
-                sel.value = "ausfall";
-            } else {
-                sel.value = ""; 
-            }
+function openExtraMenu(el) { 
+    closeAllExtraMenus();
+    const sel = el.querySelector('.extra-select'); 
+    const hatStift = el.querySelector('.stift') !== null;
+    const delOpt = sel.querySelector('.del-opt');
+    
+    // Notiz-Löschen Option einblenden, wenn Stift vorhanden
+    if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
 
-            sel.style.zIndex = "100"; 
-            sel.style.pointerEvents = "all"; 
-            sel.style.opacity = "1"; 
-            setTimeout(() => { if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } }, 50); 
-        }
-        
-        window.saveChanges = async () => { 
-            const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
-            btn.style.display = 'none'; ball.classList.add('active');
-            try { 
-                const response = await fetch(url, { 
-                    method: "POST", 
-                    body: JSON.stringify({ 
-                        date: document.getElementById('datePicker').value, 
-                        changes: pendingChanges, 
-                        pw: userPw,
-                        kuerzel: userKuerzel
-                    }) 
-                }); 
-                const result = await response.json();
-                if (result.status === "success") {
-                    pendingChanges = []; 
-                    ball.classList.remove('active'); 
-                    btn.innerText = "OK! ✔"; 
-                    btn.classList.add('success'); 
-                    btn.style.display = 'block'; 
-                    setTimeout(() => { 
-                        btn.style.display = 'none'; 
-                        btn.classList.remove('success'); 
-                        btn.innerText = "SAVE"; 
-                    }, 1000); 
-                } else { throw new Error(); }
-            } catch (e) { 
-                ball.classList.remove('active'); 
-                btn.style.display = 'block'; 
-                btn.innerText = "Fehler!"; 
-            }
-        };
+    const aktuelleRes = el.querySelector('.res').innerText.trim();
+    
+    // Outdoor-Abfrage hier entfernt
+    if (aktuelleRes === "Ausfall") {
+        sel.value = "ausfall";
+    } else {
+        sel.value = ""; 
+    }
+
+    sel.style.zIndex = "100"; 
+    sel.style.pointerEvents = "all"; 
+    sel.style.opacity = "1"; 
+    
+    // Picker öffnen (Standard-Browser-Verhalten)
+    setTimeout(() => { 
+        if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } 
+    }, 50); 
+}
+
+window.saveChanges = async () => { 
+    const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
+    btn.style.display = 'none'; 
+    ball.classList.add('active');
+    
+    try { 
+        const response = await fetch(url, { 
+            method: "POST", 
+            body: JSON.stringify({ 
+                date: document.getElementById('datePicker').value, 
+                changes: pendingChanges, 
+                pw: userPw,
+                kuerzel: userKuerzel
+            }) 
+        }); 
+        const result = await response.json();
+        if (result.status === "success") {
+            pendingChanges = []; 
+            ball.classList.remove('active'); 
+            btn.innerText = "OK! ✔"; 
+            btn.classList.add('success'); 
+            btn.style.display = 'block'; 
+            setTimeout(() => { 
+                btn.style.display = 'none'; 
+                btn.classList.remove('success'); 
+                btn.innerText = "SAVE"; 
+            }, 1000); 
+        } else { throw new Error(); }
+    } catch (e) { 
+        ball.classList.remove('active'); 
+        btn.style.display = 'block'; 
+        btn.innerText = "Fehler!"; 
+    }
+};
 
         window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
         window.goToToday = () => {
