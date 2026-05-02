@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport111</title>
+    <title>Reservation Sport000</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -601,7 +601,9 @@ window.addChange = (el, time, slot, klasse) => {
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
     
-    parent.classList.remove('ausfall-mode', 'outdoor-mode');
+    // 'outdoor-mode' hier entfernt
+    parent.classList.remove('ausfall-mode');
+    
     parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
     parent.style.backgroundColor = configFarben[res] || ""; 
 
@@ -612,6 +614,10 @@ window.addChange = (el, time, slot, klasse) => {
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
     document.getElementById('saveBtn').style.display = 'block';
 };
+
+
+
+
 
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
@@ -679,13 +685,12 @@ window.handleExtraAction = (el, time, slot) => {
     }
     // ------------------------------------------
     
-    if (action === "outdoor") {
-        neueHalle = "Outdoor";
-        parent.classList.remove('ausfall-mode');
-        parent.classList.add('outdoor-mode');
-    } else if (action === "ausfall") {
+
+
+
+   // Zweig für "Outdoor" komplett entfernt
+    if (action === "ausfall") {
         neueHalle = "Ausfall";
-        parent.classList.remove('outdoor-mode');
         parent.classList.add('ausfall-mode');
     } else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
@@ -719,8 +724,8 @@ window.handleExtraAction = (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // Optische Anpassung der Zelle
-    if (neueHalle !== "Outdoor" && neueHalle !== "Ausfall") {
+    // Optische Anpassung der Zelle (Outdoor-Prüfung entfernt)
+    if (neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else {
         parent.style.backgroundColor = "";
@@ -742,7 +747,11 @@ window.handleExtraAction = (el, time, slot) => {
 
     el.value = ""; // Dropdown Auswahl optisch zurücksetzen
     closeAllExtraMenus();
-};
+
+
+
+
+
 
         window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
         window.clearTimer = () => clearTimeout(pressTimer);
@@ -887,7 +896,3 @@ window.handleExtraAction = (el, time, slot) => {
     
 </body>
 </html>
-
-
-
-
