@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport</title>
+    <title>Reservation Sport123</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -620,34 +620,54 @@ window.addChange = (el, time, slot, klasse) => {
 
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
+    const parent = el.parentElement;
     
-    // 1. Abbruch-Check (Nur wenn gar nichts gewählt wurde)
-    if (!action) {
+    // 1. WICHTIG: Wenn die Auswahl leer ist oder "---" gewählt wurde -> LÖSCHEN
+    if (action === "" || action === "---") {
+        const r = parent.getAttribute('data-row');
+        const c = parent.getAttribute('data-col');
+        
+        // Optik zurücksetzen
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        
+        const resElem = parent.querySelector('.res');
+        if (resElem) resElem.innerText = ""; // Text in der Zelle löschen
+
+        // Kommentar beibehalten, aber Halle leeren
+        let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+        let parts = fullString.split('|').map(s => s.trim());
+        let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+        
+        let finalVal = buildFinalValue(r, c, "", commentPart);
+        
+        // Speichern
+        if (!currentPlanData[r]) currentPlanData[r] = [];
+        currentPlanData[r][c] = finalVal;
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        document.getElementById('saveBtn').style.display = 'block';
+
+        el.value = "";
         closeAllExtraMenus();
-        return;
+        return; // Hier abbrechen, damit der Rest nicht ausgeführt wird
     }
 
-    const parent = el.parentElement;
+    // --- AB HIER DER RESTLICHE CODE (wird nur ausgeführt, wenn action NICHT leer ist) ---
+    
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
-    
     const klasseElem = parent.querySelector('.klasse');
     const klasse = klasseElem ? klasseElem.innerText.trim() : "";
     
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let parts = fullString.split('|').map(s => s.trim());
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-    
-    // WICHTIG: Wir starten mit einer leeren Variable oder dem aktuellen Wert
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // 2. Weiche: Was soll getan werden?
     if (action === "perma_delete") {
-        // ... (Dein Passwort-Schutz Code für permanentes Löschen)
+        // ... dein bestehender Passwort-Lösch-Code ...
         if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
-            // ... Modal Logik ...
-            // (Hier überspringe ich den langen Modal-Teil zur Übersicht, 
-            // lass deinen bestehenden Modal-Code einfach hier drin)
+             // Modal-Logik hier lassen
         }
         el.value = ""; closeAllExtraMenus(); return;
     } 
@@ -655,12 +675,8 @@ window.handleExtraAction = (el, time, slot) => {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
     } 
-    else if (action === "---") {
-        // HIER PASSIERT DIE MAGIE:
-        neueHalle = ""; // Wir leeren den Text
-        parent.classList.remove('ausfall-mode'); // Wir entfernen das Rot/Grau
-    } 
     else if (action === "kommentar") {
+        // ... dein bestehender Kommentar-Code ...
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         if (text !== null) {
@@ -673,12 +689,8 @@ window.handleExtraAction = (el, time, slot) => {
                 span.innerHTML = '<i class="fas fa-comment-dots"></i>';
                 span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
-            } else {
-                commentPart = undefined;
-            }
-        } else {
-            el.value = ""; closeAllExtraMenus(); return;
-        }
+            } else { commentPart = undefined; }
+        } else { el.value = ""; closeAllExtraMenus(); return; }
     } 
     else if (action === "delete_comment") {
         commentPart = ""; 
@@ -686,23 +698,19 @@ window.handleExtraAction = (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // 3. Finale optische Anwendung
-    // Hintergrundfarbe nur setzen, wenn es nicht leer ist
+    // Optik finalisieren (für Ausfall oder Kommentar-Änderungen)
     if (neueHalle !== "" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
-    } else {
-        parent.style.backgroundColor = ""; // Reset für leere Zellen und Ausfall
+    } else if (neueHalle === "Ausfall") {
+        parent.style.backgroundColor = ""; // Farbe weg bei Ausfall (Klasse steuert das via CSS)
     }
     
     const resElem = parent.querySelector('.res');
     if (resElem) resElem.innerText = neueHalle;
 
-    // 4. Export & Speichern
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
-
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
-    
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     document.getElementById('saveBtn').style.display = 'block';
 
