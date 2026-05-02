@@ -7,327 +7,185 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: white; padding: 20px; }
-        .grid { display: grid; grid-template-columns: 120px repeat(5, 1fr); gap: 2px; max-width: 1000px; margin: auto; }
-       .date-control { 
-            text-align: center; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 15px; 
-            position: sticky; 
-            top: 0; 
-            z-index: 1000; 
-            background: #1a1a1a; 
-            padding: 10px 0;
-            margin-bottom: 10px;
-            border-bottom: 1px solid #333;
-        }
-        .global-loader { position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .nav-group { display: flex; gap: 5px; }
-        #datePicker { padding: 10px; background: #333; color: white; border: 1px solid #444; height: 40px; box-sizing: border-box; cursor: pointer; border-radius: 4px; }
-        .nav-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; border-radius: 4px; }
-        .nav-btn:hover { background: #444; }
-        
-        .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: #e67e22; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; transition: all 0.2s; border-radius: 4px; margin-left: 10px; }
-        .refresh-btn:hover { background: #444; color: #ff9f43; }
-        .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
-        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        .box { border: 1px solid #444; padding: 5px; background: #262626; min-height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; font-size: 11px; position: relative; cursor: pointer; overflow: hidden; }
-        .box.empty { pointer-events: none; opacity: 0.5; }
-        
-       /* Deine Zellen behalten immer den Rahmen (hast du ja schon im Code) */
-.box.is-mine { 
-    border: 2px solid #e67e22 !important; 
-    z-index: 10; 
-}
 
-/* Die neue, zusätzliche Interaktion beim Hovern */
-.box.is-mine:hover {
-    /* 1. Ein sanftes Pulsieren des Hintergrunds */
-    background-color: rgba(230, 126, 34, 0.2) !important;
-    
-    /* 2. Ein "innerer Glanz", der die Zelle wertiger erscheinen lässt */
-    box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
-    
-    /* 3. Minimale Skalierung, damit sie "lebendig" wirkt */
-    transform: scale(1.03);
-    
-    /* 4. Der Cursor zeigt sofort: Hier kann man klicken */
-    cursor: pointer;
-    
-    /* Stellt sicher, dass die Zelle beim Hovern über den Linien der Nachbarzellen liegt */
-    z-index: 100;
-}
-        .box.ausfall-mode { background-color: #000000 !important; color: #777777 !important; background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); }
-        .box.ausfall-mode .klasse { color: #777777; }
-        .box.ausfall-mode .res { color: #555555; }
-        .box.ausfall-mode .lehrer-info { display: none; }
 
-        .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; display: inline-block; font-size: 22px; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,1); transition: transform 0.2s ease; }
-        .stift:hover { transform: scale(1.2); color: #ff9f43; }
+<style>
+    /* ============================================================
+       1. BASIS-STYLING & LAYOUT
+       ============================================================ */
+    body { 
+        font-family: 'Segoe UI', sans-serif; 
+        background: #1a1a1a; 
+        color: white; 
+        padding: 20px; 
+    }
 
-        .zeit-box { background: #333; font-weight: bold; cursor: default; }
-     .header-row { 
-            grid-column: span 6; 
-            background: #333; 
-            font-size: 14px; 
-            font-weight: bold; 
-            position: sticky; 
-            top: 60px; /* Höhe der .date-control + Padding */
-            z-index: 999; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            height: 50px; 
-        }
-        .info-box { grid-column: span 6; padding: 40px; text-align: center; color: #d1d1d1; font-style: italic; font-size: 18px; }
+    .grid { 
+        display: grid; 
+        grid-template-columns: 120px repeat(5, 1fr); 
+        gap: 2px; 
+        max-width: 1000px; 
+        margin: auto; 
+    }
 
-#loginError {
-    color: #ff4757;
-    margin-top: 15px;
-    font-size: 14px;
-    font-weight: 600;
-    min-height: 20px;
-    transition: opacity 0.3s ease; /* Macht das Verschwinden geschmeidiger */
-}
-        
-/* Profi-Login-Design */
-#loginOverlay { 
-        position: fixed; 
-        top: 0; left: 0; width: 100%; height: 100%; 
-        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
-                    url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
-        background-size: cover;
-        background-position: center;
-        z-index: 20000; 
+    /* ============================================================
+       2. NAVIGATION & DATUMSKONTROLLE (STICKY)
+       ============================================================ */
+    .date-control { 
+        text-align: center; 
         display: flex; 
         justify-content: center; 
         align-items: center; 
-        backdrop-filter: blur(18px); /* Stärkerer Fokus auf die Card */
-        font-family: 'Inter', sans-serif; /* Hier ist die moderne Schrift */
+        gap: 15px; 
+        position: sticky; 
+        top: 0; 
+        z-index: 1000; 
+        background: #1a1a1a; 
+        padding: 10px 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #333;
+    }
+
+    .nav-group { display: flex; gap: 5px; }
+
+    #datePicker { 
+        padding: 10px; background: #333; color: white; 
+        border: 1px solid #444; height: 40px; border-radius: 4px; cursor: pointer; 
+    }
+
+    .nav-btn, .refresh-btn { 
+        height: 40px; width: 40px; background: #333; border: 1px solid #444; 
+        color: white; cursor: pointer; display: flex; align-items: center; 
+        justify-content: center; border-radius: 4px; 
+    }
+
+    .refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
+    .refresh-btn:hover { color: #ff9f43; background: #444; }
+
+    /* ============================================================
+       3. ZELLEN-STYLING (BOXES)
+       ============================================================ */
+    .box { 
+        border: 1px solid #444; padding: 5px; background: #262626; 
+        min-height: 50px; display: flex; flex-direction: column; 
+        align-items: center; justify-content: center; text-align: center; 
+        font-size: 11px; position: relative; cursor: pointer; overflow: hidden; 
+    }
+
+    .box.empty { pointer-events: none; opacity: 0.5; }
+
+    .zeit-box { background: #333; font-weight: bold; cursor: default; }
+
+    .header-row { 
+        grid-column: span 6; background: #333; font-size: 14px; font-weight: bold; 
+        position: sticky; top: 60px; z-index: 999; display: flex; 
+        align-items: center; justify-content: center; height: 50px; 
+    }
+
+    /* Markierung für eigene Termine */
+    .box.is-mine { 
+        border: 2px solid #e67e22 !important; 
+        z-index: 10; 
+    }
+
+    .box.is-mine:hover {
+        background-color: rgba(230, 126, 34, 0.2) !important;
+        box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
+        transform: scale(1.03);
+        z-index: 100;
+    }
+
+    /* ============================================================
+       4. SPEZIAL-MODI (AUSFALL)
+       ============================================================ */
+    .box.ausfall-mode { 
+        background-color: #000000 !important; 
+        color: #777777 !important; 
+        background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), 
+                          linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); 
+    }
+    
+    /* Hinweis: .outdoor-mode wurde entfernt, da die Farbe nun dynamisch kommt */
+
+    /* ============================================================
+       5. LOGIN-OVERLAY & CARD-DESIGN (PROFI-LOOK)
+       ============================================================ */
+    #loginOverlay { 
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
+                    url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
+        background-size: cover; background-position: center; z-index: 20000; 
+        display: flex; justify-content: center; align-items: center; backdrop-filter: blur(18px); 
     }
 
     .login-card {
-        background: rgba(20, 20, 20, 0.7); 
-        padding: 50px 40px;
-        border-radius: 28px;
-        /* Subtile Lichtkante oben für High-End Look */
-        border: 1px solid rgba(255, 255, 255, 0.08); 
-        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
-        width: 100%;
-        max-width: 360px;
-        text-align: center;
+        background: rgba(20, 20, 20, 0.7); padding: 50px 40px; border-radius: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
+        width: 100%; max-width: 360px; text-align: center;
     }
 
-  .login-card h2 { 
-    color: #ffffff; /* Beides in reinem Weiß */
-    font-size: 30px; 
-    margin-bottom: 35px; 
-    font-weight: 800; /* Die schwere Inter-Schrift wirkt in Weiß extrem edel */
-    letter-spacing: -1.5px;
-    /* Subtiler, dunkler Schatten für bessere Lesbarkeit auf dem Logo-Hintergrund */
-    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-
-/* Falls du das span im HTML noch hast, setzen wir es auch auf weiß */
-.login-card h2 span {
-    background: none;
-    -webkit-text-fill-color: #ffffff;
-    color: #ffffff;
-}
+    .login-card h2 { color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; letter-spacing: -1.5px; }
 
     .login-card input { 
-        padding: 16px 20px; 
-        margin: 10px 0; 
-        background: rgba(0, 0, 0, 0.4); 
-        border: 1px solid rgba(255, 255, 255, 0.1); 
-        color: #fff; 
-        border-radius: 14px; 
-        width: 100%; 
-        font-size: 16px; 
-        outline: none; 
-        box-sizing: border-box;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        padding: 16px 20px; margin: 10px 0; background: rgba(0, 0, 0, 0.4); 
+        border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 14px; 
+        width: 100%; font-size: 16px; outline: none; transition: all 0.3s;
     }
 
-   .login-card input:focus { 
-    border-color: #e67e22; 
-    background: rgba(0, 0, 0, 0.6);
-    box-shadow: 0 0 20px rgba(230, 126, 34, 0.2);
-    /* Ein leichter Glow-Effekt lässt das Feld "aktiv" wirken */
-}
+    .login-card input:focus { border-color: #e67e22; box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); }
 
-  #loginBtn { 
-    padding: 18px; 
-    margin-top: 25px; 
-    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
-    color: white; 
-    border: none; 
-    border-radius: 16px; 
-    cursor: pointer; 
-    width: 100%; 
+    /* ============================================================
+       6. BUTTONS (LOGIN & SPEICHERN) MIT BLITZ-EFFEKT
+       ============================================================ */
+    #loginBtn, .save-btn { 
+        padding: 18px; margin-top: 25px; border: none; border-radius: 16px; 
+        cursor: pointer; width: 100%; font-family: 'Oswald', sans-serif; 
+        font-size: 20px; font-weight: 700; text-transform: uppercase; 
+        color: white; background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
+        position: relative; overflow: hidden; transition: all 0.3s;
+    }
+
+    #loginBtn:hover, .save-btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+    /* Dynamischer Blitz-Effekt für Buttons */
+    #loginBtn::after, .save-btn::after {
+        content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        transform: skewX(-25deg); transition: 0.6s;
+    }
+
+    #loginBtn:hover::after, .save-btn:hover::after { left: 150%; }
+
+    .save-btn.success { background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%); }
+
+    /* ============================================================
+       7. ELEMENTE INNERHALB DER BOXEN & LOADER
+       ============================================================ */
+    .klasse { font-weight: bold; }
+    .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
+    .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
     
-    /* Schrift-Styling: Oswald & Sport-Vibe */
-    font-family: 'Oswald', sans-serif;
-    font-size: 20px; 
-    font-weight: 700;
-    text-transform: uppercase; 
-    letter-spacing: 1.5px;
-    
-    /* Tiefe & Interaktion */
-    box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    
-    /* Der "Käfig" für die Effekte */
-    position: relative;
-    overflow: hidden; 
-    z-index: 1;
-}
+    .stift { 
+        position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; 
+        font-size: 22px; transition: transform 0.2s ease; 
+    }
+    .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
-#loginBtn:hover { 
-    transform: translateY(-3px);
-    box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6);
-    filter: brightness(1.1);
-}
+    .global-loader { 
+        position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; 
+        border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; 
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-#loginBtn:active { 
-    transform: translateY(-1px);
-    box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
-}
+    .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
+    .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
+</style>
 
-/* 1. Statischer Glanz-Effekt (Obere Hälfte des Buttons) */
-#loginBtn::before {
-    content: '';
-    position: absolute;
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 50%;
-    background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
-    pointer-events: none;
-    z-index: 2;
-}
 
-/* 2. Dynamischer Blitz (Speed-Line) */
-#loginBtn::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -150%; /* Start weit links außen */
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(
-        90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
-        transparent
-    );
-    transform: skewX(-25deg); 
-    transition: 0.6s ease-in-out;
-    z-index: 3;
-}
-
-/* Blitz-Animation bei Hover */
-#loginBtn:hover::after {
-    left: 150%; /* Jagt durch den Button nach rechts außen */
-}
-        
-        .klasse { font-weight: bold; }
-        .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
-        .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
-        select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
-        .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
-        
-        .save-btn {
-    display: none; 
-    padding: 10px 28px;
-    /* Ein satterer Verlauf für mehr Plastizität */
-    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
-    color: white;
-    border: none;
-    border-radius: 30px; 
-    font-family: 'Oswald', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    cursor: pointer;
-    
-    /* Ein weicherer, tieferer Schatten */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(230, 126, 34, 0.4);
-    
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
-}
-
-/* 1. Die Lichtkante (Glossy-Effekt oben) */
-.save-btn::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 50%;
-    background: linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0));
-    pointer-events: none;
-    z-index: 2;
-}
-
-/* 2. Der dynamische Blitz beim Hovern */
-.save-btn::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -150%;
-    width: 60%;
-    height: 100%;
-    background: linear-gradient(
-        90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
-        transparent
-    );
-    transform: skewX(-25deg);
-    transition: 0.6s ease-in-out;
-    z-index: 3;
-}
-
-/* Interaktionen */
-.save-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
-    filter: brightness(1.1);
-}
-
-.save-btn:hover::after {
-    left: 150%;
-}
-
-.save-btn:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-/* Erfolg-Status */
-.save-btn.success {
-    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
-    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
-}
-        
-        
-        .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
-        .sport-loader.active { visibility: visible; }
-        @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
-        
-        .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
-        .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
-        .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
-    </style>
 </head>
+
+
 <body onclick="closeAllExtraMenus()">
     <div id="loginOverlay">
     <div class="login-card">
@@ -511,6 +369,7 @@
                                    </select>
                                    <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
     <option value="">---</option>
+    <option value="outdoor">🌳 Outdoor</option>
     <option value="ausfall">❌ Ausfall</option>
     <option value="perma_delete">🏆 Schuljahr beendet</option>
     <option value="kommentar">📝 Notiz hinzufügen</option>
@@ -859,3 +718,21 @@ window.handleExtraAction = (el, time, slot) => {
     
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
