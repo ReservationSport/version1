@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport33333</title>
+    <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -134,6 +134,12 @@
 
     .login-card h2 { color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; letter-spacing: -1.5px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
 
+.login-card h2 span {
+    background: none;
+    -webkit-text-fill-color: #ffffff;
+    color: #ffffff;
+}
+
     .login-card input { 
         padding: 16px 20px; margin: 10px 0; background: rgba(0, 0, 0, 0.4); 
         border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 14px; 
@@ -145,28 +151,46 @@
     /* ============================================================
        6. BUTTONS (LOGIN & SPEICHERN) MIT BLITZ-EFFEKT
        ============================================================ */
-    #loginBtn, .save-btn { 
-        padding: 18px; margin-top: 25px; border: none; border-radius: 16px; 
-        cursor: pointer; width: 100%; font-family: 'Oswald', sans-serif; 
-        font-size: 20px; font-weight: 700; text-transform: uppercase; 
-        color: white; background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
-        position: relative; overflow: hidden; transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1); letter-spacing: 1.5px; box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5); z-index: 1;
-    }
+  
+  #loginBtn { 
+    padding: 18px; 
+    margin-top: 25px; 
+    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
+    color: white; 
+    border: none; 
+    border-radius: 16px; 
+    cursor: pointer; 
+    width: 100%; 
+    
+    /* Schrift-Styling: Oswald & Sport-Vibe */
+    font-family: 'Oswald', sans-serif;
+    font-size: 20px; 
+    font-weight: 700;
+    text-transform: uppercase; 
+    letter-spacing: 1.5px;
+    
+    /* Tiefe & Interaktion */
+    box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    
+    /* Der "Käfig" für die Effekte */
+    position: relative;
+    overflow: hidden; 
+    z-index: 1;
+}
 
-    #loginBtn:hover, .save-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6); filter: brightness(1.1); }
-
-    /* Dynamischer Blitz-Effekt für Buttons */
-    #loginBtn::after, .save-btn::after {
-        content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-        transform: skewX(-25deg); transition: 0.6s ease-in-out; z-index: 3;
-    }
+#loginBtn:hover { 
+    transform: translateY(-3px);
+    box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6);
+    filter: brightness(1.1);
+}
 
 #loginBtn:active { 
     transform: translateY(-1px);
     box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
 }
 
+/* 1. Statischer Glanz-Effekt (Obere Hälfte des Buttons) */
 #loginBtn::before {
     content: '';
     position: absolute;
@@ -179,10 +203,104 @@
     z-index: 2;
 }
 
+/* 2. Dynamischer Blitz (Speed-Line) */
+#loginBtn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%; /* Start weit links außen */
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent
+    );
+    transform: skewX(-25deg); 
+    transition: 0.6s ease-in-out;
+    z-index: 3;
+}
 
-    #loginBtn:hover::after, .save-btn:hover::after { left: 150%; }
+/* Blitz-Animation bei Hover */
+#loginBtn:hover::after {
+    left: 150%; /* Jagt durch den Button nach rechts außen */
+}
 
-    .save-btn.success { background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%); box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3); }
+        .save-btn {
+    display: none; 
+    padding: 10px 28px;
+    /* Ein satterer Verlauf für mehr Plastizität */
+    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
+    color: white;
+    border: none;
+    border-radius: 30px; 
+    font-family: 'Oswald', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    cursor: pointer;
+    
+    /* Ein weicherer, tieferer Schatten */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(230, 126, 34, 0.4);
+    
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* 1. Die Lichtkante (Glossy-Effekt oben) */
+.save-btn::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 50%;
+    background: linear-gradient(rgba(255,255,255,0.25), rgba(255,255,255,0));
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* 2. Der dynamische Blitz beim Hovern */
+.save-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(
+        90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent
+    );
+    transform: skewX(-25deg);
+    transition: 0.6s ease-in-out;
+    z-index: 3;
+}
+
+/* Interaktionen */
+.save-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
+    filter: brightness(1.1);
+}
+
+.save-btn:hover::after {
+    left: 150%;
+}
+
+.save-btn:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Erfolg-Status */
+.save-btn.success {
+    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
+    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+}
 
 #loginError {
     color: #ff4757;
@@ -764,21 +882,3 @@ window.handleExtraAction = (el, time, slot) => {
     
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
