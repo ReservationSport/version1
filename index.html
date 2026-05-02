@@ -749,13 +749,6 @@ window.handleExtraAction = (el, time, slot) => {
 
 
 
-
-
-        window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
-        window.clearTimer = () => clearTimeout(pressTimer);
-        window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); 
-
-
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
 window.clearTimer = () => clearTimeout(pressTimer);
 window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
