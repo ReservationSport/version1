@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Reservation Sport0222</title>
+    <title>Reservation Sport1111112</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -620,37 +620,36 @@ window.addChange = (el, time, slot, klasse) => {
 
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
-    if (!action || action === "---") {
+    
+    // WICHTIG: Die Prüfung wurde angepasst, damit "---" nicht sofort abbricht, 
+    // sondern weiter unten als "Lösch-Befehl" verarbeitet wird.
+    if (!action) {
         closeAllExtraMenus();
         return;
-        }
+    }
 
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // Die Klasse sicher aus dem HTML-Element holen
     const klasseElem = parent.querySelector('.klasse');
     const klasse = klasseElem ? klasseElem.innerText.trim() : "";
     
-    // Bestehende Daten aus dem Speicher holen
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    let hasU21 = fullString.includes("U21");
-    
     let parts = fullString.split('|').map(s => s.trim());
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     
+    // Standardmäßig nehmen wir die aktuelle Halle als Basis
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // --- LOGIK FÜR PERMANENTES LÖSCHEN MIT PASSWORT-SCHUTZ ---
-  if (action === "perma_delete") {
+    // --- 1. LOGIK: PERMANENTES LÖSCHEN ---
+    if (action === "perma_delete") {
         if (!klasse || klasse === "") {
             alert("Keine Klasse zum Löschen gefunden.");
             el.value = "";
             closeAllExtraMenus();
             return;
-            }
-        
+        }
 
         if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
             const modal = document.getElementById('pwModal');
@@ -661,10 +660,9 @@ window.handleExtraAction = (el, time, slot) => {
             input.value = '';
             input.focus();
 
-            // ENTER-TASTE FIX:
             input.onkeydown = (e) => {
                 if (e.key === 'Enter') {
-                    e.preventDefault(); // Verhindert ungewolltes Neuladen der Seite
+                    e.preventDefault();
                     btn.click();
                 }
             };
@@ -678,19 +676,21 @@ window.handleExtraAction = (el, time, slot) => {
                 }
             };
         }
-        
         el.value = "";
         closeAllExtraMenus();
         return;
     }
-    // ------------------------------------------
-    
 
-
+    // --- 2. LOGIK: AUSFALL ODER LÖSCHEN (---) ---
     if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-    } else if (action === "kommentar") {
+    } 
+    else if (action === "---") {
+        neueHalle = ""; // Zelle leeren
+        parent.classList.remove('ausfall-mode'); // Rot/Grau-Markierung entfernen
+    } 
+    else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         
@@ -716,37 +716,36 @@ window.handleExtraAction = (el, time, slot) => {
             closeAllExtraMenus();
             return;
         }
-    } else if (action === "delete_comment") {
+    } 
+    else if (action === "delete_comment") {
         commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
     }
 
-
-    if (neueHalle !== "Ausfall") {
+    // --- 3. OPTIK & SPEICHERN ---
+    
+    // Hintergrundfarbe setzen (nur wenn es kein Ausfall und nicht leer ist)
+    if (neueHalle !== "" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else {
-        parent.style.backgroundColor = "";
+        parent.style.backgroundColor = ""; // Weiß/Transparent bei Ausfall oder Leeren
     }
     
     const resElem = parent.querySelector('.res');
     if (resElem) resElem.innerText = neueHalle;
 
-    // Finalen Wert für den Export bauen
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
 
-    // Daten im lokalen Speicher aktualisieren
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
-    // Änderung in die Liste für den "Speichern"-Button aufnehmen
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     document.getElementById('saveBtn').style.display = 'block';
 
-    el.value = ""; // Dropdown Auswahl optisch zurücksetzen
+    el.value = ""; 
     closeAllExtraMenus();
-}
-
+};
 
 
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
