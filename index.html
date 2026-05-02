@@ -68,9 +68,6 @@
         .box.ausfall-mode .res { color: #555555; }
         .box.ausfall-mode .lehrer-info { display: none; }
 
-        .box.outdoor-mode { background-color: #0B2F1366 !important; color: white !important; }
-        .box.outdoor-mode .res { font-weight: bold; }
-
         .stift { position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; cursor: pointer; pointer-events: auto; display: inline-block; font-size: 22px; line-height: 1; text-shadow: 0 0 5px rgba(0,0,0,1); transition: transform 0.2s ease; }
         .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
@@ -514,7 +511,6 @@
                                    </select>
                                    <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
     <option value="">---</option>
-    <option value="outdoor">🌳 Outdoor</option>
     <option value="ausfall">❌ Ausfall</option>
     <option value="perma_delete">🏆 Schuljahr beendet</option>
     <option value="kommentar">📝 Notiz hinzufügen</option>
