@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026sdad</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -158,7 +158,12 @@
     .refresh-btn:hover { color: #ff9f43; background: #444; }
  .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
         @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
+
+
+    /* Diese Klasse blendet die Buttons radikal aus */
+.nav-btn-hidden {
+    display: none !important;
+}
 
     /* ============================================================
        3. ZELLEN-STYLING (BOXES)
@@ -553,37 +558,36 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const dp = document.getElementById('datePicker');
     if (!dp || !dp.value) return;
 
-    // Daten normieren: Nur Jahr, Monat, Tag zählen
     const pickerDate = new Date(dp.value);
     pickerDate.setHours(0, 0, 0, 0);
 
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
 
-  // BUTTON: TAG ZURÜCK
-const prevDayBtn = document.getElementById('btnPrevDay');
-if (prevDayBtn) {
-    if (pickerDate <= heute) {
-        // Wir erzwingen das Verstecken mit !important
-        prevDayBtn.style.setProperty('display', 'none', 'important');
-    } else {
-        // Wir setzen es explizit auf flex zurück
-        prevDayBtn.style.setProperty('display', 'flex', 'important');
-    }
-}
+    const prevDayBtn = document.getElementById('btnPrevDay');
+    const prevWeekBtn = document.getElementById('btnPrevWeek');
 
-// BUTTON: WOCHE ZURÜCK
-const prevWeekBtn = document.getElementById('btnPrevWeek');
-if (prevWeekBtn) {
-    const minWoche = new Date(heute);
-    minWoche.setDate(heute.getDate() + 6); 
-
-    if (pickerDate <= minWoche) {
-        prevWeekBtn.style.setProperty('display', 'none', 'important');
-    } else {
-        prevWeekBtn.style.setProperty('display', 'flex', 'important');
+    // LOGIK TAG ZURÜCK
+    if (prevDayBtn) {
+        if (pickerDate <= heute) {
+            prevDayBtn.classList.add('nav-btn-hidden');
+        } else {
+            prevDayBtn.classList.remove('nav-btn-hidden');
+        }
     }
-}
+
+    // LOGIK WOCHE ZURÜCK
+    if (prevWeekBtn) {
+        const eineWocheZukunft = new Date(heute);
+        eineWocheZukunft.setDate(heute.getDate() + 6); 
+
+        if (pickerDate <= eineWocheZukunft) {
+            prevWeekBtn.classList.add('nav-btn-hidden');
+        } else {
+            prevWeekBtn.classList.remove('nav-btn-hidden');
+        }
+    }
+    
 }
 
         function closeAllExtraMenus() {
