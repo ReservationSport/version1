@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 20266666</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -477,6 +477,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
     
   <div class="date-control">
+      <div id="globalLoader" class="global-loader"></div>
+
     <!-- LINKER BEREICH: News & Zurück-Navigation -->
     <div class="nav-section nav-left">
         <button onclick="openNews()" class="news-btn-premium" title="Nachrichtenzentrale">
@@ -579,6 +581,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const container = document.getElementById('plan');
     container.innerHTML = ""; 
     document.getElementById('globalLoader').style.display = 'block';
+            
     const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
     const heute = new Date(); heute.setHours(12,0,0,0);
     const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
