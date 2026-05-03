@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026555</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -22,12 +22,12 @@
     }
 
     .grid { 
-        display: grid; 
-        grid-template-columns: 120px repeat(5, 1fr); 
-        gap: 2px; 
-        max-width: 1000px; 
-        margin: auto; 
-    }
+    display: grid; 
+    grid-template-columns: 120px repeat(5, 1fr); 
+    gap: 2px; 
+    max-width: 1400px; /* Auf Navigation angepasst */
+    margin: auto; 
+}
 
      .info-box {
     grid-column: span 6;
@@ -51,9 +51,13 @@
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1400px; /* Hier die Breite deines Grids eintragen */
-    margin: 10px auto 20px auto;
-    padding: 0;
+    max-width: 1400px;
+    margin: 0 auto; /* Margin unten entfernt, da Sticky Platz braucht */
+    padding: 10px 0; /* Etwas Padding für den Abstand */
+    background: #1a1a1a; /* WICHTIG: Hintergrundfarbe deckend */
+    position: sticky;
+    top: 0;
+    z-index: 1100; /* Höchster Index, damit Buttons über allem liegen */
 }
 
 .nav-section {
@@ -169,10 +173,18 @@
     .zeit-box { background: #333; font-weight: bold; cursor: default; }
 
     .header-row { 
-        grid-column: span 6; background: #333; font-size: 14px; font-weight: bold; 
-        position: sticky; top: 60px; z-index: 999; display: flex; 
-        align-items: center; justify-content: center; height: 50px; 
-    }
+    grid-column: span 6; 
+    background: #333; 
+    font-size: 14px; 
+    font-weight: bold; 
+    position: sticky; 
+    top: 60px; /* Dieser Wert muss direkt unter der .date-control liegen */
+    z-index: 1090; /* Knapp unter der Navigation */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 50px; 
+}
 
     /* Markierung für eigene Termine */
     .box.is-mine { 
@@ -411,9 +423,17 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
     .global-loader { 
-        position: absolute; left: 20px; width: 30px; height: 30px; border: 4px solid #444; 
-        border-top: 4px solid #27ae60; border-radius: 50%; animation: spin 1s linear infinite; display: none; 
-    }
+    position: relative; /* Von absolute auf relative geändert */
+    margin-right: 15px;
+    width: 30px; 
+    height: 30px; 
+    border: 4px solid #444; 
+    border-top: 4px solid #27ae60; 
+    border-radius: 50%; 
+    animation: spin 1s linear infinite; 
+    display: none; 
+}
+    
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
