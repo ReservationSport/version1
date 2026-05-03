@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026555</title>
+     <title>Reservation Sport 2026333</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -21,11 +21,12 @@
         padding: 20px; 
     }
 
-    .grid { 
+    /* 2. Das Grid/Die Tabelle wieder schmaler machen */
+.grid { 
     display: grid; 
     grid-template-columns: 120px repeat(5, 1fr); 
     gap: 2px; 
-    max-width: 1400px; /* Auf Navigation angepasst */
+    max-width: 1000px; /* Hier ebenfalls wieder 1000px */
     margin: auto; 
 }
 
@@ -46,18 +47,19 @@
        ============================================================ */
 
     
-  .date-control {
+ /* 1. Die Navigationsleiste wieder schmaler machen */
+.date-control {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1400px;
-    margin: 0 auto; /* Margin unten entfernt, da Sticky Platz braucht */
-    padding: 10px 0; /* Etwas Padding für den Abstand */
-    background: #1a1a1a; /* WICHTIG: Hintergrundfarbe deckend */
+    max-width: 1000px; /* Zurück auf den Originalwert deiner Tabelle */
+    margin: 0 auto;
+    padding: 10px 0;
+    background: #1a1a1a;
     position: sticky;
     top: 0;
-    z-index: 1100; /* Höchster Index, damit Buttons über allem liegen */
+    z-index: 1100;
 }
 
 .nav-section {
