@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026111</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -48,27 +48,59 @@
     
    .date-control {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* Verteilt links, mitte, rechts */
     align-items: center;
     width: 100%;
-    max-width: 1200px; /* Dieser Wert sollte der Breite deiner Inhaltsbox entsprechen */
-    margin: 20px auto; /* Zentriert die ganze Zeile und gibt Abstand nach oben/unten */
-    padding: 0 40px;   /* DAS IST DER SCHLÜSSEL: Gleicht den Einzug der Box darunter aus */
-    box-sizing: border-box;
+    max-width: 1200px; /* Muss der Breite deiner Tabelle entsprechen */
+    margin: 20px auto; 
+    padding: 0;        /* Sorgt für Bündigkeit an den Außenkanten */
 }
 
+/* Hilfsklassen für die Sektionen */
+.nav-section {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Abstand zwischen den Buttons innerhalb einer Gruppe */
+}
+
+.nav-left {
+    flex: 1;
+    justify-content: flex-start;
+}
+
+.nav-center {
+    flex: 2; /* Gibt der Mitte mehr Raum zum Zentrieren */
+    justify-content: center;
+    gap: 5px; /* Engere Gruppierung um das Datum */
+}
+
+.nav-right {
+    flex: 1;
+    justify-content: flex-end;
+}
+
+/* Spezifisches Styling für das Datum im Zentrum */
+#datePicker {
+    padding: 8px;
+    background: #2a2a2a;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    font-family: sans-serif;
+}
+    
 /* Der News-Button im edlen Design */
 .news-btn-premium {
     position: relative;
     display: flex;
     align-items: center;
-    background: #2a2a2a;      
+    background: #2a2a2a;
     border: 1px solid #444;
     border-radius: 6px;
     padding: 6px 15px;
+    margin-right: 10px;
     cursor: pointer;
-    height: 38px;             /* Etwas kompakter für den Look im Screenshot */
-    transition: all 0.3s ease;
+    height: 40px;
 }
 
 .news-btn-premium:hover {
@@ -78,16 +110,16 @@
 
 .news-btn-premium .btn-text {
     color: #fff;
-    font-family: 'Segoe UI', sans-serif; 
-    font-weight: 400;         
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 400;
     font-size: 13px;
-    letter-spacing: 1.5px; 
+    letter-spacing: 1.5px;
     margin-right: 10px;
 }
 
     
 .news-btn-premium .bell-icon {
-    font-size: 14px;
+    font-size: 14px; opacity: 0.7;
 }
 
 /* Badge Punkt (Orange) */
@@ -442,31 +474,39 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px;"></p>
     </div>
 </div>
-    <div class="date-control">
-        <div id="globalLoader" class="global-loader"></div>
 
-        
-        <div class="nav-group">
-           <button onclick="openNews()" class="news-btn-premium" title="Nachrichtenzentrale">
-        <span class="btn-text">NEWS</span>
-        <span class="bell-icon">🔔</span>
-        <span id="newsBadge" class="badge" style="display:none;"></span>
-            </button>
-            
-            <button id="btnPrevWeek" class="nav-btn" title="Vorherige Woche" onclick="changeDate(-7)">⏮</button>
-            <button id="btnPrevDay" class="nav-btn" title="Vorheriger Tag" onclick="changeDate(-1)">◀</button>
-        </div>
-        
-        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-house"></i></button>
-        <input type="date" id="datePicker" onchange="loadPlan()">
-        <div class="nav-group" style="display: flex; align-items: center;">
-            <button class="nav-btn" title="Nächster Tag" onclick="changeDate(1)">▶</button>
-            <button class="nav-btn" title="Nächste Woche" onclick="changeDate(7)">⏭</button>
-            <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
-                <i class="fas fa-sync-alt"></i>
-            </button>
-        </div>
+    
+  <div class="date-control">
+    <!-- LINKER BEREICH: News & Zurück-Navigation -->
+    <div class="nav-section nav-left">
+        <button onclick="openNews()" class="news-btn-premium" title="Nachrichtenzentrale">
+            <span class="btn-text">NEWS</span>
+            <span class="bell-icon">🔔</span>
+            <span id="newsBadge" class="badge" style="display:none;"></span>
+        </button>
+        <button id="btnPrevWeek" class="nav-btn" title="Vorherige Woche" onclick="changeDate(-7)">⏮</button>
+        <button id="btnPrevDay" class="nav-btn" title="Vorheriger Tag" onclick="changeDate(-1)">◀</button>
     </div>
+
+    <!-- MITTLERER BEREICH: Heute & Datumsauswahl & Vor-Navigation -->
+    <div class="nav-section nav-center">
+        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute">
+            <i class="fas fa-house"></i>
+        </button>
+        <input type="date" id="datePicker" onchange="loadPlan()">
+        <button class="nav-btn" title="Nächster Tag" onclick="changeDate(1)">▶</button>
+        <button class="nav-btn" title="Nächste Woche" onclick="changeDate(7)">⏭</button>
+    </div>
+
+    <!-- RECHTER BEREICH: Aktualisierung bündig am Rand -->
+    <div class="nav-section nav-right">
+        <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
+</div>
+
+    
     <div class="grid" id="plan"></div>
 
 
