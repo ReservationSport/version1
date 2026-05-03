@@ -325,26 +325,19 @@
 
         .save-btn {
     display: none; 
-    padding: 10px 28px;
-    /* Ein satterer Verlauf für mehr Plastizität */
+    padding: 0 15px !important; /* Etwas weniger Padding für mehr Platz */
     background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
     color: white;
     border: none;
-    border-radius: 30px; 
+    border-radius: 20px; 
     font-family: 'Oswald', sans-serif;
-    font-size: 16px;
+    font-size: 12px !important; /* Kleiner als vorher */
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1.2px;
+    letter-spacing: 1px;
     cursor: pointer;
-    
-    /* Ein weicherer, tieferer Schatten */
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(230, 126, 34, 0.4);
-    
-    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    position: relative;
-    overflow: hidden;
-    z-index: 1;
+    height: 34px !important;
+    white-space: nowrap;
 }
 
 /* 1. Die Lichtkante (Glossy-Effekt oben) */
@@ -392,10 +385,21 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-/* Erfolg-Status */
+/* Erfolg-Status: Nur noch grüner Button mit Haken */
 .save-btn.success {
-    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%);
-    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%) !important;
+    color: white !important;
+    width: 40px !important; /* Button wird rund/quadratisch */
+    padding: 0 !important;
+    font-size: 0 !important; /* Text verschwindet */
+}
+
+    .save-btn.success::before {
+    content: '✔'; /* Der Haken */
+    font-size: 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 #loginError {
@@ -424,18 +428,18 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     }
     .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
-    .global-loader { 
-    position: relative; /* Von absolute auf relative geändert */
-    margin-right: 15px;
-    width: 30px; 
-    height: 30px; 
-    border: 4px solid #444; 
-    border-top: 4px solid #27ae60; 
+    /* Global Loader Positionierung */
+.global-loader { 
+    position: absolute; 
+    left: 10px; /* Schön dezent am Rand der Leiste */
+    width: 25px; 
+    height: 25px; 
+    border: 3px solid #444; 
+    border-top: 3px solid #e67e22; 
     border-radius: 50%; 
     animation: spin 1s linear infinite; 
     display: none; 
 }
-    
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
@@ -499,41 +503,32 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 </div>
 
     
- <div class="date-control">
+<div class="date-control">
+    <!-- Der Global Loader ist wieder da -->
     <div id="globalLoader" class="global-loader" style="display:none;"></div>
 
-    <!-- LINKS: Nur News -->
     <div class="nav-section nav-left">
-        <button onclick="openNews()" class="news-btn-premium" title="Nachrichtenzentrale">
+        <button onclick="openNews()" class="news-btn-premium">
             <span class="btn-text">NEWS</span>
             <span class="bell-icon">🔔</span>
-            <span id="newsBadge" class="badge" style="display:none;"></span>
         </button>
     </div>
 
-    <!-- MITTE: Alles für die Zeit-Navigation -->
     <div class="nav-section nav-center">
-        <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)">⏮</button>
-        <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)">◀</button>
-        
-        <button id="btnToday" class="nav-btn" onclick="goToToday()">
-            <i class="fas fa-house"></i>
-        </button>
-        
+        <button class="nav-btn" onclick="changeDate(-7)">⏮</button>
+        <button class="nav-btn" onclick="changeDate(-1)">◀</button>
+        <button class="nav-btn" onclick="goToToday()"><i class="fas fa-house"></i></button>
         <input type="date" id="datePicker" onchange="loadPlan()">
-        
         <button class="nav-btn" onclick="changeDate(1)">▶</button>
         <button class="nav-btn" onclick="changeDate(7)">⏭</button>
     </div>
 
-    <!-- RECHTS: Speichern & Aktualisieren -->
     <div class="nav-section nav-right">
-        <button id="saveBtn" class="nav-btn save-btn" style="display:none;" onclick="saveChanges()">
-            <i class="fas fa-save"></i>
+        <!-- Save-Button mit kleinerer Schrift -->
+        <button id="saveBtn" class="save-btn" style="display:none;" onclick="saveChanges()">
+            SAVE
         </button>
-        <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
-            <i class="fas fa-sync-alt"></i>
-        </button>
+        <button class="refresh-btn" onclick="loadPlan()"><i class="fas fa-sync-alt"></i></button>
     </div>
 </div>
 
@@ -946,10 +941,19 @@ function openExtraMenu(el) {
     }, 50); 
 }
 
-window.saveChanges = async () => { 
-    const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
-    btn.style.display = 'none'; 
-    ball.classList.add('active');
+function saveChanges() {
+    const btn = document.getElementById('saveBtn');
+    // ... dein Speicher-Code ...
+    
+    // Nach erfolgreichem Speichern:
+    btn.classList.add('success');
+    
+    // Optional: Nach 3 Sekunden zurücksetzen oder ausblenden
+    setTimeout(() => {
+        btn.classList.remove('success');
+        btn.style.display = 'none';
+    }, 3000);
+}
     
     try { 
         const response = await fetch(url, { 
