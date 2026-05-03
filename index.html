@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 20266666</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -46,34 +46,36 @@
        ============================================================ */
 
     
-   .date-control {
+  .date-control {
     display: flex;
-    justify-content: space-between; /* Verteilt links, mitte, rechts */
+    justify-content: space-between;
     align-items: center;
     width: 100%;
-    max-width: 1200px; /* Muss der Breite deiner Tabelle entsprechen */
-    margin: 20px auto; 
-    padding: 0;        /* Sorgt für Bündigkeit an den Außenkanten */
+    max-width: 1400px; /* Hier die Breite deines Grids eintragen */
+    margin: 10px auto 20px auto;
+    padding: 0;
 }
 
-/* Hilfsklassen für die Sektionen */
 .nav-section {
     display: flex;
     align-items: center;
-    gap: 8px; /* Abstand zwischen den Buttons innerhalb einer Gruppe */
+    gap: 10px;
 }
 
+/* Linke Sektion (News) */
 .nav-left {
     flex: 1;
     justify-content: flex-start;
 }
 
+/* Mittlere Sektion (Datum & alle Pfeile) */
 .nav-center {
-    flex: 2; /* Gibt der Mitte mehr Raum zum Zentrieren */
+    flex: 2; /* Nimmt mehr Platz ein, um sich perfekt zu zentrieren */
     justify-content: center;
-    gap: 5px; /* Engere Gruppierung um das Datum */
+    gap: 8px;
 }
 
+/* Rechte Sektion (Save & Refresh) */
 .nav-right {
     flex: 1;
     justify-content: flex-end;
@@ -89,7 +91,7 @@
     font-family: sans-serif;
 }
     
-/* Der News-Button im edlen Design */
+/* Der News-Button bleibt im Premium-Style */
 .news-btn-premium {
     position: relative;
     display: flex;
@@ -98,7 +100,6 @@
     border: 1px solid #444;
     border-radius: 6px;
     padding: 6px 15px;
-    margin-right: 10px;
     cursor: pointer;
     height: 40px;
 }
@@ -111,9 +112,9 @@
 .news-btn-premium .btn-text {
     color: #fff;
     font-family: 'Segoe UI', sans-serif;
-    font-weight: 400;
+    font-weight: 300;
     font-size: 13px;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     margin-right: 10px;
 }
 
@@ -476,32 +477,38 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 </div>
 
     
-  <div class="date-control">
-      <div id="globalLoader" class="global-loader"></div>
+ <div class="date-control">
+    <div id="globalLoader" class="global-loader" style="display:none;"></div>
 
-    <!-- LINKER BEREICH: News & Zurück-Navigation -->
+    <!-- LINKS: Nur News -->
     <div class="nav-section nav-left">
         <button onclick="openNews()" class="news-btn-premium" title="Nachrichtenzentrale">
             <span class="btn-text">NEWS</span>
             <span class="bell-icon">🔔</span>
             <span id="newsBadge" class="badge" style="display:none;"></span>
         </button>
-        <button id="btnPrevWeek" class="nav-btn" title="Vorherige Woche" onclick="changeDate(-7)">⏮</button>
-        <button id="btnPrevDay" class="nav-btn" title="Vorheriger Tag" onclick="changeDate(-1)">◀</button>
     </div>
 
-    <!-- MITTLERER BEREICH: Heute & Datumsauswahl & Vor-Navigation -->
+    <!-- MITTE: Alles für die Zeit-Navigation -->
     <div class="nav-section nav-center">
-        <button id="btnToday" class="nav-btn" onclick="goToToday()" title="Heute">
+        <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)">⏮</button>
+        <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)">◀</button>
+        
+        <button id="btnToday" class="nav-btn" onclick="goToToday()">
             <i class="fas fa-house"></i>
         </button>
+        
         <input type="date" id="datePicker" onchange="loadPlan()">
-        <button class="nav-btn" title="Nächster Tag" onclick="changeDate(1)">▶</button>
-        <button class="nav-btn" title="Nächste Woche" onclick="changeDate(7)">⏭</button>
+        
+        <button class="nav-btn" onclick="changeDate(1)">▶</button>
+        <button class="nav-btn" onclick="changeDate(7)">⏭</button>
     </div>
 
-    <!-- RECHTER BEREICH: Aktualisierung bündig am Rand -->
+    <!-- RECHTS: Speichern & Aktualisieren -->
     <div class="nav-section nav-right">
+        <button id="saveBtn" class="nav-btn save-btn" style="display:none;" onclick="saveChanges()">
+            <i class="fas fa-save"></i>
+        </button>
         <button class="refresh-btn" onclick="loadPlan()" title="Tag aktualisieren">
             <i class="fas fa-sync-alt"></i>
         </button>
