@@ -659,27 +659,25 @@ window.addChange = (el, time, slot, klasse) => {
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
     const parent = el.parentElement;
+    const dp = document.getElementById('datePicker'); // Für das Datum der Benachrichtigung
     
     // 1. WICHTIG: Wenn die Auswahl leer ist oder "---" gewählt wurde -> LÖSCHEN
     if (action === "" || action === "---") {
         const r = parent.getAttribute('data-row');
         const c = parent.getAttribute('data-col');
         
-        // Optik zurücksetzen
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         
         const resElem = parent.querySelector('.res');
-        if (resElem) resElem.innerText = ""; // Text in der Zelle löschen
+        if (resElem) resElem.innerText = ""; 
 
-        // Kommentar beibehalten, aber Halle leeren
         let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
         let parts = fullString.split('|').map(s => s.trim());
         let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
         
         let finalVal = buildFinalValue(r, c, "", commentPart);
         
-        // Speichern
         if (!currentPlanData[r]) currentPlanData[r] = [];
         currentPlanData[r][c] = finalVal;
         pendingChanges.push({ time, slotIndex: slot, val: finalVal });
@@ -687,11 +685,9 @@ window.handleExtraAction = (el, time, slot) => {
 
         el.value = "";
         closeAllExtraMenus();
-        return; // Hier abbrechen, damit der Rest nicht ausgeführt wird
+        return; 
     }
 
-    // --- AB HIER DER RESTLICHE CODE (wird nur ausgeführt, wenn action NICHT leer ist) ---
-    
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const klasseElem = parent.querySelector('.klasse');
@@ -702,31 +698,28 @@ window.handleExtraAction = (el, time, slot) => {
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
+    // --- LOGIK FÜR DIE AKTIONEN ---
+
     if (action === "perma_delete") {
-        // 1. Die Browser-Abfrage (dein Screenshot)
         if (confirm(`Soll das Schuljahr für die Klasse "${klasse}" beendet werden?`)) {
-            
-            // 2. Das Modal-Element aus deinem HTML holen
             const modal = document.getElementById('pwModal');
             const input = document.getElementById('modalPwInput');
             const btn = document.getElementById('confirmPwBtn');
 
             if (modal && input && btn) {
-                // Modal anzeigen
                 modal.style.display = 'flex';
                 input.value = '';
                 input.focus();
 
-                // 3. Logik für den "Bestätigen"-Button im Modal
                 btn.onclick = () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        
-                        // Hier wird die eigentliche Lösch-Funktion aufgerufen
+                        // Nachricht senden, bevor die Klasse überall gelöscht wird
+                        if (typeof createNotification === "function") {
+                            createNotification("Outdoor/Ende", klasse, r, dp.value);
+                        }
                         if (typeof permaDeleteClass === "function") {
                             permaDeleteClass(klasse, slot);
-                        } else {
-                            alert("Klasse wird gelöscht... (Funktion permaDeleteClass nicht gefunden)");
                         }
                     } else {
                         alert("Falsches Passwort!");
@@ -736,21 +729,22 @@ window.handleExtraAction = (el, time, slot) => {
                 };
             }
         }
-        // Dropdown und Menüs immer schließen
+        // Bei Perma-Delete beenden wir hier, da das Modal die weitere Steuerung übernimmt
         el.value = ""; 
         closeAllExtraMenus(); 
         return;
-
-        createNotification("Outdoor/Ende", klasse, rowIndex, dp.value);
-    }
-        
+    } 
+    
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-        createNotification("einen Ausfall", klasse, rowIndex, dp.value);
+        // Benachrichtigung auslösen
+        if (typeof createNotification === "function") {
+            createNotification("einen Ausfall", klasse, r, dp.value);
+        }
     } 
+    
     else if (action === "kommentar") {
-        // ... dein bestehender Kommentar-Code ...
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         if (text !== null) {
@@ -764,30 +758,41 @@ window.handleExtraAction = (el, time, slot) => {
                 span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
             } else { commentPart = undefined; }
-        } else { el.value = ""; closeAllExtraMenus(); return; }
+        } else { 
+            el.value = ""; closeAllExtraMenus(); return; 
+        }
     } 
+    
     else if (action === "delete_comment") {
         commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
     }
 
-    // Optik finalisieren (für Ausfall oder Kommentar-Änderungen)
+    // --- FINALES UPDATE (Wird für Ausfall/Kommentar/Löschen ausgeführt) ---
+
+    // Optik anpassen
     if (neueHalle !== "" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else if (neueHalle === "Ausfall") {
-        parent.style.backgroundColor = ""; // Farbe weg bei Ausfall (Klasse steuert das via CSS)
+        parent.style.backgroundColor = ""; 
     }
     
     const resElem = parent.querySelector('.res');
     if (resElem) resElem.innerText = neueHalle;
 
+    // Werte berechnen und in Liste speichern
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
+    
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    document.getElementById('saveBtn').style.display = 'block';
+    
+    // Save-Button anzeigen
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) saveBtn.style.display = 'block';
 
+    // Menü aufräumen
     el.value = ""; 
     closeAllExtraMenus();
 };
