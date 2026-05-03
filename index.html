@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -44,15 +44,17 @@
     /* ============================================================
        2. NAVIGATION & DATUMSKONTROLLE & News
        ============================================================ */
-    .date-control {
+
+    
+   .date-control {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    /* Falls deine Tabelle eine max-width hat, hier den gleichen Wert nutzen: */
-    max-width: 1400px; 
-    margin: 0 auto 15px 0; /* Links bündig (0), unten Abstand zur Tabelle */
-    padding: 0;            /* CRITICAL: Entfernt den Einzug links */
+    max-width: 1200px; /* Dieser Wert sollte der Breite deiner Inhaltsbox entsprechen */
+    margin: 20px auto; /* Zentriert die ganze Zeile und gibt Abstand nach oben/unten */
+    padding: 0 40px;   /* DAS IST DER SCHLÜSSEL: Gleicht den Einzug der Box darunter aus */
+    box-sizing: border-box;
 }
 
 /* Der News-Button im edlen Design */
@@ -63,10 +65,9 @@
     background: #2a2a2a;      
     border: 1px solid #444;
     border-radius: 6px;
-    padding: 6px 18px;
-    margin-right: 20px;       /* Abstand zu den Pfeilen ⏮ ◀ */
+    padding: 6px 15px;
     cursor: pointer;
-    height: 40px;             /* Einheitliche Höhe mit den anderen Buttons */
+    height: 38px;             /* Etwas kompakter für den Look im Screenshot */
     transition: all 0.3s ease;
 }
 
@@ -77,13 +78,14 @@
 
 .news-btn-premium .btn-text {
     color: #fff;
-    font-family: 'Segoe UI', Roboto, sans-serif; 
-    font-weight: 300;         /* Elegante dünne Schrift */
+    font-family: 'Segoe UI', sans-serif; 
+    font-weight: 400;         
     font-size: 13px;
-    letter-spacing: 2px;      /* Weite Buchstabenabstände */
-    margin-right: 12px;       /* Platz zur Glocke */
+    letter-spacing: 1.5px; 
+    margin-right: 10px;
 }
 
+    
 .news-btn-premium .bell-icon {
     font-size: 14px;
 }
