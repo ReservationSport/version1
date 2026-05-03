@@ -352,22 +352,56 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
        ============================================================ */
     
 
-/* Animation für das Hereinfahren der Sidebar */
+#newsSidebar {
+    left: 0 !important;
+    right: auto !important;
+    animation: slideIn 0.3s ease-out !important; /* slideIn von links */
+}
+
 @keyframes slideIn {
     from { transform: translateX(-100%); }
     to { transform: translateX(0); }
 }
 
-/* Der Benachrichtigungs-Punkt am Button */
-.badge {
+.news-btn-wide {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px !important; /* Viel Platz links und rechts */
+    min-width: 100px;           /* Mindestbreite */
+    height: 40px;               /* Gleiche Höhe wie deine anderen Buttons */
+    background: #333;
+    border: 1px solid #444;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s ease;
+}
+
+.news-btn-wide:hover {
+    background: #444;
+    border-color: #e67e22;
+}
+
+.news-btn-wide .btn-text {
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Der Badge-Punkt (Orange) oben rechts auf dem Button */
+.news-btn-wide .badge {
     position: absolute;
     top: 2px;
-    right: 2px;
+    right: 5px;
     width: 8px;
     height: 8px;
-    background: #e67e22; /* Dein Orange */
+    background: #e67e22;
     border-radius: 50%;
     border: 1px solid #1a1a1a;
+    box-shadow: 0 0 5px rgba(230, 126, 34, 0.5);
 }
 
     
