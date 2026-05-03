@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -72,7 +72,7 @@
     .refresh-btn:hover { color: #ff9f43; background: #444; }
  .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
         @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
+    
 
     /* ============================================================
        3. ZELLEN-STYLING (BOXES)
@@ -346,6 +346,31 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
 .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
 
+
+  /* ============================================================
+       8. Sidebar mit Nachrichtenzentrale
+       ============================================================ */
+    
+
+/* Animation für das Hereinfahren der Sidebar */
+@keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+}
+
+/* Der Benachrichtigungs-Punkt am Button */
+.badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 8px;
+    height: 8px;
+    background: #e67e22; /* Dein Orange */
+    border-radius: 50%;
+    border: 1px solid #1a1a1a;
+}
+
+    
 </style>
 
 
@@ -380,6 +405,10 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     <div class="date-control">
         <div id="globalLoader" class="global-loader"></div>
         <div class="nav-group">
+            <button onclick="openNews()" class="nav-btn" title="Nachrichtenzentrale" style="position: relative;">
+        <span>🔔</span>
+        <span id="newsBadge" class="badge" style="display:none;"></span>
+    </button>
             <button id="btnPrevWeek" class="nav-btn" title="Vorherige Woche" onclick="changeDate(-7)">⏮</button>
             <button id="btnPrevDay" class="nav-btn" title="Vorheriger Tag" onclick="changeDate(-1)">◀</button>
         </div>
@@ -879,9 +908,65 @@ window.saveChanges = async () => {
     document.getElementById('pwModal').style.display = 'none';
 }
 
+
+// Sidebar öffnen
+window.openNews = () => {
+    document.getElementById('newsSidebar').style.display = 'flex';
+    document.getElementById('newsBadge').style.display = 'none'; 
+};
+
+// Sidebar schließen
+window.closeNews = () => {
+    document.getElementById('newsSidebar').style.display = 'none';
+};
+
+// Admin-Check zum Schreiben
+window.checkAdminForNews = () => {
+    const modal = document.getElementById('pwModal');
+    const input = document.getElementById('modalPwInput');
+    const btn = document.getElementById('confirmPwBtn');
+
+    modal.style.display = 'flex';
+    input.value = '';
+    input.focus();
+
+    btn.onclick = () => {
+        if (input.value === userPw) {
+            modal.style.display = 'none';
+            const msg = prompt("Nachricht eingeben (Max. 200 Zeichen):");
+            if (msg && msg.trim() !== "") {
+                // Hier kommt später der Speicherbefehl fürs Backend
+                console.log("Nachricht bereit zum Senden:", msg);
+                alert("Nachricht verfasst! (Backend-Anbindung folgt)");
+            }
+        } else {
+            alert("Falsches Passwort!");
+        }
+    };
+};
+        
         
     </script>
 
+<!-- Nachrichtenzentrale Sidebar -->
+<div id="newsSidebar" style="display:none; position:fixed; top:0; left:0; width:350px; height:100%; background:#121212; z-index:25000; box-shadow: 10px 0 30px rgba(0,0,0,0.5); border-right: 1px solid #333; flex-direction: column; animation: slideIn 0.3s ease-out; font-family: sans-serif;">
+    <div style="padding: 25px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="color: #fff; margin: 0; font-size: 20px;">News & Info</h2>
+        <button onclick="closeNews()" style="background:transparent; border:none; color:#666; cursor:pointer; font-size: 24px;">&times;</button>
+    </div>
+    <div id="newsContent" style="padding: 20px; overflow-y: auto; flex-grow: 1; color: #ccc;">
+        <!-- Beispiel-Nachricht -->
+        <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #e67e22;">
+            <div style="color: #e67e22; font-size: 11px; font-weight: bold; margin-bottom: 5px;">SYSTEM | 04.05.2026</div>
+            <div style="font-size: 14px; line-height: 1.4;">Willkommen im neuen Nachrichtenzentrum!</div>
+        </div>
+    </div>
+    <div style="padding: 20px; border-top: 1px solid #333; background: #0d0d0d;">
+        <button onclick="checkAdminForNews()" style="width: 100%; background: #333; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">+ Nachricht schreiben</button>
+    </div>
+</div>
+
+    
 <!-- Schlichteres, modernes Passwort-Modal in deinem Farbschema -->
 <div id="pwModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; backdrop-filter: blur(8px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
     <div style="background: #121212; padding: 40px; border-radius: 12px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
