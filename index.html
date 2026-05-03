@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026aaaa</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -553,27 +553,37 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const dp = document.getElementById('datePicker');
     if (!dp || !dp.value) return;
 
-    // Erstelle Datumsobjekte und setze ALLES auf Null (Uhrzeit, Min, Sek, MS)
+    // Daten normieren: Nur Jahr, Monat, Tag zählen
     const pickerDate = new Date(dp.value);
     pickerDate.setHours(0, 0, 0, 0);
 
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
 
-    const prevDayBtn = document.getElementById('btnPrevDay');
-if (prevDayBtn) {
-    // Wenn Picker-Datum heute oder in der Vergangenheit: display none
-    // Ansonsten: display flex (passend zu deinem CSS)
-    prevDayBtn.style.setProperty('display', (pickerDate <= heute) ? 'none' : 'flex', 'important');
-}
+    console.log("Vergleiche Picker:", pickerDate.toDateString(), "mit Heute:", heute.toDateString());
 
+    // BUTTON: TAG ZURÜCK
+    const prevDayBtn = document.getElementById('btnPrevDay');
+    if (prevDayBtn) {
+        if (pickerDate <= heute) {
+            prevDayBtn.style.setProperty('display', 'none', 'important');
+        } else {
+            prevDayBtn.style.setProperty('display', 'flex', 'important');
+        }
+    }
+
+    // BUTTON: WOCHE ZURÜCK
     const prevWeekBtn = document.getElementById('btnPrevWeek');
-if (prevWeekBtn) {
-    const eineWocheInZukunft = new Date(heute);
-    eineWocheInZukunft.setDate(heute.getDate() + 6);
-    
-    prevWeekBtn.style.setProperty('display', (pickerDate <= eineWocheInZukunft) ? 'none' : 'flex', 'important');
-}
+    if (prevWeekBtn) {
+        const minWoche = new Date(heute);
+        minWoche.setDate(heute.getDate() + 6); // Erst ab Tag 7 sichtbar
+
+        if (pickerDate <= minWoche) {
+            prevWeekBtn.style.setProperty('display', 'none', 'important');
+        } else {
+            prevWeekBtn.style.setProperty('display', 'flex', 'important');
+        }
+    }
 }
 
         function closeAllExtraMenus() {
