@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026111</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -740,11 +740,14 @@ window.handleExtraAction = (el, time, slot) => {
         el.value = ""; 
         closeAllExtraMenus(); 
         return;
+
+        createNotification("Outdoor/Ende", klasse, rowIndex, dp.value);
     }
         
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
+        createNotification("einen Ausfall", klasse, rowIndex, dp.value);
     } 
     else if (action === "kommentar") {
         // ... dein bestehender Kommentar-Code ...
@@ -920,30 +923,77 @@ window.closeNews = () => {
     document.getElementById('newsSidebar').style.display = 'none';
 };
 
-// Admin-Check zum Schreiben
-window.checkAdminForNews = () => {
-    const modal = document.getElementById('pwModal');
-    const input = document.getElementById('modalPwInput');
-    const btn = document.getElementById('confirmPwBtn');
+// Erstellt die Nachricht und filtert betroffene Kollegen
+function createNotification(typ, eigeneKlasse, slotIndex, datum) {
+    const reihe = currentPlanData[slotIndex];
+    let kollegen = [];
 
-    modal.style.display = 'flex';
-    input.value = '';
-    input.focus();
-
-    btn.onclick = () => {
-        if (input.value === userPw) {
-            modal.style.display = 'none';
-            const msg = prompt("Nachricht eingeben (Max. 200 Zeichen):");
-            if (msg && msg.trim() !== "") {
-                // Hier kommt später der Speicherbefehl fürs Backend
-                console.log("Nachricht bereit zum Senden:", msg);
-                alert("Nachricht verfasst! (Backend-Anbindung folgt)");
-            }
-        } else {
-            alert("Falsches Passwort!");
+    // Checke alle 5 Hallen-Spalten in dieser Zeile
+    for (let i = 1; i <= 5; i++) {
+        let inhalt = (reihe[i] || "").split(' | ')[0].trim();
+        if (inhalt !== "" && inhalt !== eigeneKlasse) {
+            // Hole Lehrer-Kürzel aus deiner allClassTeachers Liste
+            let lehrer = allClassTeachers[inhalt] || "Kollege";
+            if (!kollegen.includes(lehrer)) kollegen.push(lehrer);
         }
+    }
+
+    if (kollegen.length === 0) return; // Keiner da, der benachrichtigt werden müsste
+
+    const msg = {
+        id: Date.now(),
+        datum: datum,
+        slot: slotIndex,
+        text: `Halle frei! ${eigeneKlasse} hat ${typ}.`,
+        info: `Betrifft: ${kollegen.join(', ')}`,
+        zeit: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
     };
-};
+
+    renderNewsEntry(msg);
+}
+
+// Nachricht in Sidebar zeichnen
+function renderNewsEntry(entry) {
+    const container = document.getElementById('newsContent');
+    const div = document.createElement('div');
+    div.className = "news-item";
+    div.style = "background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #e67e22; cursor: pointer;";
+    
+    div.onclick = () => goToDateAndHighlight(entry.datum, entry.slot);
+
+    div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase;">Meldung ${entry.zeit}</span>
+            <span style="color: #444; font-size: 10px;">${entry.datum}</span>
+        </div>
+        <div style="font-size: 14px; color: #fff; margin-bottom: 5px;">${entry.text}</div>
+        <div style="font-size: 11px; color: #666;">${entry.info}</div>
+    `;
+    
+    container.prepend(div);
+    document.getElementById('newsBadge').style.display = 'block';
+}
+
+// Der "Magic Jump" zum Feld
+async function goToDateAndHighlight(targetDate, rowIdx) {
+    const dp = document.getElementById('datePicker');
+    if (dp.value !== targetDate) {
+        dp.value = targetDate;
+        await loadPlan(); // Warte bis der Plan geladen ist
+    }
+    
+    closeNews();
+
+    // Kleiner Delay, damit der Browser die neuen Elemente gerendert hat
+    setTimeout(() => {
+        const targetCells = document.querySelectorAll(`[data-row="${rowIdx}"]`);
+        targetCells.forEach(cell => {
+            cell.classList.add('blink-active');
+            // Klasse nach Animation wieder entfernen
+            setTimeout(() => cell.classList.remove('blink-active'), 3000);
+        });
+    }, 300);
+}
         
         
     </script>
@@ -951,20 +1001,36 @@ window.checkAdminForNews = () => {
 <!-- Nachrichtenzentrale Sidebar -->
 <div id="newsSidebar" style="display:none; position:fixed; top:0; left:0; width:350px; height:100%; background:#121212; z-index:25000; box-shadow: 10px 0 30px rgba(0,0,0,0.5); border-right: 1px solid #333; flex-direction: column; animation: slideIn 0.3s ease-out; font-family: sans-serif;">
     <div style="padding: 25px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="color: #fff; margin: 0; font-size: 20px;">News & Info</h2>
+        <h2 style="color: #fff; margin: 0; font-size: 20px;">Info-Zentrale</h2>
         <button onclick="closeNews()" style="background:transparent; border:none; color:#666; cursor:pointer; font-size: 24px;">&times;</button>
     </div>
+    
+    <!-- Hier landen die automatischen News -->
     <div id="newsContent" style="padding: 20px; overflow-y: auto; flex-grow: 1; color: #ccc;">
-        <!-- Beispiel-Nachricht -->
-        <div style="background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid #e67e22;">
-            <div style="color: #e67e22; font-size: 11px; font-weight: bold; margin-bottom: 5px;">SYSTEM | 04.05.2026</div>
-            <div style="font-size: 14px; line-height: 1.4;">Willkommen im neuen Nachrichtenzentrum!</div>
-        </div>
+        <!-- Die Nachrichten werden hier per JS eingefügt -->
     </div>
-    <div style="padding: 20px; border-top: 1px solid #333; background: #0d0d0d;">
-        <button onclick="checkAdminForNews()" style="width: 100%; background: #333; color: #fff; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold;">+ Nachricht schreiben</button>
+
+    <!-- Kleiner Hinweis-Footer -->
+    <div style="padding: 15px; background: #0d0d0d; color: #444; font-size: 11px; text-align: center;">
+        Automatische Benachrichtigungen bei Hallenänderungen
     </div>
 </div>
+
+<style>
+/* Hover-Effekt für die Nachrichten-Items */
+.news-item { transition: background 0.2s; }
+.news-item:hover { background: #222 !important; }
+
+/* Das Blinken für die Ziel-Zelle */
+@keyframes highlightBlink {
+    0% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
+    50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; }
+    100% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
+}
+.blink-active {
+    animation: highlightBlink 0.8s ease-in-out 3; /* 3 mal blinken */
+}
+</style>
 
     
 <!-- Schlichteres, modernes Passwort-Modal in deinem Farbschema -->
