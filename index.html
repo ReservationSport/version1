@@ -162,7 +162,10 @@
 
     /* Diese Klasse blendet die Buttons radikal aus */
 .nav-btn-hidden {
-    display: none !important;
+    /* Sichtbarkeit auf hidden statt display auf none */
+    visibility: hidden !important;
+    /* optional: verhindert, dass man den unsichtbaren Button noch klicken kann */
+    pointer-events: none; 
 }
 
     /* ============================================================
@@ -570,7 +573,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const prevDayBtn = document.getElementById('btnPrevDay');
     const prevWeekBtn = document.getElementById('btnPrevWeek');
 
-    // LOGIK TAG ZURÜCK
+    // TAG ZURÜCK: Verstecken, wenn wir am heutigen Tag sind
     if (prevDayBtn) {
         if (pickerDate <= heute) {
             prevDayBtn.classList.add('nav-btn-hidden');
@@ -579,20 +582,18 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         }
     }
 
-    // LOGIK WOCHE ZURÜCK
+    // WOCHE ZURÜCK: Verstecken, wenn ein Sprung zurück in die Vergangenheit führen würde
     if (prevWeekBtn) {
-        const eineWocheZukunft = new Date(heute);
-        eineWocheZukunft.setDate(heute.getDate() + 6); 
+        const limitWoche = new Date(heute);
+        limitWoche.setDate(heute.getDate() + 7); // Erst ab Tag 7 in der Zukunft sichtbar
 
-        if (pickerDate <= eineWocheZukunft) {
+        if (pickerDate < limitWoche) {
             prevWeekBtn.classList.add('nav-btn-hidden');
         } else {
             prevWeekBtn.classList.remove('nav-btn-hidden');
         }
     }
-    
 }
-
         function closeAllExtraMenus() {
             document.querySelectorAll('.extra-select').forEach(sel => {
                 sel.style.zIndex = "-1";
