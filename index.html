@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026asa</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -357,11 +357,11 @@
     color: #ff9f43 !important;
 }
 
-/* Aktives Leuchten: Wird per JS getriggert */
 .save-btn.needs-save {
     display: block !important;
-    border: 1px solid #e67e22 !important; 
+    /* Wir fügen 'forwards' hinzu und erhöhen die Deckkraft beim Pulsieren */
     animation: pulse-glow 1.5s infinite ease-in-out !important;
+    border: 1px solid #e67e22 !important;
 }
 
 /* Lade-Zustand (während fetch läuft) */
@@ -406,9 +406,17 @@
 }
 
 @keyframes pulse-glow {
-    0% { box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4); }
-    50% { box-shadow: inset 0 0 15px rgba(230, 126, 34, 0.9); }
-    100% { box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4); }
+    0% {
+        box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4);
+    }
+    50% {
+        /* Hier erhöhen wir den Radius und die Intensität */
+        box-shadow: inset 0 0 20px rgba(230, 126, 34, 1);
+        border-color: #ff9f43 !important;
+    }
+    100% {
+        box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4);
+    }
 }
 
 .save-btn:disabled {
@@ -1019,7 +1027,14 @@ window.handleExtraAction = (el, time, slot) => {
     
  const saveBtn = document.getElementById('saveBtn');
 if (saveBtn) {
-    saveBtn.classList.add('needs-save'); // Triggert display: block und Animation
+    saveBtn.style.display = 'block'; // Erst sichtbar machen
+    
+    // Kleiner "Trick": Wir fragen einen Wert ab, der den Browser zwingt, 
+    // das Layout neu zu berechnen (Reflow)
+    void saveBtn.offsetWidth; 
+    
+    // Jetzt die Klasse für das Leuchten hinzufügen
+    saveBtn.classList.add('needs-save');
 }
 
     
