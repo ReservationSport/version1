@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026dfasdAD</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -584,6 +584,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
 
+    let pendingNotifications = [];
+        
         window.addEventListener('beforeunload', (e) => {
             if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
         });
@@ -806,7 +808,7 @@ async function saveChanges() {
     
     btn.classList.add('is-loading');
     btn.disabled = true;
-    btn.innerText = "SAVE"; // Text bleibt zur Breitenstabilität intern erhalten
+    btn.innerText = "SAVE"; 
 
     try { 
         const response = await fetch(url, { 
@@ -823,23 +825,33 @@ async function saveChanges() {
 
         // 2. ERFOLG: Änderungen gespeichert
         if (result.status === "success") {
+            
+            // --- NEU: GEPARKTE BENACHRICHTIGUNGEN JETZT SENDEN ---
+            if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
+                pendingNotifications.forEach(n => {
+                    if (typeof createNotification === "function") {
+                        createNotification(n.type, n.klasse, n.r, n.datum);
+                    }
+                });
+                pendingNotifications = []; // Liste leeren
+            }
+            // ----------------------------------------------------
+
             pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
             
-            // Zustände umschalten: Spinner & Leuchten weg -> Haken her
+            // Zustände umschalten
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
             btn.classList.add('success'); 
             
-            // Text leeren, damit nur der Haken (via CSS ::before) sichtbar ist
-            // Die feste Breite im CSS (min-width) hält den Button stabil
             btn.innerText = ""; 
 
             // 3. RESET: Button nach 1,5 Sekunden ausblenden
             setTimeout(() => { 
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
-                btn.innerText = "SAVE"; // Text für den nächsten Einsatz wiederherstellen
+                btn.innerText = "SAVE"; 
                 btn.disabled = false;
             }, 1500); 
 
@@ -852,13 +864,12 @@ async function saveChanges() {
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
-        btn.style.color = "#ff4757"; // Kurzes rotes Feedback
+        btn.style.color = "#ff4757"; 
         btn.innerText = "Error"; 
         
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
-            btn.style.color = "#e67e22"; // Zurück zu Orange
-            // Falls noch Änderungen offen sind, Leuchten reaktivieren
+            btn.style.color = "#e67e22"; 
             if(pendingChanges.length > 0) {
                 btn.classList.add('needs-save');
             }
@@ -866,7 +877,6 @@ async function saveChanges() {
     }
 }
 
-// Damit der Aufruf über onclick="saveChanges()" im HTML sicher klappt
 window.saveChanges = saveChanges;
 
 
@@ -915,6 +925,8 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     return finalParts.join(" | ");
 }
 
+
+        
 window.addChange = (el, time, slot, klasse) => { 
     let res = el.value; 
     const parent = el.parentElement;
@@ -946,9 +958,8 @@ window.addChange = (el, time, slot, klasse) => {
 window.handleExtraAction = (el, time, slot) => {
     const action = el.value;
     const parent = el.parentElement;
-    const dp = document.getElementById('datePicker'); // Für das Datum der Benachrichtigung
+    const dp = document.getElementById('datePicker'); 
     
-    // 1. WICHTIG: Wenn die Auswahl leer ist oder "---" gewählt wurde -> LÖSCHEN
     if (action === "" || action === "---") {
         const r = parent.getAttribute('data-row');
         const c = parent.getAttribute('data-col');
@@ -1001,12 +1012,20 @@ window.handleExtraAction = (el, time, slot) => {
                 btn.onclick = () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        // Nachricht senden, bevor die Klasse überall gelöscht wird
-                        if (typeof createNotification === "function") {
-                            createNotification("Outdoor/Ende", klasse, r, dp.value);
-                        }
+                        
+                        // NEU: Nachricht nur parken, nicht senden
+                        pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
+
                         if (typeof permaDeleteClass === "function") {
                             permaDeleteClass(klasse, slot);
+                        }
+                        
+                        // Save-Button aktivieren (für die Notification-Queue)
+                        const sBtn = document.getElementById('saveBtn');
+                        if (sBtn) {
+                            sBtn.style.display = 'block';
+                            void sBtn.offsetWidth;
+                            sBtn.classList.add('needs-save');
                         }
                     } else {
                         alert("Falsches Passwort!");
@@ -1016,7 +1035,6 @@ window.handleExtraAction = (el, time, slot) => {
                 };
             }
         }
-        // Bei Perma-Delete beenden wir hier, da das Modal die weitere Steuerung übernimmt
         el.value = ""; 
         closeAllExtraMenus(); 
         return;
@@ -1025,10 +1043,9 @@ window.handleExtraAction = (el, time, slot) => {
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-        // Benachrichtigung auslösen
-        if (typeof createNotification === "function") {
-            createNotification("einen Ausfall", klasse, r, dp.value);
-        }
+        
+        // NEU: Nachricht nur parken, nicht sofort senden
+        pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
     } 
     
     else if (action === "kommentar") {
@@ -1056,9 +1073,8 @@ window.handleExtraAction = (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // --- FINALES UPDATE (Wird für Ausfall/Kommentar/Löschen ausgeführt) ---
+    // --- FINALES UPDATE ---
 
-    // Optik anpassen
     if (neueHalle !== "" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
     } else if (neueHalle === "Ausfall") {
@@ -1068,30 +1084,22 @@ window.handleExtraAction = (el, time, slot) => {
     const resElem = parent.querySelector('.res');
     if (resElem) resElem.innerText = neueHalle;
 
-    // Werte berechnen und in Liste speichern
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     
- const saveBtn = document.getElementById('saveBtn');
-if (saveBtn) {
-    saveBtn.style.display = 'block'; // Erst sichtbar machen
-    
-    // Kleiner "Trick": Wir fragen einen Wert ab, der den Browser zwingt, 
-    // das Layout neu zu berechnen (Reflow)
-    void saveBtn.offsetWidth; 
-    
-    // Jetzt die Klasse für das Leuchten hinzufügen
-    saveBtn.classList.add('needs-save');
-}
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+        void saveBtn.offsetWidth; 
+        saveBtn.classList.add('needs-save');
+    }
 
-    
-    // Menü aufräumen
     el.value = ""; 
     closeAllExtraMenus();
-}; // Ende der Funktion
+};
 
 
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
