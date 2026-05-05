@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026sdfsdf</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -395,6 +395,32 @@
     to { transform: rotate(360deg); }
 }
 
+
+    /* Die Animations-Klasse */
+.save-btn.needs-save {
+    animation: pulse-glow 1.5s infinite;
+    border-color: #e67e22; /* Rand wird deutlicher */
+}
+
+@keyframes pulse-glow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(230, 126, 34, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0);
+    }
+}
+
+/* Deaktivierte Buttons sollen nicht leuchten */
+.save-btn:disabled {
+    animation: none !important;
+}
+
+
+    
 #loginError {
     color: #ff4757;
     margin-top: 15px;
@@ -941,14 +967,17 @@ window.handleExtraAction = (el, time, slot) => {
     
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     
-    // Save-Button anzeigen
+   // Save-Button anzeigen und zum Leuchten bringen
     const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) saveBtn.style.display = 'block';
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+        saveBtn.classList.add('needs-save'); // <--- NEU: Das Leuchten starten
+    }
 
     // Menü aufräumen
     el.value = ""; 
     closeAllExtraMenus();
-};
+}; // Ende der Funktion
 
 
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
