@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 20261111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1006,11 +1006,16 @@ function openExtraMenu(el) {
 }
 
 window.saveChanges = async () => { 
-    const btn = document.getElementById('saveBtn'), ball = document.getElementById('sport-loader'); 
-    btn.style.display = 'none'; 
-    ball.classList.add('active');
-
+    const btn = document.getElementById('saveBtn');
+    const gLoader = document.getElementById('globalLoader'); // Dein neuer Kreisel
     
+    // 1. Start-Zustand: Global Loader an, Button bleibt sichtbar (für die Animation)
+    if (gLoader) gLoader.style.display = 'block';
+    
+    // Wir lassen den Button da, damit er sich zum Haken verwandeln kann
+    btn.innerText = "Speichert..."; 
+    btn.disabled = true; // Verhindert Doppelklicks
+
     try { 
         const response = await fetch(url, { 
             method: "POST", 
@@ -1021,23 +1026,32 @@ window.saveChanges = async () => {
                 kuerzel: userKuerzel
             }) 
         }); 
+        
         const result = await response.json();
+
         if (result.status === "success") {
             pendingChanges = []; 
-            ball.classList.remove('active'); 
-            btn.innerText = "OK! ✔"; 
-            btn.classList.add('success'); 
-            btn.style.display = 'block'; 
+            
+            // 2. Erfolg: Global Loader aus, Button wird zum grünen Kreis
+            if (gLoader) gLoader.style.display = 'none';
+            
+            btn.disabled = false;
+            btn.classList.add('success'); // Hier greift dein neues CSS (grüner Kreis + Haken)
+            btn.innerText = ""; // Text weg, damit nur der Haken aus dem CSS erscheint
+
             setTimeout(() => { 
-                btn.style.display = 'none'; 
+                btn.style.display = 'none'; // Nach 1 Sekunde ganz weg
                 btn.classList.remove('success'); 
                 btn.innerText = "SAVE"; 
             }, 1000); 
         } else { throw new Error(); }
     } catch (e) { 
-        ball.classList.remove('active'); 
+        // 3. Fehler-Fall
+        if (gLoader) gLoader.style.display = 'none';
+        btn.disabled = false;
         btn.style.display = 'block'; 
         btn.innerText = "Fehler!"; 
+        setTimeout(() => { btn.innerText = "SAVE"; }, 2000);
     }
 };
 
