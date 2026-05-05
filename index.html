@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202644444</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1083,21 +1083,24 @@ window.addChange = (el, time, slot, klasse) => {
 
 
 window.handleExtraAction = async (el, time, slot) => {
+    // 1. Sofortiger Fokus-Verlust, um das Hängenbleiben aus grafik_4.png zu verhindern
+    el.blur(); 
+    
     const action = el.value;
     const parent = el.parentElement;
     const dp = document.getElementById('datePicker'); 
     
-    // Hilfsfunktion für den Save-Button Trigger
-    const showSaveButton = () => {
+    // Hilfsfunktion: Speicher-Button aktivieren
+    const triggerSaveUI = () => {
         const saveBtn = document.getElementById('saveBtn');
         if (saveBtn) {
             saveBtn.style.display = 'block';
-            void saveBtn.offsetWidth; // Force Reflow für Animation
+            void saveBtn.offsetWidth; // Reflow für CSS-Animation
             saveBtn.classList.add('needs-save');
         }
     };
 
-    // Hilfsfunktion zum Senden der News
+    // Hilfsfunktion: News in DB schreiben
     const triggerNews = (klasse, typ) => {
         const datumVal = dp.value;
         const dateObj = new Date(datumVal);
@@ -1110,38 +1113,14 @@ window.handleExtraAction = async (el, time, slot) => {
             inhalt: `Freie Halle! Klasse ${klasse} hat einen ${typ}. Betrifft die Lektion vom ${datumVal} (Slot ${slot}).`
         };
 
-        google.script.run
-            .withSuccessHandler(() => console.log("News-Eintrag in DB erstellt"))
-            .addNewsEntry(newsData);
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run
+                .withSuccessHandler(() => console.log("News-Eintrag in DB erstellt"))
+                .addNewsEntry(newsData);
+        }
     };
 
-    // Fall: Auswahl zurücksetzen
-    if (action === "" || action === "---") {
-        const r = parent.getAttribute('data-row');
-        const c = parent.getAttribute('data-col');
-        
-        parent.classList.remove('ausfall-mode');
-        parent.style.backgroundColor = "";
-        
-        const resElem = parent.querySelector('.res');
-        if (resElem) resElem.innerText = ""; 
-
-        let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-        let parts = fullString.split('|').map(s => s.trim());
-        let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-        
-        let finalVal = buildFinalValue(r, c, "", commentPart);
-        
-        if (!currentPlanData[r]) currentPlanData[r] = [];
-        currentPlanData[r][c] = finalVal;
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        
-        showSaveButton();
-        el.value = "";
-        closeAllExtraMenus();
-        return; 
-    }
-
+    // Daten für die Verarbeitung holen
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const klasseElem = parent.querySelector('.klasse');
@@ -1152,14 +1131,24 @@ window.handleExtraAction = async (el, time, slot) => {
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // --- LOGIK FÜR DIE SPEZIAL-AKTIONEN ---
+    // --- WEICHE FÜR AKTIONEN ---
 
-    if (action === "perma_delete") {
-        const confirmed = await showCustomConfirm(
-            "Schuljahr beenden", 
-            `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
-        );
+    // A: LEEREN / ZURÜCKSETZEN
+    if (action === "" || action === "---") {
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = ""; 
+        
+        let finalVal = buildFinalValue(r, c, "", commentPart);
+        currentPlanData[r][c] = finalVal;
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        
+        triggerSaveUI();
+    } 
 
+    // B: PERMANENT LÖSCHEN
+    else if (action === "perma_delete") {
+        const confirmed = await showCustomConfirm("Schuljahr beenden", `Klasse "${klasse}" entfernen?`);
         if (confirmed) {
             const modal = document.getElementById('pwModal');
             const input = document.getElementById('modalPwInput');
@@ -1167,45 +1156,42 @@ window.handleExtraAction = async (el, time, slot) => {
 
             if (modal && input && btn) {
                 modal.style.display = 'flex';
-                input.value = '';
-                input.focus();
-
+                input.value = ''; input.focus();
                 btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
                         triggerNews(klasse, "Outdoor-Status (Schuljahr beendet)");
-
-                        const gLoader = document.getElementById('globalLoader');
-                        if (gLoader) gLoader.style.display = 'block';
-                        
+                        if (document.getElementById('globalLoader')) document.getElementById('globalLoader').style.display = 'block';
                         pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
-
-                        if (typeof permaDeleteClass === "function") {
-                            await permaDeleteClass(klasse, slot);
-                        }
+                        if (typeof permaDeleteClass === "function") await permaDeleteClass(klasse, slot);
                     } else {
                         alert("Falsches Passwort!");
-                        input.value = '';
-                        input.focus();
                     }
                 };
             }
         }
-        el.value = ""; 
-        closeAllExtraMenus(); 
-        return;
     } 
-    
+
+    // C: AUSFALL (Das Problem aus grafik_4.png)
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-        parent.style.backgroundColor = ""; // Bei Ausfall keine Hallenfarbe
+        parent.style.backgroundColor = ""; // Farbe entfernen
+        
+        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
+
+        let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
+        if (!currentPlanData[r]) currentPlanData[r] = [];
+        currentPlanData[r][c] = finalVal;
+
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
         
         triggerNews(klasse, "Ausfall");
-        pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
-        // Der Save-Button Trigger erfolgt unten am Ende der Funktion
+        triggerSaveUI();
     } 
-    
+
+    // D: KOMMENTAR
     else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
@@ -1217,45 +1203,31 @@ window.handleExtraAction = async (el, time, slot) => {
                 let span = document.createElement('span');
                 span.className = 'stift';
                 span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
-            } else { 
-                commentPart = undefined; 
+            } else {
+                commentPart = undefined;
             }
-        } else { 
-            el.value = ""; 
-            closeAllExtraMenus(); 
-            return; 
+            let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+            currentPlanData[r][c] = finalVal;
+            pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+            triggerSaveUI();
         }
-    } 
-    
+    }
+
+    // E: NOTIZ LÖSCHEN
     else if (action === "delete_comment") {
         commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
+        let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+        currentPlanData[r][c] = finalVal;
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        triggerSaveUI();
     }
 
-    // --- FINALES UPDATE ---
-
-    if (neueHalle !== "" && neueHalle !== "Ausfall") {
-        parent.style.backgroundColor = configFarben[neueHalle] || "";
-        parent.classList.remove('ausfall-mode');
-        triggerNews(klasse, neueHalle); 
-    } 
-
-    const resElem = parent.querySelector('.res');
-    if (resElem) resElem.innerText = neueHalle;
-
-    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-    
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    
-    // Speicher-Button anzeigen
-    showSaveButton();
-
-    // Menü sauber zurücksetzen und schließen
+    // --- FINISH: Menü ausblenden ---
+    el.style.opacity = "0";
+    el.style.pointerEvents = "none";
     el.value = ""; 
     closeAllExtraMenus();
 };
