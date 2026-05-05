@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202632435</title>
+     <title>Reservation Sport 202611111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -705,7 +705,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
 
     <script>
-        const url = "https://script.google.com/macros/s/AKfycbym6U2fvrWEGoiqbXcpyjZlvAfxDt61IFQNSDzt9zXuWY6sz9JU3cuH93fIRauxnLLk/exec"; 
+        const url = "https://script.google.com/macros/s/AKfycbyfGP5INmJYbo2pl2JufKMmiGmiYh0D3R7BntykusTw8oOlpcXY27tJ9h9uc1kzKFtj/exec"; 
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
 
@@ -785,8 +785,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const dp = document.getElementById('datePicker');
     
     // 1. Prüfung auf ungespeicherte Änderungen
-    if (pendingChanges.length > 0 || (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0)) {
-        if (!confirm("Du hast ungespeicherte Änderungen (Halle oder Ausfall). Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
+    if (pendingChanges.length > 0) {
+        if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
             dp.value = lastStableDate; 
             return;
         }
@@ -803,8 +803,6 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         sBtn.innerText = "SAVE"; 
     }
     pendingChanges = []; 
-    // Falls pendingNotifications existiert, auch hier leeren
-    if (typeof pendingNotifications !== 'undefined') pendingNotifications = [];
 
     lastStableDate = dateVal; 
     updateNavButtons();
@@ -837,24 +835,11 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     try {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
-
-        console.log("Server Antwort:", json); // SCHAU IN DIE BROWSER-KONSOLE (F12)
-    
-    if (json.news) {
-        console.log("Gefundene News für dieses Datum:", json.news);
-        processNewsFromServer(json.news);
-    }
         
         if (json.error === "SPERRE") {
             container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
             document.getElementById('globalLoader').style.display = 'none';
             return;
-        }
-
-        // --- NEU: News verarbeiten ---
-        // Bevor die Tabelle gezeichnet wird, verarbeiten wir die News-Daten vom Server
-        if (json.news && typeof processNewsFromServer === "function") {
-            processNewsFromServer(json.news);
         }
 
         container.innerHTML = ""; 
@@ -931,8 +916,10 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         });
     } catch(e) { 
         console.error(e); 
+        // ERGÄNZT: Fehlermeldung für den User, falls der Server streikt
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
     } finally {
+        // ERGÄNZT: Der Loader wird IMMER ausgeschaltet, egal ob Erfolg oder Fehler
         document.getElementById('globalLoader').style.display = 'none';
         updateNavButtons();
     }
@@ -943,6 +930,7 @@ async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
+    // 1. START: Globaler Loader an, Button in Lade-Zustand
     if (gLoader) gLoader.style.display = 'block';
     
     btn.classList.add('is-loading');
@@ -955,7 +943,6 @@ async function saveChanges() {
             body: JSON.stringify({ 
                 date: document.getElementById('datePicker').value, 
                 changes: pendingChanges, 
-                notifications: pendingNotifications, 
                 pw: userPw,
                 kuerzel: userKuerzel
             }) 
@@ -963,25 +950,31 @@ async function saveChanges() {
         
         const result = await response.json();
 
+        // 2. ERFOLG: Änderungen gespeichert
         if (result.status === "success") {
-            // --- ÄNDERUNG: KEIN LOKALES CREATE_NOTIFICATION MEHR ---
-            // Wir leeren nur noch die Warteschlangen, da die News nun sicher 
-            // in der DB stehen und beim nächsten loadPlan() mitkommen.
-            pendingNotifications = []; 
-            pendingChanges = []; 
+            
+            // --- NEU: GEPARKTE BENACHRICHTIGUNGEN JETZT SENDEN ---
+            if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
+                pendingNotifications.forEach(n => {
+                    if (typeof createNotification === "function") {
+                        createNotification(n.type, n.klasse, n.r, n.datum);
+                    }
+                });
+                pendingNotifications = []; // Liste leeren
+            }
+            // ----------------------------------------------------
 
-            // UI-Feedback für Erfolg
+            pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
+            
+            // Zustände umschalten
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
             btn.classList.add('success'); 
+            
             btn.innerText = ""; 
 
-            // Den Plan neu laden, um die echten News vom Server anzuzeigen
-            if (typeof loadPlan === "function") {
-                await loadPlan();
-            }
-
+            // 3. RESET: Button nach 1,5 Sekunden ausblenden
             setTimeout(() => { 
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
@@ -994,6 +987,7 @@ async function saveChanges() {
         }
 
     } catch (e) { 
+        // 4. FEHLER-HANDLING
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
@@ -1003,13 +997,13 @@ async function saveChanges() {
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
             btn.style.color = "#e67e22"; 
-            if(pendingChanges.length > 0 || pendingNotifications.length > 0) {
+            if(pendingChanges.length > 0) {
                 btn.classList.add('needs-save');
             }
         }, 2000);
     }
 }
-        
+
 window.saveChanges = saveChanges;
 
 
@@ -1065,21 +1059,6 @@ window.addChange = (el, time, slot, klasse) => {
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
     
-    // --- NEU: BEREINIGUNG DER WARTESCHLANGEN ---
-    // Dies verhindert, dass "Ausfall"-Leichen in der News-DB landen, 
-    // wenn du dich für eine normale Halle entscheidest.
-    
-    // 1. Bestehende Plan-Änderungen für diese Zelle entfernen
-    pendingChanges = pendingChanges.filter(ch => 
-        !(String(ch.time) === String(time) && String(ch.slotIndex) === String(slot))
-    );
-
-    // 2. Bestehende News/Notifications für diese Zelle entfernen
-    pendingNotifications = pendingNotifications.filter(n => 
-        !(String(n.r) === String(r) && String(n.slot) === String(slot))
-    );
-    // --------------------------------------------
-
     parent.classList.remove('ausfall-mode');
     parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
     parent.style.backgroundColor = configFarben[res] || ""; 
@@ -1088,11 +1067,9 @@ window.addChange = (el, time, slot, klasse) => {
 
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
-    
-    // Neue Änderung hinzufügen
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
 
-    // --- TRIGGER FÜR LEUCHTEN ---
+    // --- NEU: TRIGGER FÜR LEUCHTEN ---
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         saveBtn.style.display = 'block';
@@ -1101,68 +1078,42 @@ window.addChange = (el, time, slot, klasse) => {
     }
 };
 
-// Diese Funktion wird jetzt nur noch von loadPlan aufgerufen, 
-// wenn echte Daten aus der News_DB eintreffen.
-function processNewsFromServer(newsRows) {
-    const container = document.getElementById('newsContent');
-    container.innerHTML = ""; // Container leeren für frische Daten
-    
-    if (!newsRows || newsRows.length === 0) {
-        document.getElementById('newsBadge').style.display = 'none';
-        return;
-    }
 
-    newsRows.forEach(row => {
-        // row-Struktur aus deinem Backend: [ID, Datum, Slot, TagIndex, Text, Kuerzel]
-        const entry = {
-            id: row[0],
-            datum: row[1],
-            slot: row[2],
-            text: row[4],
-            kuerzel: row[5],
-            // Wir nutzen die ID (Timestamp) um die Uhrzeit zu extrahieren, falls nötig
-            zeit: new Date(parseInt(row[0].split('_')[0])).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-        };
-
-        // Optional: Hier könnten wir trotzdem noch die "Betrifft: Kollegen" Logik einbauen
-        // Aber einfacher ist es, den Text zu nehmen, den das Backend schon generiert hat.
-        renderNewsEntry(entry);
-    });
-}
-
-function renderNewsEntry(entry) {
-    const container = document.getElementById('newsContent');
-    const div = document.createElement('div');
-    div.className = "news-item";
-    div.style = "background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #e67e22; cursor: pointer;";
-    
-    // Der Magic Jump bleibt erhalten!
-    div.onclick = () => goToDateAndHighlight(entry.datum, entry.slot);
-
-    div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase;">Meldung ${entry.zeit}</span>
-            <span style="color: #444; font-size: 10px;">${entry.datum}</span>
-        </div>
-        <div style="font-size: 14px; color: #fff; margin-bottom: 5px;">${entry.text}</div>
-        <div style="font-size: 11px; color: #666;">Gemeldet von: ${entry.kuerzel || 'System'}</div>
-    `;
-    
-    container.prepend(div);
-    document.getElementById('newsBadge').style.display = 'block';
-}
 
 
 
 window.handleExtraAction = async (el, time, slot) => {
-    // 1. Sofortiger Fokus-Verlust, um das Hängenbleiben zu verhindern
-    el.blur(); 
-    
     const action = el.value;
     const parent = el.parentElement;
     const dp = document.getElementById('datePicker'); 
     
-    // Daten für die Verarbeitung holen
+    // Fall: Auswahl zurücksetzen / Leeren
+    if (action === "" || action === "---") {
+        const r = parent.getAttribute('data-row');
+        const c = parent.getAttribute('data-col');
+        
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        
+        const resElem = parent.querySelector('.res');
+        if (resElem) resElem.innerText = ""; 
+
+        let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+        let parts = fullString.split('|').map(s => s.trim());
+        let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+        
+        let finalVal = buildFinalValue(r, c, "", commentPart);
+        
+        if (!currentPlanData[r]) currentPlanData[r] = [];
+        currentPlanData[r][c] = finalVal;
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        document.getElementById('saveBtn').style.display = 'block';
+
+        el.value = "";
+        closeAllExtraMenus();
+        return; 
+    }
+
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const klasseElem = parent.querySelector('.klasse');
@@ -1173,141 +1124,117 @@ window.handleExtraAction = async (el, time, slot) => {
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // --- HILFSFUNKTIONEN ---
+    // --- LOGIK FÜR DIE AKTIONEN ---
 
-    // Bereinigt die Warteschlangen für die aktuelle Zelle (verhindert Duplikate/Leichen)
-    const clearPendingForCell = () => {
-        pendingChanges = pendingChanges.filter(cIdx => !(cIdx.time === time && cIdx.slotIndex === slot));
-        pendingNotifications = pendingNotifications.filter(n => !(n.r === r && n.slot === slot));
-    };
+    if (action === "perma_delete") {
+        // 1. Dein neues Custom Confirm im PW-Design aufrufen
+        const confirmed = await showCustomConfirm(
+            "Schuljahr beenden", 
+            `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
+        );
 
-    const triggerSaveUI = () => {
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.style.display = 'block';
-            void saveBtn.offsetWidth; 
-            saveBtn.classList.add('needs-save');
-        }
-    };
-
-    // --- WEICHE FÜR AKTIONEN ---
-
-    // A: LEEREN / ZURÜCKSETZEN
-    if (action === "" || action === "---") {
-        clearPendingForCell(); // Alte Einträge löschen
-        
-        parent.classList.remove('ausfall-mode');
-        parent.style.backgroundColor = "";
-        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = ""; 
-        
-        let finalVal = buildFinalValue(r, c, "", commentPart);
-        currentPlanData[r][c] = finalVal;
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        
-        triggerSaveUI();
-    } 
-
-    // B: PERMANENT LÖSCHEN
-    else if (action === "perma_delete") {
-        const confirmed = await showCustomConfirm("Schuljahr beenden", `Klasse "${klasse}" entfernen?`);
         if (confirmed) {
+            // 2. Wenn bestätigt, PW-Modal für den finalen Check öffnen
             const modal = document.getElementById('pwModal');
             const input = document.getElementById('modalPwInput');
             const btn = document.getElementById('confirmPwBtn');
 
             if (modal && input && btn) {
                 modal.style.display = 'flex';
-                input.value = ''; input.focus();
+                input.value = '';
+                input.focus();
+
                 btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        if (document.getElementById('globalLoader')) document.getElementById('globalLoader').style.display = 'block';
                         
-                        // Hier wird direkt permaDeleteClass getriggert
+                        // VISUELLER LOCK: Tabelle leeren & Loader an
+                        const gLoader = document.getElementById('globalLoader');
+                        if (gLoader) gLoader.style.display = 'block';
+                        const planContainer = document.getElementById('plan');
+                        if (planContainer) planContainer.innerHTML = ""; 
+
+                        // Nachricht für Zentrale parken
                         pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
-                        if (typeof permaDeleteClass === "function") await permaDeleteClass(klasse, slot);
+
+                        // Löschvorgang starten
+                        if (typeof permaDeleteClass === "function") {
+                            await permaDeleteClass(klasse, slot);
+                        }
+                        
                     } else {
                         alert("Falsches Passwort!");
+                        input.value = '';
+                        input.focus();
                     }
                 };
             }
         }
+        el.value = ""; 
+        closeAllExtraMenus(); 
+        return;
     } 
-
-    // C: AUSFALL
+    
     else if (action === "ausfall") {
-        clearPendingForCell(); // Ganz wichtig: Vorherige Zustände dieser Zelle löschen
-
+        neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-        parent.style.backgroundColor = ""; 
-        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
-
-        let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
-        currentPlanData[r][c] = finalVal;
-
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        pendingNotifications.push({ 
-            type: "Ausfall", 
-            klasse: klasse, 
-            r: r, 
-            slot: slot, 
-            datum: dp.value 
-        });
-
-        triggerSaveUI();
+        pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
     } 
-
-    // D: KOMMENTAR
+    
     else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         if (text !== null) {
-            clearPendingForCell(); // Auch hier Warteschlange aktualisieren
-
             let oldStift = parent.querySelector('.stift');
             if (oldStift) oldStift.remove();
-            
             if (text.trim() !== "") {
                 commentPart = "KOMMENTAR:" + text.trim();
                 let span = document.createElement('span');
                 span.className = 'stift';
                 span.innerHTML = '<i class="fas fa-comment-dots"></i>';
+                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
-            } else {
-                commentPart = undefined;
-            }
-            
-            let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
-            currentPlanData[r][c] = finalVal;
-            pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-            triggerSaveUI();
+            } else { commentPart = undefined; }
+        } else { 
+            el.value = ""; closeAllExtraMenus(); return; 
         }
-    }
-
-    // E: NOTIZ LÖSCHEN
+    } 
+    
     else if (action === "delete_comment") {
-        clearPendingForCell();
-
         commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
-        
-        let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
-        currentPlanData[r][c] = finalVal;
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        triggerSaveUI();
     }
 
-    // --- FINISH: UI aufräumen ---
-    el.style.opacity = "0";
-    el.style.pointerEvents = "none";
+    // --- FINALES UPDATE (nur wenn nicht perma_delete) ---
+
+    if (neueHalle !== "" && neueHalle !== "Ausfall") {
+        parent.style.backgroundColor = configFarben[neueHalle] || "";
+    } else if (neueHalle === "Ausfall") {
+        parent.style.backgroundColor = ""; 
+    }
+    
+    const resElem = parent.querySelector('.res');
+    if (resElem) resElem.innerText = neueHalle;
+
+    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+        void saveBtn.offsetWidth; 
+        saveBtn.classList.add('needs-save');
+    }
+
     el.value = ""; 
     closeAllExtraMenus();
 };
 
 
-
-        
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
 window.clearTimer = () => clearTimeout(pressTimer);
 window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
@@ -1537,7 +1464,7 @@ async function goToDateAndHighlight(targetDate, rowIdx) {
 
     <!-- Kleiner Hinweis-Footer -->
     <div style="padding: 15px; background: #0d0d0d; color: #444; font-size: 11px; text-align: center;">
-        Automatische Benachrichtigungen für freie Hallen
+        Automatische Benachrichtigungen bei Hallenänderungen
     </div>
 </div>
 
@@ -1624,3 +1551,4 @@ async function goToDateAndHighlight(targetDate, rowIdx) {
     
 </body>
 </html>
+
