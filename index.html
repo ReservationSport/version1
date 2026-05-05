@@ -331,24 +331,27 @@
     left: 150%; /* Jagt durch den Button nach rechts außen */
 }
 
-        .save-btn {
+.save-btn {
     display: none; 
-    padding: 0 15px !important; /* Etwas weniger Padding für mehr Platz */
+    position: relative;    /* WICHTIG: Damit der Blitz im Button bleibt */
+    overflow: hidden;      /* WICHTIG: Damit der Blitz nicht über die Zeile schießt */
+    padding: 0 15px !important;
     background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
     color: white;
     border: none;
     border-radius: 20px; 
     font-family: 'Oswald', sans-serif;
-    font-size: 12px !important; /* Kleiner als vorher */
+    font-size: 12px !important;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
     height: 34px !important;
     white-space: nowrap;
+    transition: all 0.3s ease; /* Geschmeidiger Übergang zum grünen Haken */
 }
 
-/* 1. Die Lichtkante (Glossy-Effekt oben) */
+/* 1. Die Lichtkante (Glossy-Effekt) */
 .save-btn::before {
     content: '';
     position: absolute;
@@ -358,7 +361,7 @@
     z-index: 2;
 }
 
-/* 2. Der dynamische Blitz beim Hovern */
+/* 2. Der Blitz (Jetzt sicher im Button gefangen) */
 .save-btn::after {
     content: '';
     position: absolute;
@@ -378,36 +381,41 @@
 }
 
 /* Interaktionen */
-.save-btn:hover {
+.save-btn:hover:not(.success) { /* Nur blitzen, wenn noch nicht fertig */
     transform: translateY(-3px);
     box-shadow: 0 10px 25px rgba(230, 126, 34, 0.4);
     filter: brightness(1.1);
 }
 
-.save-btn:hover::after {
+.save-btn:hover:not(.success)::after {
     left: 150%;
 }
 
-.save-btn:active {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-}
-
-/* Erfolg-Status: Nur noch grüner Button mit Haken */
+/* Erfolg-Status: Grüner Kreis mit zentriertem Haken */
 .save-btn.success {
-    background: linear-gradient(180deg, #2ecc71 0%, #27ae60 100%) !important;
-    color: white !important;
-    width: 40px !important; /* Button wird rund/quadratisch */
+    background: #27ae60 !important; /* Festes Grün */
+    width: 34px !important;  /* Gleiche Breite wie Höhe = Kreis */
+    min-width: 34px !important;
     padding: 0 !important;
-    font-size: 0 !important; /* Text verschwindet */
+    font-size: 0 !important; /* "SAVE" Text verstecken */
+    border-radius: 50%;      /* Perfekter Kreis */
+    cursor: default;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
-    .save-btn.success::before {
-    content: '✔'; /* Der Haken */
-    font-size: 18px;
+/* Der Haken im Erfolgsfall */
+.save-btn.success::before {
+    content: '✔';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: none;       /* Glossy-Effekt entfernen */
     display: flex;
     justify-content: center;
     align-items: center;
+    font-size: 18px;
+    color: white;
+    z-index: 4;
 }
 
 #loginError {
