@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202633333</title>
+     <title>Reservation Sport 202633333sdddddddddddddd</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1179,17 +1179,19 @@ window.handleExtraAction = async (el, time, slot) => {
     let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
     currentPlanData[r][c] = finalVal;
 
-    // 3. In die Warteschlange für das Speichern einreihen
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    // Bevor wir pushen, entfernen wir alte Einträge für dieselbe Zelle (r, slot)
+pendingChanges = pendingChanges.filter(c => !(c.time === time && c.slotIndex === slot));
+pendingChanges.push({ time, slotIndex: slot, val: finalVal });
 
-    // 4. In die Warteschlange für die News-DB einreihen
-    // Hier wird noch nichts gesendet! Wir merken uns nur, was später in die News soll.
-    pendingNotifications.push({ 
-        type: "Ausfall", 
-        klasse: klasse, 
-        slot: slot, 
-        datum: dp.value 
-    });
+   // Dasselbe für Notifications (damit nicht 5x "Ausfall" in der DB landet)
+pendingNotifications = pendingNotifications.filter(n => !(n.r === r && n.slot === slot));
+pendingNotifications.push({ 
+    type: "Ausfall", 
+    klasse: klasse, 
+    r: r, 
+    slot: slot, // Slot hinzufügen für eindeutige Filterung
+    datum: dp.value 
+});
 
     // 5. Speicher-Button zum Leuchten bringen
     const saveBtn = document.getElementById('saveBtn');
