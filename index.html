@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026adsd</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -171,43 +171,70 @@
     /* ============================================================
        3. ZELLEN-STYLING (BOXES)
        ============================================================ */
-    .box { 
-        border: 1px solid #444; padding: 5px; background: #262626; 
-        min-height: 50px; display: flex; flex-direction: column; 
-        align-items: center; justify-content: center; text-align: center; 
-        font-size: 11px; position: relative; cursor: pointer; overflow: hidden; 
-    }
+    /* Grundzustand: Kein Zeigefinger für alle Boxen */
+.box { 
+    border: 1px solid #444; 
+    padding: 5px; 
+    background: #262626; 
+    min-height: 50px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    text-align: center; 
+    font-size: 11px; 
+    position: relative; 
+    cursor: default; /* Zeigefinger entfernt */
+    overflow: hidden; 
+}
 
-    .box.empty { pointer-events: none; opacity: 0.5; }
+/* Leere Zellen: Keine Interaktion möglich */
+.box.empty { 
+    pointer-events: none; 
+    opacity: 0.5; 
+    cursor: default; 
+}
 
-    .zeit-box { background: #333; font-weight: bold; cursor: default; }
+/* Zeit-Spalte und Header: Neutraler Cursor */
+.zeit-box { 
+    background: #333; 
+    font-weight: bold; 
+    cursor: default; 
+}
 
-    .header-row { 
+.header-row { 
     grid-column: span 6; 
     background: #333; 
     font-size: 14px; 
     font-weight: bold; 
     position: sticky; 
-    top: 60px; /* Dieser Wert muss direkt unter der .date-control liegen */
-    z-index: 1090; /* Knapp unter der Navigation */
+    top: 60px; 
+    z-index: 1090; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
     height: 50px; 
+    cursor: default;
 }
 
-    /* Markierung für eigene Termine */
-    .box.is-mine { 
-        border: 2px solid #e67e22 !important; 
-        z-index: 10; 
-    }
+/* NUR DEINE ZELLEN: Hier erscheint der Zeigefinger */
+.box.is-mine { 
+    border: 2px solid #e67e22 !important; 
+    z-index: 10; 
+    cursor: pointer; /* Zeigefinger nur hier */
+}
 
-    .box.is-mine:hover {
-        background-color: rgba(230, 126, 34, 0.2) !important;
-        box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
-        transform: scale(1.03);
-        z-index: 100;
-    }
+.box.is-mine:hover {
+    background-color: rgba(230, 126, 34, 0.2) !important;
+    box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
+    transform: scale(1.03);
+    z-index: 100;
+}
+
+/* Fremde Zellen: Sicherstellen, dass kein Finger erscheint */
+.box.not-mine {
+    cursor: default !important;
+}
 
     /* ============================================================
        4. SPEZIAL-MODI (AUSFALL)
