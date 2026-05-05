@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026sdfsd</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -396,22 +396,26 @@
 }
 
 
-   /* Die Animations-Klasse */
+  /* Die Animations-Klasse */
 .save-btn.needs-save {
-    display: block !important; /* Sicherstellen, dass er sichtbar ist */
+    display: block !important;
     animation: pulse-glow 1.5s infinite !important;
-    border: 1px solid #e67e22 !important; 
+    border: 1px solid #e67e22 !important;
+    z-index: 100; /* Sicherstellen, dass er oben liegt */
 }
 
 @keyframes pulse-glow {
     0% {
-        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.7) !important;
+        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.8) !important;
+        outline: 1px solid rgba(230, 126, 34, 0.5) !important;
     }
     70% {
-        box-shadow: 0 0 0 10px rgba(230, 126, 34, 0) !important;
+        box-shadow: 0 0 0 15px rgba(230, 126, 34, 0) !important;
+        outline: 1px solid rgba(230, 126, 34, 0) !important;
     }
     100% {
         box-shadow: 0 0 0 0 rgba(230, 126, 34, 0) !important;
+        outline: 1px solid rgba(230, 126, 34, 0) !important;
     }
 }
 
