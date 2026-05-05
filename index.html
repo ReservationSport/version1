@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 20261111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -396,26 +396,25 @@
 }
 
 
-  /* Die Animations-Klasse */
+  /* Und stelle sicher, dass die Klasse die Animation auch aufruft */
 .save-btn.needs-save {
     display: block !important;
-    animation: pulse-glow 1.5s infinite !important;
-    border: 1px solid #e67e22 !important;
-    z-index: 100; /* Sicherstellen, dass er oben liegt */
+    animation: pulse-glow 1.5s infinite ease-in-out !important;
+    border: 1px solid #e67e22 !important; /* Orangener Rand hilft dem Effekt */
 }
 
 @keyframes pulse-glow {
     0% {
-        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0.8) !important;
-        outline: 1px solid rgba(230, 126, 34, 0.5) !important;
+        /* Leuchten startet dezent innen */
+        box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4) !important;
     }
-    70% {
-        box-shadow: 0 0 0 15px rgba(230, 126, 34, 0) !important;
-        outline: 1px solid rgba(230, 126, 34, 0) !important;
+    50% {
+        /* Volles Glühen nach innen */
+        box-shadow: inset 0 0 15px rgba(230, 126, 34, 0.9) !important;
     }
     100% {
-        box-shadow: 0 0 0 0 rgba(230, 126, 34, 0) !important;
-        outline: 1px solid rgba(230, 126, 34, 0) !important;
+        /* Zurück zum Ursprung */
+        box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4) !important;
     }
 }
 
