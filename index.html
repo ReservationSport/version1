@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202611111</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1087,6 +1087,24 @@ window.handleExtraAction = async (el, time, slot) => {
     const parent = el.parentElement;
     const dp = document.getElementById('datePicker'); 
     
+    // Hilfsfunktion zum Senden der News an die Google-Datenbank
+    const triggerNews = (klasse, typ) => {
+        const datumVal = dp.value;
+        const dateObj = new Date(datumVal);
+        const tagIndex = dateObj.getDay(); // 1=Mo, 2=Di...
+
+        const newsData = {
+            datum: datumVal,
+            tagIndex: tagIndex,
+            slotIndex: slot,
+            inhalt: `Freie Halle! Klasse ${klasse} hat einen ${typ}. Betrifft die Lektion vom ${datumVal} (Slot ${slot}).`
+        };
+
+        google.script.run
+            .withSuccessHandler(() => console.log("News-Eintrag in DB erstellt"))
+            .addNewsEntry(newsData);
+    };
+
     // Fall: Auswahl zurücksetzen / Leeren
     if (action === "" || action === "---") {
         const r = parent.getAttribute('data-row');
@@ -1124,17 +1142,15 @@ window.handleExtraAction = async (el, time, slot) => {
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // --- LOGIK FÜR DIE AKTIONEN ---
+    // --- LOGIK FÜR DIE SPEZIAL-AKTIONEN ---
 
     if (action === "perma_delete") {
-        // 1. Dein neues Custom Confirm im PW-Design aufrufen
         const confirmed = await showCustomConfirm(
             "Schuljahr beenden", 
             `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
         );
 
         if (confirmed) {
-            // 2. Wenn bestätigt, PW-Modal für den finalen Check öffnen
             const modal = document.getElementById('pwModal');
             const input = document.getElementById('modalPwInput');
             const btn = document.getElementById('confirmPwBtn');
@@ -1148,20 +1164,19 @@ window.handleExtraAction = async (el, time, slot) => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
                         
-                        // VISUELLER LOCK: Tabelle leeren & Loader an
+                        // NEWS-TRIGGER: Schuljahr beendet
+                        triggerNews(klasse, "Outdoor-Status (Schuljahr beendet)");
+
                         const gLoader = document.getElementById('globalLoader');
                         if (gLoader) gLoader.style.display = 'block';
                         const planContainer = document.getElementById('plan');
                         if (planContainer) planContainer.innerHTML = ""; 
 
-                        // Nachricht für Zentrale parken
                         pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
 
-                        // Löschvorgang starten
                         if (typeof permaDeleteClass === "function") {
                             await permaDeleteClass(klasse, slot);
                         }
-                        
                     } else {
                         alert("Falsches Passwort!");
                         input.value = '';
@@ -1170,14 +1185,16 @@ window.handleExtraAction = async (el, time, slot) => {
                 };
             }
         }
-        el.value = ""; 
-        closeAllExtraMenus(); 
-        return;
+        el.value = ""; closeAllExtraMenus(); return;
     } 
     
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
+        
+        // NEWS-TRIGGER: Ausfall
+        triggerNews(klasse, "Ausfall");
+
         pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
     } 
     
@@ -1206,10 +1223,14 @@ window.handleExtraAction = async (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // --- FINALES UPDATE (nur wenn nicht perma_delete) ---
+    // --- FINALES UPDATE & NEWS-TRIGGER FÜR RESSOURCEN (z.B. Outdoor) ---
 
     if (neueHalle !== "" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
+        
+        // NEWS-TRIGGER: Manuelle Wahl (Outdoor, etc.)
+        triggerNews(klasse, neueHalle); 
+
     } else if (neueHalle === "Ausfall") {
         parent.style.backgroundColor = ""; 
     }
@@ -1235,6 +1256,8 @@ window.handleExtraAction = async (el, time, slot) => {
 };
 
 
+
+        
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
 window.clearTimer = () => clearTimeout(pressTimer);
 window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
