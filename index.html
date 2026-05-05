@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026asa</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -761,14 +761,12 @@ async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
-    // 1. START: Button in Lade-Modus versetzen
-    if (gLoader) gLoader.style.display = 'block'; // Falls vorhanden, globaler Loader an
+    if (gLoader) gLoader.style.display = 'block';
     
-    btn.classList.add('is-loading'); // Zeigt den orangefarbenen Spinner im Button
-    btn.disabled = true;             // Verhindert Klicks während des Speicherns
+    btn.classList.add('is-loading');
+    btn.disabled = true;
 
     try { 
-        // 2. DATEN SENDEN: Wir warten (await) auf die Antwort vom Server
         const response = await fetch(url, { 
             method: "POST", 
             body: JSON.stringify({ 
@@ -781,49 +779,39 @@ async function saveChanges() {
         
         const result = await response.json();
 
-        // 3. ERFOLG: Wenn der Server "success" meldet
         if (result.status === "success") {
-            pendingChanges = []; // Liste der Änderungen leeren
-            
+            pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
             
-            // Optisches Feedback: Spinner weg, Leuchten weg, Haken hin
+            // WICHTIG: Alles Alte weg, Erfolg an
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
-            btn.classList.add('success');       // CSS zeigt grünen Haken
-            btn.innerText = "";                 // Text weg, damit nur der Haken sichtbar ist
+            btn.classList.add('success'); 
+            btn.innerText = ""; 
 
-            // 4. AUFRÄUMEN: Nach 1,5 Sekunden Button verstecken
             setTimeout(() => { 
-                btn.style.display = 'none';     // Button verschwindet
+                // Button Reset
+                btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
-                btn.innerText = "SAVE";         // Text für das nächste Mal vorbereiten
-                btn.disabled = false;           // Button wieder benutzbar machen
+                btn.innerText = "SAVE";
+                btn.disabled = false;
             }, 1500); 
-
-        } else { 
-            // Falls der Server antwortet, aber einen Fehler meldet
-            throw new Error("Server hat Fehler gemeldet"); 
-        }
-
+        } else { throw new Error(); }
     } catch (e) { 
-        // 5. FEHLER: Wenn die Internetverbindung abbricht oder der Server offline ist
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
-        btn.innerText = "Fehler!"; 
-        btn.style.color = "#ff4757"; // Text kurz rot färben
-        
-        // Nach 2 Sekunden zurück auf Anfang, damit man es nochmal probieren kann
+        btn.style.color = "#ff4757"; 
+        btn.innerText = "Error"; 
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
-            btn.style.color = "#e67e22"; // Wieder Orange
-            if (pendingChanges.length > 0) {
-                btn.classList.add('needs-save'); // Pulsieren wieder an
-            }
+            btn.style.color = "#e67e22"; 
+            if(pendingChanges.length > 0) btn.classList.add('needs-save');
         }, 2000);
     }
 }
+// Damit onclick="saveChanges()" immer funktioniert:
+window.saveChanges = saveChanges;
 
 
 
@@ -877,7 +865,6 @@ window.addChange = (el, time, slot, klasse) => {
     const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
     
     parent.classList.remove('ausfall-mode');
-    
     parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
     parent.style.backgroundColor = configFarben[res] || ""; 
 
@@ -886,7 +873,14 @@ window.addChange = (el, time, slot, klasse) => {
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
-    document.getElementById('saveBtn').style.display = 'block';
+
+    // --- NEU: TRIGGER FÜR LEUCHTEN ---
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+        void saveBtn.offsetWidth; // Force Reflow
+        saveBtn.classList.add('needs-save');
+    }
 };
 
 
@@ -1075,57 +1069,7 @@ function openExtraMenu(el) {
     }, 50); 
 }
 
-window.saveChanges = async () => { 
-    const btn = document.getElementById('saveBtn');
-    const gLoader = document.getElementById('globalLoader'); 
-    
-    // Loader oben links zur Sicherheit an
-    if (gLoader) gLoader.style.display = 'block';
-    
-    // Button in Lade-Modus (Text wird transparent, Loader erscheint)
-    btn.classList.add('is-loading');
-    btn.disabled = true;
 
-    try { 
-        const response = await fetch(url, { 
-            method: "POST", 
-            body: JSON.stringify({ 
-                date: document.getElementById('datePicker').value, 
-                changes: pendingChanges, 
-                pw: userPw,
-                kuerzel: userKuerzel
-            }) 
-        }); 
-        
-        const result = await response.json();
-
-        if (result.status === "success") {
-            pendingChanges = []; 
-            
-            if (gLoader) gLoader.style.display = 'none';
-            
-            // Wechsel zum Erfolg: Loader weg, grüner Haken rein
-            btn.classList.remove('is-loading');
-            btn.classList.add('success'); 
-
-            setTimeout(() => { 
-                btn.style.display = 'none'; // Button verschwindet nach Erfolg
-                btn.classList.remove('success'); 
-                btn.disabled = false;
-            }, 1500); 
-        } else { throw new Error(); }
-    } catch (e) { 
-        if (gLoader) gLoader.style.display = 'none';
-        btn.classList.remove('is-loading');
-        btn.disabled = false;
-        btn.style.color = "#ff4757"; // Fehler kurz in Rot anzeigen
-        btn.innerText = "Error"; 
-        setTimeout(() => { 
-            btn.innerText = "SAVE"; 
-            btn.style.color = "#e67e22"; 
-        }, 2000);
-    }
-};
 
 
 
