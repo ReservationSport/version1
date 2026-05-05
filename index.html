@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 202632435</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -837,6 +837,13 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     try {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
+
+        console.log("Server Antwort:", json); // SCHAU IN DIE BROWSER-KONSOLE (F12)
+    
+    if (json.news) {
+        console.log("Gefundene News für dieses Datum:", json.news);
+        processNewsFromServer(json.news);
+    }
         
         if (json.error === "SPERRE") {
             container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
