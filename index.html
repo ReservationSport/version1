@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 202611111111111111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1049,6 +1049,21 @@ window.addChange = (el, time, slot, klasse) => {
     const parent = el.parentElement;
     const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
     
+    // --- NEU: BEREINIGUNG DER WARTESCHLANGEN ---
+    // Dies verhindert, dass "Ausfall"-Leichen in der News-DB landen, 
+    // wenn du dich für eine normale Halle entscheidest.
+    
+    // 1. Bestehende Plan-Änderungen für diese Zelle entfernen
+    pendingChanges = pendingChanges.filter(ch => 
+        !(String(ch.time) === String(time) && String(ch.slotIndex) === String(slot))
+    );
+
+    // 2. Bestehende News/Notifications für diese Zelle entfernen
+    pendingNotifications = pendingNotifications.filter(n => 
+        !(String(n.r) === String(r) && String(n.slot) === String(slot))
+    );
+    // --------------------------------------------
+
     parent.classList.remove('ausfall-mode');
     parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
     parent.style.backgroundColor = configFarben[res] || ""; 
@@ -1057,9 +1072,11 @@ window.addChange = (el, time, slot, klasse) => {
 
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
+    
+    // Neue Änderung hinzufügen
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
 
-    // --- NEU: TRIGGER FÜR LEUCHTEN ---
+    // --- TRIGGER FÜR LEUCHTEN ---
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         saveBtn.style.display = 'block';
