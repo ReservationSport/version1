@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026fdgsdfghs</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -334,13 +334,13 @@
 .save-btn {
     display: none;
     position: relative;
-    padding: 0 20px !important;
-    background: #e67e22; /* Dein Orange als Basis */
-    color: white;
-    border: none;
-    border-radius: 4px; /* Eckiger/Moderner Look */
+    padding: 0 15px !important;
+    background: #333 !important; /* Dunkelgrau wie die anderen Buttons */
+    color: #e67e22 !important;   /* Orange Schrift */
+    border: 1px solid #444;      /* Dezenter Rand */
+    border-radius: 4px;
     font-family: 'Oswald', sans-serif;
-    font-size: 13px !important;
+    font-size: 12px !important;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
@@ -350,21 +350,18 @@
     overflow: hidden;
 }
 
-/* Hover-Effekt: Dezent und wertig */
+/* Hover: Schrift wird etwas heller oder Hintergrund leicht heller */
 .save-btn:hover:not(:disabled) {
-    background: #d35400;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    background: #3d3d3d !important;
+    color: #ff9f43 !important;
 }
 
-/* Der Button während des Speicherns */
+/* Lade-Zustand: Button bleibt grau, Loader dreht sich */
 .save-btn.is-loading {
-    color: transparent !important; /* Text unsichtbar machen */
-    background: #444 !important; /* Neutraler während des Ladens */
+    color: transparent !important;
     cursor: wait;
-    width: 60px !important; /* Zieht sich etwas zusammen */
 }
 
-/* Der Mini-Loader im Button */
 .save-btn.is-loading::after {
     content: "";
     position: absolute;
@@ -372,18 +369,15 @@
     height: 16px;
     top: calc(50% - 8px);
     left: calc(50% - 8px);
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: #ffffff;
+    border: 2px solid rgba(230, 126, 34, 0.3);
+    border-top-color: #e67e22; /* Loader in Orange */
     border-radius: 50%;
     animation: button-spin 0.6s linear infinite;
 }
 
-/* Erfolg-Look: Grüner Haken ohne Schnörkel */
+/* Erfolg-Zustand: Button bleibt GRAU, nur der HAKEN ist GRÜN */
 .save-btn.success {
-    background: #27ae60 !important;
-    width: 40px !important;
-    padding: 0 !important;
-    border-radius: 4px;
+    color: transparent !important; /* Versteckt "SAVE" */
 }
 
 .save-btn.success::before {
@@ -392,8 +386,9 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 16px;
-    color: white;
+    font-size: 18px;
+    color: #27ae60; /* NUR DER HAKEN IST GRÜN */
+    font-weight: bold;
 }
 
 @keyframes button-spin {
@@ -991,10 +986,11 @@ window.saveChanges = async () => {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
-    // 1. Laden beginnt
-    if (gLoader) gLoader.style.display = 'block'; // Oben links dreht er trotzdem (Sicherheit)
+    // Loader oben links zur Sicherheit an
+    if (gLoader) gLoader.style.display = 'block';
     
-    btn.classList.add('is-loading'); // Button wird dunkel, Text weg, Spinner rein
+    // Button in Lade-Modus (Text wird transparent, Loader erscheint)
+    btn.classList.add('is-loading');
     btn.disabled = true;
 
     try { 
@@ -1013,26 +1009,28 @@ window.saveChanges = async () => {
         if (result.status === "success") {
             pendingChanges = []; 
             
-            // 2. Erfolg
             if (gLoader) gLoader.style.display = 'none';
+            
+            // Wechsel zum Erfolg: Loader weg, grüner Haken rein
             btn.classList.remove('is-loading');
             btn.classList.add('success'); 
-            btn.innerText = ""; // Text permanent löschen für den Haken
 
             setTimeout(() => { 
-                btn.style.display = 'none'; 
+                btn.style.display = 'none'; // Button verschwindet nach Erfolg
                 btn.classList.remove('success'); 
-                btn.innerText = "SAVE"; 
                 btn.disabled = false;
             }, 1500); 
         } else { throw new Error(); }
     } catch (e) { 
-        // 3. Fehler
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
+        btn.style.color = "#ff4757"; // Fehler kurz in Rot anzeigen
         btn.innerText = "Error"; 
-        setTimeout(() => { btn.innerText = "SAVE"; }, 2000);
+        setTimeout(() => { 
+            btn.innerText = "SAVE"; 
+            btn.style.color = "#e67e22"; 
+        }, 2000);
     }
 };
 
