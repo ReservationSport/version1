@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026sdfsd</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -969,12 +969,16 @@ window.handleExtraAction = (el, time, slot) => {
     
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     
-   // Save-Button anzeigen und zum Leuchten bringen
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'block';
-        saveBtn.classList.add('needs-save'); // <--- NEU: Das Leuchten starten
-    }
+   // Am Ende von handleExtraAction:
+const saveBtn = document.getElementById('saveBtn');
+if (saveBtn) {
+    saveBtn.style.display = 'block';
+    
+    // Kleiner Timeout, damit der Browser den Wechsel bemerkt
+    setTimeout(() => {
+        saveBtn.classList.add('needs-save');
+    }, 10);
+}
 
     // Menü aufräumen
     el.value = ""; 
