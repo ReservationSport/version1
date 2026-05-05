@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202633333sdddddddddddddd</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1073,43 +1073,13 @@ window.addChange = (el, time, slot, klasse) => {
 
 
 window.handleExtraAction = async (el, time, slot) => {
-    // 1. Sofortiger Fokus-Verlust, um das Hängenbleiben aus grafik_4.png zu verhindern
+    // 1. Sofortiger Fokus-Verlust, um das Hängenbleiben zu verhindern
     el.blur(); 
     
     const action = el.value;
     const parent = el.parentElement;
     const dp = document.getElementById('datePicker'); 
     
-    // Hilfsfunktion: Speicher-Button aktivieren
-    const triggerSaveUI = () => {
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.style.display = 'block';
-            void saveBtn.offsetWidth; // Reflow für CSS-Animation
-            saveBtn.classList.add('needs-save');
-        }
-    };
-
-    // Hilfsfunktion: News in DB schreiben
-    const triggerNews = (klasse, typ) => {
-        const datumVal = dp.value;
-        const dateObj = new Date(datumVal);
-        const tagIndex = dateObj.getDay();
-
-        const newsData = {
-            datum: datumVal,
-            tagIndex: tagIndex,
-            slotIndex: slot,
-            inhalt: `Freie Halle! Klasse ${klasse} hat einen ${typ}. Betrifft die Lektion vom ${datumVal} (Slot ${slot}).`
-        };
-
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run
-                .withSuccessHandler(() => console.log("News-Eintrag in DB erstellt"))
-                .addNewsEntry(newsData);
-        }
-    };
-
     // Daten für die Verarbeitung holen
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
@@ -1121,10 +1091,29 @@ window.handleExtraAction = async (el, time, slot) => {
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
+    // --- HILFSFUNKTIONEN ---
+
+    // Bereinigt die Warteschlangen für die aktuelle Zelle (verhindert Duplikate/Leichen)
+    const clearPendingForCell = () => {
+        pendingChanges = pendingChanges.filter(cIdx => !(cIdx.time === time && cIdx.slotIndex === slot));
+        pendingNotifications = pendingNotifications.filter(n => !(n.r === r && n.slot === slot));
+    };
+
+    const triggerSaveUI = () => {
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.style.display = 'block';
+            void saveBtn.offsetWidth; 
+            saveBtn.classList.add('needs-save');
+        }
+    };
+
     // --- WEICHE FÜR AKTIONEN ---
 
     // A: LEEREN / ZURÜCKSETZEN
     if (action === "" || action === "---") {
+        clearPendingForCell(); // Alte Einträge löschen
+        
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         if (parent.querySelector('.res')) parent.querySelector('.res').innerText = ""; 
@@ -1150,8 +1139,9 @@ window.handleExtraAction = async (el, time, slot) => {
                 btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        triggerNews(klasse, "Outdoor-Status (Schuljahr beendet)");
                         if (document.getElementById('globalLoader')) document.getElementById('globalLoader').style.display = 'block';
+                        
+                        // Hier wird direkt permaDeleteClass getriggert
                         pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
                         if (typeof permaDeleteClass === "function") await permaDeleteClass(klasse, slot);
                     } else {
@@ -1162,57 +1152,39 @@ window.handleExtraAction = async (el, time, slot) => {
         }
     } 
 
-    
+    // C: AUSFALL
     else if (action === "ausfall") {
-    // 1. Visuelle Markierung (Hintergrundfarbe weg, Rahmen/Style für Ausfall hin)
-    parent.classList.add('ausfall-mode');
-    parent.style.backgroundColor = ""; 
-    
-    const resElem = parent.querySelector('.res');
-    if (resElem) resElem.innerText = "Ausfall";
+        clearPendingForCell(); // Ganz wichtig: Vorherige Zustände dieser Zelle löschen
 
-    // 2. Daten für den Hallenplan vorbereiten (Tages-Tabellenblatt)
-    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    let parts = fullString.split('|').map(s => s.trim());
-    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-    
-    let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
-    currentPlanData[r][c] = finalVal;
+        parent.classList.add('ausfall-mode');
+        parent.style.backgroundColor = ""; 
+        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
 
-    // Bevor wir pushen, entfernen wir alte Einträge für dieselbe Zelle (r, slot)
-pendingChanges = pendingChanges.filter(c => !(c.time === time && c.slotIndex === slot));
-pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
+        currentPlanData[r][c] = finalVal;
 
-   // Dasselbe für Notifications (damit nicht 5x "Ausfall" in der DB landet)
-pendingNotifications = pendingNotifications.filter(n => !(n.r === r && n.slot === slot));
-pendingNotifications.push({ 
-    type: "Ausfall", 
-    klasse: klasse, 
-    r: r, 
-    slot: slot, // Slot hinzufügen für eindeutige Filterung
-    datum: dp.value 
-});
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+        pendingNotifications.push({ 
+            type: "Ausfall", 
+            klasse: klasse, 
+            r: r, 
+            slot: slot, 
+            datum: dp.value 
+        });
 
-    // 5. Speicher-Button zum Leuchten bringen
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'block';
-        saveBtn.classList.add('needs-save');
-    }
-
-    // 6. UI aufräumen
-    el.blur();
-    el.value = ""; 
-    closeAllExtraMenus();
-}
+        triggerSaveUI();
+    } 
 
     // D: KOMMENTAR
     else if (action === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         if (text !== null) {
+            clearPendingForCell(); // Auch hier Warteschlange aktualisieren
+
             let oldStift = parent.querySelector('.stift');
             if (oldStift) oldStift.remove();
+            
             if (text.trim() !== "") {
                 commentPart = "KOMMENTAR:" + text.trim();
                 let span = document.createElement('span');
@@ -1222,6 +1194,7 @@ pendingNotifications.push({
             } else {
                 commentPart = undefined;
             }
+            
             let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
             currentPlanData[r][c] = finalVal;
             pendingChanges.push({ time, slotIndex: slot, val: finalVal });
@@ -1231,16 +1204,19 @@ pendingNotifications.push({
 
     // E: NOTIZ LÖSCHEN
     else if (action === "delete_comment") {
+        clearPendingForCell();
+
         commentPart = ""; 
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
+        
         let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
         currentPlanData[r][c] = finalVal;
         pendingChanges.push({ time, slotIndex: slot, val: finalVal });
         triggerSaveUI();
     }
 
-    // --- FINISH: Menü ausblenden ---
+    // --- FINISH: UI aufräumen ---
     el.style.opacity = "0";
     el.style.pointerEvents = "none";
     el.value = ""; 
