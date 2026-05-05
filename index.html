@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 202633333</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -930,7 +930,6 @@ async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
-    // 1. START: Globaler Loader an, Button in Lade-Zustand
     if (gLoader) gLoader.style.display = 'block';
     
     btn.classList.add('is-loading');
@@ -943,6 +942,7 @@ async function saveChanges() {
             body: JSON.stringify({ 
                 date: document.getElementById('datePicker').value, 
                 changes: pendingChanges, 
+                notifications: pendingNotifications, // NEU: Hier gehen die News mit!
                 pw: userPw,
                 kuerzel: userKuerzel
             }) 
@@ -950,31 +950,25 @@ async function saveChanges() {
         
         const result = await response.json();
 
-        // 2. ERFOLG: Änderungen gespeichert
         if (result.status === "success") {
-            
-            // --- NEU: GEPARKTE BENACHRICHTIGUNGEN JETZT SENDEN ---
+            // Erfolg: Wir triggern die lokale Anzeige in der Sidebar (optional)
             if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
                 pendingNotifications.forEach(n => {
                     if (typeof createNotification === "function") {
                         createNotification(n.type, n.klasse, n.r, n.datum);
                     }
                 });
-                pendingNotifications = []; // Liste leeren
+                pendingNotifications = []; 
             }
-            // ----------------------------------------------------
 
             pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
             
-            // Zustände umschalten
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
             btn.classList.add('success'); 
-            
             btn.innerText = ""; 
 
-            // 3. RESET: Button nach 1,5 Sekunden ausblenden
             setTimeout(() => { 
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
@@ -987,7 +981,6 @@ async function saveChanges() {
         }
 
     } catch (e) { 
-        // 4. FEHLER-HANDLING
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
@@ -997,13 +990,10 @@ async function saveChanges() {
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
             btn.style.color = "#e67e22"; 
-            if(pendingChanges.length > 0) {
-                btn.classList.add('needs-save');
-            }
+            if(pendingChanges.length > 0) btn.classList.add('needs-save');
         }, 2000);
     }
 }
-
 window.saveChanges = saveChanges;
 
 
@@ -1172,24 +1162,47 @@ window.handleExtraAction = async (el, time, slot) => {
         }
     } 
 
-    // C: AUSFALL (Das Problem aus grafik_4.png)
+    
     else if (action === "ausfall") {
-        neueHalle = "Ausfall";
-        parent.classList.add('ausfall-mode');
-        parent.style.backgroundColor = ""; // Farbe entfernen
-        
-        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
+    // 1. Visuelle Markierung (Hintergrundfarbe weg, Rahmen/Style für Ausfall hin)
+    parent.classList.add('ausfall-mode');
+    parent.style.backgroundColor = ""; 
+    
+    const resElem = parent.querySelector('.res');
+    if (resElem) resElem.innerText = "Ausfall";
 
-        let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
-        if (!currentPlanData[r]) currentPlanData[r] = [];
-        currentPlanData[r][c] = finalVal;
+    // 2. Daten für den Hallenplan vorbereiten (Tages-Tabellenblatt)
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let parts = fullString.split('|').map(s => s.trim());
+    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+    
+    let finalVal = buildFinalValue(r, c, "Ausfall", commentPart);
+    currentPlanData[r][c] = finalVal;
 
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
-        
-        triggerNews(klasse, "Ausfall");
-        triggerSaveUI();
-    } 
+    // 3. In die Warteschlange für das Speichern einreihen
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+
+    // 4. In die Warteschlange für die News-DB einreihen
+    // Hier wird noch nichts gesendet! Wir merken uns nur, was später in die News soll.
+    pendingNotifications.push({ 
+        type: "Ausfall", 
+        klasse: klasse, 
+        slot: slot, 
+        datum: dp.value 
+    });
+
+    // 5. Speicher-Button zum Leuchten bringen
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+        saveBtn.classList.add('needs-save');
+    }
+
+    // 6. UI aufräumen
+    el.blur();
+    el.value = ""; 
+    closeAllExtraMenus();
+}
 
     // D: KOMMENTAR
     else if (action === "kommentar") {
