@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026asda</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -714,7 +714,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     if (sBtn) {
         sBtn.style.display = 'none';
         sBtn.classList.remove('needs-save', 'success', 'is-loading');
-        sBtn.innerText = "SAVE"; // Text zurücksetzen
+        sBtn.innerText = "SAVE"; 
     }
     pendingChanges = []; 
 
@@ -722,8 +722,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     updateNavButtons();
     
     const container = document.getElementById('plan');
-    container.innerHTML = ""; 
-    document.getElementById('globalLoader').style.display = 'block';
+    container.innerHTML = ""; // Tabelle leeren
+    document.getElementById('globalLoader').style.display = 'block'; // Loader an
             
     const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
     const heute = new Date(); heute.setHours(12,0,0,0);
@@ -769,7 +769,6 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         
         data.forEach((row, rowIndex) => {
             if (rowIndex === 0) {
-                // Nur Datum im Header, KEIN Button hier (der ist statisch oben)
                 container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
             } else {
                 if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
@@ -831,10 +830,13 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         });
     } catch(e) { 
         console.error(e); 
+        // ERGÄNZT: Fehlermeldung für den User, falls der Server streikt
+        container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
+    } finally {
+        // ERGÄNZT: Der Loader wird IMMER ausgeschaltet, egal ob Erfolg oder Fehler
+        document.getElementById('globalLoader').style.display = 'none';
+        updateNavButtons();
     }
-    
-    document.getElementById('globalLoader').style.display = 'none';
-    updateNavButtons();
 }
 
 
@@ -1048,24 +1050,25 @@ window.handleExtraAction = (el, time, slot) => {
                 input.value = '';
                 input.focus();
 
-                btn.onclick = () => {
+                // Auf async umgestellt, damit wir auf das Löschen warten können
+                btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
                         
-                        // NEU: Nachricht nur parken, nicht senden
+                        // 1. VISUELLER LOCK: Tabelle leeren & Loader an
+                        const gLoader = document.getElementById('globalLoader');
+                        if (gLoader) gLoader.style.display = 'block';
+                        const planContainer = document.getElementById('plan');
+                        if (planContainer) planContainer.innerHTML = ""; 
+
+                        // 2. Nachricht für Zentrale parken
                         pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
 
+                        // 3. Löschvorgang starten und warten
                         if (typeof permaDeleteClass === "function") {
-                            permaDeleteClass(klasse, slot);
+                            await permaDeleteClass(klasse, slot);
                         }
                         
-                        // Save-Button aktivieren (für die Notification-Queue)
-                        const sBtn = document.getElementById('saveBtn');
-                        if (sBtn) {
-                            sBtn.style.display = 'block';
-                            void sBtn.offsetWidth;
-                            sBtn.classList.add('needs-save');
-                        }
                     } else {
                         alert("Falsches Passwort!");
                         input.value = '';
@@ -1082,8 +1085,6 @@ window.handleExtraAction = (el, time, slot) => {
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-        
-        // NEU: Nachricht nur parken, nicht sofort senden
         pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
     } 
     
@@ -1195,8 +1196,8 @@ function openExtraMenu(el) {
         });
 
         async function permaDeleteClass(klasse, slotIndex) {
-    const ball = document.getElementById('globalLoader'); // Nutzt den vorhandenen Loader
-    ball.style.display = 'block';
+    const ball = document.getElementById('globalLoader'); 
+    if (ball) ball.style.display = 'block';
     
     try {
         const response = await fetch(url, {
@@ -1210,15 +1211,27 @@ function openExtraMenu(el) {
                 kuerzel: userKuerzel
             })
         });
+        
         const result = await response.json();
+        
         if (result.status === "success") {
-            alert("Erfolg: Die Klasse wurde für alle zukünftigen Termine entfernt.");
-            loadPlan(); // Plan neu laden, damit die Lücken sofort sichtbar sind
+            // Wir verzichten auf das Alert, oder setzen es ans Ende, 
+            // damit der Flow nicht unterbrochen wird.
+            console.log("Erfolg: Klasse entfernt.");
+            
+            // Wichtig: loadPlan() lädt die Daten neu und schaltet den Loader aus
+            await loadPlan(); 
+            
+            // Optionaler Erfolgshinweis nach dem Laden
+            // alert("Die Klasse wurde für alle zukünftigen Termine entfernt.");
+        } else {
+            throw new Error(result.error || "Unbekannter Fehler");
         }
     } catch (e) {
+        console.error("PermaDelete Error:", e);
         alert("Fehler beim dauerhaften Löschen. Bitte Verbindung prüfen.");
-    } finally {
-        ball.style.display = 'none';
+        // Nur im Fehlerfall schalten wir den Loader hier manuell aus
+        if (ball) ball.style.display = 'none';
     }
 }
 
