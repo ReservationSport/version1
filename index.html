@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 2026</title>
+     <title>Reservation Sport 2026dddd</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -331,13 +331,13 @@
     left: 150%; /* Jagt durch den Button nach rechts außen */
 }
 
-.save-btn {
-    display: none;
+/* Wir nutzen die ID zur Sicherheit für die Layout-Stabilität */
+#saveBtn {
+    display: none; /* Steuerung via JS (style.display) */
     position: relative;
     padding: 0 15px !important;
     background: #333 !important;
     color: #e67e22 !important;
-    /* Rand standardmäßig transparent, damit er im unsichtbaren Zustand nicht stört */
     border: 1px solid transparent; 
     border-radius: 4px;
     font-family: 'Oswald', sans-serif;
@@ -346,56 +346,65 @@
     text-transform: uppercase;
     letter-spacing: 1px;
     cursor: pointer;
-    height: 34px !important;
+    
+    /* FIX: Feste Dimensionen verhindern das Springen */
+    height: 34px !important; 
+    min-width: 85px; /* Breite fixiert auf den "SAVE"-Text */
+    
+    /* Zentrierung für den Inhalt (Spinner & Haken) */
+    display: inline-flex; 
+    align-items: center;
+    justify-content: center;
+    
     transition: all 0.2s ease;
     overflow: hidden;
 }
 
 /* Hover-Effekt */
-.save-btn:hover:not(:disabled) {
+#saveBtn:hover:not(:disabled) {
     background: #3d3d3d !important;
     color: #ff9f43 !important;
 }
 
-.save-btn.needs-save {
-    display: block !important;
-    /* Wir fügen 'forwards' hinzu und erhöhen die Deckkraft beim Pulsieren */
+/* Aktives Leuchten bei Änderungen */
+#saveBtn.needs-save {
+    display: inline-flex !important;
     animation: pulse-glow 1.5s infinite ease-in-out !important;
     border: 1px solid #e67e22 !important;
 }
 
 /* Lade-Zustand (während fetch läuft) */
-.save-btn.is-loading {
-    color: transparent !important;
+#saveBtn.is-loading {
+    display: inline-flex !important;
+    color: transparent !important; /* Versteckt Text, hält Platz */
     cursor: wait;
-    animation: none !important; /* Pulsieren stoppen während Laden */
+    animation: none !important;
 }
 
-.save-btn.is-loading::after {
+#saveBtn.is-loading::after {
     content: "";
     position: absolute;
     width: 16px; height: 16px;
-    top: calc(50% - 8px); left: calc(50% - 8px);
     border: 2px solid rgba(230, 126, 34, 0.3);
     border-top-color: #e67e22;
     border-radius: 50%;
     animation: button-spin 0.6s linear infinite;
 }
 
-/* Erfolg-Zustand (Grüner Haken auf grauem Grund) */
-.save-btn.success {
-    display: block !important;
-    color: transparent !important;
+/* Erfolg-Zustand: Haken erscheint, Größe bleibt identisch */
+#saveBtn.success {
+    display: inline-flex !important;
+    color: transparent !important; /* Versteckt Text */
     animation: none !important;
-    border-color: #444 !important; /* Neutraler Rand */
+    border-color: #444 !important;
 }
 
-.save-btn.success::before {
+#saveBtn.success::before {
     content: '✔';
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 18px;
+    font-size: 18px; /* Haken schön groß im Button */
     color: #27ae60;
     font-weight: bold;
 }
@@ -410,7 +419,6 @@
         box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4);
     }
     50% {
-        /* Hier erhöhen wir den Radius und die Intensität */
         box-shadow: inset 0 0 20px rgba(230, 126, 34, 1);
         border-color: #ff9f43 !important;
     }
@@ -419,7 +427,7 @@
     }
 }
 
-.save-btn:disabled {
+#saveBtn:disabled {
     animation: none !important;
     cursor: not-allowed;
 }
@@ -761,10 +769,12 @@ async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
+    // 1. START: Globaler Loader an, Button in Lade-Zustand
     if (gLoader) gLoader.style.display = 'block';
     
     btn.classList.add('is-loading');
     btn.disabled = true;
+    btn.innerText = "SAVE"; // Text bleibt zur Breitenstabilität intern erhalten
 
     try { 
         const response = await fetch(url, { 
@@ -779,38 +789,52 @@ async function saveChanges() {
         
         const result = await response.json();
 
+        // 2. ERFOLG: Änderungen gespeichert
         if (result.status === "success") {
             pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
             
-            // WICHTIG: Alles Alte weg, Erfolg an
+            // Zustände umschalten: Spinner & Leuchten weg -> Haken her
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
             btn.classList.add('success'); 
+            
+            // Text leeren, damit nur der Haken (via CSS ::before) sichtbar ist
+            // Die feste Breite im CSS (min-width) hält den Button stabil
             btn.innerText = ""; 
 
+            // 3. RESET: Button nach 1,5 Sekunden ausblenden
             setTimeout(() => { 
-                // Button Reset
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
-                btn.innerText = "SAVE";
+                btn.innerText = "SAVE"; // Text für den nächsten Einsatz wiederherstellen
                 btn.disabled = false;
             }, 1500); 
-        } else { throw new Error(); }
+
+        } else { 
+            throw new Error("Server Error"); 
+        }
+
     } catch (e) { 
+        // 4. FEHLER-HANDLING
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
-        btn.style.color = "#ff4757"; 
+        btn.style.color = "#ff4757"; // Kurzes rotes Feedback
         btn.innerText = "Error"; 
+        
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
-            btn.style.color = "#e67e22"; 
-            if(pendingChanges.length > 0) btn.classList.add('needs-save');
+            btn.style.color = "#e67e22"; // Zurück zu Orange
+            // Falls noch Änderungen offen sind, Leuchten reaktivieren
+            if(pendingChanges.length > 0) {
+                btn.classList.add('needs-save');
+            }
         }, 2000);
     }
 }
-// Damit onclick="saveChanges()" immer funktioniert:
+
+// Damit der Aufruf über onclick="saveChanges()" im HTML sicher klappt
 window.saveChanges = saveChanges;
 
 
