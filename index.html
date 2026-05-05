@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202611111111111111</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -785,8 +785,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const dp = document.getElementById('datePicker');
     
     // 1. Prüfung auf ungespeicherte Änderungen
-    if (pendingChanges.length > 0) {
-        if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
+    if (pendingChanges.length > 0 || (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0)) {
+        if (!confirm("Du hast ungespeicherte Änderungen (Halle oder Ausfall). Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
             dp.value = lastStableDate; 
             return;
         }
@@ -803,6 +803,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         sBtn.innerText = "SAVE"; 
     }
     pendingChanges = []; 
+    // Falls pendingNotifications existiert, auch hier leeren
+    if (typeof pendingNotifications !== 'undefined') pendingNotifications = [];
 
     lastStableDate = dateVal; 
     updateNavButtons();
@@ -840,6 +842,12 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
             container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
             document.getElementById('globalLoader').style.display = 'none';
             return;
+        }
+
+        // --- NEU: News verarbeiten ---
+        // Bevor die Tabelle gezeichnet wird, verarbeiten wir die News-Daten vom Server
+        if (json.news && typeof processNewsFromServer === "function") {
+            processNewsFromServer(json.news);
         }
 
         container.innerHTML = ""; 
@@ -916,10 +924,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         });
     } catch(e) { 
         console.error(e); 
-        // ERGÄNZT: Fehlermeldung für den User, falls der Server streikt
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
     } finally {
-        // ERGÄNZT: Der Loader wird IMMER ausgeschaltet, egal ob Erfolg oder Fehler
         document.getElementById('globalLoader').style.display = 'none';
         updateNavButtons();
     }
@@ -942,7 +948,7 @@ async function saveChanges() {
             body: JSON.stringify({ 
                 date: document.getElementById('datePicker').value, 
                 changes: pendingChanges, 
-                notifications: pendingNotifications, // NEU: Hier gehen die News mit!
+                notifications: pendingNotifications, 
                 pw: userPw,
                 kuerzel: userKuerzel
             }) 
@@ -951,23 +957,23 @@ async function saveChanges() {
         const result = await response.json();
 
         if (result.status === "success") {
-            // Erfolg: Wir triggern die lokale Anzeige in der Sidebar (optional)
-            if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
-                pendingNotifications.forEach(n => {
-                    if (typeof createNotification === "function") {
-                        createNotification(n.type, n.klasse, n.r, n.datum);
-                    }
-                });
-                pendingNotifications = []; 
-            }
-
+            // --- ÄNDERUNG: KEIN LOKALES CREATE_NOTIFICATION MEHR ---
+            // Wir leeren nur noch die Warteschlangen, da die News nun sicher 
+            // in der DB stehen und beim nächsten loadPlan() mitkommen.
+            pendingNotifications = []; 
             pendingChanges = []; 
+
+            // UI-Feedback für Erfolg
             if (gLoader) gLoader.style.display = 'none';
-            
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
             btn.classList.add('success'); 
             btn.innerText = ""; 
+
+            // Den Plan neu laden, um die echten News vom Server anzuzeigen
+            if (typeof loadPlan === "function") {
+                await loadPlan();
+            }
 
             setTimeout(() => { 
                 btn.style.display = 'none'; 
@@ -990,10 +996,13 @@ async function saveChanges() {
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
             btn.style.color = "#e67e22"; 
-            if(pendingChanges.length > 0) btn.classList.add('needs-save');
+            if(pendingChanges.length > 0 || pendingNotifications.length > 0) {
+                btn.classList.add('needs-save');
+            }
         }, 2000);
     }
 }
+        
 window.saveChanges = saveChanges;
 
 
@@ -1085,7 +1094,56 @@ window.addChange = (el, time, slot, klasse) => {
     }
 };
 
+// Diese Funktion wird jetzt nur noch von loadPlan aufgerufen, 
+// wenn echte Daten aus der News_DB eintreffen.
+function processNewsFromServer(newsRows) {
+    const container = document.getElementById('newsContent');
+    container.innerHTML = ""; // Container leeren für frische Daten
+    
+    if (!newsRows || newsRows.length === 0) {
+        document.getElementById('newsBadge').style.display = 'none';
+        return;
+    }
 
+    newsRows.forEach(row => {
+        // row-Struktur aus deinem Backend: [ID, Datum, Slot, TagIndex, Text, Kuerzel]
+        const entry = {
+            id: row[0],
+            datum: row[1],
+            slot: row[2],
+            text: row[4],
+            kuerzel: row[5],
+            // Wir nutzen die ID (Timestamp) um die Uhrzeit zu extrahieren, falls nötig
+            zeit: new Date(parseInt(row[0].split('_')[0])).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        };
+
+        // Optional: Hier könnten wir trotzdem noch die "Betrifft: Kollegen" Logik einbauen
+        // Aber einfacher ist es, den Text zu nehmen, den das Backend schon generiert hat.
+        renderNewsEntry(entry);
+    });
+}
+
+function renderNewsEntry(entry) {
+    const container = document.getElementById('newsContent');
+    const div = document.createElement('div');
+    div.className = "news-item";
+    div.style = "background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #e67e22; cursor: pointer;";
+    
+    // Der Magic Jump bleibt erhalten!
+    div.onclick = () => goToDateAndHighlight(entry.datum, entry.slot);
+
+    div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+            <span style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase;">Meldung ${entry.zeit}</span>
+            <span style="color: #444; font-size: 10px;">${entry.datum}</span>
+        </div>
+        <div style="font-size: 14px; color: #fff; margin-bottom: 5px;">${entry.text}</div>
+        <div style="font-size: 11px; color: #666;">Gemeldet von: ${entry.kuerzel || 'System'}</div>
+    `;
+    
+    container.prepend(div);
+    document.getElementById('newsBadge').style.display = 'block';
+}
 
 
 
@@ -1472,7 +1530,7 @@ async function goToDateAndHighlight(targetDate, rowIdx) {
 
     <!-- Kleiner Hinweis-Footer -->
     <div style="padding: 15px; background: #0d0d0d; color: #444; font-size: 11px; text-align: center;">
-        Automatische Benachrichtigungen bei Hallenänderungen
+        Automatische Benachrichtigungen für freie Hallen
     </div>
 </div>
 
