@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 20261111</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -335,9 +335,10 @@
     display: none;
     position: relative;
     padding: 0 15px !important;
-    background: #333 !important; /* Dunkelgrau wie die anderen Buttons */
-    color: #e67e22 !important;   /* Orange Schrift */
-    border: 1px solid #444;      /* Dezenter Rand */
+    background: #333 !important;
+    color: #e67e22 !important;
+    /* Rand standardmäßig transparent, damit er im unsichtbaren Zustand nicht stört */
+    border: 1px solid transparent; 
     border-radius: 4px;
     font-family: 'Oswald', sans-serif;
     font-size: 12px !important;
@@ -350,80 +351,70 @@
     overflow: hidden;
 }
 
-/* Hover: Schrift wird etwas heller oder Hintergrund leicht heller */
+/* Hover-Effekt */
 .save-btn:hover:not(:disabled) {
     background: #3d3d3d !important;
     color: #ff9f43 !important;
 }
 
-/* Lade-Zustand: Button bleibt grau, Loader dreht sich */
+/* Aktives Leuchten: Wird per JS getriggert */
+.save-btn.needs-save {
+    display: block !important;
+    border: 1px solid #e67e22 !important; 
+    animation: pulse-glow 1.5s infinite ease-in-out !important;
+}
+
+/* Lade-Zustand (während fetch läuft) */
 .save-btn.is-loading {
     color: transparent !important;
     cursor: wait;
+    animation: none !important; /* Pulsieren stoppen während Laden */
 }
 
 .save-btn.is-loading::after {
     content: "";
     position: absolute;
-    width: 16px;
-    height: 16px;
-    top: calc(50% - 8px);
-    left: calc(50% - 8px);
+    width: 16px; height: 16px;
+    top: calc(50% - 8px); left: calc(50% - 8px);
     border: 2px solid rgba(230, 126, 34, 0.3);
-    border-top-color: #e67e22; /* Loader in Orange */
+    border-top-color: #e67e22;
     border-radius: 50%;
     animation: button-spin 0.6s linear infinite;
 }
 
-/* Erfolg-Zustand: Button bleibt GRAU, nur der HAKEN ist GRÜN */
+/* Erfolg-Zustand (Grüner Haken auf grauem Grund) */
 .save-btn.success {
-    color: transparent !important; /* Versteckt "SAVE" */
+    display: block !important;
+    color: transparent !important;
+    animation: none !important;
+    border-color: #444 !important; /* Neutraler Rand */
 }
 
 .save-btn.success::before {
     content: '✔';
     position: absolute;
-    top: 50%;
-    left: 50%;
+    top: 50%; left: 50%;
     transform: translate(-50%, -50%);
     font-size: 18px;
-    color: #27ae60; /* NUR DER HAKEN IST GRÜN */
+    color: #27ae60;
     font-weight: bold;
 }
 
+/* Animationen */
 @keyframes button-spin {
     to { transform: rotate(360deg); }
 }
 
-
-  /* Und stelle sicher, dass die Klasse die Animation auch aufruft */
-.save-btn.needs-save {
-    display: block !important;
-    animation: pulse-glow 1.5s infinite ease-in-out !important;
-    border: 1px solid #e67e22 !important; /* Orangener Rand hilft dem Effekt */
-}
-
 @keyframes pulse-glow {
-    0% {
-        /* Leuchten startet dezent innen */
-        box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4) !important;
-    }
-    50% {
-        /* Volles Glühen nach innen */
-        box-shadow: inset 0 0 15px rgba(230, 126, 34, 0.9) !important;
-    }
-    100% {
-        /* Zurück zum Ursprung */
-        box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4) !important;
-    }
+    0% { box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4); }
+    50% { box-shadow: inset 0 0 15px rgba(230, 126, 34, 0.9); }
+    100% { box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4); }
 }
 
-    
-/* Deaktivierte Buttons sollen nicht leuchten */
 .save-btn:disabled {
     animation: none !important;
+    cursor: not-allowed;
 }
-
 
     
 #loginError {
@@ -758,18 +749,72 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 }
 
 
-function saveChanges() {
+async function saveChanges() {
     const btn = document.getElementById('saveBtn');
-    // ... dein Speicher-Code ...
+    const gLoader = document.getElementById('globalLoader'); 
     
-    // Nach erfolgreichem Speichern:
-    btn.classList.add('success');
+    // 1. START: Button in Lade-Modus versetzen
+    if (gLoader) gLoader.style.display = 'block'; // Falls vorhanden, globaler Loader an
     
-    // Optional: Nach 3 Sekunden zurücksetzen oder ausblenden
-    setTimeout(() => {
-        btn.classList.remove('success');
-        btn.style.display = 'none';
-    }, 3000);
+    btn.classList.add('is-loading'); // Zeigt den orangefarbenen Spinner im Button
+    btn.disabled = true;             // Verhindert Klicks während des Speicherns
+
+    try { 
+        // 2. DATEN SENDEN: Wir warten (await) auf die Antwort vom Server
+        const response = await fetch(url, { 
+            method: "POST", 
+            body: JSON.stringify({ 
+                date: document.getElementById('datePicker').value, 
+                changes: pendingChanges, 
+                pw: userPw,
+                kuerzel: userKuerzel
+            }) 
+        }); 
+        
+        const result = await response.json();
+
+        // 3. ERFOLG: Wenn der Server "success" meldet
+        if (result.status === "success") {
+            pendingChanges = []; // Liste der Änderungen leeren
+            
+            if (gLoader) gLoader.style.display = 'none';
+            
+            // Optisches Feedback: Spinner weg, Leuchten weg, Haken hin
+            btn.classList.remove('is-loading');
+            btn.classList.remove('needs-save'); 
+            btn.classList.add('success');       // CSS zeigt grünen Haken
+            btn.innerText = "";                 // Text weg, damit nur der Haken sichtbar ist
+
+            // 4. AUFRÄUMEN: Nach 1,5 Sekunden Button verstecken
+            setTimeout(() => { 
+                btn.style.display = 'none';     // Button verschwindet
+                btn.classList.remove('success'); 
+                btn.innerText = "SAVE";         // Text für das nächste Mal vorbereiten
+                btn.disabled = false;           // Button wieder benutzbar machen
+            }, 1500); 
+
+        } else { 
+            // Falls der Server antwortet, aber einen Fehler meldet
+            throw new Error("Server hat Fehler gemeldet"); 
+        }
+
+    } catch (e) { 
+        // 5. FEHLER: Wenn die Internetverbindung abbricht oder der Server offline ist
+        if (gLoader) gLoader.style.display = 'none';
+        btn.classList.remove('is-loading');
+        btn.disabled = false;
+        btn.innerText = "Fehler!"; 
+        btn.style.color = "#ff4757"; // Text kurz rot färben
+        
+        // Nach 2 Sekunden zurück auf Anfang, damit man es nochmal probieren kann
+        setTimeout(() => { 
+            btn.innerText = "SAVE"; 
+            btn.style.color = "#e67e22"; // Wieder Orange
+            if (pendingChanges.length > 0) {
+                btn.classList.add('needs-save'); // Pulsieren wieder an
+            }
+        }, 2000);
+    }
 }
 
 
@@ -972,17 +1017,12 @@ window.handleExtraAction = (el, time, slot) => {
     
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     
-   // Am Ende von handleExtraAction:
-const saveBtn = document.getElementById('saveBtn');
+ const saveBtn = document.getElementById('saveBtn');
 if (saveBtn) {
-    saveBtn.style.display = 'block';
-    
-    // Kleiner Timeout, damit der Browser den Wechsel bemerkt
-    setTimeout(() => {
-        saveBtn.classList.add('needs-save');
-    }, 10);
+    saveBtn.classList.add('needs-save'); // Triggert display: block und Animation
 }
 
+    
     // Menü aufräumen
     el.value = ""; 
     closeAllExtraMenus();
