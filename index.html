@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202611</title>
+     <title>Reservation Sport 202644444</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1087,11 +1087,21 @@ window.handleExtraAction = async (el, time, slot) => {
     const parent = el.parentElement;
     const dp = document.getElementById('datePicker'); 
     
-    // Hilfsfunktion zum Senden der News an die Google-Datenbank
+    // Hilfsfunktion für den Save-Button Trigger
+    const showSaveButton = () => {
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.style.display = 'block';
+            void saveBtn.offsetWidth; // Force Reflow für Animation
+            saveBtn.classList.add('needs-save');
+        }
+    };
+
+    // Hilfsfunktion zum Senden der News
     const triggerNews = (klasse, typ) => {
         const datumVal = dp.value;
         const dateObj = new Date(datumVal);
-        const tagIndex = dateObj.getDay(); // 1=Mo, 2=Di...
+        const tagIndex = dateObj.getDay();
 
         const newsData = {
             datum: datumVal,
@@ -1105,7 +1115,7 @@ window.handleExtraAction = async (el, time, slot) => {
             .addNewsEntry(newsData);
     };
 
-    // Fall: Auswahl zurücksetzen / Leeren
+    // Fall: Auswahl zurücksetzen
     if (action === "" || action === "---") {
         const r = parent.getAttribute('data-row');
         const c = parent.getAttribute('data-col');
@@ -1125,8 +1135,8 @@ window.handleExtraAction = async (el, time, slot) => {
         if (!currentPlanData[r]) currentPlanData[r] = [];
         currentPlanData[r][c] = finalVal;
         pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        document.getElementById('saveBtn').style.display = 'block';
-
+        
+        showSaveButton();
         el.value = "";
         closeAllExtraMenus();
         return; 
@@ -1163,15 +1173,11 @@ window.handleExtraAction = async (el, time, slot) => {
                 btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        
-                        // NEWS-TRIGGER: Schuljahr beendet
                         triggerNews(klasse, "Outdoor-Status (Schuljahr beendet)");
 
                         const gLoader = document.getElementById('globalLoader');
                         if (gLoader) gLoader.style.display = 'block';
-                        const planContainer = document.getElementById('plan');
-                        if (planContainer) planContainer.innerHTML = ""; 
-
+                        
                         pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
 
                         if (typeof permaDeleteClass === "function") {
@@ -1185,17 +1191,19 @@ window.handleExtraAction = async (el, time, slot) => {
                 };
             }
         }
-        el.value = ""; closeAllExtraMenus(); return;
+        el.value = ""; 
+        closeAllExtraMenus(); 
+        return;
     } 
     
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
+        parent.style.backgroundColor = ""; // Bei Ausfall keine Hallenfarbe
         
-        // NEWS-TRIGGER: Ausfall
         triggerNews(klasse, "Ausfall");
-
         pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
+        // Der Save-Button Trigger erfolgt unten am Ende der Funktion
     } 
     
     else if (action === "kommentar") {
@@ -1211,9 +1219,13 @@ window.handleExtraAction = async (el, time, slot) => {
                 span.innerHTML = '<i class="fas fa-comment-dots"></i>';
                 span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
-            } else { commentPart = undefined; }
+            } else { 
+                commentPart = undefined; 
+            }
         } else { 
-            el.value = ""; closeAllExtraMenus(); return; 
+            el.value = ""; 
+            closeAllExtraMenus(); 
+            return; 
         }
     } 
     
@@ -1223,18 +1235,14 @@ window.handleExtraAction = async (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // --- FINALES UPDATE & NEWS-TRIGGER FÜR RESSOURCEN (z.B. Outdoor) ---
+    // --- FINALES UPDATE ---
 
     if (neueHalle !== "" && neueHalle !== "Ausfall") {
         parent.style.backgroundColor = configFarben[neueHalle] || "";
-        
-        // NEWS-TRIGGER: Manuelle Wahl (Outdoor, etc.)
+        parent.classList.remove('ausfall-mode');
         triggerNews(klasse, neueHalle); 
+    } 
 
-    } else if (neueHalle === "Ausfall") {
-        parent.style.backgroundColor = ""; 
-    }
-    
     const resElem = parent.querySelector('.res');
     if (resElem) resElem.innerText = neueHalle;
 
@@ -1244,13 +1252,10 @@ window.handleExtraAction = async (el, time, slot) => {
     
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'block';
-        void saveBtn.offsetWidth; 
-        saveBtn.classList.add('needs-save');
-    }
+    // Speicher-Button anzeigen
+    showSaveButton();
 
+    // Menü sauber zurücksetzen und schließen
     el.value = ""; 
     closeAllExtraMenus();
 };
