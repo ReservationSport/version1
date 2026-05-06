@@ -1,1788 +1,3117 @@
+Mit der Google Docs App bearbeiten
+Nehmen Sie Veränderungen vor, hinterlassen Sie Kommentare und geben Sie Dateien für andere frei, damit Sie gleichzeitig mit anderen daran arbeiten können.
+Nein dankeApp verwenden
+
+index.html_version1_newszentrale
+
 <!DOCTYPE html>
+
 <html lang="de">
+
 <head>
+
     <meta charset="UTF-8">
-     <title>Reservation Sport123</title>
+
+     <title>Reservation Sport111111</title>
+
 <!-- Icons -->
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 <!-- Schriftart -->
+
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 
 
+
 <style>
-    
+
+   
+
     /* ============================================================
+
        1. BASIS-STYLING & LAYOUT
+
        ============================================================ */
-    body { 
-        font-family: 'Segoe UI', sans-serif; 
-        background: #1a1a1a; 
-        color: white; 
-        padding: 20px; 
+
+    body {
+
+        font-family: 'Segoe UI', sans-serif;
+
+        background: #1a1a1a;
+
+        color: white;
+
+        padding: 20px;
+
     }
 
+
     /* 2. Das Grid/Die Tabelle wieder schmaler machen */
-.grid { 
-    display: grid; 
-    grid-template-columns: 120px repeat(5, 1fr); 
-    gap: 2px; 
+
+.grid {
+
+    display: grid;
+
+    grid-template-columns: 120px repeat(5, 1fr);
+
+    gap: 2px;
+
     max-width: 1000px; /* Hier ebenfalls wieder 1000px */
-    margin: auto; 
+
+    margin: auto;
+
 }
 
+
      .info-box {
+
     grid-column: span 6;
+
     font-size: 20px !important; /* Hier die gewünschte Größe */
+
     padding: 40px !important;   /* Mehr Abstand für eine bessere Optik */
+
     text-align: center;
+
     line-height: 1.5;           /* Angenehmerer Zeilenabstand */
+
     color: #888;                /* Dezentes Grau wie im Screenshot */
+
     font-style: italic;         /* Kursiv wie gewünscht */
+
 }
+
 
 
 
     /* ============================================================
+
        2. NAVIGATION & DATUMSKONTROLLE & News
+
        ============================================================ */
 
-    
+
+   
+
  /* 1. Die Navigationsleiste wieder schmaler machen */
+
 .date-control {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
+
     width: 100%;
+
     max-width: 1000px; /* Zurück auf den Originalwert deiner Tabelle */
+
     margin: 0 auto;
+
     padding: 10px 0;
+
     background: #1a1a1a;
+
     position: sticky;
+
     top: 0;
+
     z-index: 1100;
+
 }
+
 
 .nav-section {
+
     display: flex;
+
     align-items: center;
+
     gap: 10px;
+
 }
+
 
 /* Linke Sektion (News) */
+
 .nav-left {
+
     flex: 1;
+
     justify-content: flex-start;
+
 }
+
 
 /* Mittlere Sektion (Datum & alle Pfeile) */
+
 .nav-center {
+
     flex: 2; /* Nimmt mehr Platz ein, um sich perfekt zu zentrieren */
+
     justify-content: center;
+
     gap: 8px;
+
 }
+
 
 /* Rechte Sektion (Save & Refresh) */
+
 .nav-right {
+
     flex: 1;
+
     justify-content: flex-end;
+
 }
+
 
 /* Spezifisches Styling für das Datum im Zentrum */
+
 #datePicker {
+
     padding: 8px;
+
     background: #2a2a2a;
+
     border: 1px solid #444;
+
     color: white;
+
     border-radius: 4px;
+
     font-family: sans-serif;
+
 }
-    
+
+   
+
 /* Der News-Button bleibt im Premium-Style */
+
 .news-btn-premium {
+
     position: relative;
+
     display: flex;
+
     align-items: center;
+
     background: #2a2a2a;
+
     border: 1px solid #444;
+
     border-radius: 6px;
+
     padding: 6px 15px;
+
     cursor: pointer;
+
     height: 40px;
+
 }
+
 
 .news-btn-premium:hover {
+
     background: #333;
+
     border-color: #e67e22;
+
 }
+
 
 .news-btn-premium .btn-text {
+
     color: #fff;
+
     font-family: 'Segoe UI', sans-serif;
+
     font-weight: 300;
+
     font-size: 13px;
+
     letter-spacing: 2px;
+
     margin-right: 10px;
+
 }
 
-    
+
+   
+
 .news-btn-premium .bell-icon {
+
     font-size: 14px; opacity: 0.7;
+
 }
+
 
 /* Badge Punkt (Orange) */
+
 .news-btn-premium .badge {
+
     position: absolute;
+
     top: -3px;
+
     right: -3px;
+
     width: 9px;
+
     height: 9px;
+
     background: #e67e22;
+
     border-radius: 50%;
+
     border: 1px solid #1a1a1a;
+
     box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
+
 }
 
 
 
-    
+
+   
+
     .nav-group { display: flex; gap: 5px; }
 
-   #datePicker { padding: 0 10px; /* Oben/Unten 0, damit die 40px fix bleiben */ background: #333; color: white; border: 1px solid #444; height: 40px; border-radius: 4px; cursor: pointer; box-sizing: border-box; /* Erzwingt, dass Rahmen/Padding in den 40px enthalten sind */ font-family: inherit; /* Verhindert Schrift-Größen-Sprünge */ } 
 
-   .nav-btn, .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-sizing: border-box; /* Auch hier für absolute Symmetrie */ } 
+   #datePicker { padding: 0 10px; /* Oben/Unten 0, damit die 40px fix bleiben */ background: #333; color: white; border: 1px solid #444; height: 40px; border-radius: 4px; cursor: pointer; box-sizing: border-box; /* Erzwingt, dass Rahmen/Padding in den 40px enthalten sind */ font-family: inherit; /* Verhindert Schrift-Größen-Sprünge */ }
+
+
+   .nav-btn, .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-sizing: border-box; /* Auch hier für absolute Symmetrie */ }
+
 
      .nav-btn:hover { background: #444; }
 
 
+
     .refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
+
     .refresh-btn:hover { color: #ff9f43; background: #444; }
+
  .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
+
         @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 
+
     /* Diese Klasse blendet die Buttons radikal aus */
+
 .nav-btn-hidden {
+
     /* Sichtbarkeit auf hidden statt display auf none */
+
     visibility: hidden !important;
+
     /* optional: verhindert, dass man den unsichtbaren Button noch klicken kann */
-    pointer-events: none; 
+
+    pointer-events: none;
+
 }
 
+
     /* ============================================================
+
        3. ZELLEN-STYLING (BOXES)
+
        ============================================================ */
+
     /* Grundzustand: Kein Zeigefinger für alle Boxen */
-.box { 
-    border: 1px solid #444; 
-    padding: 5px; 
-    background: #262626; 
-    min-height: 50px; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center; 
-    font-size: 11px; 
-    position: relative; 
+
+.box {
+
+    border: 1px solid #444;
+
+    padding: 5px;
+
+    background: #262626;
+
+    min-height: 50px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+
+    font-size: 11px;
+
+    position: relative;
+
     cursor: default; /* Zeigefinger entfernt */
-    overflow: hidden; 
+
+    overflow: hidden;
+
 }
+
 
 /* Leere Zellen: Keine Interaktion möglich */
-.box.empty { 
-    pointer-events: none; 
-    opacity: 0.5; 
-    cursor: default; 
+
+.box.empty {
+
+    pointer-events: none;
+
+    opacity: 0.5;
+
+    cursor: default;
+
 }
+
 
 /* Zeit-Spalte und Header: Neutraler Cursor */
-.zeit-box { 
-    background: #333; 
-    font-weight: bold; 
-    cursor: default; 
+
+.zeit-box {
+
+    background: #333;
+
+    font-weight: bold;
+
+    cursor: default;
+
 }
 
-.header-row { 
-    grid-column: span 6; 
-    background: #333; 
-    font-size: 14px; 
-    font-weight: bold; 
-    position: sticky; 
-    top: 60px; 
-    z-index: 1090; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    height: 50px; 
+
+.header-row {
+
+    grid-column: span 6;
+
+    background: #333;
+
+    font-size: 14px;
+
+    font-weight: bold;
+
+    position: sticky;
+
+    top: 60px;
+
+    z-index: 1090;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    height: 50px;
+
     cursor: default;
+
 }
+
 
 /* NUR DEINE ZELLEN: Hier erscheint der Zeigefinger */
-.box.is-mine { 
-    border: 2px solid #e67e22 !important; 
-    z-index: 10; 
+
+.box.is-mine {
+
+    border: 2px solid #e67e22 !important;
+
+    z-index: 10;
+
     cursor: pointer; /* Zeigefinger nur hier */
+
 }
+
 
 .box.is-mine:hover {
+
     background-color: rgba(230, 126, 34, 0.2) !important;
+
     box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
+
     transform: scale(1.03);
+
     z-index: 100;
+
 }
+
 
 /* Fremde Zellen: Sicherstellen, dass kein Finger erscheint */
+
 .box.not-mine {
+
     cursor: default !important;
+
 }
 
+
     /* ============================================================
+
        4. SPEZIAL-MODI (AUSFALL) und Beendet
+
        ============================================================ */
-    .box.ausfall-mode { 
-        background-color: #000000 !important; 
-        color: #777777 !important; 
-        background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)), 
-                          linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)); 
+
+    .box.ausfall-mode {
+
+        background-color: #000000 !important;
+
+        color: #777777 !important;
+
+        background-image: linear-gradient(to top right, transparent calc(50% - 1px), #444, transparent calc(50% + 1px)),
+
+                          linear-gradient(to top left, transparent calc(50% - 1px), #444, transparent calc(50% + 1px));
+
     }
+
 
 /* Overlay: Dunkler & fokussierter */
+
 .modal-overlay {
+
     display: none;
+
     position: fixed;
+
     top: 0; left: 0; width: 100%; height: 100%;
+
     background: rgba(0, 0, 0, 0.85);
+
     backdrop-filter: blur(5px);
+
     z-index: 10000;
+
     justify-content: center;
+
     align-items: center;
+
 }
+
 
 /* Modal: Schmaler (320px statt 400px) & Kantiger */
+
 .modal-content {
+
     background: #111; /* Echtes Schwarz-Grau */
+
     border: 1px solid #333;
+
     padding: 24px;
+
     border-radius: 12px;
-    width: 320px; 
+
+    width: 320px;
+
     text-align: center;
+
     color: #eee;
+
     box-shadow: 0 15px 40px rgba(0,0,0,0.8);
+
 }
+
 
 /* Icon & Titel Bereich */
+
 .modal-header {
+
     color: #ff8c00; /* Dein Orange */
+
     font-size: 28px;
+
     margin-bottom: 12px;
+
 }
+
 
 .modal-content h3 {
+
     font-size: 1.1rem;
+
     font-weight: 700;
+
     margin-bottom: 8px;
+
     text-transform: uppercase;
+
     letter-spacing: 1px;
+
     color: #fff;
+
 }
+
 
 .modal-content p {
+
     font-size: 0.9rem;
+
     color: #888;
+
     margin-bottom: 24px;
+
     line-height: 1.4;
+
 }
+
 
 /* Buttons: Kompakt & Industrial */
+
 .modal-buttons {
+
     display: flex;
+
     gap: 8px;
+
 }
+
 
 .modal-buttons button {
+
     flex: 1;
+
     padding: 10px;
+
     border: none;
+
     border-radius: 4px;
+
     font-size: 0.8rem;
+
     font-weight: 800;
+
     cursor: pointer;
+
     text-transform: uppercase;
+
     transition: 0.2s;
+
 }
+
 
 .btn-confirm {
+
     background: #ff8c00;
+
     color: #000;
+
 }
+
 
 .btn-confirm:hover {
+
     background: #ffa500;
+
     box-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+
 }
+
 
 .btn-cancel {
+
     background: #222;
+
     color: #666;
+
     border: 1px solid #333 !important;
+
 }
+
 
 .btn-cancel:hover {
+
     background: #333;
+
     color: #fff;
+
 }
-    
+
+   
+
     /* ============================================================
+
        5. LOGIN-OVERLAY & CARD-DESIGN (PROFI-LOOK)
+
        ============================================================ */
-    #loginOverlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
+
+    #loginOverlay {
+
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+
+        background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%),
+
                     url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
-        background-size: cover; background-position: center; z-index: 20000; 
-        display: flex; justify-content: center; align-items: center; font-family: 'Inter', sans-serif; backdrop-filter: blur(18px); 
+
+        background-size: cover; background-position: center; z-index: 20000;
+
+        display: flex; justify-content: center; align-items: center; font-family: 'Inter', sans-serif; backdrop-filter: blur(18px);
+
     }
 
+
     .login-card {
+
         background: rgba(20, 20, 20, 0.7); padding: 50px 40px; border-radius: 28px;
-        border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
+
+        border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5);
+
         width: 100%; max-width: 360px; text-align: center;
+
     }
+
 
     .login-card h2 { color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; letter-spacing: -1.5px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); }
 
+
 .login-card h2 span {
+
     background: none;
+
     -webkit-text-fill-color: #ffffff;
+
     color: #ffffff;
+
 }
 
-    .login-card input { 
-        padding: 16px 20px; margin: 10px 0; background: rgba(0, 0, 0, 0.4); 
-        border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 14px; 
+
+    .login-card input {
+
+        padding: 16px 20px; margin: 10px 0; background: rgba(0, 0, 0, 0.4);
+
+        border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 14px;
+
         width: 100%; font-size: 16px; outline: none; box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
     }
+
 
     .login-card input:focus { border-color: #e67e22; background: rgba(0, 0, 0, 0.6); box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); }
 
+
     /* ============================================================
+
        6. BUTTONS (LOGIN & SPEICHERN) MIT BLITZ-EFFEKT
+
        ============================================================ */
-  
-  #loginBtn { 
-    padding: 18px; 
-    margin-top: 25px; 
-    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
-    color: white; 
-    border: none; 
-    border-radius: 16px; 
-    cursor: pointer; 
-    width: 100%; 
-    
+
+ 
+
+  #loginBtn {
+
+    padding: 18px;
+
+    margin-top: 25px;
+
+    background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%);
+
+    color: white;
+
+    border: none;
+
+    border-radius: 16px;
+
+    cursor: pointer;
+
+    width: 100%;
+
+   
+
     /* Schrift-Styling: Oswald & Sport-Vibe */
+
     font-family: 'Oswald', sans-serif;
-    font-size: 20px; 
+
+    font-size: 20px;
+
     font-weight: 700;
-    text-transform: uppercase; 
+
+    text-transform: uppercase;
+
     letter-spacing: 1.5px;
-    
+
+   
+
     /* Tiefe & Interaktion */
+
     box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
+
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    
+
+   
+
     /* Der "Käfig" für die Effekte */
+
     position: relative;
-    overflow: hidden; 
+
+    overflow: hidden;
+
     z-index: 1;
+
 }
 
-#loginBtn:hover { 
+
+#loginBtn:hover {
+
     transform: translateY(-3px);
+
     box-shadow: 0 15px 30px -5px rgba(230, 126, 34, 0.6);
+
     filter: brightness(1.1);
+
 }
 
-#loginBtn:active { 
+
+#loginBtn:active {
+
     transform: translateY(-1px);
+
     box-shadow: 0 5px 10px -2px rgba(230, 126, 34, 0.5);
+
 }
+
 
 /* 1. Statischer Glanz-Effekt (Obere Hälfte des Buttons) */
+
 #loginBtn::before {
+
     content: '';
+
     position: absolute;
-    top: 0; 
-    left: 0; 
-    width: 100%; 
+
+    top: 0;
+
+    left: 0;
+
+    width: 100%;
+
     height: 50%;
+
     background: linear-gradient(rgba(255,255,255,0.2), rgba(255,255,255,0));
+
     pointer-events: none;
+
     z-index: 2;
+
 }
+
 
 /* 2. Dynamischer Blitz (Speed-Line) */
+
 #loginBtn::after {
+
     content: '';
+
     position: absolute;
+
     top: 0;
+
     left: -150%; /* Start weit links außen */
+
     width: 60%;
+
     height: 100%;
+
     background: linear-gradient(
-        90deg, 
-        transparent, 
-        rgba(255, 255, 255, 0.4), 
+
+        90deg,
+
+        transparent,
+
+        rgba(255, 255, 255, 0.4),
+
         transparent
+
     );
-    transform: skewX(-25deg); 
+
+    transform: skewX(-25deg);
+
     transition: 0.6s ease-in-out;
+
     z-index: 3;
+
 }
+
 
 /* Blitz-Animation bei Hover */
+
 #loginBtn:hover::after {
+
     left: 150%; /* Jagt durch den Button nach rechts außen */
+
 }
+
 
 /* Wir nutzen die ID zur Sicherheit für die Layout-Stabilität */
+
 #saveBtn {
+
     display: none; /* Steuerung via JS (style.display) */
+
     position: relative;
+
     padding: 0 15px !important;
+
     background: #333 !important;
+
     color: #e67e22 !important;
-    border: 1px solid transparent; 
+
+    border: 1px solid transparent;
+
     border-radius: 4px;
+
     font-family: 'Oswald', sans-serif;
+
     font-size: 12px !important;
+
     font-weight: 600;
+
     text-transform: uppercase;
+
     letter-spacing: 1px;
+
     cursor: pointer;
-    
+
+   
+
     /* FIX: Feste Dimensionen verhindern das Springen */
-    height: 34px !important; 
+
+    height: 34px !important;
+
     min-width: 85px; /* Breite fixiert auf den "SAVE"-Text */
-    
+
+   
+
     /* Zentrierung für den Inhalt (Spinner & Haken) */
-    display: inline-flex; 
+
+    display: inline-flex;
+
     align-items: center;
+
     justify-content: center;
-    
+
+   
+
     transition: all 0.2s ease;
+
     overflow: hidden;
+
 }
+
 
 #saveBtn:disabled {
+
     cursor: default !important; /* Entfernt das "Gesperrt"-Zeichen */
+
 }
 
-/* Optional: Wenn du willst, dass er im Erfolg-Zustand 
+
+/* Optional: Wenn du willst, dass er im Erfolg-Zustand
+
    auch keinen "Klick-Finger" mehr zeigt */
+
 #saveBtn.success {
+
     cursor: default !important;
+
     border: 2px solid #27ae60 !important;
+
 }
-    
+
+   
+
 /* Hover-Effekt */
+
 #saveBtn:hover:not(:disabled) {
+
     background: #3d3d3d !important;
+
     color: #ff9f43 !important;
+
 }
+
 
 /* Aktives Leuchten bei Änderungen */
+
 #saveBtn.needs-save {
+
     display: inline-flex !important;
+
     animation: pulse-glow 1.5s infinite ease-in-out !important;
+
     border: 1px solid #e67e22 !important;
+
 }
+
 
 /* Lade-Zustand (während fetch läuft) */
+
 #saveBtn.is-loading {
+
     display: inline-flex !important;
+
     color: transparent !important; /* Versteckt Text, hält Platz */
+
     cursor: wait;
+
     animation: none !important;
+
 }
+
 
 #saveBtn.is-loading::after {
+
     content: "";
+
     position: absolute;
+
     width: 16px; height: 16px;
+
     border: 2px solid rgba(230, 126, 34, 0.3);
+
     border-top-color: #e67e22;
+
     border-radius: 50%;
+
     animation: button-spin 0.6s linear infinite;
+
 }
+
 
 #saveBtn.success {
+
     background-color: transparent !important; /* Hintergrund weg für den Haken-Effekt */
+
     border: 2px solid #27ae60 !important;    /* Kräftiger grüner Rand */
+
     box-shadow: none !important;             /* Glühen entfernen */
+
     cursor: default;
+
     color: transparent !important;
+
 }
+
 
 /* Der Haken selbst (falls noch nicht so definiert) */
+
 #saveBtn.success::before {
+
     content: '✔';
+
     position: absolute;
+
     top: 50%;
+
     left: 50%;
+
     transform: translate(-50%, -50%);
+
     font-size: 18px;
+
     color: #27ae60;
+
     font-weight: bold;
+
 }
+
 
 /* Animationen */
+
 @keyframes button-spin {
+
     to { transform: rotate(360deg); }
+
 }
+
 
 @keyframes pulse-glow {
+
     0% {
+
         box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4);
+
     }
+
     50% {
+
         box-shadow: inset 0 0 20px rgba(230, 126, 34, 1);
+
         border-color: #ff9f43 !important;
+
     }
+
     100% {
+
         box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.4);
+
     }
+
 }
+
 
 #saveBtn:disabled {
+
     animation: none !important;
+
     cursor: not-allowed;
+
 }
 
-    
+
+   
+
 #loginError {
+
     color: #ff4757;
+
     margin-top: 15px;
+
     font-size: 14px;
+
     font-weight: 600;
+
     min-height: 20px;
+
     transition: opacity 0.3s ease; /* Macht das Verschwinden geschmeidiger */
+
 }
+
 
     /* ============================================================
+
        7. ELEMENTE INNERHALB DER BOXEN & LOADER
+
        ============================================================ */
+
     .klasse { font-weight: bold; }
+
     .lehrer-info { font-size: 9px; color: #aaa; margin-top: 1px; }
+
     .res { font-style: italic; font-size: 9px; margin-top: 2px; position: relative; z-index: 10; }
-    
+
+   
+
 select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity: 0; cursor: pointer; z-index: 5; }
 
+
         .save-container { position: absolute; right: 10px; z-index: 10; display: flex; align-items: center; height: 40px; }
-        
-    .stift { 
-        position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22; 
-        font-size: 22px; transition: transform 0.2s ease; 
+
+       
+
+    .stift {
+
+        position: absolute; top: 2px; right: 4px; z-index: 50; color: #e67e22;
+
+        font-size: 22px; transition: transform 0.2s ease;
+
     }
+
     .stift:hover { transform: scale(1.2); color: #ff9f43; }
 
-   .global-loader { 
+
+   .global-loader {
+
     position: fixed; /* WICHTIG: Bezieht sich auf den Bildschirm, nicht auf die Leiste */
+
     left: 15px;      /* Abstand vom linken Rand */
+
     top: 15px;       /* Abstand vom oberen Rand */
-    width: 25px; 
-    height: 25px; 
-    border: 3px solid #444; 
-    border-top: 3px solid #e67e22; 
-    border-radius: 50%; 
-    animation: spin 1s linear infinite; 
+
+    width: 25px;
+
+    height: 25px;
+
+    border: 3px solid #444;
+
+    border-top: 3px solid #e67e22;
+
+    border-radius: 50%;
+
+    animation: spin 1s linear infinite;
+
     display: none;   /* Standardmäßig aus */
+
     z-index: 9999;   /* Höchster Wert, damit er über ALLEM liegt */
+
 }
 
-@keyframes spin { 
-    0% { transform: rotate(0deg); } 
-    100% { transform: rotate(360deg); } 
+
+@keyframes spin {
+
+    0% { transform: rotate(0deg); }
+
+    100% { transform: rotate(360deg); }
+
 }
-    
+
+   
+
 .sport-loader { font-size: 20px; visibility: hidden; animation: bounce 0.6s infinite alternate; }
+
         .sport-loader.active { visibility: visible; }
+
         @keyframes bounce { 0% { transform: translateY(0); } 100% { transform: translateY(-10px); } }
 
 
+
     .divider-thin { grid-column: 1 / span 6; height: 1px; background: #444; margin: 2px 0; }
+
     .divider-thick { grid-column: 1 / span 6; height: 4px; background: #444; margin: 5px 0; }
+
 
 .extra-select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; z-index: -1; pointer-events: none; }
 
 
+
   /* ============================================================
+
        8. Sidebar mit Nachrichtenzentrale
+
        ============================================================ */
-    
+
+   
+
 
 #newsSidebar {
+
     left: 0 !important;
+
     right: auto !important;
+
     animation: slideIn 0.3s ease-out !important; /* slideIn von links */
+
 }
 
+
 @keyframes slideIn {
+
     from { transform: translateX(-100%); }
+
     to { transform: translateX(0); }
+
 }
+
 
 
     /* Hover-Effekt für die Nachrichten-Items */
+
 .news-item { transition: background 0.2s; }
+
 .news-item:hover { background: #222 !important; }
 
+
 /* Das Blinken für die Ziel-Zelle */
+
 @keyframes highlightBlink {
+
     0% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
+
     50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; }
+
     100% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
+
 }
+
 .blink-active {
+
     animation: highlightBlink 0.8s ease-in-out 3; /* 3 mal blinken */
+
 }
-    
+
+   
+
 </style>
+
 
 
 </head>
 
 
+
 <body onclick="closeAllExtraMenus()">
+
     <div id="loginOverlay">
+
     <div class="login-card">
+
         <h2>Reservation <span>Sport</span></h2>
-        
+
+       
+
     <!-- Kürzel Feld -->
+
 <input type="text" id="kuerzelInput" placeholder="Kürzel" autocomplete="off"
+
        onfocus="document.getElementById('loginError').innerText=''"
+
        oninput="document.getElementById('loginError').innerText=''">
 
+
 <!-- Passwort Feld -->
-<input type="password" id="passwordInput" placeholder="Passwort" 
+
+<input type="password" id="passwordInput" placeholder="Passwort"
+
        onfocus="document.getElementById('loginError').innerText=''"
+
        oninput="document.getElementById('loginError').innerText=''"
+
        onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('loginBtn').click(); }">
 
+
 <button id="loginBtn" onclick="checkLogin()">
+
     On your marks...    
+
 </button>
-        
+
+       
+
         <!-- Basketball als dezenter, moderner Loader -->
+
         <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px; filter: grayscale(0.2);">🏀</div>
+
         <p id="loginError" style="color: #ff4757; margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px;"></p>
+
     </div>
+
 </div>
 
-    
+
+   
+
 <div class="date-control">
+
     <!-- Der Global Loader ist wieder da -->
+
     <div id="globalLoader" class="global-loader" style="display:none;"></div>
 
+
     <div class="nav-section nav-left">
+
         <button onclick="openNews()" class="news-btn-premium">
+
             <span class="btn-text">News</span>
+
             <span class="bell-icon">🔔</span>
+
             <span id="newsBadge" class="badge" style="display:none;"></span>
+
         </button>
+
     </div>
+
 
     <div class="nav-section nav-center">
+
     <!-- Hier wurden die IDs hinzugefügt -->
+
     <button id="btnPrevWeek" class="nav-btn" onclick="changeDate(-7)">⏮</button>
+
     <button id="btnPrevDay" class="nav-btn" onclick="changeDate(-1)">◀</button>
-    
+
+   
+
     <button class="nav-btn" onclick="goToToday()"><i class="fas fa-house"></i></button>
+
     <input type="date" id="datePicker" onchange="loadPlan()">
-    
+
+   
+
     <button class="nav-btn" onclick="changeDate(1)">▶</button>
+
     <button class="nav-btn" onclick="changeDate(7)">⏭</button>
+
 </div>
+
 
     <div class="nav-section nav-right">
+
         <!-- Save-Button mit kleinerer Schrift -->
+
         <button id="saveBtn" class="save-btn" style="display:none;" onclick="saveChanges()">
+
             SAVE
+
         </button>
+
         <button class="refresh-btn" onclick="loadPlan()"><i class="fas fa-sync-alt"></i></button>
+
     </div>
+
 </div>
 
-    
+
+   
+
     <div class="grid" id="plan"></div>
 
 
-    
+
+   
+
 
 <script>
-        const url = "https://script.google.com/macros/s/AKfycbxnKFUWoNuF_5o98GIqj6l6KsydUNgCClXOR0Qzet9Z136lyzmWY2ozm7d_354e_JWB/exec"; 
+
+        const url = "https://script.google.com/macros/s/AKfycbxnKFUWoNuF_5o98GIqj6l6KsydUNgCClXOR0Qzet9Z136lyzmWY2ozm7d_354e_JWB/exec";
+
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
+
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
+
         let pendingNews = [];
 
-    // SCHRITT 1: Der Snapshot beim Anklicken
-window.createSnapshot = (el) => {
-    const parent = el.closest('.box');
-    const resText = parent.querySelector('.res') ? parent.querySelector('.res').innerText.trim() : "";
-    const isAusfall = parent.classList.contains('ausfall-mode');
 
-    // Wir ermitteln den IST-Zustand der Kachel
-    let currentState = "leer";
-    if (isAusfall) {
-        currentState = "ausfall";
-    } else if (resText !== "" && resText !== "---") {
-        currentState = resText;
-    }
-
-    // Snapshot im Element speichern, damit wir später vergleichen können
-    el.dataset.snapshot = currentState;
-
-    // TRICK: Damit "---" (Leerwert) immer ein onchange auslöst, wenn die Zelle nicht leer ist
-    if (currentState !== "leer" && el.value === "") {
-        el.value = "dummy_for_change"; 
-        if (!el.querySelector('option[value="dummy_for_change"]')) {
-            const opt = document.createElement("option");
-            opt.value = "dummy_for_change";
-            opt.text = ""; // Unsichtbar für den User
-            opt.style.display = "none";
-            el.appendChild(opt);
-        }
-    }
-};
-
-window.processChange = (el, type, time, slot, klasse) => {
-    const newVal = el.value;
-    const oldState = el.dataset.snapshot;
-    const parent = el.closest('.box');
-    const r = parent.getAttribute('data-row');
-    const c = parent.getAttribute('data-col');
-
-    // 1. Abbruch, wenn nichts geändert wurde oder dummy aktiv ist
-    if (newVal === "dummy_for_change" || newVal === oldState || newVal === "") {
-        if (newVal !== "") el.value = ""; // Menü zurücksetzen
-        return; 
-    }
-
-    let finalRes = ""; // Was am Ende in der Zelle stehen soll
-
-    // A: TOTAL-RESET (--- gewählt)
-    if (newVal === "---") {
-        parent.classList.remove('ausfall-mode');
-        parent.style.backgroundColor = "";
-        if(parent.querySelector('.res')) parent.querySelector('.res').innerText = "";
-        
-        // Das jeweils andere Dropdown leeren
-        const other = parent.querySelector(type === 'main' ? '.extra-select' : 'select:not(.extra-select)');
-        if (other) other.value = "";
-        
-        finalRes = ""; 
-    } 
-    
-    // B: AUSFALL gewählt (aus dem Extra-Menü)
-    else if (newVal === "ausfall") {
-        parent.classList.add('ausfall-mode');
-        parent.style.backgroundColor = "";
-        if(parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
-        
-        // Hallen-Dropdown leeren
-        const mainSelect = parent.querySelector('select:not(.extra-select)');
-        if (mainSelect) mainSelect.value = "";
-        
-        finalRes = "Ausfall";
-        if (typeof triggerNews === "function") triggerNews("ausfall", parseInt(slot), klasse);
-    }
-
-    // C: NORMALE HALLE / OUTDOOR gewählt
-    else if (newVal !== "kommentar" && newVal !== "delete_comment" && newVal !== "perma_delete") {
-        parent.classList.remove('ausfall-mode');
-        if(parent.querySelector('.res')) parent.querySelector('.res').innerText = newVal;
-        parent.style.backgroundColor = configFarben[newVal] || "";
-        
-        // Extra-Dropdown leeren
-        const extraSelect = parent.querySelector('.extra-select');
-        if (extraSelect) extraSelect.value = "";
-
-        finalRes = newVal;
-        
-        if (newVal.includes("Outdoor") && typeof triggerNews === "function") {
-            triggerNews("outdoor", parseInt(slot), klasse);
-        }
-    }
-
-    // --- JETZT SPEICHERN ---
-    // Wir bauen den String: "Klasse | Halle | Kommentar"
-    let currentKommentar = ""; 
-    // Falls ein Kommentar-Stift existiert, müssen wir ihn im String erhalten!
-    // (Diese Logik müsstest du eventuell an deine buildFinalValue anpassen)
-    let finalString = finalRes === "" ? klasse : klasse + " | " + finalRes;
-
-    finalizeEntry(r, c, time, slot, finalString);
-
-    // --- DER FIX FÜR DAS "KLEBENDE" MENÜ ---
-    // Wir setzen das Dropdown, das gerade benutzt wurde, wieder auf "---"
-    setTimeout(() => { el.value = ""; }, 100); 
-
-    // Speicher-Button zeigen
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'inline-flex';
-        saveBtn.classList.add('needs-save');
-    }
-};
-
-    
-    window.finalizeEntry = (r, c, time, slot, finalVal) => {
-    // Daten im lokalen Speicher aktualisieren
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-
-    // In die Warteschlange für das Backend schieben
-    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
-};
-
-
-    
  // ------------LOGIN RESERVATION------------
-        
+
+       
+
   async function checkLogin() {
+
             const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
+
             const pwVal = document.getElementById('passwordInput').value;
+
             const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
+
             if(!kuerzelVal) { document.getElementById('loginError').innerText = "Kürzel fehlt!"; return; }
+
             btn.style.display = 'none'; ball.classList.add('active');
+
             try {
+
                 const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
+
                 const json = await res.json();
+
                 if (json.error === "Falsches Passwort") {
+
                     document.getElementById('loginError').innerText = "Falsches Passwort!";
+
                     btn.style.display = 'block'; ball.classList.remove('active');
+
                 } else {
+
                     userPw = pwVal;
+
                     userKuerzel = kuerzelVal;
+
                     document.getElementById('loginOverlay').style.display = 'none';
+
                     loadPlan();
+
                 }
+
             } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
+
         }
+
 
  // ------------SICHERHEITSABFRAGE ÄNDERUNGEN------------
-        
+
+       
+
         window.addEventListener('beforeunload', (e) => {
+
             if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
+
         });
+
 
 
  // ------------STEUERUNG DER TAGES-BUTTONS------------
-        
+
+       
+
         function updateNavButtons() {
+
     const dp = document.getElementById('datePicker');
+
     if (!dp || !dp.value) return;
 
+
     const pickerDate = new Date(dp.value);
+
     pickerDate.setHours(0, 0, 0, 0);
 
+
     const heute = new Date();
+
     heute.setHours(0, 0, 0, 0);
 
+
     const prevDayBtn = document.getElementById('btnPrevDay');
+
     const prevWeekBtn = document.getElementById('btnPrevWeek');
 
+
     // TAG ZURÜCK: Verstecken, wenn wir am heutigen Tag sind
+
     if (prevDayBtn) {
+
         if (pickerDate <= heute) {
+
             prevDayBtn.classList.add('nav-btn-hidden');
+
         } else {
+
             prevDayBtn.classList.remove('nav-btn-hidden');
+
         }
+
     }
+
 
     // WOCHE ZURÜCK: Verstecken, wenn ein Sprung zurück in die Vergangenheit führen würde
+
     if (prevWeekBtn) {
+
         const limitWoche = new Date(heute);
+
         limitWoche.setDate(heute.getDate() + 7); // Erst ab Tag 7 in der Zukunft sichtbar
 
+
         if (pickerDate < limitWoche) {
+
             prevWeekBtn.classList.add('nav-btn-hidden');
+
         } else {
+
             prevWeekBtn.classList.remove('nav-btn-hidden');
+
         }
+
     }
+
 }    
 
+
     window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
+
         window.goToToday = () => {
+
             const dp = document.getElementById('datePicker');
+
             const today = new Date();
+
             const offset = today.getTimezoneOffset();
+
             today.setMinutes(today.getMinutes() - offset);
+
             const dateStr = today.toISOString().split('T')[0];
+
             dp.value = dateStr;
+
             loadPlan();
+
         };
 
+
 // ------------AKTUELLER TAG------------
-  
-        document.addEventListener('DOMContentLoaded', () => { 
-            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset); 
+
+ 
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset);
+
             const dateStr = today.toISOString().split('T')[0];
+
             document.getElementById('datePicker').value = dateStr;
+
             lastStableDate = dateStr;
+
         });
 
-    
+
+   
+
 // ------------STUNDENPLAN LADEN------------
 
+
 async function loadPlan() {
+
     const dp = document.getElementById('datePicker');
+
     const container = document.getElementById('plan');
+
     const loader = document.getElementById('globalLoader');
+
     const sBtn = document.getElementById('saveBtn');
 
+
     // 1. Prüfung auf ungespeicherte Änderungen
+
     if (pendingChanges.length > 0) {
+
         if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
-            dp.value = lastStableDate; 
+
+            dp.value = lastStableDate;
+
             return;
+
         }
+
     }
+
 
     const dateVal = dp.value;
+
     if (!userPw || !dateVal) return;
 
+
     // 2. RESET: UI und Datenzustand
+
     if (sBtn) {
+
         sBtn.style.display = 'none';
+
         sBtn.classList.remove('needs-save', 'success', 'is-loading');
-        sBtn.innerText = "SAVE"; 
+
+        sBtn.innerText = "SAVE";
+
     }
-    pendingChanges = []; 
-    lastStableDate = dateVal; 
-    
-    container.innerHTML = ""; 
-    loader.style.display = 'block'; 
+
+    pendingChanges = [];
+
+    lastStableDate = dateVal;
+
+   
+
+    container.innerHTML = "";
+
+    loader.style.display = 'block';
+
     updateNavButtons();
 
+
     // 3. Zeit-Validierung
+
     const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
+
     const heute = new Date(); heute.setHours(12,0,0,0);
+
     const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
-    
-    if (dateObj < heute) { 
-        container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; 
-        loader.style.display = 'none'; 
-        return; 
+
+   
+
+    if (dateObj < heute) {
+
+        container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`;
+
+        loader.style.display = 'none';
+
+        return;
+
     }
-    if (dateObj > vierWochen) { 
-        container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; 
-        loader.style.display = 'none'; 
-        return; 
+
+    if (dateObj > vierWochen) {
+
+        container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`;
+
+        loader.style.display = 'none';
+
+        return;
+
     }
-    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
-        container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; 
-        loader.style.display = 'none'; 
-        return; 
+
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) {
+
+        container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`;
+
+        loader.style.display = 'none';
+
+        return;
+
     }
-    
+
+   
+
     try {
+
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
+
         const json = await res.json();
-        
+
+       
+
         if (json.error === "SPERRE") {
+
             container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
+
             return;
+
         }
 
+
         // 4. Daten-Verarbeitung
-        currentPlanData = json.data; 
+
+        currentPlanData = json.data;
+
         myClasses = json.userClasses || [];
+
         allClassTeachers = json.allClassTeachers || {};
-        
+
+       
+
         const data = json.data;
+
         const options = json.options;
-        configFarben = {}; 
+
+        configFarben = {};
+
         options.forEach(opt => configFarben[opt[0]] = opt[1]);
-        
+
+       
+
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+
         const [y, m, d] = dateVal.split('-').map(Number);
-        
+
+       
+
         let html = ""; // Sammel-Variable für bessere Performance
 
+
         // 5. Plan-Generierung
+
         data.forEach((row, rowIndex) => {
+
             if (rowIndex === 0) {
+
                 html += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
+
             } else {
+
                 if (rowIndex === 4 || rowIndex === 10) html += `<div class="divider-thin"></div>`;
+
                 if (rowIndex === 7) html += `<div class="divider-thick"></div>`;
-                
+
+               
+
                 html += `<div class="box zeit-box">${row[0]}</div>`;
-                
+
+               
+
                 for(let i = 1; i <= 5; i++) {
+
                     // Hallen-Belegung prüfen
+
                     let belegteHallen = [];
+
                     for (let k = 1; k <= 5; k++) {
-                        if (k === i) continue; 
+
+                        if (k === i) continue;
+
                         let cellVal = String(row[k] || "").trim();
+
                         if (cellVal !== "") {
+
                             let rPart = cellVal.split(' | ')[1] || "";
+
                             if (rPart && rPart !== "Ausfall") belegteHallen.push(rPart);
+
                         }
+
                     }
 
+
                     // Zell-Details
+
                     let val = row[i] || "", teile = val.split(' | ');
+
                     let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
+
                     let isAusfall = (res === "Ausfall");
+
                     let canEdit = myClasses.some(c => klasse.trim() === c.trim());
-                    
-                    let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) 
-                        ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` 
+
+                   
+
+                    let stiftHtml = (kommentar.startsWith("KOMMENTAR:"))
+
+                        ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>`
+
                         : "";
-                    
+
+                   
+
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    // HTML für die Kachel
-                    html += `
-                    <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                            data-row="${rowIndex}" data-col="${i}"
-                            oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" 
-                            ontouchstart="${canEdit ? 'startTimer(this)' : ''}" 
-                            ontouchend="clearTimer()" 
-                            style="background-color: ${isAusfall ? '' : configFarben[res] || ''}">
-                            
-                            ${stiftHtml}
-                            <div class="klasse">${klasse}</div>
-                            <div class="lehrer-info">${teacher}</div>
-                            <div class="res">${res}</div>
-                            
-                            ${canEdit ? `
-    <select 
-        onfocus="createSnapshot(this)" 
-        onclick="event.stopPropagation()" 
-        onchange="processChange(this, 'main', '${row[0]}', ${i}, '${klasse}')">
-        
-        <option value="">---</option>
-        ${options.filter(o => {
-            const optName = o[0];
-            if (res === optName) return true;
-            return !belegteHallen.some(belegt => {
-                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                return oParts.some(p => bParts.includes(p));
-            });
-        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-    </select>
 
-    <select 
-        class="extra-select" 
-        onfocus="createSnapshot(this)" 
-        onclick="event.stopPropagation()" 
-        onchange="processChange(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
-        
-         <option value="">---</option>
-         <option value="ausfall">❌ Ausfall</option>
-         <option value="perma_delete">🏆 Schuljahr beendet</option>
-         <option value="kommentar">📝 Notiz hinzufügen</option>
-         <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-    </select>
-` : ''}
+                    // HTML für die Kachel
+
+                    html += `
+
+                    <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}"
+
+                            data-row="${rowIndex}" data-col="${i}"
+
+                            oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}"
+
+                            ontouchstart="${canEdit ? 'startTimer(this)' : ''}"
+
+                            ontouchend="clearTimer()"
+
+                            style="background-color: ${isAusfall ? '' : configFarben[res] || ''}">
+
+                           
+
+                            ${stiftHtml}
+
+                            <div class="klasse">${klasse}</div>
+
+                            <div class="lehrer-info">${teacher}</div>
+
+                            <div class="res">${res}</div>
+
+                           
+
+                            ${canEdit ? `
+
+                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+
+                                <option value="">---</option>
+
+                                ${options.filter(o => {
+
+                                    const optName = o[0];
+
+                                    if (res === optName) return true;
+
+                                    return !belegteHallen.some(belegt => {
+
+                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+
+                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+
+                                        return oParts.some(p => bParts.includes(p));
+
+                                    });
+
+                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+
+                            </select>
+
+
+                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+
+                                 <option value="">---</option>
+
+                                 <option value="ausfall">❌ Ausfall</option>
+
+                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
+
+                                 <option value="kommentar">📝 Notiz hinzufügen</option>
+
+                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+
+                            </select>` : ''}
+
                     </div>`;
+
                 }
+
             }
+
         });
+
         container.innerHTML = html; // Einmaliges Schreiben ins DOM
 
-    } catch(e) { 
-        console.error("Fehler in loadPlan:", e); 
+
+    } catch(e) {
+
+        console.error("Fehler in loadPlan:", e);
+
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
+
     } finally {
+
         loader.style.display = 'none';
+
         updateNavButtons();
+
     }
+
 }
+
 
 
 // ------------SPEICHERN------------
 
+
 async function saveChanges() {
+
     const btn = document.getElementById('saveBtn');
-    const gLoader = document.getElementById('globalLoader'); 
-    
+
+    const gLoader = document.getElementById('globalLoader');
+
+   
+
     // 1. UI-Startzustand
+
     if (gLoader) gLoader.style.display = 'block';
-    
+
+   
+
     btn.classList.remove('needs-save', 'success');
+
     btn.classList.add('is-loading');
+
     btn.disabled = true;
 
-    try { 
+
+    try {
+
         const dateVal = document.getElementById('datePicker').value;
-        
+
+       
+
         // 2. Der reine Datenversand (Plan-Änderungen)
-        const response = await fetch(url, { 
-            method: "POST", 
-            body: JSON.stringify({ 
-                date: dateVal, 
-                changes: pendingChanges, 
+
+        const response = await fetch(url, {
+
+            method: "POST",
+
+            body: JSON.stringify({
+
+                date: dateVal,
+
+                changes: pendingChanges,
+
                 pw: userPw,
+
                 kuerzel: userKuerzel
-            }) 
-        }); 
-        
+
+            })
+
+        });
+
+       
+
         const result = await response.json();
 
+
         // 3. Erfolgskontrolle
+
         if (result.status === "success") {
-            
+
+           
+
             // --- NEU: NEWS-WARTESCHLANGE ABARBEITEN ---
+
             if (pendingNews && pendingNews.length > 0) {
+
                 for (let newsItem of pendingNews) {
+
                     try {
+
                         await fetch(url, {
+
                             method: "POST",
+
                             body: JSON.stringify(newsItem)
+
                         });
+
                     } catch (newsError) {
+
                         console.error("Einzelne News konnte nicht gesendet werden:", newsError);
+
                         // Wir machen trotzdem weiter, damit die App nicht hängen bleibt
+
                     }
+
                 }
+
                 pendingNews = []; // News-Liste nach Versand leeren
+
             }
+
             // ------------------------------------------
 
+
             pendingChanges = []; // Plan-Änderungen leeren
-            
+
+           
+
             if (gLoader) gLoader.style.display = 'none';
-            
+
+           
+
             // Visuelles Feedback via CSS
+
             btn.classList.remove('is-loading');
-            btn.classList.add('success'); 
+
+            btn.classList.add('success');
+
 
             // Button nach 1,5 Sek. wieder verstecken und zurücksetzen
-            setTimeout(() => { 
-                btn.style.display = 'none'; 
-                btn.classList.remove('success'); 
-                btn.disabled = false;
-            }, 1500); 
 
-        } else { 
-            throw new Error(result.msg || "Server Error"); 
+            setTimeout(() => {
+
+                btn.style.display = 'none';
+
+                btn.classList.remove('success');
+
+                btn.disabled = false;
+
+            }, 1500);
+
+
+        } else {
+
+            throw new Error(result.msg || "Server Error");
+
         }
 
-    } catch (e) { 
+
+    } catch (e) {
+
         // 4. Fehlerbehandlung
+
         console.error("Speicherfehler:", e);
-        
+
+       
+
         if (gLoader) gLoader.style.display = 'none';
-        
+
+       
+
         btn.classList.remove('is-loading');
+
         btn.disabled = false;
-        
+
+       
+
         // Bei Fehler lassen wir das 'needs-save' wieder aufleuchten
+
         btn.classList.add('needs-save');
+
         alert("Fehler beim Speichern: " + e.message);
+
     }
+
 }
+
 
 window.saveChanges = saveChanges;
 
-    
+
+   
+
 // ------------TEXTSTRING BILDEN------------    
-    
+
+   
+
 function buildFinalValue(r, c, neueHalle, neuerKommentar) {
+
     const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
+
     const klasse = parent.querySelector('.klasse').innerText.trim();
-    
+
+   
+
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+
     let hasU21 = fullString.includes("U21");
 
+
     // Wenn die Halle gelöscht wird, fällt U21 weg
+
     if (neueHalle === "" || neueHalle === "---" || neueHalle === null) {
+
         hasU21 = false;
-        neueHalle = ""; 
+
+        neueHalle = "";
+
     }
-    
+
+   
+
     // Kommentar-Logik: Entweder der neue oder der bestehende
+
     let commentPart = neuerKommentar !== undefined ? neuerKommentar : getExistingComment(r, c);
 
+
     // WICHTIG: Die Reihenfolge muss exakt stimmen für die Anzeige-Logik
+
     // Teil 0: Klasse
+
     // Teil 1: Halle (evtl. mit U21)
+
     // Teil 2: Kommentar
-    
+
+   
+
     let hallenTeil = neueHalle;
+
     if (hasU21 && hallenTeil !== "") {
+
         hallenTeil += " | U21"; // U21 wird an die Halle geklebt
+
     } else if (hasU21 && hallenTeil === "") {
+
         // Sonderfall: U21 ohne Halle (sollte durch unsere neue Logik vermieden werden)
-        hallenTeil = "U21"; 
+
+        hallenTeil = "U21";
+
     }
+
 
     let finalParts = [klasse];
+
     finalParts.push(hallenTeil || ""); // Muss existieren, auch wenn leer, damit Kommentar Index 2 bleibt
+
     if (commentPart && commentPart !== "") {
+
         finalParts.push(commentPart);
+
     }
+
 
     return finalParts.join(" | ");
+
 }
 
-    
+
+   
+
 // ------------ÄNDERUNGEN------------    
-    
-window.addChange = (el, time, slot, klasse) => { 
-    let res = el.value; 
+
+   
+
+window.addChange = (el, time, slot, klasse) => {
+
+    let res = el.value;
+
     // Sicherer: sucht die Kachel, egal wie tief das Select verschachtelt ist
-    const parent = el.closest('.box'); 
+
+    const parent = el.closest('.box');
+
     const r = parent.getAttribute('data-row');
+
     const c = parent.getAttribute('data-col');
-    
+
+   
+
     // Optik-Update
+
     parent.classList.remove('ausfall-mode');
+
     const resDisplay = parent.querySelector('.res');
-    if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
-    parent.style.backgroundColor = configFarben[res] || ""; 
+
+    if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res;
+
+    parent.style.backgroundColor = configFarben[res] || "";
+
 
     // String bauen
+
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
+
     // --- NEU: NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
-    
+
+   
+
     // 1. Zuerst alte News für diesen Slot entfernen (Reset-Logik)
-    // Das stellt sicher, dass keine "Ausfall"-News gesendet wird, 
+
+    // Das stellt sicher, dass keine "Ausfall"-News gesendet wird,
+
     // wenn man sich umentscheidet und jetzt z.B. "Halle 4" wählt.
+
     if (typeof pendingNews !== "undefined") {
+
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
+
     }
+
 
     // 2. Nur wenn der NEUE Wert "Outdoor" enthält, News wieder hinzufügen
+
     if (res && res.toString().includes("Outdoor")) {
+
         console.log("Outdoor-Aktion erkannt für:", res);
+
         if (typeof triggerNews === "function") {
+
             const newsKlasse = klasse || res.split('|')[0].trim();
+
             triggerNews("outdoor", parseInt(slot), newsKlasse);
+
         }
+
     }
+
     // -----------------------------------------------------
 
+
     // Datenstand aktualisieren
+
     if (!currentPlanData[r]) currentPlanData[r] = [];
+
     currentPlanData[r][c] = finalVal;
-    
+
+   
+
     // In die Speicherliste (Double-Entry verhindern)
-    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+
+    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
+
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+
 
     // Button-Animation
+
     const saveBtn = document.getElementById('saveBtn');
+
     if (saveBtn) {
-        saveBtn.style.display = 'inline-flex'; 
-        void saveBtn.offsetWidth; 
+
+        saveBtn.style.display = 'inline-flex';
+
+        void saveBtn.offsetWidth;
+
         saveBtn.classList.add('needs-save');
+
     }
+
 };
+
 
 
 // ------------EXTRAMENU------------    
-  
+
+ 
+
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
+
 window.clearTimer = () => clearTimeout(pressTimer);
+
 window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
 
-    
-function openExtraMenu(el) { 
+
+   
+
+function openExtraMenu(el) {
+
     closeAllExtraMenus();
-    const sel = el.querySelector('.extra-select'); 
+
+    const sel = el.querySelector('.extra-select');
+
     const hatStift = el.querySelector('.stift') !== null;
+
     const delOpt = sel.querySelector('.del-opt');
-    
+
+   
+
     // Notiz-Löschen Option einblenden, wenn Stift vorhanden
+
     if(delOpt) delOpt.style.display = hatStift ? "block" : "none";
 
+
     const aktuelleRes = el.querySelector('.res').innerText.trim();
-    
+
+   
+
     if (aktuelleRes === "Ausfall") {
+
         sel.value = "ausfall";
+
     } else {
-        sel.value = ""; 
+
+        sel.value = "";
+
     }
 
-    sel.style.zIndex = "100"; 
-    sel.style.pointerEvents = "all"; 
-    sel.style.opacity = "1"; 
-    
+
+    sel.style.zIndex = "100";
+
+    sel.style.pointerEvents = "all";
+
+    sel.style.opacity = "1";
+
+   
+
     // Picker öffnen (Standard-Browser-Verhalten)
-    setTimeout(() => { 
-        if (sel.showPicker) { sel.showPicker(); } else { sel.click(); } 
-    }, 50); 
+
+    setTimeout(() => {
+
+        if (sel.showPicker) { sel.showPicker(); } else { sel.click(); }
+
+    }, 50);
+
 }
 
-    
+
+   
+
 // ------------ÄNDERUNGEN PER EXTRAMENU------------    
 
+
 window.handleExtraAction = async (el, time, slot) => {
+
     const action = el.value;
-    const parent = el.closest('.box'); 
+
+    const parent = el.closest('.box');
+
     const r = parent.getAttribute('data-row');
+
     const c = parent.getAttribute('data-col');
+
     const klasseElem = parent.querySelector('.klasse');
+
     const klasse = klasseElem ? klasseElem.innerText.trim() : "";
 
+
     // --- 1. NEWS-WARTESCHLANGE BEREINIGEN (RESET) ---
+
     // Wir entfernen bei jeder Aktion im Extra-Menü vorsorglich alte News-Einträge für diesen Slot
+
     if (typeof pendingNews !== "undefined") {
+
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
+
     }
+
 
     // --- 2. LOGIK FÜR RESET (---) ---
+
     if (action === "" || action === "---") {
+
         // Optik komplett zurücksetzen
+
         parent.classList.remove('ausfall-mode');
+
         parent.style.backgroundColor = "";
-        
+
+       
+
         const resElem = parent.querySelector('.res');
+
         if (resElem) resElem.innerText = ""; // Halle/Zusatz leeren
 
+
         // Kommentar-Icon entfernen
+
         let stift = parent.querySelector('.stift');
+
         if (stift) stift.remove();
 
+
         // Daten auf reine Klasse zurücksetzen
-        let finalVal = klasse; 
+
+        let finalVal = klasse;
+
         if (!currentPlanData[r]) currentPlanData[r] = [];
+
         currentPlanData[r][c] = finalVal;
 
+
         // In pendingChanges speichern
+
         pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
+
         pendingChanges.push({ time, slotIndex: slot, val: finalVal });
 
+
         // Speicher-Button triggern
+
         const saveBtn = document.getElementById('saveBtn');
+
         if (saveBtn) {
+
             saveBtn.style.display = 'inline-flex';
+
             saveBtn.classList.add('needs-save');
+
         }
 
+
         el.value = "";
+
         closeAllExtraMenus();
-        return; 
+
+        return;
+
     }
 
+
     // --- 3. ÜBRIGE VARIABLEN VORBEREITEN ---
+
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+
     let parts = fullString.split('|').map(s => s.trim());
+
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+
     let neueHalle = parent.querySelector('.res').innerText.trim();
+
 
     // --- 4. AKTIONEN LOGIK ---
 
+
     if (action === "perma_delete") {
+
         const confirmed = await showCustomConfirm(
-            "Schuljahr beendet", 
+
+            "Schuljahr beendet",
+
             `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
+
         );
 
+
         if (confirmed) {
+
             const modal = document.getElementById('pwModal');
+
             const input = document.getElementById('modalPwInput');
+
             const btn = document.getElementById('confirmPwBtn');
 
+
             if (modal && input && btn) {
+
                 modal.style.display = 'flex';
+
                 input.value = '';
+
                 input.focus();
 
+
                 btn.onclick = async () => {
+
                     if (input.value === userPw) {
+
                         modal.style.display = 'none';
-                        
+
+                       
+
                         const dateVal = document.getElementById('datePicker').value;
+
                         const recipients = getAffectedColleagues(parseInt(c));
-                        
+
+                       
+
                         if (recipients) {
+
                             const directNewsPayload = {
+
                                 mode: "saveNews",
+
                                 id: "ID_" + Date.now() + "_PERMA",
+
                                 datum: dateVal,
+
                                 slot: parseInt(c),
+
                                 tagIndex: new Date(dateVal).getDay(),
+
                                 klasse: klasse,
+
                                 verfasser: userKuerzel,
+
                                 empfaenger: recipients,
+
                                 text: `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`,
+
                                 pw: userPw
+
                             };
 
+
                             fetch(url, {
+
                                 method: "POST",
+
                                 body: JSON.stringify(directNewsPayload)
+
                             }).then(() => console.log("Perma-News direkt versendet"));
+
                         }
+
 
                         const gLoader = document.getElementById('globalLoader');
+
                         if (gLoader) gLoader.style.display = 'block';
+
                         const planContainer = document.getElementById('plan');
-                        if (planContainer) planContainer.innerHTML = ""; 
+
+                        if (planContainer) planContainer.innerHTML = "";
+
 
                         if (typeof permaDeleteClass === "function") {
+
                             await permaDeleteClass(klasse, slot);
+
                         }
-                        
+
+                       
+
                     } else {
+
                         alert("Falsches Passwort!");
+
                         input.value = '';
+
                         input.focus();
+
                     }
+
                 };
+
             }
+
         }
-        el.value = ""; 
-        closeAllExtraMenus(); 
+
+        el.value = "";
+
+        closeAllExtraMenus();
+
         return;
-    } 
-    
-    else if (action === "ausfall") {
-        neueHalle = "Ausfall";
-        parent.classList.add('ausfall-mode');
-        
-        if (typeof triggerNews === "function") {
-            triggerNews("ausfall", parseInt(c), klasse);
-        }
-    } 
-    
-    else if (action === "kommentar") {
-        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
-        const text = prompt("Notiz eingeben:", existingText);
-        if (text !== null) {
-            let oldStift = parent.querySelector('.stift');
-            if (oldStift) oldStift.remove();
-            if (text.trim() !== "") {
-                commentPart = "KOMMENTAR:" + text.trim();
-                let span = document.createElement('span');
-                span.className = 'stift';
-                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
-                parent.appendChild(span);
-            } else { 
-                commentPart = ""; 
-            }
-        } else { 
-            el.value = ""; closeAllExtraMenus(); return; 
-        }
-    } 
-    
-    else if (action === "delete_comment") {
-        commentPart = ""; 
-        let stift = parent.querySelector('.stift');
-        if (stift) stift.remove();
+
     }
+
+   
+
+    else if (action === "ausfall") {
+
+        neueHalle = "Ausfall";
+
+        parent.classList.add('ausfall-mode');
+
+       
+
+        if (typeof triggerNews === "function") {
+
+            triggerNews("ausfall", parseInt(c), klasse);
+
+        }
+
+    }
+
+   
+
+    else if (action === "kommentar") {
+
+        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
+
+        const text = prompt("Notiz eingeben:", existingText);
+
+        if (text !== null) {
+
+            let oldStift = parent.querySelector('.stift');
+
+            if (oldStift) oldStift.remove();
+
+            if (text.trim() !== "") {
+
+                commentPart = "KOMMENTAR:" + text.trim();
+
+                let span = document.createElement('span');
+
+                span.className = 'stift';
+
+                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
+
+                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
+
+                parent.appendChild(span);
+
+            } else {
+
+                commentPart = "";
+
+            }
+
+        } else {
+
+            el.value = ""; closeAllExtraMenus(); return;
+
+        }
+
+    }
+
+   
+
+    else if (action === "delete_comment") {
+
+        commentPart = "";
+
+        let stift = parent.querySelector('.stift');
+
+        if (stift) stift.remove();
+
+    }
+
 
     // --- 5. FINALES UPDATE (Optik & Daten) ---
+
     if (neueHalle === "Ausfall") {
-        parent.style.backgroundColor = ""; 
+
+        parent.style.backgroundColor = "";
+
     } else {
+
         parent.style.backgroundColor = configFarben[neueHalle] || "";
+
     }
-    
+
+   
+
     const resElem = parent.querySelector('.res');
+
     if (resElem) resElem.innerText = neueHalle;
 
+
     let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+
     if (!currentPlanData[r]) currentPlanData[r] = [];
+
     currentPlanData[r][c] = finalVal;
-    
+
+   
+
     pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
+
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    
+
+   
+
     const saveBtn = document.getElementById('saveBtn');
+
     if (saveBtn) {
-        saveBtn.style.display = 'inline-flex'; 
-        void saveBtn.offsetWidth; 
+
+        saveBtn.style.display = 'inline-flex';
+
+        void saveBtn.offsetWidth;
+
         saveBtn.classList.add('needs-save');
+
     }
-    el.value = ""; 
+
+    el.value = "";
+
     closeAllExtraMenus();
+
 };
 
 
+
  // ------------ALLE MENUS SCHLIESSEN------------
-        
+
+       
+
         function closeAllExtraMenus() {
+
             document.querySelectorAll('.extra-select').forEach(sel => {
+
                 sel.style.zIndex = "-1";
+
                 sel.style.pointerEvents = "none";
+
                 sel.style.opacity = "0";
+
             });
+
         }
 
-      
+
+     
+
 // ------------KOMMENTARE LADEN------------
-    
+
+   
+
 function getExistingComment(r, c) {
+
     // Sicherstellen, dass r und c existieren, bevor wir zugreifen
+
     if (!currentPlanData[r] || !currentPlanData[r][c]) return "";
-    
+
+   
+
     let val = currentPlanData[r][c];
+
     let teile = val.split(' | ');
-    
+
+   
+
     // Prüfen, ob der dritte Teil existiert und mit dem Präfix beginnt
+
     if (teile.length >= 3 && teile[2].trim().startsWith("KOMMENTAR:")) {
+
         return teile[2].trim();
+
     }
+
     return "";
+
 }
+
 
 
  // ------------KLASSE ENTFERNEN------------
 
+
 async function permaDeleteClass(klasse, slotIndex) {
-    const ball = document.getElementById('globalLoader'); 
+
+    const ball = document.getElementById('globalLoader');
+
     if (ball) ball.style.display = 'block';
-    
+
+   
+
     try {
+
         const response = await fetch(url, {
+
             method: "POST",
+
             body: JSON.stringify({
+
                 mode: "permaDelete",
+
                 klasse: klasse,
+
                 slot: slotIndex,
+
                 startDate: document.getElementById('datePicker').value,
+
                 pw: userPw,
+
                 kuerzel: userKuerzel
+
             })
+
         });
-        
+
+       
+
         const result = await response.json();
-        
+
+       
+
         if (result.status === "success") {
-            // Wir verzichten auf das Alert, oder setzen es ans Ende, 
+
+            // Wir verzichten auf das Alert, oder setzen es ans Ende,
+
             // damit der Flow nicht unterbrochen wird.
+
             console.log("Erfolg: Klasse entfernt.");
-            
+
+           
+
             // Wichtig: loadPlan() lädt die Daten neu und schaltet den Loader aus
-            await loadPlan(); 
-            
+
+            await loadPlan();
+
+           
+
             // Optionaler Erfolgshinweis nach dem Laden
+
             // alert("Die Klasse wurde für alle zukünftigen Termine entfernt.");
+
         } else {
+
             throw new Error(result.error || "Unbekannter Fehler");
+
         }
+
     } catch (e) {
+
         console.error("PermaDelete Error:", e);
+
         alert("Fehler beim dauerhaften Löschen. Bitte Verbindung prüfen.");
+
         // Nur im Fehlerfall schalten wir den Loader hier manuell aus
+
         if (ball) ball.style.display = 'none';
+
     }
+
 }
+
 
 function closePwModal() {
+
     document.getElementById('pwModal').style.display = 'none';
+
 }
+
 
 function showCustomConfirm(title, message) {
+
     return new Promise((resolve) => {
+
         const modal = document.getElementById('customModal');
+
         const confirmBtn = document.getElementById('modalConfirm');
+
         const cancelBtn = document.getElementById('modalCancel');
-        
+
+       
+
         document.getElementById('modalTitle').innerText = title;
+
         document.getElementById('modalMessage').innerText = message;
-        
+
+       
+
         modal.style.display = 'flex';
 
+
         confirmBtn.onclick = () => {
+
             modal.style.display = 'none';
+
             resolve(true);
+
         };
+
 
         cancelBtn.onclick = () => {
+
             modal.style.display = 'none';
+
             resolve(false);
+
         };
-        
+
+       
+
         // Optional: Schließen bei Klick außerhalb des Kastens
+
         modal.onclick = (e) => {
+
             if (e.target === modal) {
+
                 modal.style.display = 'none';
+
                 resolve(false);
+
             }
+
         };
+
     });
+
 }
 
 
-    
+
+   
+
  // ------------NEWS-ZENTRALE------------
 
-  
+
+ 
+
 // Sidebar öffnen
+
 window.openNews = () => {
+
     document.getElementById('newsSidebar').style.display = 'flex';
-    document.getElementById('newsBadge').style.display = 'none'; 
+
+    document.getElementById('newsBadge').style.display = 'none';
+
 };
+
 
 // Sidebar schließen
+
 window.closeNews = () => {
+
     document.getElementById('newsSidebar').style.display = 'none';
+
 };
 
+
 // Betroffene Kollegen suchen
+
    function getAffectedColleagues(slotIndex) {
+
     const colleagues = [];
-    
+
+   
+
     // Wir nutzen currentPlanData (dein globales Daten-Objekt)
+
     // r = Zeile (Zeit), s = Spalte (Halle/Slot)
-    
+
+   
+
     for (let s = 1; s <= 5; s++) {
+
         if (s === slotIndex) continue; // Den eigenen Slot ignorieren
 
+
         // Wir loopen durch alle Zeilen in currentPlanData
+
         for (let r in currentPlanData) {
+
             let row = currentPlanData[r];
+
             let cellContent = row[s] ? row[s].toString().trim() : "";
-            
+
+           
+
             if (cellContent !== "" && !cellContent.includes("U21")) {
+
                 // Klasse isolieren (Teil vor dem ersten Leerzeichen oder Pipe)
+
                 let klasse = cellContent.split(" ")[0].split("|")[0].trim();
+
                 let lehrerKuerzel = allClassTeachers[klasse];
-                
+
+               
+
                 if (lehrerKuerzel && !colleagues.includes(lehrerKuerzel)) {
+
                     colleagues.push(lehrerKuerzel);
+
                 }
+
             }
+
         }
+
     }
+
     return colleagues.join(",");
+
 }
+
 
 // News erstellen
+
     function triggerNews(type, slotIndex, klasse) {
+
     const dateVal = document.getElementById('datePicker').value;
-    
+
+   
+
     // Bestehende News für diesen Slot in der Warteschlange löschen (Korrektur-Schutz)
+
     pendingNews = pendingNews.filter(n => n.slot !== slotIndex);
 
+
     let newsText = "";
+
     if (type === "ausfall") newsText = `Halle frei: ${klasse} fällt aus.`;
+
     if (type === "outdoor") newsText = `Halle frei: ${klasse} ist Outdoor.`;
+
     if (type === "beendet") newsText = `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`;
 
+
     // Das News-Objekt vorbereiten
+
     pendingNews.push({
+
         mode: "saveNews",
-        id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000), 
+
+        id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
+
         datum: dateVal,
+
         slot: slotIndex,
+
         tagIndex: new Date(dateVal).getDay(),
+
         klasse: klasse,
+
         verfasser: userKuerzel,
+
         empfaenger: getAffectedColleagues(slotIndex), // Empfänger jetzt schon ermitteln
+
         text: newsText,
+
         pw: userPw
+
     });
-    
+
+   
+
     console.log("News in Warteschlange: ", newsText);
+
 }
 
 
 
-    
-    
+
+   
+
+   
+
 </script>
 
 
 
 
-    
+
+   
+
 <!-- Nachrichtenzentrale Sidebar -->
+
 <div id="newsSidebar" style="display:none; position:fixed; top:0; left:0; width:350px; height:100%; background:#121212; z-index:25000; box-shadow: 10px 0 30px rgba(0,0,0,0.5); border-right: 1px solid #333; flex-direction: column; animation: slideIn 0.3s ease-out; font-family: sans-serif;">
+
     <div style="padding: 25px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
+
         <h2 style="color: #fff; margin: 0; font-size: 20px;">Info-Zentrale</h2>
+
         <button onclick="closeNews()" style="background:transparent; border:none; color:#666; cursor:pointer; font-size: 24px;">&times;</button>
-    </div>
-    
-    <!-- Hier landen die automatischen News -->
-    <div id="newsContent" style="padding: 20px; overflow-y: auto; flex-grow: 1; color: #ccc;">
-        <!-- Die Nachrichten werden hier per JS eingefügt -->
+
     </div>
 
-    <!-- Kleiner Hinweis-Footer -->
-    <div style="padding: 15px; background: #0d0d0d; color: #444; font-size: 11px; text-align: center;">
-        Automatische Benachrichtigungen bei Hallenänderungen
+   
+
+    <!-- Hier landen die automatischen News -->
+
+    <div id="newsContent" style="padding: 20px; overflow-y: auto; flex-grow: 1; color: #ccc;">
+
+        <!-- Die Nachrichten werden hier per JS eingefügt -->
+
     </div>
+
+
+    <!-- Kleiner Hinweis-Footer -->
+
+    <div style="padding: 15px; background: #0d0d0d; color: #444; font-size: 11px; text-align: center;">
+
+        Automatische Benachrichtigungen bei Hallenänderungen
+
+    </div>
+
 </div>
+
 
 
 
 <!-- Custom Confirm Modal im PW-Design -->
+
 <div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10001; justify-content:center; align-items:center; backdrop-filter: blur(8px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
     <div style="background: #121212; padding: 40px; border-radius: 12px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-        
+
+       
+
         <h2 id="modalTitle" style="color: #fff; margin: 0 0 8px 0; font-size: 22px; font-weight: 500; letter-spacing: -0.5px;">Bestätigung</h2>
+
         <p id="modalMessage" style="color: #888; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">Möchtest du fortfahren?</p>
-        
+
+       
+
         <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button id="modalConfirm" 
+
+            <button id="modalConfirm"
+
                     style="width: 100%; background: #e67e22; color: #fff; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: background 0.2s, transform 0.1s;"
-                    onmouseover="this.style.background='#d35400';" 
+
+                    onmouseover="this.style.background='#d35400';"
+
                     onmouseout="this.style.background='#e67e22';"
+
                     onmousedown="this.style.transform='scale(0.98)';"
+
                     onmouseup="this.style.transform='scale(1)';">
+
                 Fortfahren
+
             </button>
-            <button id="modalCancel" 
+
+            <button id="modalCancel"
+
                     style="width: 100%; background: transparent; color: #666; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: color 0.2s;"
-                    onmouseover="this.style.color='#888';" 
+
+                    onmouseover="this.style.color='#888';"
+
                     onmouseout="this.style.color='#666';">
+
                 Abbrechen
+
             </button>
+
         </div>
+
     </div>
+
 </div>
-    
-    
-    
+
+   
+
+   
+
+   
+
 <!-- Schlichteres, modernes Passwort-Modal in deinem Farbschema -->
+
 <div id="pwModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; backdrop-filter: blur(8px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
     <div style="background: #121212; padding: 40px; border-radius: 12px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-        
+
+       
+
         <h2 style="color: #fff; margin: 0 0 8px 0; font-size: 22px; font-weight: 500; letter-spacing: -0.5px;">Safety-Check</h2>
+
         <p style="color: #888; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">Gib das Passwort ein, um die Klasse virtuell abzukleben:</p>
-        
+
+       
+
         <!-- Input mit Orange-Effekt beim Klicken -->
-        <input type="password" id="modalPwInput" 
-               placeholder="Passwort" 
+
+        <input type="password" id="modalPwInput"
+
+               placeholder="Passwort"
+
                onfocus="this.style.borderColor='#e67e22'; this.style.boxShadow='0 0 0 2px rgba(230, 126, 34, 0.2)';"
+
                onblur="this.style.borderColor='#444'; this.style.boxShadow='none';"
+
                onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('confirmPwBtn').click(); }"
+
                style="width: 100%; padding: 12px 16px; margin-bottom: 24px; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 16px; outline: none; box-sizing: border-box; transition: all 0.2s ease;">
-        
+
+       
+
         <!-- Action Buttons -->
+
         <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button id="confirmPwBtn" 
+
+            <button id="confirmPwBtn"
+
                     style="width: 100%; background: #e67e22; color: #fff; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: background 0.2s, transform 0.1s;"
-                    onmouseover="this.style.background='#d35400';" 
+
+                    onmouseover="this.style.background='#d35400';"
+
                     onmouseout="this.style.background='#e67e22';"
+
                     onmousedown="this.style.transform='scale(0.98)';"
+
                     onmouseup="this.style.transform='scale(1)';">
+
                 Bestätigen
+
             </button>
-            <button onclick="closePwModal()" 
+
+            <button onclick="closePwModal()"
+
                     style="width: 100%; background: transparent; color: #666; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: color 0.2s;"
-                    onmouseover="this.style.color='#888';" 
+
+                    onmouseover="this.style.color='#888';"
+
                     onmouseout="this.style.color='#666';">
+
                 Abbrechen
+
             </button>
+
         </div>
+
     </div>
+
 </div>
-    
+
+   
+
 </body>
+
 </html>
 
