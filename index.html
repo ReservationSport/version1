@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sportdecsdcd</title>
+     <title>Reservation Sport11111d</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -887,7 +887,7 @@ async function loadPlan() {
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = ""; // Sammel-Variable für bessere Performance
+        let html = ""; 
 
         // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
@@ -900,7 +900,6 @@ async function loadPlan() {
                 html += `<div class="box zeit-box">${row[0]}</div>`;
                 
                 for(let i = 1; i <= 5; i++) {
-                    // Hallen-Belegung prüfen
                     let belegteHallen = [];
                     for (let k = 1; k <= 5; k++) {
                         if (k === i) continue; 
@@ -911,7 +910,6 @@ async function loadPlan() {
                         }
                     }
 
-                    // Zell-Details
                     let val = row[i] || "", teile = val.split(' | ');
                     let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                     let isAusfall = (res === "Ausfall");
@@ -923,7 +921,6 @@ async function loadPlan() {
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    // HTML für die Kachel
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
@@ -938,7 +935,7 @@ async function loadPlan() {
                             <div class="res">${res}</div>
                             
                             ${canEdit ? `
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                            <select onfocus="syncDropdownBeforeChange(this)" onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
                                 <option value="">---</option>
                                 ${options.filter(o => {
                                     const optName = o[0];
@@ -951,7 +948,7 @@ async function loadPlan() {
                                 }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
                             </select>
 
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+                            <select class="extra-select" onfocus="syncDropdownBeforeChange(this)" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
                                  <option value="">---</option>
                                  <option value="ausfall">❌ Ausfall</option>
                                  <option value="perma_delete">🏆 Schuljahr beendet</option>
@@ -962,7 +959,7 @@ async function loadPlan() {
                 }
             }
         });
-        container.innerHTML = html; // Einmaliges Schreiben ins DOM
+        container.innerHTML = html; 
 
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
@@ -1389,6 +1386,25 @@ window.handleExtraAction = async (el, time, slot) => {
     }
     el.value = ""; 
     closeAllExtraMenus();
+};
+
+    
+ // ------------MENUS CONNECTEN------------
+
+window.syncDropdownBeforeChange = (el) => {
+    const parent = el.closest('.box');
+    const isAusfall = parent.classList.contains('ausfall-mode');
+    const currentRes = parent.querySelector('.res').innerText.trim();
+
+    // Wenn "Ausfall" drin steht, aber das Dropdown auf "" steht:
+    // Wir setzen einen temporären Wert, damit die Änderung auf "---" vom Browser erkannt wird
+    if (isAusfall || currentRes !== "") {
+        if (el.value === "") {
+            // Ein kleiner Trick: Wir tun so, als stünde da was, 
+            // damit der Klick auf "---" eine echte Änderung (onchange) auslöst
+            el.dataset.previousValue = "dirty"; 
+        }
+    }
 };
 
 
