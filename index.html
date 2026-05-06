@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport11111d</title>
+     <title>Reservation Sport134534534</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1107,32 +1107,38 @@ window.addChange = (el, time, slot, klasse) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // --- RICHTUNG DROPDOWN -> EXTRA-MENU ---
-    // Falls vorher "Ausfall" über das Extra-Menü aktiv war, entfernen wir den Modus jetzt
+    // --- 1. RESET-LOGIK FÜR OPTIK ---
+    // Wir entfernen den Ausfall-Modus immer, wenn das Dropdown benutzt wird
     parent.classList.remove('ausfall-mode');
-    
-    // Wir lassen Kommentare (Stift) bestehen, falls vorhanden, 
-    // aber du könntest hier auch parent.querySelector('.stift')?.remove() nutzen,
-    // wenn eine Hallenwahl ALLES (auch Notizen) resetten soll.
-    // ----------------------------------------
 
-    // Optik-Update
-    const resDisplay = parent.querySelector('.res');
-    if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
-    parent.style.backgroundColor = configFarben[res] || ""; 
+    // Falls "---" gewählt wurde, leeren wir die Anzeige und die Farbe
+    if (res === "" || res === "---") {
+        parent.style.backgroundColor = "";
+        const resDisplay = parent.querySelector('.res');
+        if (resDisplay) resDisplay.innerText = "";
+        
+        // Optional: Hier den Stift entfernen, wenn bei "---" alles weg soll
+        // let stift = parent.querySelector('.stift');
+        // if (stift) stift.remove();
+    } else {
+        // Normale Halle wurde gewählt
+        const resDisplay = parent.querySelector('.res');
+        if (resDisplay) resDisplay.innerText = res; 
+        parent.style.backgroundColor = configFarben[res] || ""; 
+    }
 
-    // String bauen
+    // --- 2. DATEN-STRING BAUEN ---
+    // Wenn res leer ist, wird nur die Klasse gespeichert (Ursprung)
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
-    // --- NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
+    // --- 3. NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
     
-    // 1. Zuerst alte News für diesen Slot entfernen (Reset-Logik)
-    // Löscht z.B. einen "Ausfall"-Trigger, wenn man jetzt eine Halle wählt.
+    // Zuerst alte News für diesen Slot entfernen (z.B. alten Ausfall-Trigger löschen)
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
     }
 
-    // 2. Nur wenn der NEUE Wert "Outdoor" enthält, News wieder hinzufügen
+    // Nur wenn der NEUE Wert "Outdoor" enthält, News wieder hinzufügen
     if (res && res.toString().includes("Outdoor")) {
         console.log("Outdoor-Aktion erkannt für:", res);
         if (typeof triggerNews === "function") {
@@ -1140,9 +1146,8 @@ window.addChange = (el, time, slot, klasse) => {
             triggerNews("outdoor", parseInt(slot), newsKlasse);
         }
     }
-    // -----------------------------------------------------
 
-    // Datenstand aktualisieren
+    // --- 4. DATENSTAND AKTUALISIEREN ---
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
@@ -1150,15 +1155,17 @@ window.addChange = (el, time, slot, klasse) => {
     pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
 
-    // Button-Animation
+    // --- 5. UI FEEDBACK ---
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         saveBtn.style.display = 'inline-flex'; 
         void saveBtn.offsetWidth; 
         saveBtn.classList.add('needs-save');
     }
+    
+    // Hilfs-Attribut für den Browser-Sync (falls onfocus genutzt wird) zurücksetzen
+    if (el.dataset.dirty) delete el.dataset.dirty;
 };
-
 
 // ------------EXTRAMENU------------    
   
