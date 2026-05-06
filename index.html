@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 202611111</title>
+     <title>Reservation Sport 2026</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -630,6 +630,20 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     to { transform: translateX(0); }
 }
 
+
+    /* Hover-Effekt für die Nachrichten-Items */
+.news-item { transition: background 0.2s; }
+.news-item:hover { background: #222 !important; }
+
+/* Das Blinken für die Ziel-Zelle */
+@keyframes highlightBlink {
+    0% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
+    50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; }
+    100% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
+}
+.blink-active {
+    animation: highlightBlink 0.8s ease-in-out 3; /* 3 mal blinken */
+}
     
 </style>
 
@@ -950,19 +964,21 @@ async function saveChanges() {
         
         const result = await response.json();
 
-        // 2. ERFOLG: Änderungen gespeichert
+        // 2. ERFOLG: Änderungen im Stundenplan gespeichert
         if (result.status === "success") {
             
-            // --- NEU: GEPARKTE BENACHRICHTIGUNGEN JETZT SENDEN ---
+            // --- NEU: NEWS IN DIE DATENBANK SCHREIBEN ---
+            // Wir prüfen, ob Benachrichtigungen geparkt wurden (z.B. durch Ausfall-Klick)
             if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
                 pendingNotifications.forEach(n => {
-                    if (typeof createNotification === "function") {
-                        createNotification(n.type, n.klasse, n.r, n.datum);
+                    // Hier nutzen wir jetzt die neue, modulare Funktion
+                    if (typeof saveToNewsDB === "function") {
+                        saveToNewsDB(n.type, n.klasse, n.r, n.datum);
                     }
                 });
-                pendingNotifications = []; // Liste leeren
+                pendingNotifications = []; // Liste nach Erfolg leeren
             }
-            // ----------------------------------------------------
+            // --------------------------------------------
 
             pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
@@ -1375,77 +1391,59 @@ window.closeNews = () => {
     document.getElementById('newsSidebar').style.display = 'none';
 };
 
-// Erstellt die Nachricht und filtert betroffene Kollegen
-function createNotification(typ, eigeneKlasse, slotIndex, datum) {
+
+// Berechnet, wer die Info erhalten muss (Empfänger-Liste)
+function getAffectedColleagues(eigeneKlasse, slotIndex) {
     const reihe = currentPlanData[slotIndex];
     let kollegen = [];
 
     // Checke alle 5 Hallen-Spalten in dieser Zeile
     for (let i = 1; i <= 5; i++) {
-        let inhalt = (reihe[i] || "").split(' | ')[0].trim();
-        if (inhalt !== "" && inhalt !== eigeneKlasse) {
-            // Hole Lehrer-Kürzel aus deiner allClassTeachers Liste
-            let lehrer = allClassTeachers[inhalt] || "Kollege";
-            if (!kollegen.includes(lehrer)) kollegen.push(lehrer);
+        let zellenInhalt = (reihe[i] || "").split(' | ')[0].trim();
+        if (zellenInhalt !== "" && zellenInhalt !== eigeneKlasse) {
+            // Lehrer-Kürzel ermitteln
+            let lehrer = allClassTeachers[zellenInhalt];
+            if (lehrer && !kollegen.includes(lehrer)) {
+                kollegen.push(lehrer);
+            }
         }
     }
+    // Gibt die Kürzel kommagetrennt zurück (z.B. "jaka,blmi")
+    return kollegen.join(',');
+}
 
-    if (kollegen.length === 0) return; // Keiner da, der benachrichtigt werden müsste
 
-    const msg = {
+
+    function saveToNewsDB(typ, klasse, slot, datum) {
+    // 1. Empfänger ermitteln
+    const empfaengerListe = getAffectedColleagues(klasse, slot);
+
+    // 2. Datenpaket schnüren
+    const payload = {
+        mode: "saveNews",
         id: Date.now(),
         datum: datum,
-        slot: slotIndex,
-        text: `Halle frei! ${eigeneKlasse} hat ${typ}.`,
-        info: `Betrifft: ${kollegen.join(', ')}`,
-        zeit: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+        slot: slot,
+        tagIndex: new Date(datum).getDay(),
+        klasse: klasse,
+        verfasser: userKuerzel,
+        empfaenger: empfaengerListe,
+        text: `Halle frei! ${klasse} hat ${typ}.`,
+        pw: SECRET_PASSWORD
     };
 
-    renderNewsEntry(msg);
+    // 3. Versand an das Google Script
+    fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => console.log("News_DB Update:", data.status))
+    .catch(err => console.error("News_DB Fehler:", err));
 }
 
-// Nachricht in Sidebar zeichnen
-function renderNewsEntry(entry) {
-    const container = document.getElementById('newsContent');
-    const div = document.createElement('div');
-    div.className = "news-item";
-    div.style = "background: #1a1a1a; padding: 15px; border-radius: 10px; margin-bottom: 12px; border-left: 4px solid #e67e22; cursor: pointer;";
-    
-    div.onclick = () => goToDateAndHighlight(entry.datum, entry.slot);
 
-    div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
-            <span style="color: #e67e22; font-size: 10px; font-weight: bold; text-transform: uppercase;">Meldung ${entry.zeit}</span>
-            <span style="color: #444; font-size: 10px;">${entry.datum}</span>
-        </div>
-        <div style="font-size: 14px; color: #fff; margin-bottom: 5px;">${entry.text}</div>
-        <div style="font-size: 11px; color: #666;">${entry.info}</div>
-    `;
-    
-    container.prepend(div);
-    document.getElementById('newsBadge').style.display = 'block';
-}
-
-// Der "Magic Jump" zum Feld
-async function goToDateAndHighlight(targetDate, rowIdx) {
-    const dp = document.getElementById('datePicker');
-    if (dp.value !== targetDate) {
-        dp.value = targetDate;
-        await loadPlan(); // Warte bis der Plan geladen ist
-    }
-    
-    closeNews();
-
-    // Kleiner Delay, damit der Browser die neuen Elemente gerendert hat
-    setTimeout(() => {
-        const targetCells = document.querySelectorAll(`[data-row="${rowIdx}"]`);
-        targetCells.forEach(cell => {
-            cell.classList.add('blink-active');
-            // Klasse nach Animation wieder entfernen
-            setTimeout(() => cell.classList.remove('blink-active'), 3000);
-        });
-    }, 300);
-}
+        
         
         
     </script>
@@ -1467,22 +1465,6 @@ async function goToDateAndHighlight(targetDate, rowIdx) {
         Automatische Benachrichtigungen bei Hallenänderungen
     </div>
 </div>
-
-<style>
-/* Hover-Effekt für die Nachrichten-Items */
-.news-item { transition: background 0.2s; }
-.news-item:hover { background: #222 !important; }
-
-/* Das Blinken für die Ziel-Zelle */
-@keyframes highlightBlink {
-    0% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
-    50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; }
-    100% { box-shadow: 0 0 0px #e67e22; border-color: #444; }
-}
-.blink-active {
-    animation: highlightBlink 0.8s ease-in-out 3; /* 3 mal blinken */
-}
-</style>
 
 
 
