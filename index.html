@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport134534534</title>
+     <title>Reservation Sport111111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -887,7 +887,7 @@ async function loadPlan() {
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = ""; 
+        let html = ""; // Sammel-Variable für bessere Performance
 
         // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
@@ -900,6 +900,7 @@ async function loadPlan() {
                 html += `<div class="box zeit-box">${row[0]}</div>`;
                 
                 for(let i = 1; i <= 5; i++) {
+                    // Hallen-Belegung prüfen
                     let belegteHallen = [];
                     for (let k = 1; k <= 5; k++) {
                         if (k === i) continue; 
@@ -910,6 +911,7 @@ async function loadPlan() {
                         }
                     }
 
+                    // Zell-Details
                     let val = row[i] || "", teile = val.split(' | ');
                     let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                     let isAusfall = (res === "Ausfall");
@@ -921,6 +923,7 @@ async function loadPlan() {
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
+                    // HTML für die Kachel
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
@@ -935,7 +938,7 @@ async function loadPlan() {
                             <div class="res">${res}</div>
                             
                             ${canEdit ? `
-                            <select onfocus="syncDropdownBeforeChange(this)" onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
                                 <option value="">---</option>
                                 ${options.filter(o => {
                                     const optName = o[0];
@@ -948,7 +951,7 @@ async function loadPlan() {
                                 }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
                             </select>
 
-                            <select class="extra-select" onfocus="syncDropdownBeforeChange(this)" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
                                  <option value="">---</option>
                                  <option value="ausfall">❌ Ausfall</option>
                                  <option value="perma_delete">🏆 Schuljahr beendet</option>
@@ -959,7 +962,7 @@ async function loadPlan() {
                 }
             }
         });
-        container.innerHTML = html; 
+        container.innerHTML = html; // Einmaliges Schreiben ins DOM
 
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
@@ -1107,38 +1110,25 @@ window.addChange = (el, time, slot, klasse) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // --- 1. RESET-LOGIK FÜR OPTIK ---
-    // Wir entfernen den Ausfall-Modus immer, wenn das Dropdown benutzt wird
+    // Optik-Update
     parent.classList.remove('ausfall-mode');
+    const resDisplay = parent.querySelector('.res');
+    if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
+    parent.style.backgroundColor = configFarben[res] || ""; 
 
-    // Falls "---" gewählt wurde, leeren wir die Anzeige und die Farbe
-    if (res === "" || res === "---") {
-        parent.style.backgroundColor = "";
-        const resDisplay = parent.querySelector('.res');
-        if (resDisplay) resDisplay.innerText = "";
-        
-        // Optional: Hier den Stift entfernen, wenn bei "---" alles weg soll
-        // let stift = parent.querySelector('.stift');
-        // if (stift) stift.remove();
-    } else {
-        // Normale Halle wurde gewählt
-        const resDisplay = parent.querySelector('.res');
-        if (resDisplay) resDisplay.innerText = res; 
-        parent.style.backgroundColor = configFarben[res] || ""; 
-    }
-
-    // --- 2. DATEN-STRING BAUEN ---
-    // Wenn res leer ist, wird nur die Klasse gespeichert (Ursprung)
+    // String bauen
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
-    // --- 3. NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
+    // --- NEU: NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
     
-    // Zuerst alte News für diesen Slot entfernen (z.B. alten Ausfall-Trigger löschen)
+    // 1. Zuerst alte News für diesen Slot entfernen (Reset-Logik)
+    // Das stellt sicher, dass keine "Ausfall"-News gesendet wird, 
+    // wenn man sich umentscheidet und jetzt z.B. "Halle 4" wählt.
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
     }
 
-    // Nur wenn der NEUE Wert "Outdoor" enthält, News wieder hinzufügen
+    // 2. Nur wenn der NEUE Wert "Outdoor" enthält, News wieder hinzufügen
     if (res && res.toString().includes("Outdoor")) {
         console.log("Outdoor-Aktion erkannt für:", res);
         if (typeof triggerNews === "function") {
@@ -1146,8 +1136,9 @@ window.addChange = (el, time, slot, klasse) => {
             triggerNews("outdoor", parseInt(slot), newsKlasse);
         }
     }
+    // -----------------------------------------------------
 
-    // --- 4. DATENSTAND AKTUALISIEREN ---
+    // Datenstand aktualisieren
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
@@ -1155,17 +1146,15 @@ window.addChange = (el, time, slot, klasse) => {
     pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
 
-    // --- 5. UI FEEDBACK ---
+    // Button-Animation
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         saveBtn.style.display = 'inline-flex'; 
         void saveBtn.offsetWidth; 
         saveBtn.classList.add('needs-save');
     }
-    
-    // Hilfs-Attribut für den Browser-Sync (falls onfocus genutzt wird) zurücksetzen
-    if (el.dataset.dirty) delete el.dataset.dirty;
 };
+
 
 // ------------EXTRAMENU------------    
   
@@ -1213,6 +1202,7 @@ window.handleExtraAction = async (el, time, slot) => {
     const klasse = klasseElem ? klasseElem.innerText.trim() : "";
 
     // --- 1. NEWS-WARTESCHLANGE BEREINIGEN (RESET) ---
+    // Wir entfernen bei jeder Aktion im Extra-Menü vorsorglich alte News-Einträge für diesen Slot
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
     }
@@ -1225,10 +1215,6 @@ window.handleExtraAction = async (el, time, slot) => {
         
         const resElem = parent.querySelector('.res');
         if (resElem) resElem.innerText = ""; // Halle/Zusatz leeren
-
-        // NEU: Das Dropdown-Menü (Select) physisch zurücksetzen
-        const mainSelect = parent.querySelector('select');
-        if (mainSelect) mainSelect.value = "";
 
         // Kommentar-Icon entfernen
         let stift = parent.querySelector('.stift');
@@ -1332,10 +1318,6 @@ window.handleExtraAction = async (el, time, slot) => {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
         
-        // NEU: Wenn Ausfall gewählt wird, sollte das Haupt-Dropdown geleert werden
-        const mainSelect = parent.querySelector('select');
-        if (mainSelect) mainSelect.value = "";
-
         if (typeof triggerNews === "function") {
             triggerNews("ausfall", parseInt(c), klasse);
         }
@@ -1393,25 +1375,6 @@ window.handleExtraAction = async (el, time, slot) => {
     }
     el.value = ""; 
     closeAllExtraMenus();
-};
-
-    
- // ------------MENUS CONNECTEN------------
-
-window.syncDropdownBeforeChange = (el) => {
-    const parent = el.closest('.box');
-    const isAusfall = parent.classList.contains('ausfall-mode');
-    const currentRes = parent.querySelector('.res').innerText.trim();
-
-    // Wenn "Ausfall" drin steht, aber das Dropdown auf "" steht:
-    // Wir setzen einen temporären Wert, damit die Änderung auf "---" vom Browser erkannt wird
-    if (isAusfall || currentRes !== "") {
-        if (el.value === "") {
-            // Ein kleiner Trick: Wir tun so, als stünde da was, 
-            // damit der Klick auf "---" eine echte Änderung (onchange) auslöst
-            el.dataset.previousValue = "dirty"; 
-        }
-    }
 };
 
 
@@ -1689,3 +1652,4 @@ window.closeNews = () => {
     
 </body>
 </html>
+
