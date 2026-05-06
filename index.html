@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport7568679</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -723,12 +723,39 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
 
-    let pendingNotifications = [];
+
+ // ------------LOGIN RESERVATION------------
+        
+  async function checkLogin() {
+            const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
+            const pwVal = document.getElementById('passwordInput').value;
+            const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
+            if(!kuerzelVal) { document.getElementById('loginError').innerText = "Kürzel fehlt!"; return; }
+            btn.style.display = 'none'; ball.classList.add('active');
+            try {
+                const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
+                const json = await res.json();
+                if (json.error === "Falsches Passwort") {
+                    document.getElementById('loginError').innerText = "Falsches Passwort!";
+                    btn.style.display = 'block'; ball.classList.remove('active');
+                } else {
+                    userPw = pwVal;
+                    userKuerzel = kuerzelVal;
+                    document.getElementById('loginOverlay').style.display = 'none';
+                    loadPlan();
+                }
+            } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
+        }
+
+ // ------------SICHERHEITSABFRAGE ÄNDERUNGEN------------
         
         window.addEventListener('beforeunload', (e) => {
             if (pendingChanges.length > 0) { e.preventDefault(); e.returnValue = ''; }
         });
 
+
+ // ------------STEUERUNG DER TAGES-BUTTONS------------
+        
         function updateNavButtons() {
     const dp = document.getElementById('datePicker');
     if (!dp || !dp.value) return;
@@ -762,7 +789,10 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
             prevWeekBtn.classList.remove('nav-btn-hidden');
         }
     }
-}
+}    
+       
+ // ------------EXTRAMENU SCHLIESSEN------------
+        
         function closeAllExtraMenus() {
             document.querySelectorAll('.extra-select').forEach(sel => {
                 sel.style.zIndex = "-1";
@@ -771,34 +801,14 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
             });
         }
 
-        async function checkLogin() {
-            const btn = document.getElementById('loginBtn'), ball = document.getElementById('loginBall');
-            const pwVal = document.getElementById('passwordInput').value;
-            const kuerzelVal = document.getElementById('kuerzelInput').value.trim().toLowerCase();
-            if(!kuerzelVal) { document.getElementById('loginError').innerText = "Kürzel fehlt!"; return; }
-            btn.style.display = 'none'; ball.classList.add('active');
-            try {
-                const res = await fetch(`${url}?mode=login&pw=${pwVal}&kuerzel=${kuerzelVal}`);
-                const json = await res.json();
-                if (json.error === "Falsches Passwort") {
-                    document.getElementById('loginError').innerText = "Falsches Passwort!";
-                    btn.style.display = 'block'; ball.classList.remove('active');
-                } else {
-                    userPw = pwVal;
-                    userKuerzel = kuerzelVal;
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    loadPlan();
-                }
-            } catch(e) { document.getElementById('loginError').innerText = "Fehler."; btn.style.display = 'block'; ball.classList.remove('active'); }
-        }
+      
 
-
-
+// ------------STUNDENPLAN LADEN------------
 
         async function loadPlan() {
     const dp = document.getElementById('datePicker');
     
-    // 1. Prüfung auf ungespeicherte Änderungen
+    // 1. Plan laden und Prüfung auf ungespeicherte Änderungen
     if (pendingChanges.length > 0) {
         if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
             dp.value = lastStableDate; 
@@ -820,7 +830,9 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
     lastStableDate = dateVal; 
     updateNavButtons();
-    
+
+
+    // 3. Vorbereitung der neuen Tabelle       
     const container = document.getElementById('plan');
     container.innerHTML = ""; // Tabelle leeren
     document.getElementById('globalLoader').style.display = 'block'; // Loader an
@@ -829,7 +841,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const heute = new Date(); heute.setHours(12,0,0,0);
     const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
     
-    // Validierung der Daten
+    // 4. Validierung der Daten
     if (dateObj < heute) { 
         container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; 
         document.getElementById('globalLoader').style.display = 'none'; 
@@ -856,6 +868,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
             return;
         }
 
+        // 5. Plan-Logik        
         container.innerHTML = ""; 
         currentPlanData = json.data; 
         myClasses = json.userClasses || [];
@@ -867,6 +880,8 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
+
+        // 6. Plan füllen    
         data.forEach((row, rowIndex) => {
             if (rowIndex === 0) {
                 container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
@@ -939,6 +954,10 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     }
 }
 
+
+
+
+        
 
 async function saveChanges() {
     const btn = document.getElementById('saveBtn');
