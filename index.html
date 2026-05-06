@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -965,28 +965,31 @@ async function saveChanges() {
 
         if (result.status === "success") {
             
-            // --- NEWS-LOGIK MIT FLEXIBLER SUCHE ---
+            // --- NEWS-LOGIK FINAL ANGEPASST ---
 if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
     pendingNotifications.forEach(n => {
-        // Wir suchen die Änderung und loggen zur Sicherheit das ganze Objekt
-        const changeStillExists = pendingChanges.find(c => {
-            // Wir prüfen alle Möglichkeiten: slotIndex, slot oder die Zeit (time)
-            // n.r ist die Zeilennummer/Slot-Index
-            return c.slotIndex === n.r || c.slot === n.r || c.time == n.r;
-        });
+        // Wir suchen exakt nach dem Feld 'slotIndex'
+        // Wir nutzen == statt === um String/Zahl-Unterschiede ( "4" vs 4 ) zu ignorieren
+        const changeStillExists = pendingChanges.find(c => c.slotIndex == n.r);
 
         if (changeStillExists) {
-            console.log("Treffer! News wird gesendet für:", n.klasse);
-            if (typeof saveToNewsDB === "function") {
-                try {
-                    saveToNewsDB(n.type, n.klasse, n.r, n.datum);
-                } catch (newsErr) {
-                    console.error("News-Fehler:", newsErr);
+            console.log("✅ Match gefunden für Slot:", n.r);
+            
+            // Wir prüfen, ob im aktuellen Wert wirklich noch "Ausfall", "Outdoor" oder "beendet" steht
+            const val = changeStillExists.val || "";
+            if (val.includes("Ausfall") || val.includes("Outdoor") || val.includes("beendet")) {
+                if (typeof saveToNewsDB === "function") {
+                    try {
+                        saveToNewsDB(n.type, n.klasse, n.r, n.datum);
+                    } catch (newsErr) {
+                        console.error("News-Fehler:", newsErr);
+                    }
                 }
+            } else {
+                console.warn("News abgebrochen: Begriff nicht mehr im Zellen-Text enthalten.");
             }
         } else {
-            // Falls es immer noch nicht klappt, zeigen wir an, was ÜBERHAUPT in pendingChanges steht
-            console.warn(`Kein Match für Slot ${n.r}. In pendingChanges vorhanden:`, pendingChanges);
+            console.warn(`❌ Kein Match: Slot ${n.r} (Typ: ${typeof n.r}) wurde in pendingChanges nicht gefunden.`);
         }
     });
     pendingNotifications = []; 
