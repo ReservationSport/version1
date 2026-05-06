@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport675769</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -944,7 +944,6 @@ async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
-    // 1. START: Globaler Loader an, Button in Lade-Zustand
     if (gLoader) gLoader.style.display = 'block';
     
     btn.classList.add('is-loading');
@@ -964,35 +963,44 @@ async function saveChanges() {
         
         const result = await response.json();
 
-        // 2. ERFOLG: Änderungen im Stundenplan gespeichert
         if (result.status === "success") {
             
-            // --- NEU: NEWS IN DIE DATENBANK SCHREIBEN ---
+            // --- NEWS-LOGIK MIT ABGLEICH ---
             if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
                 pendingNotifications.forEach(n => {
-                    if (typeof saveToNewsDB === "function") {
-                        try {
-                            saveToNewsDB(n.type, n.klasse, n.r, n.datum);
-                        } catch (newsErr) {
-                            console.error("News-Fehler abgefangen:", newsErr);
+                    // PRÜFUNG: Ist die Meldung noch aktuell?
+                    // Wir suchen in den pendingChanges, ob für diesen Slot (r) 
+                    // die betroffene Klasse noch einen News-relevanten Status hat.
+                    const changeStillExists = pendingChanges.find(c => c.slotIndex === n.r);
+                    
+                    if (changeStillExists && 
+                        (changeStillExists.val.includes("Ausfall") || 
+                         changeStillExists.val.includes("Outdoor") || 
+                         changeStillExists.val.includes("beendet"))) {
+                        
+                        if (typeof saveToNewsDB === "function") {
+                            try {
+                                saveToNewsDB(n.type, n.klasse, n.r, n.datum);
+                            } catch (newsErr) {
+                                console.error("News-Fehler abgefangen:", newsErr);
+                            }
                         }
+                    } else {
+                        console.log(`News für ${n.klasse} verworfen, da Status geändert oder gelöscht.`);
                     }
                 });
-                pendingNotifications = []; // Liste nach Erfolg leeren
+                pendingNotifications = []; // Liste leeren
             }
             // --------------------------------------------
 
             pendingChanges = []; 
             if (gLoader) gLoader.style.display = 'none';
             
-            // Zustände umschalten
             btn.classList.remove('is-loading');
             btn.classList.remove('needs-save'); 
             btn.classList.add('success'); 
-            
             btn.innerText = ""; 
 
-            // 3. RESET: Button nach 1,5 Sekunden ausblenden
             setTimeout(() => { 
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
@@ -1005,7 +1013,6 @@ async function saveChanges() {
         }
 
     } catch (e) { 
-        // 4. FEHLER-HANDLING
         console.error("Speicherfehler:", e);
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
