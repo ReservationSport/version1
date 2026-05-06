@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1</title>
+     <title>Reservation Sport123</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -754,7 +754,6 @@ window.createSnapshot = (el) => {
     }
 };
 
-// SCHRITT 2: Die Auswertung bei einer Auswahl
 window.processChange = (el, type, time, slot, klasse) => {
     const newVal = el.value;
     const oldState = el.dataset.snapshot;
@@ -762,57 +761,72 @@ window.processChange = (el, type, time, slot, klasse) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
 
-    // Abbrechen, wenn nur geklickt, aber nichts geändert wurde
-    if (newVal === "dummy_for_change" || newVal === oldState) {
-        // Dropdown optisch zurücksetzen auf das, was in der Kachel steht
-        el.value = (oldState === "ausfall" || oldState === "leer") ? "" : oldState;
+    // 1. Abbruch, wenn nichts geändert wurde oder dummy aktiv ist
+    if (newVal === "dummy_for_change" || newVal === oldState || newVal === "") {
+        if (newVal !== "") el.value = ""; // Menü zurücksetzen
         return; 
     }
 
-    // A: RESET (--- gewählt)
-    if (newVal === "" || newVal === "---") {
+    let finalRes = ""; // Was am Ende in der Zelle stehen soll
+
+    // A: TOTAL-RESET (--- gewählt)
+    if (newVal === "---") {
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         if(parent.querySelector('.res')) parent.querySelector('.res').innerText = "";
         
-        // Das jeweils andere Dropdown in der Kachel auch leeren
+        // Das jeweils andere Dropdown leeren
         const other = parent.querySelector(type === 'main' ? '.extra-select' : 'select:not(.extra-select)');
         if (other) other.value = "";
-
-        finalizeEntry(r, c, time, slot, klasse); // Speichert nur die Klasse (Ur-Zustand)
+        
+        finalRes = ""; 
     } 
     
-    // B: AUSFALL gewählt
+    // B: AUSFALL gewählt (aus dem Extra-Menü)
     else if (newVal === "ausfall") {
         parent.classList.add('ausfall-mode');
         parent.style.backgroundColor = "";
         if(parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
         
+        // Hallen-Dropdown leeren
         const mainSelect = parent.querySelector('select:not(.extra-select)');
         if (mainSelect) mainSelect.value = "";
         
-        finalizeEntry(r, c, time, slot, klasse + " | Ausfall");
+        finalRes = "Ausfall";
         if (typeof triggerNews === "function") triggerNews("ausfall", parseInt(slot), klasse);
     }
 
-    // C: HALLE/OUTDOOR gewählt
-    else {
+    // C: NORMALE HALLE / OUTDOOR gewählt
+    else if (newVal !== "kommentar" && newVal !== "delete_comment" && newVal !== "perma_delete") {
         parent.classList.remove('ausfall-mode');
         if(parent.querySelector('.res')) parent.querySelector('.res').innerText = newVal;
         parent.style.backgroundColor = configFarben[newVal] || "";
         
+        // Extra-Dropdown leeren
         const extraSelect = parent.querySelector('.extra-select');
         if (extraSelect) extraSelect.value = "";
 
-        finalizeEntry(r, c, time, slot, klasse + " | " + newVal);
+        finalRes = newVal;
         
-        // Outdoor News Check
         if (newVal.includes("Outdoor") && typeof triggerNews === "function") {
             triggerNews("outdoor", parseInt(slot), klasse);
         }
     }
-    
-    // Speicher-Button Animation
+
+    // --- JETZT SPEICHERN ---
+    // Wir bauen den String: "Klasse | Halle | Kommentar"
+    let currentKommentar = ""; 
+    // Falls ein Kommentar-Stift existiert, müssen wir ihn im String erhalten!
+    // (Diese Logik müsstest du eventuell an deine buildFinalValue anpassen)
+    let finalString = finalRes === "" ? klasse : klasse + " | " + finalRes;
+
+    finalizeEntry(r, c, time, slot, finalString);
+
+    // --- DER FIX FÜR DAS "KLEBENDE" MENÜ ---
+    // Wir setzen das Dropdown, das gerade benutzt wurde, wieder auf "---"
+    setTimeout(() => { el.value = ""; }, 100); 
+
+    // Speicher-Button zeigen
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         saveBtn.style.display = 'inline-flex';
