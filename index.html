@@ -805,10 +805,13 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
 // ------------STUNDENPLAN LADEN------------
 
-        async function loadPlan() {
+async function loadPlan() {
     const dp = document.getElementById('datePicker');
-    
-    // 1. Plan laden und Prüfung auf ungespeicherte Änderungen
+    const container = document.getElementById('plan');
+    const loader = document.getElementById('globalLoader');
+    const sBtn = document.getElementById('saveBtn');
+
+    // 1. Prüfung auf ungespeicherte Änderungen
     if (pendingChanges.length > 0) {
         if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
             dp.value = lastStableDate; 
@@ -819,42 +822,37 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
-    // 2. RESET: Save-Button verstecken und Liste leeren
-    const sBtn = document.getElementById('saveBtn');
+    // 2. RESET: UI und Datenzustand
     if (sBtn) {
         sBtn.style.display = 'none';
         sBtn.classList.remove('needs-save', 'success', 'is-loading');
         sBtn.innerText = "SAVE"; 
     }
     pendingChanges = []; 
-
     lastStableDate = dateVal; 
+    
+    container.innerHTML = ""; 
+    loader.style.display = 'block'; 
     updateNavButtons();
 
-
-    // 3. Vorbereitung der neuen Tabelle       
-    const container = document.getElementById('plan');
-    container.innerHTML = ""; // Tabelle leeren
-    document.getElementById('globalLoader').style.display = 'block'; // Loader an
-            
+    // 3. Zeit-Validierung
     const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
     const heute = new Date(); heute.setHours(12,0,0,0);
     const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
     
-    // 4. Validierung der Daten
     if (dateObj < heute) { 
         container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; 
-        document.getElementById('globalLoader').style.display = 'none'; 
+        loader.style.display = 'none'; 
         return; 
     }
     if (dateObj > vierWochen) { 
         container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; 
-        document.getElementById('globalLoader').style.display = 'none'; 
+        loader.style.display = 'none'; 
         return; 
     }
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; 
-        document.getElementById('globalLoader').style.display = 'none'; 
+        loader.style.display = 'none'; 
         return; 
     }
     
@@ -864,71 +862,83 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         
         if (json.error === "SPERRE") {
             container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
-            document.getElementById('globalLoader').style.display = 'none';
             return;
         }
 
-        // 5. Plan-Logik        
-        container.innerHTML = ""; 
+        // 4. Daten-Verarbeitung
         currentPlanData = json.data; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
-        const data = json.data, options = json.options;
+        
+        const data = json.data;
+        const options = json.options;
         configFarben = {}; 
         options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
+        let html = ""; // Sammel-Variable für bessere Performance
 
-        // 6. Plan füllen    
+        // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
             if (rowIndex === 0) {
-                container.innerHTML += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
+                html += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
             } else {
-                if (rowIndex === 4 || rowIndex === 10) container.innerHTML += `<div class="divider-thin"></div>`;
-                if (rowIndex === 7) container.innerHTML += `<div class="divider-thick"></div>`;
-                container.innerHTML += `<div class="box zeit-box">${row[0]}</div>`;
+                if (rowIndex === 4 || rowIndex === 10) html += `<div class="divider-thin"></div>`;
+                if (rowIndex === 7) html += `<div class="divider-thick"></div>`;
+                
+                html += `<div class="box zeit-box">${row[0]}</div>`;
                 
                 for(let i = 1; i <= 5; i++) {
-                    let belegteHallenInZeileOhneMich = [];
+                    // Hallen-Belegung prüfen
+                    let belegteHallen = [];
                     for (let k = 1; k <= 5; k++) {
                         if (k === i) continue; 
-                        let otherVal = String(row[k] || "").trim();
-                        if (otherVal !== "") {
-                            let resPart = otherVal.split(' | ')[1] || "";
-                            if (resPart && resPart !== "Ausfall") {
-                                belegteHallenInZeileOhneMich.push(resPart);
-                            }
+                        let cellVal = String(row[k] || "").trim();
+                        if (cellVal !== "") {
+                            let rPart = cellVal.split(' | ')[1] || "";
+                            if (rPart && rPart !== "Ausfall") belegteHallen.push(rPart);
                         }
                     }
 
-                    let val = row[i] || "", teile = val.split(' | '), klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
+                    // Zell-Details
+                    let val = row[i] || "", teile = val.split(' | ');
+                    let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                     let isAusfall = (res === "Ausfall");
                     let canEdit = myClasses.some(c => klasse.trim() === c.trim());
-                    let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` : "";
+                    
+                    let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) 
+                        ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` 
+                        : "";
+                    
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    container.innerHTML += `
+                    // HTML für die Kachel
+                    html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
-                            oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" ontouchstart="${canEdit ? 'startTimer(this)' : ''}" ontouchend="clearTimer()" style="background-color: ${ (isAusfall) ? '' : configFarben[res] || ''}">
+                            oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" 
+                            ontouchstart="${canEdit ? 'startTimer(this)' : ''}" 
+                            ontouchend="clearTimer()" 
+                            style="background-color: ${isAusfall ? '' : configFarben[res] || ''}">
+                            
                             ${stiftHtml}
                             <div class="klasse">${klasse}</div>
                             <div class="lehrer-info">${teacher}</div>
                             <div class="res">${res}</div>
+                            
                             ${canEdit ? `
                             <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
                                 <option value="">---</option>
                                 ${options.filter(o => {
                                     const optName = o[0];
                                     if (res === optName) return true;
-                                    let istGesperrt = belegteHallenInZeileOhneMich.some(belegt => {
-                                        let belegtParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        let optParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        return optParts.some(p => belegtParts.includes(p));
+                                    return !belegteHallen.some(belegt => {
+                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                                        return oParts.some(p => bParts.includes(p));
                                     });
-                                    return !istGesperrt;
                                 }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
                             </select>
 
@@ -943,13 +953,13 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
                 }
             }
         });
+        container.innerHTML = html; // Einmaliges Schreiben ins DOM
+
     } catch(e) { 
-        console.error(e); 
-        // ERGÄNZT: Fehlermeldung für den User, falls der Server streikt
+        console.error("Fehler in loadPlan:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
     } finally {
-        // ERGÄNZT: Der Loader wird IMMER ausgeschaltet, egal ob Erfolg oder Fehler
-        document.getElementById('globalLoader').style.display = 'none';
+        loader.style.display = 'none';
         updateNavButtons();
     }
 }
