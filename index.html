@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport111111</title>
+     <title>Reservation Sportdecsdcd</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1110,8 +1110,16 @@ window.addChange = (el, time, slot, klasse) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     
-    // Optik-Update
+    // --- RICHTUNG DROPDOWN -> EXTRA-MENU ---
+    // Falls vorher "Ausfall" über das Extra-Menü aktiv war, entfernen wir den Modus jetzt
     parent.classList.remove('ausfall-mode');
+    
+    // Wir lassen Kommentare (Stift) bestehen, falls vorhanden, 
+    // aber du könntest hier auch parent.querySelector('.stift')?.remove() nutzen,
+    // wenn eine Hallenwahl ALLES (auch Notizen) resetten soll.
+    // ----------------------------------------
+
+    // Optik-Update
     const resDisplay = parent.querySelector('.res');
     if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
     parent.style.backgroundColor = configFarben[res] || ""; 
@@ -1119,11 +1127,10 @@ window.addChange = (el, time, slot, klasse) => {
     // String bauen
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
-    // --- NEU: NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
+    // --- NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
     
     // 1. Zuerst alte News für diesen Slot entfernen (Reset-Logik)
-    // Das stellt sicher, dass keine "Ausfall"-News gesendet wird, 
-    // wenn man sich umentscheidet und jetzt z.B. "Halle 4" wählt.
+    // Löscht z.B. einen "Ausfall"-Trigger, wenn man jetzt eine Halle wählt.
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
     }
@@ -1202,7 +1209,6 @@ window.handleExtraAction = async (el, time, slot) => {
     const klasse = klasseElem ? klasseElem.innerText.trim() : "";
 
     // --- 1. NEWS-WARTESCHLANGE BEREINIGEN (RESET) ---
-    // Wir entfernen bei jeder Aktion im Extra-Menü vorsorglich alte News-Einträge für diesen Slot
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
     }
@@ -1215,6 +1221,10 @@ window.handleExtraAction = async (el, time, slot) => {
         
         const resElem = parent.querySelector('.res');
         if (resElem) resElem.innerText = ""; // Halle/Zusatz leeren
+
+        // NEU: Das Dropdown-Menü (Select) physisch zurücksetzen
+        const mainSelect = parent.querySelector('select');
+        if (mainSelect) mainSelect.value = "";
 
         // Kommentar-Icon entfernen
         let stift = parent.querySelector('.stift');
@@ -1318,6 +1328,10 @@ window.handleExtraAction = async (el, time, slot) => {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
         
+        // NEU: Wenn Ausfall gewählt wird, sollte das Haupt-Dropdown geleert werden
+        const mainSelect = parent.querySelector('select');
+        if (mainSelect) mainSelect.value = "";
+
         if (typeof triggerNews === "function") {
             triggerNews("ausfall", parseInt(c), klasse);
         }
