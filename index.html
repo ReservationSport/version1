@@ -6,7 +6,7 @@
 
     <meta charset="UTF-8">
 
-     <title>Reservation Sport</title>
+     <title>Reservation Sport345</title>
 
 <!-- Icons -->
 
@@ -1369,25 +1369,27 @@ window.prepareSelect = (el) => {
     }
 };
 
-// 2. Die Zentrale Logik: Verarbeitet Änderungen in beide Richtungen
 window.handleUpdate = (el, type, time, slot, klasse) => {
     const val = el.value;
     const parent = el.closest('.box');
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
 
-    // FALL A: RESET (Nutzer wählt "---")
-    if (val === "" || val === "---") {
+    // 1. Abbruch, wenn nur die leere Start-Option oder der dirty_state aktiv ist
+    if (val === "" || val === "dirty_state") return;
+
+    // 2. RESET-Logik (--- gewählt)
+    if (val === "---") {
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "";
         
-        // Beide Dropdowns leeren
+        // Beide Menüs komplett leeren
         parent.querySelectorAll('select').forEach(s => s.value = "");
         
         saveFinal(r, c, time, slot, klasse);
     } 
-    // FALL B: AUSFALL gewählt
+    // 3. AUSFALL Logik
     else if (val === "ausfall") {
         parent.classList.add('ausfall-mode');
         if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
@@ -1398,8 +1400,8 @@ window.handleUpdate = (el, type, time, slot, klasse) => {
         
         saveFinal(r, c, time, slot, klasse + " | Ausfall");
     }
-    // FALL C: HALLE gewählt (kein Kommentar/dirty_state)
-    else if (val !== "dirty_state" && val !== "kommentar") {
+    // 4. HALLE Logik (Normales Dropdown)
+    else if (val !== "kommentar" && val !== "perma_delete") {
         parent.classList.remove('ausfall-mode');
         if (parent.querySelector('.res')) parent.querySelector('.res').innerText = val;
         parent.style.backgroundColor = configFarben[val] || "";
@@ -1410,24 +1412,17 @@ window.handleUpdate = (el, type, time, slot, klasse) => {
         saveFinal(r, c, time, slot, klasse + " | " + val);
     }
 
+    // --- DER ENTSCHEIDENDE FIX: MENÜ-RESET ---
+    // Wir setzen das gerade benutzte Menü nach einer kurzen Verzögerung 
+    // wieder auf die leere Startposition (""), damit es optisch "verschwindet".
+    setTimeout(() => {
+        el.value = ""; 
+    }, 100);
+
     // Speicher-Button UI
     const sBtn = document.getElementById('saveBtn');
-    if (sBtn) { 
-        sBtn.style.display = 'inline-flex'; 
-        sBtn.classList.add('needs-save'); 
-    }
+    if (sBtn) { sBtn.style.display = 'inline-flex'; sBtn.classList.add('needs-save'); }
 };
-
-// 3. Die Speicher-Funktion: Aktualisiert Datenstand und Warteschlange
-window.saveFinal = (r, c, time, slot, finalVal) => {
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-
-    pendingChanges = pendingChanges.filter(ch => ch.slotIndex !== slot);
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-};
-
-
 
 
 
@@ -1857,7 +1852,7 @@ async function loadPlan() {
      
      <option value=""> </option> 
      
-     <option value="---">--- (Reset)</option>
+     <option value="---">---</option>
      
      <option value="ausfall">❌ Ausfall</option>
      <option value="perma_delete">🏆 Schuljahr beendet</option>
