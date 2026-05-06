@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport d</title>
+     <title>Reservation Sport111111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1196,33 +1196,58 @@ function openExtraMenu(el) {
 window.handleExtraAction = async (el, time, slot) => {
     const action = el.value;
     const parent = el.closest('.box'); 
-    const dp = document.getElementById('datePicker'); 
-    
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+    const klasseElem = parent.querySelector('.klasse');
+    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
+
+    // --- 1. NEWS-WARTESCHLANGE BEREINIGEN (RESET) ---
+    // Wir entfernen bei jeder Aktion im Extra-Menü vorsorglich alte News-Einträge für diesen Slot
+    if (typeof pendingNews !== "undefined") {
+        pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
+    }
+
+    // --- 2. LOGIK FÜR RESET (---) ---
     if (action === "" || action === "---") {
+        // Optik komplett zurücksetzen
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        
+        const resElem = parent.querySelector('.res');
+        if (resElem) resElem.innerText = ""; // Halle/Zusatz leeren
+
+        // Kommentar-Icon entfernen
+        let stift = parent.querySelector('.stift');
+        if (stift) stift.remove();
+
+        // Daten auf reine Klasse zurücksetzen
+        let finalVal = klasse; 
+        if (!currentPlanData[r]) currentPlanData[r] = [];
+        currentPlanData[r][c] = finalVal;
+
+        // In pendingChanges speichern
+        pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+
+        // Speicher-Button triggern
+        const saveBtn = document.getElementById('saveBtn');
+        if (saveBtn) {
+            saveBtn.style.display = 'inline-flex';
+            saveBtn.classList.add('needs-save');
+        }
+
         el.value = "";
         closeAllExtraMenus();
         return; 
     }
 
-    const r = parent.getAttribute('data-row');
-    const c = parent.getAttribute('data-col');
-    const klasseElem = parent.querySelector('.klasse');
-    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
-    
-    // --- NEU: NEWS-WARTESCHLANGE BEREINIGEN (RESET) ---
-    // Sobald eine Aktion im Extra-Menü gewählt wird, entfernen wir 
-    // vorsorglich eine alte News für diesen Slot, um "Leichen" zu vermeiden.
-    if (typeof pendingNews !== "undefined") {
-        pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
-    }
-    // --------------------------------------------------
-
+    // --- 3. ÜBRIGE VARIABLEN VORBEREITEN ---
     let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
     let parts = fullString.split('|').map(s => s.trim());
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // --- LOGIK FÜR DIE AKTIONEN ---
+    // --- 4. AKTIONEN LOGIK ---
 
     if (action === "perma_delete") {
         const confirmed = await showCustomConfirm(
@@ -1244,7 +1269,6 @@ window.handleExtraAction = async (el, time, slot) => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
                         
-                        // NEWS DIREKTVERSAND (Perma-Delete wartet nicht auf Save-Button)
                         const dateVal = document.getElementById('datePicker').value;
                         const recipients = getAffectedColleagues(parseInt(c));
                         
@@ -1294,7 +1318,6 @@ window.handleExtraAction = async (el, time, slot) => {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
         
-        // NEWS-TRIGGER: Ausfall (wird hier wieder zur Warteschlange hinzugefügt)
         if (typeof triggerNews === "function") {
             triggerNews("ausfall", parseInt(c), klasse);
         }
@@ -1327,7 +1350,7 @@ window.handleExtraAction = async (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // --- FINALES UPDATE ---
+    // --- 5. FINALES UPDATE (Optik & Daten) ---
     if (neueHalle === "Ausfall") {
         parent.style.backgroundColor = ""; 
     } else {
