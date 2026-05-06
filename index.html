@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sportsxs scs d</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1119,18 +1119,32 @@ window.addChange = (el, time, slot, klasse) => {
     // String bauen
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
+    // --- NEU: NEWS TRIGGER FÜR OUTDOOR ---
+    // Wir prüfen, ob der gewählte Wert (res) das Wort "Outdoor" enthält
+    if (res && res.toString().includes("Outdoor")) {
+        console.log("Outdoor-Aktion erkannt für:", res);
+        if (typeof triggerNews === "function") {
+            // Wir extrahieren die Klasse: Entweder aus dem Parameter 'klasse' 
+            // oder aus dem ersten Teil von 'res'
+            const newsKlasse = klasse || res.split('|')[0].trim();
+            triggerNews("outdoor", parseInt(slot), newsKlasse);
+        }
+    }
+    // -------------------------------------
+
     // Datenstand aktualisieren
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
     // In die Speicherliste (Double-Entry verhindern)
-    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); // Optional: Falls man die gleiche Stunde mehrfach ändert
+    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
     pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
 
     // Button-Animation
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
-        saveBtn.style.display = 'block';
+        // Nutze inline-flex für dein CSS (Spinner-Zentrierung)
+        saveBtn.style.display = 'inline-flex'; 
         void saveBtn.offsetWidth; 
         saveBtn.classList.add('needs-save');
     }
