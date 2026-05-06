@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport11111</title>
+     <title>Reservation Sport8078</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -979,11 +979,13 @@ async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
-    // 1. UI-Startzustand: Loader an, Button sperren
+    // 1. UI-Startzustand
     if (gLoader) gLoader.style.display = 'block';
+    
+    // Wir entfernen 'needs-save' (das Pulsieren) und setzen 'is-loading' (für den Spinner)
+    btn.classList.remove('needs-save', 'success');
     btn.classList.add('is-loading');
     btn.disabled = true;
-    btn.innerText = "Speichere..."; 
 
     try { 
         const dateVal = document.getElementById('datePicker').value;
@@ -1003,54 +1005,45 @@ async function saveChanges() {
 
         // 3. Erfolgskontrolle
         if (result.status === "success") {
-            
-            // WICHTIG: Hier ist jetzt ALLES weg, was News betrifft.
-            // Keine Schleifen über Benachrichtigungen mehr.
-            
-            pendingChanges = []; // Liste der Änderungen leeren
+            pendingChanges = []; // Änderungen leeren
             
             if (gLoader) gLoader.style.display = 'none';
             
-            // Visuelles Feedback für den User
-            btn.classList.remove('is-loading', 'needs-save');
+            // Visuelles Feedback via CSS
+            // 'is-loading' weg -> Spinner verschwindet
+            // 'success' dazu -> Dein CSS zeigt den grünen Rand und den Haken via ::before
+            btn.classList.remove('is-loading');
             btn.classList.add('success'); 
-            btn.innerText = "Gespeichert!"; 
 
             // Button nach 1,5 Sek. wieder verstecken und zurücksetzen
             setTimeout(() => { 
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
-                btn.innerText = "SAVE"; 
                 btn.disabled = false;
+                // Hinweis: btn.innerText bleibt durchgehend "SAVE" im HTML, 
+                // aber dein CSS macht ihn bei 'is-loading' transparent 
+                // und überdeckt ihn bei 'success' mit dem Haken.
             }, 1500); 
 
         } else { 
-            // Falls der Server eine Fehlermeldung schickt (z.B. falsches Passwort)
             throw new Error(result.msg || "Server Error"); 
         }
 
     } catch (e) { 
-        // 4. Fehlerbehandlung (Internet weg, Server down, etc.)
+        // 4. Fehlerbehandlung
         console.error("Speicherfehler:", e);
         
         if (gLoader) gLoader.style.display = 'none';
         
         btn.classList.remove('is-loading');
         btn.disabled = false;
-        btn.style.color = "#ff4757"; 
-        btn.innerText = "Fehler!"; 
         
-        // Nach 2 Sek. den Button wieder auf "SAVE" setzen, damit man es nochmal probieren kann
-        setTimeout(() => { 
-            btn.innerText = "SAVE"; 
-            btn.style.color = ""; 
-            if(pendingChanges.length > 0) {
-                btn.classList.add('needs-save');
-            }
-        }, 2000);
+        // Bei Fehler lassen wir das 'needs-save' wieder aufleuchten
+        btn.classList.add('needs-save');
+        alert("Fehler beim Speichern: " + e.message);
     }
 }
-    
+
 window.saveChanges = saveChanges;
 
     
