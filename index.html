@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sportdcece</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -722,7 +722,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         const url = "https://script.google.com/macros/s/AKfycbxnKFUWoNuF_5o98GIqj6l6KsydUNgCClXOR0Qzet9Z136lyzmWY2ozm7d_354e_JWB/exec"; 
         let pendingChanges = [], configFarben = {}, userPw = "", userKuerzel = "", pressTimer;
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
-
+        let pendingNews = [];
 
  // ------------LOGIN RESERVATION------------
         
@@ -983,7 +983,6 @@ async function saveChanges() {
     // 1. UI-Startzustand
     if (gLoader) gLoader.style.display = 'block';
     
-    // Wir entfernen 'needs-save' (das Pulsieren) und setzen 'is-loading' (für den Spinner)
     btn.classList.remove('needs-save', 'success');
     btn.classList.add('is-loading');
     btn.disabled = true;
@@ -991,7 +990,7 @@ async function saveChanges() {
     try { 
         const dateVal = document.getElementById('datePicker').value;
         
-        // 2. Der reine Datenversand
+        // 2. Der reine Datenversand (Plan-Änderungen)
         const response = await fetch(url, { 
             method: "POST", 
             body: JSON.stringify({ 
@@ -1006,13 +1005,29 @@ async function saveChanges() {
 
         // 3. Erfolgskontrolle
         if (result.status === "success") {
-            pendingChanges = []; // Änderungen leeren
+            
+            // --- NEU: NEWS-WARTESCHLANGE ABARBEITEN ---
+            if (pendingNews && pendingNews.length > 0) {
+                for (let newsItem of pendingNews) {
+                    try {
+                        await fetch(url, {
+                            method: "POST",
+                            body: JSON.stringify(newsItem)
+                        });
+                    } catch (newsError) {
+                        console.error("Einzelne News konnte nicht gesendet werden:", newsError);
+                        // Wir machen trotzdem weiter, damit die App nicht hängen bleibt
+                    }
+                }
+                pendingNews = []; // News-Liste nach Versand leeren
+            }
+            // ------------------------------------------
+
+            pendingChanges = []; // Plan-Änderungen leeren
             
             if (gLoader) gLoader.style.display = 'none';
             
             // Visuelles Feedback via CSS
-            // 'is-loading' weg -> Spinner verschwindet
-            // 'success' dazu -> Dein CSS zeigt den grünen Rand und den Haken via ::before
             btn.classList.remove('is-loading');
             btn.classList.add('success'); 
 
@@ -1021,9 +1036,6 @@ async function saveChanges() {
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
                 btn.disabled = false;
-                // Hinweis: btn.innerText bleibt durchgehend "SAVE" im HTML, 
-                // aber dein CSS macht ihn bei 'is-loading' transparent 
-                // und überdeckt ihn bei 'success' mit dem Haken.
             }, 1500); 
 
         } else { 
@@ -1164,7 +1176,7 @@ function openExtraMenu(el) {
 
 window.handleExtraAction = async (el, time, slot) => {
     const action = el.value;
-    const parent = el.closest('.box'); // Sicherer als parentElement
+    const parent = el.closest('.box'); 
     const dp = document.getElementById('datePicker'); 
     
     if (action === "" || action === "---") {
@@ -1183,7 +1195,7 @@ window.handleExtraAction = async (el, time, slot) => {
     let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
     let neueHalle = parent.querySelector('.res').innerText.trim();
 
-    // Logik für die Aktionen
+    // --- LOGIK FÜR DIE AKTIONEN ---
 
     if (action === "perma_delete") {
         const confirmed = await showCustomConfirm(
@@ -1205,6 +1217,11 @@ window.handleExtraAction = async (el, time, slot) => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
                         
+                        // NEWS-TRIGGER: Schuljahr beendet (in Warteschlange)
+                        if (typeof triggerNews === "function") {
+                            triggerNews("beendet", parseInt(c), klasse);
+                        }
+
                         const gLoader = document.getElementById('globalLoader');
                         if (gLoader) gLoader.style.display = 'block';
                         const planContainer = document.getElementById('plan');
@@ -1230,6 +1247,11 @@ window.handleExtraAction = async (el, time, slot) => {
     else if (action === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
+        
+        // NEWS-TRIGGER: Ausfall (in Warteschlange)
+        if (typeof triggerNews === "function") {
+            triggerNews("ausfall", parseInt(c), klasse);
+        }
     } 
     
     else if (action === "kommentar") {
@@ -1246,7 +1268,7 @@ window.handleExtraAction = async (el, time, slot) => {
                 span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
                 parent.appendChild(span);
             } else { 
-                commentPart = ""; // Aktiv löschen
+                commentPart = ""; 
             }
         } else { 
             el.value = ""; closeAllExtraMenus(); return; 
@@ -1259,7 +1281,7 @@ window.handleExtraAction = async (el, time, slot) => {
         if (stift) stift.remove();
     }
 
-    // Finales Update
+    // --- FINALES UPDATE ---
     if (neueHalle === "Ausfall") {
         parent.style.backgroundColor = ""; 
     } else {
@@ -1273,13 +1295,13 @@ window.handleExtraAction = async (el, time, slot) => {
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
-    // In pendingChanges speichern (alte Einträge für diesen Slot überschreiben)
+    // In pendingChanges speichern
     pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
     
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
-        saveBtn.style.display = 'block';
+        saveBtn.style.display = 'inline-flex'; // Für die Zentrierung des Spinners
         void saveBtn.offsetWidth; 
         saveBtn.classList.add('needs-save');
     }
@@ -1409,9 +1431,64 @@ window.closeNews = () => {
     document.getElementById('newsSidebar').style.display = 'none';
 };
 
+// Betroffene Kollegen suchen
+    function getAffectedColleagues(slotIndex) {
+    const colleagues = [];
+    // Wir nutzen 'allData', das aktuelle Grid vom Server
+    
+    for (let s = 1; s <= 5; s++) {
+        if (s === slotIndex) continue; // Den "Ausfall-Slot" selbst ignorieren
+
+        allData.forEach((row) => {
+            let cellContent = row[s] ? row[s].toString().trim() : "";
+            
+            if (cellContent !== "" && !cellContent.includes("U21")) {
+                // Wir nehmen nur den Teil VOR dem ersten Leerzeichen oder Pipe, 
+                // um die reine Klasse zu bekommen (z.B. aus "6a | Ausfall" wird "6a")
+                let klasse = cellContent.split(" ")[0].split("|")[0].trim();
+                let lehrerKuerzel = allClassTeachers[klasse];
+                
+                if (lehrerKuerzel && !colleagues.includes(lehrerKuerzel)) {
+                    colleagues.push(lehrerKuerzel);
+                }
+            }
+        });
+    }
+    return colleagues.join(",");
+}
+
+// News erstellen
+    function triggerNews(type, slotIndex, klasse) {
+    const dateVal = document.getElementById('datePicker').value;
+    
+    // Bestehende News für diesen Slot in der Warteschlange löschen (Korrektur-Schutz)
+    pendingNews = pendingNews.filter(n => n.slot !== slotIndex);
+
+    let newsText = "";
+    if (type === "ausfall") newsText = `Halle frei: ${klasse} fällt aus.`;
+    if (type === "outdoor") newsText = `Halle frei: ${klasse} ist Outdoor.`;
+    if (type === "beendet") newsText = `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`;
+
+    // Das News-Objekt vorbereiten
+    pendingNews.push({
+        mode: "saveNews",
+        id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000), 
+        datum: dateVal,
+        slot: slotIndex,
+        tagIndex: new Date(dateVal).getDay(),
+        klasse: klasse,
+        verfasser: userKuerzel,
+        empfaenger: getAffectedColleagues(slotIndex), // Empfänger jetzt schon ermitteln
+        text: newsText,
+        pw: userPw
+    });
+    
+    console.log("News in Warteschlange: ", newsText);
+}
 
 
 
+    
     
 </script>
 
