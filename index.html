@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport 1234</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -968,12 +968,14 @@ async function saveChanges() {
         if (result.status === "success") {
             
             // --- NEU: NEWS IN DIE DATENBANK SCHREIBEN ---
-            // Wir prüfen, ob Benachrichtigungen geparkt wurden (z.B. durch Ausfall-Klick)
             if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
                 pendingNotifications.forEach(n => {
-                    // Hier nutzen wir jetzt die neue, modulare Funktion
                     if (typeof saveToNewsDB === "function") {
-                        saveToNewsDB(n.type, n.klasse, n.r, n.datum);
+                        try {
+                            saveToNewsDB(n.type, n.klasse, n.r, n.datum);
+                        } catch (newsErr) {
+                            console.error("News-Fehler abgefangen:", newsErr);
+                        }
                     }
                 });
                 pendingNotifications = []; // Liste nach Erfolg leeren
@@ -1004,6 +1006,7 @@ async function saveChanges() {
 
     } catch (e) { 
         // 4. FEHLER-HANDLING
+        console.error("Speicherfehler:", e);
         if (gLoader) gLoader.style.display = 'none';
         btn.classList.remove('is-loading');
         btn.disabled = false;
