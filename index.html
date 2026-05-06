@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -965,20 +965,18 @@ async function saveChanges() {
 
         if (result.status === "success") {
             
-            // --- NEWS-LOGIK MIT VERBESSERTEM ABGLEICH ---
+            // --- NEWS-LOGIK MIT FLEXIBLER SUCHE ---
 if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
     pendingNotifications.forEach(n => {
-        // Wir suchen die Änderung im Paket
-        // Falls dein pendingChanges kein 'slotIndex' hat, prüfen wir hier alternativ 'c.slot'
-        const changeStillExists = pendingChanges.find(c => 
-            (c.slotIndex === n.r || c.slot === n.r)
-        );
+        // Wir suchen die Änderung und loggen zur Sicherheit das ganze Objekt
+        const changeStillExists = pendingChanges.find(c => {
+            // Wir prüfen alle Möglichkeiten: slotIndex, slot oder die Zeit (time)
+            // n.r ist die Zeilennummer/Slot-Index
+            return c.slotIndex === n.r || c.slot === n.r || c.time == n.r;
+        });
 
-        console.log("Prüfe News für:", n.klasse, "Gefundene Änderung:", changeStillExists);
-
-        // Wir prüfen, ob überhaupt eine Änderung da ist. 
-        // Wenn ja, schicken wir die News ab (da wir wissen, dass n.type 'Ausfall' ist)
         if (changeStillExists) {
+            console.log("Treffer! News wird gesendet für:", n.klasse);
             if (typeof saveToNewsDB === "function") {
                 try {
                     saveToNewsDB(n.type, n.klasse, n.r, n.datum);
@@ -987,7 +985,8 @@ if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length >
                 }
             }
         } else {
-            console.warn(`News für ${n.klasse} am Slot ${n.r} verworfen, da keine passende Änderung in pendingChanges gefunden wurde.`);
+            // Falls es immer noch nicht klappt, zeigen wir an, was ÜBERHAUPT in pendingChanges steht
+            console.warn(`Kein Match für Slot ${n.r}. In pendingChanges vorhanden:`, pendingChanges);
         }
     });
     pendingNotifications = []; 
