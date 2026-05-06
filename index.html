@@ -1353,16 +1353,18 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 
 
 
-// 1. Die Vorbereitung: Setzt das Dropdown auf "dirty_state", wenn die Zelle belegt ist
 window.prepareSelect = (el) => {
     const parent = el.closest('.box');
     const isAusfall = parent.classList.contains('ausfall-mode');
-    const currentRes = parent.querySelector('.res') ? parent.querySelector('.res').innerText.trim() : "";
+    // Wir prüfen, ob Text in der Ressourcen-Anzeige steht
+    const resText = parent.querySelector('.res') ? parent.querySelector('.res').innerText.trim() : "";
 
-    // Wenn die Zelle NICHT leer ist (Halle oder Ausfall), aber das Dropdown auf "---" steht
-    const isActuallyEmpty = (!isAusfall && currentRes === "");
-    
-    if (!isActuallyEmpty && (el.value === "" || el.value === "---")) {
+    // Wenn die Zelle NICHT leer ist (entweder rot durch Ausfall oder Text drin)
+    const hasContent = isAusfall || (resText !== "" && resText !== "---");
+
+    // Falls Inhalt da ist, zwingen wir das Dropdown auf den unsichtbaren Wert,
+    // damit die Wahl von "---" (Leerwert) eine echte Änderung darstellt.
+    if (hasContent && (el.value === "" || el.value === "---")) {
         el.value = "dirty_state";
     }
 };
@@ -1851,13 +1853,17 @@ async function loadPlan() {
     </select>
 
     <select class="extra-select" onfocus="prepareSelect(this)" onclick="event.stopPropagation()" onchange="handleUpdate(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
-         <option value="dirty_state" style="display:none;"></option>
-         <option value="">---</option>
-         <option value="ausfall">❌ Ausfall</option>
-         <option value="perma_delete">🏆 Schuljahr beendet</option>
-         <option value="kommentar">📝 Notiz hinzufügen</option>
-         <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-    </select>
+     <option value="dirty_state" style="display:none;"></option>
+     
+     <option value=""> </option> 
+     
+     <option value="---">--- (Reset)</option>
+     
+     <option value="ausfall">❌ Ausfall</option>
+     <option value="perma_delete">🏆 Schuljahr beendet</option>
+     <option value="kommentar">📝 Notiz hinzufügen</option>
+     <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+</select>
 ` : ''}
 
                     </div>`;
