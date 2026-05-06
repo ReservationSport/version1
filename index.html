@@ -6,7 +6,7 @@
 
     <meta charset="UTF-8">
 
-     <title>Reservation Sport111111</title>
+     <title>Reservation Sport</title>
 
 <!-- Icons -->
 
@@ -1352,6 +1352,84 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let pendingNews = [];
 
 
+
+// 1. Die Vorbereitung: Setzt das Dropdown auf "dirty_state", wenn die Zelle belegt ist
+window.prepareSelect = (el) => {
+    const parent = el.closest('.box');
+    const isAusfall = parent.classList.contains('ausfall-mode');
+    const currentRes = parent.querySelector('.res') ? parent.querySelector('.res').innerText.trim() : "";
+
+    // Wenn die Zelle NICHT leer ist (Halle oder Ausfall), aber das Dropdown auf "---" steht
+    const isActuallyEmpty = (!isAusfall && currentRes === "");
+    
+    if (!isActuallyEmpty && (el.value === "" || el.value === "---")) {
+        el.value = "dirty_state";
+    }
+};
+
+// 2. Die Zentrale Logik: Verarbeitet Änderungen in beide Richtungen
+window.handleUpdate = (el, type, time, slot, klasse) => {
+    const val = el.value;
+    const parent = el.closest('.box');
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+
+    // FALL A: RESET (Nutzer wählt "---")
+    if (val === "" || val === "---") {
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "";
+        
+        // Beide Dropdowns leeren
+        parent.querySelectorAll('select').forEach(s => s.value = "");
+        
+        saveFinal(r, c, time, slot, klasse);
+    } 
+    // FALL B: AUSFALL gewählt
+    else if (val === "ausfall") {
+        parent.classList.add('ausfall-mode');
+        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
+        parent.style.backgroundColor = "";
+        
+        const mainSelect = parent.querySelector('select:not(.extra-select)');
+        if (mainSelect) mainSelect.value = "";
+        
+        saveFinal(r, c, time, slot, klasse + " | Ausfall");
+    }
+    // FALL C: HALLE gewählt (kein Kommentar/dirty_state)
+    else if (val !== "dirty_state" && val !== "kommentar") {
+        parent.classList.remove('ausfall-mode');
+        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = val;
+        parent.style.backgroundColor = configFarben[val] || "";
+        
+        const extraSelect = parent.querySelector('.extra-select');
+        if (extraSelect) extraSelect.value = "";
+        
+        saveFinal(r, c, time, slot, klasse + " | " + val);
+    }
+
+    // Speicher-Button UI
+    const sBtn = document.getElementById('saveBtn');
+    if (sBtn) { 
+        sBtn.style.display = 'inline-flex'; 
+        sBtn.classList.add('needs-save'); 
+    }
+};
+
+// 3. Die Speicher-Funktion: Aktualisiert Datenstand und Warteschlange
+window.saveFinal = (r, c, time, slot, finalVal) => {
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+
+    pendingChanges = pendingChanges.filter(ch => ch.slotIndex !== slot);
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+};
+
+
+
+
+
+    
  // ------------LOGIN RESERVATION------------
 
        
@@ -1758,45 +1836,29 @@ async function loadPlan() {
                            
 
                             ${canEdit ? `
+    <select onfocus="prepareSelect(this)" onclick="event.stopPropagation()" onchange="handleUpdate(this, 'main', '${row[0]}', ${i}, '${klasse}')">
+        <option value="dirty_state" style="display:none;"></option>
+        <option value="">---</option>
+        ${options.filter(o => {
+            const optName = o[0];
+            if (res === optName) return true;
+            return !belegteHallen.some(belegt => {
+                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                return oParts.some(p => bParts.includes(p));
+            });
+        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+    </select>
 
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-
-                                <option value="">---</option>
-
-                                ${options.filter(o => {
-
-                                    const optName = o[0];
-
-                                    if (res === optName) return true;
-
-                                    return !belegteHallen.some(belegt => {
-
-                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-
-                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-
-                                        return oParts.some(p => bParts.includes(p));
-
-                                    });
-
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-
-                            </select>
-
-
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-
-                                 <option value="">---</option>
-
-                                 <option value="ausfall">❌ Ausfall</option>
-
-                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
-
-                                 <option value="kommentar">📝 Notiz hinzufügen</option>
-
-                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-
-                            </select>` : ''}
+    <select class="extra-select" onfocus="prepareSelect(this)" onclick="event.stopPropagation()" onchange="handleUpdate(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
+         <option value="dirty_state" style="display:none;"></option>
+         <option value="">---</option>
+         <option value="ausfall">❌ Ausfall</option>
+         <option value="perma_delete">🏆 Schuljahr beendet</option>
+         <option value="kommentar">📝 Notiz hinzufügen</option>
+         <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+    </select>
+` : ''}
 
                     </div>`;
 
