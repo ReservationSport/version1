@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport111111</title>
+     <title>Reservation Sport1</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -724,6 +724,115 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
         let pendingNews = [];
 
+    // SCHRITT 1: Der Snapshot beim Anklicken
+window.createSnapshot = (el) => {
+    const parent = el.closest('.box');
+    const resText = parent.querySelector('.res') ? parent.querySelector('.res').innerText.trim() : "";
+    const isAusfall = parent.classList.contains('ausfall-mode');
+
+    // Wir ermitteln den IST-Zustand der Kachel
+    let currentState = "leer";
+    if (isAusfall) {
+        currentState = "ausfall";
+    } else if (resText !== "" && resText !== "---") {
+        currentState = resText;
+    }
+
+    // Snapshot im Element speichern, damit wir später vergleichen können
+    el.dataset.snapshot = currentState;
+
+    // TRICK: Damit "---" (Leerwert) immer ein onchange auslöst, wenn die Zelle nicht leer ist
+    if (currentState !== "leer" && el.value === "") {
+        el.value = "dummy_for_change"; 
+        if (!el.querySelector('option[value="dummy_for_change"]')) {
+            const opt = document.createElement("option");
+            opt.value = "dummy_for_change";
+            opt.text = ""; // Unsichtbar für den User
+            opt.style.display = "none";
+            el.appendChild(opt);
+        }
+    }
+};
+
+// SCHRITT 2: Die Auswertung bei einer Auswahl
+window.processChange = (el, type, time, slot, klasse) => {
+    const newVal = el.value;
+    const oldState = el.dataset.snapshot;
+    const parent = el.closest('.box');
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+
+    // Abbrechen, wenn nur geklickt, aber nichts geändert wurde
+    if (newVal === "dummy_for_change" || newVal === oldState) {
+        // Dropdown optisch zurücksetzen auf das, was in der Kachel steht
+        el.value = (oldState === "ausfall" || oldState === "leer") ? "" : oldState;
+        return; 
+    }
+
+    // A: RESET (--- gewählt)
+    if (newVal === "" || newVal === "---") {
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        if(parent.querySelector('.res')) parent.querySelector('.res').innerText = "";
+        
+        // Das jeweils andere Dropdown in der Kachel auch leeren
+        const other = parent.querySelector(type === 'main' ? '.extra-select' : 'select:not(.extra-select)');
+        if (other) other.value = "";
+
+        finalizeEntry(r, c, time, slot, klasse); // Speichert nur die Klasse (Ur-Zustand)
+    } 
+    
+    // B: AUSFALL gewählt
+    else if (newVal === "ausfall") {
+        parent.classList.add('ausfall-mode');
+        parent.style.backgroundColor = "";
+        if(parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
+        
+        const mainSelect = parent.querySelector('select:not(.extra-select)');
+        if (mainSelect) mainSelect.value = "";
+        
+        finalizeEntry(r, c, time, slot, klasse + " | Ausfall");
+        if (typeof triggerNews === "function") triggerNews("ausfall", parseInt(slot), klasse);
+    }
+
+    // C: HALLE/OUTDOOR gewählt
+    else {
+        parent.classList.remove('ausfall-mode');
+        if(parent.querySelector('.res')) parent.querySelector('.res').innerText = newVal;
+        parent.style.backgroundColor = configFarben[newVal] || "";
+        
+        const extraSelect = parent.querySelector('.extra-select');
+        if (extraSelect) extraSelect.value = "";
+
+        finalizeEntry(r, c, time, slot, klasse + " | " + newVal);
+        
+        // Outdoor News Check
+        if (newVal.includes("Outdoor") && typeof triggerNews === "function") {
+            triggerNews("outdoor", parseInt(slot), klasse);
+        }
+    }
+    
+    // Speicher-Button Animation
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'inline-flex';
+        saveBtn.classList.add('needs-save');
+    }
+};
+
+    
+    window.finalizeEntry = (r, c, time, slot, finalVal) => {
+    // Daten im lokalen Speicher aktualisieren
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+
+    // In die Warteschlange für das Backend schieben
+    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+};
+
+
+    
  // ------------LOGIN RESERVATION------------
         
   async function checkLogin() {
@@ -938,26 +1047,36 @@ async function loadPlan() {
                             <div class="res">${res}</div>
                             
                             ${canEdit ? `
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-                                <option value="">---</option>
-                                ${options.filter(o => {
-                                    const optName = o[0];
-                                    if (res === optName) return true;
-                                    return !belegteHallen.some(belegt => {
-                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        return oParts.some(p => bParts.includes(p));
-                                    });
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                            </select>
+    <select 
+        onfocus="createSnapshot(this)" 
+        onclick="event.stopPropagation()" 
+        onchange="processChange(this, 'main', '${row[0]}', ${i}, '${klasse}')">
+        
+        <option value="">---</option>
+        ${options.filter(o => {
+            const optName = o[0];
+            if (res === optName) return true;
+            return !belegteHallen.some(belegt => {
+                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                return oParts.some(p => bParts.includes(p));
+            });
+        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+    </select>
 
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-                                 <option value="">---</option>
-                                 <option value="ausfall">❌ Ausfall</option>
-                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
-                                 <option value="kommentar">📝 Notiz hinzufügen</option>
-                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-                            </select>` : ''}
+    <select 
+        class="extra-select" 
+        onfocus="createSnapshot(this)" 
+        onclick="event.stopPropagation()" 
+        onchange="processChange(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
+        
+         <option value="">---</option>
+         <option value="ausfall">❌ Ausfall</option>
+         <option value="perma_delete">🏆 Schuljahr beendet</option>
+         <option value="kommentar">📝 Notiz hinzufügen</option>
+         <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+    </select>
+` : ''}
                     </div>`;
                 }
             }
