@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport11111</title>
+     <title>Reservation Sport7568679</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -965,31 +965,31 @@ async function saveChanges() {
 
         if (result.status === "success") {
             
-            // --- NEWS-LOGIK FINAL ANGEPASST ---
+            // --- NEWS-LOGIK: KLASSEN-CHECK (Viel sicherer) ---
 if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
     pendingNotifications.forEach(n => {
-        // Wir suchen exakt nach dem Feld 'slotIndex'
-        // Wir nutzen == statt === um String/Zahl-Unterschiede ( "4" vs 4 ) zu ignorieren
-        const changeStillExists = pendingChanges.find(c => c.slotIndex == n.r);
+        
+        // Wir suchen in allen Änderungen nach der Klasse (z.B. "TIPF24B")
+        // und prüfen, ob im neuen Wert auch "Ausfall/Outdoor/beendet" steht.
+        const matchingChange = pendingChanges.find(c => {
+            const inhalt = c.val || "";
+            return inhalt.includes(n.klasse) && 
+                   (inhalt.includes("Ausfall") || inhalt.includes("Outdoor") || inhalt.includes("beendet"));
+        });
 
-        if (changeStillExists) {
-            console.log("✅ Match gefunden für Slot:", n.r);
-            
-            // Wir prüfen, ob im aktuellen Wert wirklich noch "Ausfall", "Outdoor" oder "beendet" steht
-            const val = changeStillExists.val || "";
-            if (val.includes("Ausfall") || val.includes("Outdoor") || val.includes("beendet")) {
-                if (typeof saveToNewsDB === "function") {
-                    try {
-                        saveToNewsDB(n.type, n.klasse, n.r, n.datum);
-                    } catch (newsErr) {
-                        console.error("News-Fehler:", newsErr);
-                    }
+        if (matchingChange) {
+            console.log("✅ Match über Klasse gefunden für:", n.klasse);
+            if (typeof saveToNewsDB === "function") {
+                try {
+                    // Wir nehmen den Slot direkt aus der gefundenen Änderung (matchingChange.slotIndex)
+                    // damit die News-DB den exakt richtigen Index bekommt.
+                    saveToNewsDB(n.type, n.klasse, matchingChange.slotIndex, n.datum);
+                } catch (newsErr) {
+                    console.error("News-Fehler:", newsErr);
                 }
-            } else {
-                console.warn("News abgebrochen: Begriff nicht mehr im Zellen-Text enthalten.");
             }
         } else {
-            console.warn(`❌ Kein Match: Slot ${n.r} (Typ: ${typeof n.r}) wurde in pendingChanges nicht gefunden.`);
+            console.warn(`❌ Keine News gesendet: Für ${n.klasse} wurde kein Ausfall-Status im Speicherpaket gefunden.`);
         }
     });
     pendingNotifications = []; 
