@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -789,19 +789,28 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         }
     }
 }    
-       
- // ------------EXTRAMENU SCHLIESSEN------------
-        
-        function closeAllExtraMenus() {
-            document.querySelectorAll('.extra-select').forEach(sel => {
-                sel.style.zIndex = "-1";
-                sel.style.pointerEvents = "none";
-                sel.style.opacity = "0";
-            });
-        }
 
-      
+    window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
+        window.goToToday = () => {
+            const dp = document.getElementById('datePicker');
+            const today = new Date();
+            const offset = today.getTimezoneOffset();
+            today.setMinutes(today.getMinutes() - offset);
+            const dateStr = today.toISOString().split('T')[0];
+            dp.value = dateStr;
+            loadPlan();
+        };
 
+// ------------AKTUELLER TAG------------
+  
+        document.addEventListener('DOMContentLoaded', () => { 
+            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset); 
+            const dateStr = today.toISOString().split('T')[0];
+            document.getElementById('datePicker').value = dateStr;
+            lastStableDate = dateStr;
+        });
+
+    
 // ------------STUNDENPLAN LADEN------------
 
 async function loadPlan() {
@@ -964,25 +973,26 @@ async function loadPlan() {
 }
 
 
-
-
-        
+// ------------SPEICHERN------------
 
 async function saveChanges() {
     const btn = document.getElementById('saveBtn');
     const gLoader = document.getElementById('globalLoader'); 
     
+    // 1. UI-Startzustand: Loader an, Button sperren
     if (gLoader) gLoader.style.display = 'block';
-    
     btn.classList.add('is-loading');
     btn.disabled = true;
-    btn.innerText = "SAVE"; 
+    btn.innerText = "Speichere..."; 
 
     try { 
+        const dateVal = document.getElementById('datePicker').value;
+        
+        // 2. Der reine Datenversand
         const response = await fetch(url, { 
             method: "POST", 
             body: JSON.stringify({ 
-                date: document.getElementById('datePicker').value, 
+                date: dateVal, 
                 changes: pendingChanges, 
                 pw: userPw,
                 kuerzel: userKuerzel
@@ -991,47 +1001,22 @@ async function saveChanges() {
         
         const result = await response.json();
 
+        // 3. Erfolgskontrolle
         if (result.status === "success") {
             
-            // --- NEWS-LOGIK: KLASSEN-CHECK (Viel sicherer) ---
-if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length > 0) {
-    pendingNotifications.forEach(n => {
-        
-        // Wir suchen in allen Änderungen nach der Klasse (z.B. "TIPF24B")
-        // und prüfen, ob im neuen Wert auch "Ausfall/Outdoor/beendet" steht.
-        const matchingChange = pendingChanges.find(c => {
-            const inhalt = c.val || "";
-            return inhalt.includes(n.klasse) && 
-                   (inhalt.includes("Ausfall") || inhalt.includes("Outdoor") || inhalt.includes("beendet"));
-        });
-
-        if (matchingChange) {
-            console.log("✅ Match über Klasse gefunden für:", n.klasse);
-            if (typeof saveToNewsDB === "function") {
-                try {
-                    // Wir nehmen den Slot direkt aus der gefundenen Änderung (matchingChange.slotIndex)
-                    // damit die News-DB den exakt richtigen Index bekommt.
-                    saveToNewsDB(n.type, n.klasse, matchingChange.slotIndex, n.datum);
-                } catch (newsErr) {
-                    console.error("News-Fehler:", newsErr);
-                }
-            }
-        } else {
-            console.warn(`❌ Keine News gesendet: Für ${n.klasse} wurde kein Ausfall-Status im Speicherpaket gefunden.`);
-        }
-    });
-    pendingNotifications = []; 
-}
-            // --------------------------------------------
-
-            pendingChanges = []; 
+            // WICHTIG: Hier ist jetzt ALLES weg, was News betrifft.
+            // Keine Schleifen über Benachrichtigungen mehr.
+            
+            pendingChanges = []; // Liste der Änderungen leeren
+            
             if (gLoader) gLoader.style.display = 'none';
             
-            btn.classList.remove('is-loading');
-            btn.classList.remove('needs-save'); 
+            // Visuelles Feedback für den User
+            btn.classList.remove('is-loading', 'needs-save');
             btn.classList.add('success'); 
-            btn.innerText = ""; 
+            btn.innerText = "Gespeichert!"; 
 
+            // Button nach 1,5 Sek. wieder verstecken und zurücksetzen
             setTimeout(() => { 
                 btn.style.display = 'none'; 
                 btn.classList.remove('success'); 
@@ -1040,37 +1025,37 @@ if (typeof pendingNotifications !== 'undefined' && pendingNotifications.length >
             }, 1500); 
 
         } else { 
-            throw new Error("Server Error"); 
+            // Falls der Server eine Fehlermeldung schickt (z.B. falsches Passwort)
+            throw new Error(result.msg || "Server Error"); 
         }
 
     } catch (e) { 
+        // 4. Fehlerbehandlung (Internet weg, Server down, etc.)
         console.error("Speicherfehler:", e);
+        
         if (gLoader) gLoader.style.display = 'none';
+        
         btn.classList.remove('is-loading');
         btn.disabled = false;
         btn.style.color = "#ff4757"; 
-        btn.innerText = "Error"; 
+        btn.innerText = "Fehler!"; 
         
+        // Nach 2 Sek. den Button wieder auf "SAVE" setzen, damit man es nochmal probieren kann
         setTimeout(() => { 
             btn.innerText = "SAVE"; 
-            btn.style.color = "#e67e22"; 
+            btn.style.color = ""; 
             if(pendingChanges.length > 0) {
                 btn.classList.add('needs-save');
             }
         }, 2000);
     }
 }
-
+    
 window.saveChanges = saveChanges;
 
-
-
-        function getExistingComment(r, c) {
-            let val = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-            let teile = val.split(' | ');
-            return (teile[2] && teile[2].startsWith("KOMMENTAR:")) ? teile[2] : "";
-        }
-
+    
+// ------------TEXTSTRING BILDEN------------    
+    
 function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     const parent = document.querySelector(`.box[data-row="${r}"][data-col="${c}"]`);
     const klasse = parent.querySelector('.klasse').innerText.trim();
@@ -1109,193 +1094,50 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     return finalParts.join(" | ");
 }
 
-
-        
+    
+// ------------ÄNDERUNGEN------------    
+    
 window.addChange = (el, time, slot, klasse) => { 
     let res = el.value; 
-    const parent = el.parentElement;
-    const r = parent.getAttribute('data-row'), c = parent.getAttribute('data-col');
-    
-    parent.classList.remove('ausfall-mode');
-    parent.querySelector('.res').innerText = (res === "" || res === "---") ? "" : res; 
-    parent.style.backgroundColor = configFarben[res] || ""; 
-
-    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
-
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
-
-    // --- NEU: TRIGGER FÜR LEUCHTEN ---
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'block';
-        void saveBtn.offsetWidth; // Force Reflow
-        saveBtn.classList.add('needs-save');
-    }
-};
-
-
-
-
-
-window.handleExtraAction = async (el, time, slot) => {
-    const action = el.value;
-    const parent = el.parentElement;
-    const dp = document.getElementById('datePicker'); 
-    
-    // Fall: Auswahl zurücksetzen / Leeren
-    if (action === "" || action === "---") {
-        const r = parent.getAttribute('data-row');
-        const c = parent.getAttribute('data-col');
-        
-        parent.classList.remove('ausfall-mode');
-        parent.style.backgroundColor = "";
-        
-        const resElem = parent.querySelector('.res');
-        if (resElem) resElem.innerText = ""; 
-
-        let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-        let parts = fullString.split('|').map(s => s.trim());
-        let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-        
-        let finalVal = buildFinalValue(r, c, "", commentPart);
-        
-        if (!currentPlanData[r]) currentPlanData[r] = [];
-        currentPlanData[r][c] = finalVal;
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-        document.getElementById('saveBtn').style.display = 'block';
-
-        el.value = "";
-        closeAllExtraMenus();
-        return; 
-    }
-
+    // Sicherer: sucht die Kachel, egal wie tief das Select verschachtelt ist
+    const parent = el.closest('.box'); 
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
-    const klasseElem = parent.querySelector('.klasse');
-    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
     
-    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    let parts = fullString.split('|').map(s => s.trim());
-    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-    let neueHalle = parent.querySelector('.res').innerText.trim();
+    // Optik-Update
+    parent.classList.remove('ausfall-mode');
+    const resDisplay = parent.querySelector('.res');
+    if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
+    parent.style.backgroundColor = configFarben[res] || ""; 
 
-    // --- LOGIK FÜR DIE AKTIONEN ---
+    // String bauen
+    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
-    if (action === "perma_delete") {
-        // 1. Dein neues Custom Confirm im PW-Design aufrufen
-        const confirmed = await showCustomConfirm(
-            "Schuljahr beenden", 
-            `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
-        );
-
-        if (confirmed) {
-            // 2. Wenn bestätigt, PW-Modal für den finalen Check öffnen
-            const modal = document.getElementById('pwModal');
-            const input = document.getElementById('modalPwInput');
-            const btn = document.getElementById('confirmPwBtn');
-
-            if (modal && input && btn) {
-                modal.style.display = 'flex';
-                input.value = '';
-                input.focus();
-
-                btn.onclick = async () => {
-                    if (input.value === userPw) {
-                        modal.style.display = 'none';
-                        
-                        // VISUELLER LOCK: Tabelle leeren & Loader an
-                        const gLoader = document.getElementById('globalLoader');
-                        if (gLoader) gLoader.style.display = 'block';
-                        const planContainer = document.getElementById('plan');
-                        if (planContainer) planContainer.innerHTML = ""; 
-
-                        // Nachricht für Zentrale parken
-                        pendingNotifications.push({ type: "Outdoor/Ende", klasse, r, datum: dp.value });
-
-                        // Löschvorgang starten
-                        if (typeof permaDeleteClass === "function") {
-                            await permaDeleteClass(klasse, slot);
-                        }
-                        
-                    } else {
-                        alert("Falsches Passwort!");
-                        input.value = '';
-                        input.focus();
-                    }
-                };
-            }
-        }
-        el.value = ""; 
-        closeAllExtraMenus(); 
-        return;
-    } 
-    
-    else if (action === "ausfall") {
-        neueHalle = "Ausfall";
-        parent.classList.add('ausfall-mode');
-        pendingNotifications.push({ type: "einen Ausfall", klasse, r, datum: dp.value });
-    } 
-    
-    else if (action === "kommentar") {
-        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
-        const text = prompt("Notiz eingeben:", existingText);
-        if (text !== null) {
-            let oldStift = parent.querySelector('.stift');
-            if (oldStift) oldStift.remove();
-            if (text.trim() !== "") {
-                commentPart = "KOMMENTAR:" + text.trim();
-                let span = document.createElement('span');
-                span.className = 'stift';
-                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
-                parent.appendChild(span);
-            } else { commentPart = undefined; }
-        } else { 
-            el.value = ""; closeAllExtraMenus(); return; 
-        }
-    } 
-    
-    else if (action === "delete_comment") {
-        commentPart = ""; 
-        let stift = parent.querySelector('.stift');
-        if (stift) stift.remove();
-    }
-
-    // --- FINALES UPDATE (nur wenn nicht perma_delete) ---
-
-    if (neueHalle !== "" && neueHalle !== "Ausfall") {
-        parent.style.backgroundColor = configFarben[neueHalle] || "";
-    } else if (neueHalle === "Ausfall") {
-        parent.style.backgroundColor = ""; 
-    }
-    
-    const resElem = parent.querySelector('.res');
-    if (resElem) resElem.innerText = neueHalle;
-
-    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+    // Datenstand aktualisieren
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
     
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    
+    // In die Speicherliste (Double-Entry verhindern)
+    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); // Optional: Falls man die gleiche Stunde mehrfach ändert
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
+
+    // Button-Animation
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
         saveBtn.style.display = 'block';
         void saveBtn.offsetWidth; 
         saveBtn.classList.add('needs-save');
     }
-
-    el.value = ""; 
-    closeAllExtraMenus();
 };
 
 
+// ------------EXTRAMENU------------    
+  
 window.startTimer = (el) => { pressTimer = setTimeout(() => { openExtraMenu(el); }, 500); };
 window.clearTimer = () => clearTimeout(pressTimer);
 window.handleContextMenu = (e, el) => { e.preventDefault(); e.stopPropagation(); openExtraMenu(el); };
 
+    
 function openExtraMenu(el) { 
     closeAllExtraMenus();
     const sel = el.querySelector('.extra-select'); 
@@ -1323,29 +1165,166 @@ function openExtraMenu(el) {
     }, 50); 
 }
 
+    
+// ------------ÄNDERUNGEN PER EXTRAMENU------------    
+
+window.handleExtraAction = async (el, time, slot) => {
+    const action = el.value;
+    const parent = el.closest('.box'); // Sicherer als parentElement
+    const dp = document.getElementById('datePicker'); 
+    
+    if (action === "" || action === "---") {
+        el.value = "";
+        closeAllExtraMenus();
+        return; 
+    }
+
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+    const klasseElem = parent.querySelector('.klasse');
+    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
+    
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+    let parts = fullString.split('|').map(s => s.trim());
+    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
+    let neueHalle = parent.querySelector('.res').innerText.trim();
+
+    // Logik für die Aktionen
+
+    if (action === "perma_delete") {
+        const confirmed = await showCustomConfirm(
+            "Schuljahr beendet", 
+            `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
+        );
+
+        if (confirmed) {
+            const modal = document.getElementById('pwModal');
+            const input = document.getElementById('modalPwInput');
+            const btn = document.getElementById('confirmPwBtn');
+
+            if (modal && input && btn) {
+                modal.style.display = 'flex';
+                input.value = '';
+                input.focus();
+
+                btn.onclick = async () => {
+                    if (input.value === userPw) {
+                        modal.style.display = 'none';
+                        
+                        const gLoader = document.getElementById('globalLoader');
+                        if (gLoader) gLoader.style.display = 'block';
+                        const planContainer = document.getElementById('plan');
+                        if (planContainer) planContainer.innerHTML = ""; 
+
+                        if (typeof permaDeleteClass === "function") {
+                            await permaDeleteClass(klasse, slot);
+                        }
+                        
+                    } else {
+                        alert("Falsches Passwort!");
+                        input.value = '';
+                        input.focus();
+                    }
+                };
+            }
+        }
+        el.value = ""; 
+        closeAllExtraMenus(); 
+        return;
+    } 
+    
+    else if (action === "ausfall") {
+        neueHalle = "Ausfall";
+        parent.classList.add('ausfall-mode');
+    } 
+    
+    else if (action === "kommentar") {
+        let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
+        const text = prompt("Notiz eingeben:", existingText);
+        if (text !== null) {
+            let oldStift = parent.querySelector('.stift');
+            if (oldStift) oldStift.remove();
+            if (text.trim() !== "") {
+                commentPart = "KOMMENTAR:" + text.trim();
+                let span = document.createElement('span');
+                span.className = 'stift';
+                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
+                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
+                parent.appendChild(span);
+            } else { 
+                commentPart = ""; // Aktiv löschen
+            }
+        } else { 
+            el.value = ""; closeAllExtraMenus(); return; 
+        }
+    } 
+    
+    else if (action === "delete_comment") {
+        commentPart = ""; 
+        let stift = parent.querySelector('.stift');
+        if (stift) stift.remove();
+    }
+
+    // Finales Update
+    if (neueHalle === "Ausfall") {
+        parent.style.backgroundColor = ""; 
+    } else {
+        parent.style.backgroundColor = configFarben[neueHalle] || "";
+    }
+    
+    const resElem = parent.querySelector('.res');
+    if (resElem) resElem.innerText = neueHalle;
+
+    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+    
+    // In pendingChanges speichern (alte Einträge für diesen Slot überschreiben)
+    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.style.display = 'block';
+        void saveBtn.offsetWidth; 
+        saveBtn.classList.add('needs-save');
+    }
+    el.value = ""; 
+    closeAllExtraMenus();
+};
 
 
+ // ------------ALLE MENUS SCHLIESSEN------------
+        
+        function closeAllExtraMenus() {
+            document.querySelectorAll('.extra-select').forEach(sel => {
+                sel.style.zIndex = "-1";
+                sel.style.pointerEvents = "none";
+                sel.style.opacity = "0";
+            });
+        }
+
+      
+// ------------KOMMENTARE LADEN------------
+    
+function getExistingComment(r, c) {
+    // Sicherstellen, dass r und c existieren, bevor wir zugreifen
+    if (!currentPlanData[r] || !currentPlanData[r][c]) return "";
+    
+    let val = currentPlanData[r][c];
+    let teile = val.split(' | ');
+    
+    // Prüfen, ob der dritte Teil existiert und mit dem Präfix beginnt
+    if (teile.length >= 3 && teile[2].trim().startsWith("KOMMENTAR:")) {
+        return teile[2].trim();
+    }
+    return "";
+}
 
 
-        window.changeDate = (days) => { const dp = document.getElementById('datePicker'); let d = new Date(dp.value); d.setDate(d.getDate() + days); dp.valueAsDate = d; loadPlan(); };
-        window.goToToday = () => {
-            const dp = document.getElementById('datePicker');
-            const today = new Date();
-            const offset = today.getTimezoneOffset();
-            today.setMinutes(today.getMinutes() - offset);
-            const dateStr = today.toISOString().split('T')[0];
-            dp.value = dateStr;
-            loadPlan();
-        };
+ // ------------KLASSE ENTFERNEN------------
 
-        document.addEventListener('DOMContentLoaded', () => { 
-            const today = new Date(); const offset = today.getTimezoneOffset(); today.setMinutes(today.getMinutes() - offset); 
-            const dateStr = today.toISOString().split('T')[0];
-            document.getElementById('datePicker').value = dateStr;
-            lastStableDate = dateStr;
-        });
-
-        async function permaDeleteClass(klasse, slotIndex) {
+async function permaDeleteClass(klasse, slotIndex) {
     const ball = document.getElementById('globalLoader'); 
     if (ball) ball.style.display = 'block';
     
@@ -1385,7 +1364,7 @@ function openExtraMenu(el) {
     }
 }
 
-        function closePwModal() {
+function closePwModal() {
     document.getElementById('pwModal').style.display = 'none';
 }
 
@@ -1419,8 +1398,12 @@ function showCustomConfirm(title, message) {
         };
     });
 }
-        
 
+
+    
+ // ------------NEWS-ZENTRALE------------
+
+  
 // Sidebar öffnen
 window.openNews = () => {
     document.getElementById('newsSidebar').style.display = 'flex';
@@ -1433,68 +1416,15 @@ window.closeNews = () => {
 };
 
 
-// Berechnet, wer die Info erhalten muss (Empfänger-Liste)
-function getAffectedColleagues(eigeneKlasse, slotIndex) {
-    const reihe = currentPlanData[slotIndex];
-    let kollegen = [];
 
-    // Checke alle 5 Hallen-Spalten in dieser Zeile
-    for (let i = 1; i <= 5; i++) {
-        let zellenInhalt = (reihe[i] || "").split(' | ')[0].trim();
-        if (zellenInhalt !== "" && zellenInhalt !== eigeneKlasse) {
-            // Lehrer-Kürzel ermitteln
-            let lehrer = allClassTeachers[zellenInhalt];
-            if (lehrer && !kollegen.includes(lehrer)) {
-                kollegen.push(lehrer);
-            }
-        }
-    }
-    // Gibt die Kürzel kommagetrennt zurück (z.B. "jaka,blmi")
-    return kollegen.join(',');
-}
+
+    
+</script>
 
 
 
-   function saveToNewsDB(typ, klasse, slot, datum) {
-    // 1. Empfänger ermitteln (die Kollegen in der Halle zur selben Zeit)
-    const empfaengerListe = getAffectedColleagues(klasse, slot);
 
-    // 2. Datenpaket schnüren
-    const payload = {
-        mode: "saveNews",
-        id: Date.now(),
-        datum: datum,
-        slot: slot,
-        tagIndex: new Date(datum).getDay(),
-        klasse: klasse,
-        verfasser: userKuerzel,
-        empfaenger: empfaengerListe,
-        text: `Halle frei! ${klasse} hat ${typ}.`,
-        pw: userPw  // Geändert von SECRET_PASSWORD auf userPw, damit der ReferenceError verschwindet
-    };
-
-    // 3. Versand an das Google Script
-    fetch(url, { // Geändert von SCRIPT_URL auf url, passend zu deinem saveChanges Fetch
-        method: "POST",
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        if(data.status === "success") {
-            console.log("News erfolgreich in News_DB gespeichert");
-        } else {
-            console.error("Server meldet Fehler beim News-Speichern:", data.msg);
-        }
-    })
-    .catch(err => console.error("Netzwerkfehler beim News-Speichern:", err));
-}
-
-
-        
-        
-        
-    </script>
-
+    
 <!-- Nachrichtenzentrale Sidebar -->
 <div id="newsSidebar" style="display:none; position:fixed; top:0; left:0; width:350px; height:100%; background:#121212; z-index:25000; box-shadow: 10px 0 30px rgba(0,0,0,0.5); border-right: 1px solid #333; flex-direction: column; animation: slideIn 0.3s ease-out; font-family: sans-serif;">
     <div style="padding: 25px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center;">
