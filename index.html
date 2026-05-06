@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport675769</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1417,8 +1417,8 @@ function getAffectedColleagues(eigeneKlasse, slotIndex) {
 
 
 
-    function saveToNewsDB(typ, klasse, slot, datum) {
-    // 1. Empfänger ermitteln
+   function saveToNewsDB(typ, klasse, slot, datum) {
+    // 1. Empfänger ermitteln (die Kollegen in der Halle zur selben Zeit)
     const empfaengerListe = getAffectedColleagues(klasse, slot);
 
     // 2. Datenpaket schnüren
@@ -1432,17 +1432,23 @@ function getAffectedColleagues(eigeneKlasse, slotIndex) {
         verfasser: userKuerzel,
         empfaenger: empfaengerListe,
         text: `Halle frei! ${klasse} hat ${typ}.`,
-        pw: SECRET_PASSWORD
+        pw: userPw  // Geändert von SECRET_PASSWORD auf userPw, damit der ReferenceError verschwindet
     };
 
     // 3. Versand an das Google Script
-    fetch(SCRIPT_URL, {
+    fetch(url, { // Geändert von SCRIPT_URL auf url, passend zu deinem saveChanges Fetch
         method: "POST",
         body: JSON.stringify(payload)
     })
     .then(res => res.json())
-    .then(data => console.log("News_DB Update:", data.status))
-    .catch(err => console.error("News_DB Fehler:", err));
+    .then(data => {
+        if(data.status === "success") {
+            console.log("News erfolgreich in News_DB gespeichert");
+        } else {
+            console.error("Server meldet Fehler beim News-Speichern:", data.msg);
+        }
+    })
+    .catch(err => console.error("Netzwerkfehler beim News-Speichern:", err));
 }
 
 
