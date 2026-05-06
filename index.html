@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sportdcec33565e</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1217,10 +1217,31 @@ window.handleExtraAction = async (el, time, slot) => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
                         
-                        // NEWS-TRIGGER: Schuljahr beendet (in Warteschlange)
-                        if (typeof triggerNews === "function") {
-                            triggerNews("beendet", parseInt(c), klasse);
+                        // --- NEU: NEWS DIREKTVERSAND (bevor UI gelöscht wird) ---
+                        const dateVal = document.getElementById('datePicker').value;
+                        const recipients = getAffectedColleagues(parseInt(c));
+                        
+                        if (recipients) {
+                            const directNewsPayload = {
+                                mode: "saveNews",
+                                id: "ID_" + Date.now() + "_PERMA",
+                                datum: dateVal,
+                                slot: parseInt(c),
+                                tagIndex: new Date(dateVal).getDay(),
+                                klasse: klasse,
+                                verfasser: userKuerzel,
+                                empfaenger: recipients,
+                                text: `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`,
+                                pw: userPw
+                            };
+
+                            // Sofortiger Versand per Fetch
+                            fetch(url, {
+                                method: "POST",
+                                body: JSON.stringify(directNewsPayload)
+                            }).then(() => console.log("Perma-News direkt versendet"));
                         }
+                        // -------------------------------------------------------
 
                         const gLoader = document.getElementById('globalLoader');
                         if (gLoader) gLoader.style.display = 'block';
@@ -1248,7 +1269,7 @@ window.handleExtraAction = async (el, time, slot) => {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
         
-        // NEWS-TRIGGER: Ausfall (in Warteschlange)
+        // NEWS-TRIGGER: Ausfall (wandert normal in pendingNews Warteschlange)
         if (typeof triggerNews === "function") {
             triggerNews("ausfall", parseInt(c), klasse);
         }
@@ -1301,7 +1322,7 @@ window.handleExtraAction = async (el, time, slot) => {
     
     const saveBtn = document.getElementById('saveBtn');
     if (saveBtn) {
-        saveBtn.style.display = 'inline-flex'; // Für die Zentrierung des Spinners
+        saveBtn.style.display = 'inline-flex'; 
         void saveBtn.offsetWidth; 
         saveBtn.classList.add('needs-save');
     }
