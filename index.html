@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sportdcece</title>
+     <title>Reservation Sportdcec33565e</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1432,19 +1432,22 @@ window.closeNews = () => {
 };
 
 // Betroffene Kollegen suchen
-    function getAffectedColleagues(slotIndex) {
+   function getAffectedColleagues(slotIndex) {
     const colleagues = [];
-    // Wir nutzen 'allData', das aktuelle Grid vom Server
+    
+    // Wir nutzen currentPlanData (dein globales Daten-Objekt)
+    // r = Zeile (Zeit), s = Spalte (Halle/Slot)
     
     for (let s = 1; s <= 5; s++) {
-        if (s === slotIndex) continue; // Den "Ausfall-Slot" selbst ignorieren
+        if (s === slotIndex) continue; // Den eigenen Slot ignorieren
 
-        allData.forEach((row) => {
+        // Wir loopen durch alle Zeilen in currentPlanData
+        for (let r in currentPlanData) {
+            let row = currentPlanData[r];
             let cellContent = row[s] ? row[s].toString().trim() : "";
             
             if (cellContent !== "" && !cellContent.includes("U21")) {
-                // Wir nehmen nur den Teil VOR dem ersten Leerzeichen oder Pipe, 
-                // um die reine Klasse zu bekommen (z.B. aus "6a | Ausfall" wird "6a")
+                // Klasse isolieren (Teil vor dem ersten Leerzeichen oder Pipe)
                 let klasse = cellContent.split(" ")[0].split("|")[0].trim();
                 let lehrerKuerzel = allClassTeachers[klasse];
                 
@@ -1452,7 +1455,7 @@ window.closeNews = () => {
                     colleagues.push(lehrerKuerzel);
                 }
             }
-        });
+        }
     }
     return colleagues.join(",");
 }
