@@ -6,7 +6,7 @@
 
     <meta charset="UTF-8">
 
-     <title>Reservation Sport345</title>
+     <title>Reservation Sport</title>
 
 <!-- Icons -->
 
@@ -1352,81 +1352,6 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let pendingNews = [];
 
 
-
-window.prepareSelect = (el) => {
-    const parent = el.closest('.box');
-    const isAusfall = parent.classList.contains('ausfall-mode');
-    // Wir prüfen, ob Text in der Ressourcen-Anzeige steht
-    const resText = parent.querySelector('.res') ? parent.querySelector('.res').innerText.trim() : "";
-
-    // Wenn die Zelle NICHT leer ist (entweder rot durch Ausfall oder Text drin)
-    const hasContent = isAusfall || (resText !== "" && resText !== "---");
-
-    // Falls Inhalt da ist, zwingen wir das Dropdown auf den unsichtbaren Wert,
-    // damit die Wahl von "---" (Leerwert) eine echte Änderung darstellt.
-    if (hasContent && (el.value === "" || el.value === "---")) {
-        el.value = "dirty_state";
-    }
-};
-
-window.handleUpdate = (el, type, time, slot, klasse) => {
-    const val = el.value;
-    const parent = el.closest('.box');
-    const r = parent.getAttribute('data-row');
-    const c = parent.getAttribute('data-col');
-
-    // 1. Abbruch, wenn nur die leere Start-Option oder der dirty_state aktiv ist
-    if (val === "" || val === "dirty_state") return;
-
-    // 2. RESET-Logik (--- gewählt)
-    if (val === "---") {
-        parent.classList.remove('ausfall-mode');
-        parent.style.backgroundColor = "";
-        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "";
-        
-        // Beide Menüs komplett leeren
-        parent.querySelectorAll('select').forEach(s => s.value = "");
-        
-        saveFinal(r, c, time, slot, klasse);
-    } 
-    // 3. AUSFALL Logik
-    else if (val === "ausfall") {
-        parent.classList.add('ausfall-mode');
-        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = "Ausfall";
-        parent.style.backgroundColor = "";
-        
-        const mainSelect = parent.querySelector('select:not(.extra-select)');
-        if (mainSelect) mainSelect.value = "";
-        
-        saveFinal(r, c, time, slot, klasse + " | Ausfall");
-    }
-    // 4. HALLE Logik (Normales Dropdown)
-    else if (val !== "kommentar" && val !== "perma_delete") {
-        parent.classList.remove('ausfall-mode');
-        if (parent.querySelector('.res')) parent.querySelector('.res').innerText = val;
-        parent.style.backgroundColor = configFarben[val] || "";
-        
-        const extraSelect = parent.querySelector('.extra-select');
-        if (extraSelect) extraSelect.value = "";
-        
-        saveFinal(r, c, time, slot, klasse + " | " + val);
-    }
-
-    // --- DER ENTSCHEIDENDE FIX: MENÜ-RESET ---
-    // Wir setzen das gerade benutzte Menü nach einer kurzen Verzögerung 
-    // wieder auf die leere Startposition (""), damit es optisch "verschwindet".
-    setTimeout(() => {
-        el.value = ""; 
-    }, 100);
-
-    // Speicher-Button UI
-    const sBtn = document.getElementById('saveBtn');
-    if (sBtn) { sBtn.style.display = 'inline-flex'; sBtn.classList.add('needs-save'); }
-};
-
-
-
-    
  // ------------LOGIN RESERVATION------------
 
        
@@ -1833,33 +1758,45 @@ async function loadPlan() {
                            
 
                             ${canEdit ? `
-    <select onfocus="prepareSelect(this)" onclick="event.stopPropagation()" onchange="handleUpdate(this, 'main', '${row[0]}', ${i}, '${klasse}')">
-        <option value="dirty_state" style="display:none;"></option>
-        <option value="">---</option>
-        ${options.filter(o => {
-            const optName = o[0];
-            if (res === optName) return true;
-            return !belegteHallen.some(belegt => {
-                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                return oParts.some(p => bParts.includes(p));
-            });
-        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-    </select>
 
-    <select class="extra-select" onfocus="prepareSelect(this)" onclick="event.stopPropagation()" onchange="handleUpdate(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
-     <option value="dirty_state" style="display:none;"></option>
-     
-     <option value=""> </option> 
-     
-     <option value="---">---</option>
-     
-     <option value="ausfall">❌ Ausfall</option>
-     <option value="perma_delete">🏆 Schuljahr beendet</option>
-     <option value="kommentar">📝 Notiz hinzufügen</option>
-     <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-</select>
-` : ''}
+                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+
+                                <option value="">---</option>
+
+                                ${options.filter(o => {
+
+                                    const optName = o[0];
+
+                                    if (res === optName) return true;
+
+                                    return !belegteHallen.some(belegt => {
+
+                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+
+                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+
+                                        return oParts.some(p => bParts.includes(p));
+
+                                    });
+
+                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+
+                            </select>
+
+
+                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
+
+                                 <option value="">---</option>
+
+                                 <option value="ausfall">❌ Ausfall</option>
+
+                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
+
+                                 <option value="kommentar">📝 Notiz hinzufügen</option>
+
+                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+
+                            </select>` : ''}
 
                     </div>`;
 
