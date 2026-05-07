@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1</title>
+     <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -183,7 +183,7 @@
     justify-content: center; 
     text-align: center; 
     font-size: 11px; 
-    position: relative; 
+    position: relative !important; 
     cursor: default; /* Zeigefinger entfernt */
     overflow: hidden; 
 }
@@ -829,6 +829,48 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 .eigenesmenu-item.success {
     border-color: #27ae60 !important;
     background: rgba(39, 174, 96, 0.1) !important;
+}
+
+
+   /* ============================================================
+      9. Material
+       ============================================================ */
+    
+
+/* Das Fussball-Icon ⚽ */
+.material-icon {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    font-size: 14px; /* Dezent, aber sichtbar */
+    z-index: 5;
+    cursor: help;
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
+}
+
+/* Tooltip Styling (Sprechblase beim Drüberfahren) */
+.material-icon::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 125%;
+    right: 0;
+    background: #333;
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    white-space: nowrap;
+    display: none;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    border: 1px solid #e67e22;
+}
+
+/* Nur auf Geräten mit Maus (Hover) anzeigen */
+@media (hover: hover) {
+    .material-icon:hover::after {
+        display: block;
+    }
 }
 
     
@@ -1734,6 +1776,7 @@ function handleMenuChoice(choice, time, slot, klasse) {
     const liste = container.querySelector('.eigenesmenu-liste');
     const header = container.querySelector('.eigenesmenu-header');
 
+    // --- LOGIK FÜR HALLEN-RESERVATION ---
     if (choice === 'reservation') {
         if (!allOptions || allOptions.length === 0) {
             alert("Hallenliste konnte nicht geladen werden.");
@@ -1743,43 +1786,28 @@ function handleMenuChoice(choice, time, slot, klasse) {
         header.querySelector('.eigenesmenu-title').innerText = "Halle wählen";
         header.querySelector('.eigenesmenu-subtitle').innerText = "Verfügbare Hallen für " + time;
 
-        // 1. Die Zeilennummer der aktuellen Box holen
         const currentRow = window.currentEditBox.getAttribute('data-row');
-
-        // 2. Belegte Hallen in DIESER ZEILE (gleiches Zeitfenster) finden
         let belegteEinzelHallen = new Set();
         
-        // Wir suchen alle Boxen mit der gleichen data-row
         document.querySelectorAll(`.box[data-row="${currentRow}"]`).forEach(box => {
             const resText = box.querySelector('.res')?.innerText.trim();
-            
-            // Nur prüfen, wenn nicht "Ausfall" und nicht die Box, die wir gerade editieren
             if (resText && resText !== "Ausfall" && box !== window.currentEditBox) {
-                // Zerlegt "Halle 1+2" in Einzelteile ["1", "2"]
                 const teile = resText.split(/[\s+,/]+/).filter(p => p.length > 0 && p.toLowerCase() !== "halle");
                 teile.forEach(t => belegteEinzelHallen.add(t.toLowerCase()));
             }
         });
 
         const aktuelleRes = window.currentEditBox.querySelector('.res').innerText.trim();
-
-        // 3. Hallenliste filtern
         const freieHallen = allOptions.filter(o => {
             const optName = o[0]; 
             if (aktuelleRes === optName) return true;
-
             const optTeile = optName.split(/[\s+,/]+/).filter(p => p.length > 0 && p.toLowerCase() !== "halle");
-            
-            // Prüfen, ob eine Überschneidung mit belegten Hallen vorliegt
             const istBelegt = optTeile.some(t => belegteEinzelHallen.has(t.toLowerCase()));
-            
             return !istBelegt;
         });
 
-        // 4. HTML zusammenbauen (mit Loader-Struktur)
-        let html = `<div style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
+        let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
         
-        // Option: Leer machen
         html += `
             <button class="eigenesmenu-item" style="border-style: dashed; justify-content: center;" onclick="updateSelection('', '${time}', ${slot}, '${klasse}', this)">
                 <span class="btn-text">--- Leer ---</span>
@@ -1787,11 +1815,9 @@ function handleMenuChoice(choice, time, slot, klasse) {
                 <span class="eigenesmenu-success-icon">✓</span>
             </button>`;
 
-        // Hallen-Buttons generieren
         freieHallen.forEach(h => {
             const istAktiv = (aktuelleRes === h[0]);
             const highlight = istAktiv ? 'style="border-color: #e67e22; background: rgba(230, 126, 34, 0.1);"' : '';
-            
             html += `
                 <button class="eigenesmenu-item" ${highlight} onclick="updateSelection('${h[0]}', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">📍</span> 
@@ -1803,17 +1829,54 @@ function handleMenuChoice(choice, time, slot, klasse) {
         
         html += `</div>`;
         liste.innerHTML = html;
-
-        // Zurück-Button
-        const backBtn = document.createElement('button');
-        backBtn.className = 'eigenesmenu-cancel';
-        backBtn.innerText = "← Zurück";
-        backBtn.onclick = () => openEditor(window.currentEditBox, time, slot, klasse);
-        
-        const alterBack = container.querySelector('.eigenesmenu-cancel');
-        if (alterBack) alterBack.remove();
-        container.appendChild(backBtn);
+        addBackButton(container, time, slot, klasse);
     }
+
+    // --- NEUE LOGIK FÜR MATERIAL-AUSWAHL ---
+    else if (choice === 'material') {
+        header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
+        header.querySelector('.eigenesmenu-subtitle').innerText = "Ausrüstung für " + time;
+
+        // Deine Liste der Materialien
+        const materialOptionen = ["Dicke Matten", "Trampolin", "Schwedenkasten", "Unihockey-Set", "Kletterseile", "Bänke", "Tischtennis-Tisch"];
+
+        let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
+        
+        // Option: Material entfernen
+        html += `
+            <button class="eigenesmenu-item" style="border-style: dashed;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
+                <span class="eigenesmenu-icon">❌</span> 
+                <span class="btn-text">Kein Material / Löschen</span>
+                <div class="eigenesmenu-loader"></div>
+                <span class="eigenesmenu-success-icon">✓</span>
+            </button>`;
+
+        // Material-Buttons generieren
+        materialOptionen.forEach(mat => {
+            html += `
+                <button class="eigenesmenu-item" onclick="openMaterialDetail('${mat}', '${time}', ${slot}, '${klasse}')">
+                    <span class="eigenesmenu-icon">📦</span> 
+                    <span class="btn-text">${mat}</span>
+                    <span style="margin-left: auto; color: #666; font-size: 12px;">❯</span>
+                </button>`;
+        });
+        
+        html += `</div>`;
+        liste.innerHTML = html;
+        addBackButton(container, time, slot, klasse);
+    }
+}
+
+// Hilfsfunktion für den Zurück-Button, um Code-Wiederholung zu vermeiden
+function addBackButton(container, time, slot, klasse) {
+    const backBtn = document.createElement('button');
+    backBtn.className = 'eigenesmenu-cancel';
+    backBtn.innerText = "← Zurück";
+    backBtn.onclick = () => openEditor(window.currentEditBox, time, slot, klasse);
+    
+    const alterBack = container.querySelector('.eigenesmenu-cancel');
+    if (alterBack) alterBack.remove();
+    container.appendChild(backBtn);
 }
 
 
@@ -1957,7 +2020,87 @@ window.addChange = async (el, time, slot, klasse) => {
 };
 
 
+// ------------MATERIAL------------    
 
+    
+// 1. Funktion: Das ⚽ Icon an eine Box heften
+function markBoxWithMaterialIcon(boxElement, material, kommentar) {
+    // Altes Icon entfernen, falls vorhanden (für Updates)
+    const oldIcon = boxElement.querySelector('.material-icon');
+    if (oldIcon) oldIcon.remove();
+
+    if (!material || material === "") return;
+
+    const icon = document.createElement('div');
+    icon.className = 'material-icon';
+    icon.innerHTML = '⚽';
+    
+    // Tooltip Text zusammenbauen
+    const tooltipText = kommentar ? `${material}: ${kommentar}` : material;
+    icon.setAttribute('data-tooltip', tooltipText);
+
+    boxElement.appendChild(icon);
+}
+
+// 2. Funktion: Material-Detailfenster öffnen (Ebene 3)
+function openMaterialDetail(materialName, time, slot, klasse) {
+    const container = document.querySelector('.eigenesmenu-container');
+    const liste = container.querySelector('.eigenesmenu-liste');
+    const header = container.querySelector('.eigenesmenu-header');
+
+    header.querySelector('.eigenesmenu-title').innerText = materialName;
+    header.querySelector('.eigenesmenu-subtitle').innerText = "Details & Kommentar hinzufügen";
+
+    let html = `
+        <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+            <textarea id="material-kommentar-input" 
+                style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-family: inherit; resize: none;"
+                placeholder="z.B. Nur 4 Matten, Trampolin klein..."></textarea>
+            
+            <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; border: none;" 
+                onclick="saveMaterialSelection('${materialName}', document.getElementById('material-kommentar-input').value, '${time}', ${slot}, '${klasse}', this)">
+                <span class="btn-text">Reservierung speichern</span>
+                <div class="eigenesmenu-loader"></div>
+                <span class="eigenesmenu-success-icon">✓</span>
+            </button>
+        </div>
+    `;
+    liste.innerHTML = html;
+    
+    // Zurück-Button zu der Material-Liste
+    const backBtn = document.createElement('button');
+    backBtn.className = 'eigenesmenu-cancel';
+    backBtn.innerText = "← Zurück zur Auswahl";
+    backBtn.onclick = () => handleMenuChoice('material', time, slot, klasse);
+    if(container.querySelector('.eigenesmenu-cancel')) container.querySelector('.eigenesmenu-cancel').remove();
+    container.appendChild(backBtn);
+}
+
+// 3. Funktion: Material endgültig speichern
+function saveMaterialSelection(material, kommentar, time, slot, klasse, clickedBtn) {
+    const loader = clickedBtn.querySelector('.eigenesmenu-loader');
+    const successIcon = clickedBtn.querySelector('.eigenesmenu-success-icon');
+    const btnText = clickedBtn.querySelector('.btn-text');
+
+    if (loader) loader.style.display = 'block';
+    if (btnText) btnText.style.opacity = '0.3';
+
+    google.script.run
+        .withSuccessHandler((response) => {
+            if (loader) loader.style.display = 'none';
+            if (successIcon) successIcon.style.display = 'block';
+            clickedBtn.classList.add('success');
+            
+            // Icon im Plan sofort aktualisieren
+            markBoxWithMaterialIcon(window.currentEditBox, material, kommentar);
+
+            // Menü nach 1 Sekunde schließen
+            setTimeout(() => {
+                closeEditor();
+            }, 1000);
+        })
+        .saveMaterialToSheet(material, kommentar, time, slot, klasse);
+}
 
     
     
