@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport111111111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2085,20 +2085,33 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     if (loader) loader.style.display = 'block';
     if (btnText) btnText.style.opacity = '0.3';
 
-    // Die URL zu deiner Google Apps Script Web-App
     const scriptUrl = "https://script.google.com/macros/s/AKfycbz6w8QxV_qTvNunfwG_A7Rvune7gBYqQJEJNkePtWDGuLQEu9wmhQKYqBPHnEzl9Jxm/exec";
 
-    // DATUM HOLEN: Versuche erst 'datumAnzeige', dann 'datum-titel'
-    let displayDate = document.getElementById('datumAnzeige')?.innerText || 
-                      document.getElementById('datum-titel')?.innerText || "";
+    // --- DATUM-LOGIK VERBESSERT ---
+    let displayDate = "";
     
-    // Falls das Datum im Format "Donnerstag, 07.05.2026" steht, 
-    // müssen wir sicherstellen, dass das Script damit eine ID bauen kann.
+    // 1. Versuch: Globales Objekt/Variable (oft in deinem Plan vorhanden)
+    if (typeof window.currentDate !== 'undefined') {
+        displayDate = window.currentDate;
+    } 
+    // 2. Versuch: DOM-Elemente
+    else {
+        displayDate = document.getElementById('datumAnzeige')?.innerText || 
+                      document.getElementById('datum-titel')?.innerText || 
+                      document.querySelector('.datum-titel')?.innerText || "";
+    }
+
     displayDate = displayDate.trim();
+
+    // Sicherheits-Check: Wenn immer noch leer, Datum aus URL extrahieren
+    if (!displayDate) {
+        const params = new URLSearchParams(window.location.search);
+        displayDate = params.get('date') || "";
+    }
 
     const payload = {
         mode: "saveMaterial", 
-        pw: "bbzo",           // Passwort direkt hier fixiert
+        pw: "bbzo",           
         material: material,
         kommentar: kommentar,
         time: time,
@@ -2112,25 +2125,25 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     try {
         const response = await fetch(scriptUrl, {
             method: "POST",
-            mode: "no-cors", // Falls CORS-Probleme auftreten, oft bei Apps Script nötig
             body: JSON.stringify(payload)
         });
 
-        // HINWEIS: Bei mode: "no-cors" kann die Antwort nicht gelesen werden.
-        // Wenn du 'status: success' brauchst, muss im Script CORS korrekt konfiguriert sein.
-        // Wir gehen hier optimistisch davon aus, dass es klappt, wenn kein Fehler geworfen wird.
-        
-        if (loader) loader.style.display = 'none';
-        if (successIcon) successIcon.style.display = 'block';
-        clickedBtn.classList.add('success');
-        
-        // Icon im Plan sofort setzen
-        markBoxWithMaterialIcon(window.currentEditBox, material, kommentar);
+        const result = await response.json();
 
-        setTimeout(() => {
-            closeEditor();
-            // Falls das Icon nach Refresh weg ist, war das Datum im Payload falsch!
-        }, 1000);
+        if (result.status === "success") {
+            if (loader) loader.style.display = 'none';
+            if (successIcon) successIcon.style.display = 'block';
+            clickedBtn.classList.add('success');
+            
+            // Icon im Plan sofort setzen
+            markBoxWithMaterialIcon(window.currentEditBox, material, kommentar);
+
+            setTimeout(() => {
+                closeEditor();
+            }, 1000);
+        } else {
+            throw new Error(result.msg || "Server meldet Fehler");
+        }
 
     } catch (error) {
         console.error("Fehler beim Speichern:", error);
@@ -2139,7 +2152,6 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
         if (btnText) btnText.style.opacity = '1';
     }
 }
-
     
     
 </script>
