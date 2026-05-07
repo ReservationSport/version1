@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1763,40 +1763,60 @@ function handleMenuChoice(choice, time, slot, klasse) {
 
 
     
-async function updateSelection(neuerWert, time, slot, klasse) {
+async function updateSelection(neuerWert, time, slot, klasse, clickedBtn) {
+    console.log("--- Debug Start: updateSelection ---");
+    console.log("Wert:", neuerWert, "| Button übergeben:", !!clickedBtn);
+
+    if (!clickedBtn) {
+        console.error("FEHLER: Kein Button (this) übergeben!");
+        return;
+    }
+
+    // 1. Loader suchen
+    const loader = clickedBtn.querySelector('.eigenesmenu-loader');
+    const btnText = clickedBtn.querySelector('.btn-text');
+    
+    if (loader) {
+        console.log("Loader im DOM gefunden. Schalte auf display: block");
+        loader.style.display = 'block'; 
+    } else {
+        console.error("FEHLER: '.eigenesmenu-loader' wurde im Button-HTML nicht gefunden!");
+        // Wir machen trotzdem weiter, damit das Speichern nicht blockiert wird
+    }
+
+    if (btnText) btnText.style.opacity = '0.5';
+
+    // 2. Daten für addChange vorbereiten
     const box = window.currentEditBox;
-    if (!box) return;
-
-    // 1. Optisches Feedback: Box leicht ausblenden (Status: "Verarbeitung")
-    box.style.opacity = "0.6";
-
-    // 2. Fake-Element für deine bestehende addChange-Logik
     const fakeEl = {
         value: neuerWert,
         closest: (selector) => selector === '.box' ? box : null
     };
     
     try {
-        // 3. Aufruf von addChange
-        // WICHTIG: addChange aktualisiert die Box-Optik (Farbe/Text) 
-        // UND ruft am Ende saveImmediately() auf.
+        console.log("Starte Speichervorgang via addChange...");
+        
+        // 3. Speichern ausführen
         await window.addChange(fakeEl, time, slot, klasse);
 
-        // 4. Erfolg: Box wieder normal und kurzes grünes Leuchten
-        box.style.opacity = "1";
-        box.style.outline = "2px solid #27ae60";
-        setTimeout(() => box.style.outline = "none", 1000);
+        console.log("Speichern erfolgreich!");
+
+        // 4. Erfolg anzeigen
+        if (loader) loader.style.display = 'none';
+        
+        const successIcon = clickedBtn.querySelector('.eigenesmenu-success-icon');
+        if (successIcon) successIcon.style.display = 'block';
+        
+        clickedBtn.classList.add('success');
+
+        // Menü nach kurzer Verzögerung schließen
+        setTimeout(() => closeEditor(), 800);
         
     } catch (e) {
-        // 5. Fehler: Box orange markieren (deine Warnfarbe)
-        box.style.opacity = "1";
-        box.style.outline = "2px solid #e67e22";
-        console.error("Auto-Save Fehler:", e);
-        alert("Fehler beim automatischen Speichern! Bitte Seite neu laden.");
+        console.error("KRITISCHER FEHLER beim Speichern:", e);
+        if (loader) loader.style.display = 'none';
+        alert("Fehler beim Speichern!");
     }
-
-    // Menü schließen
-    closeEditor();
 }
 
     
