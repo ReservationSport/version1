@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport11111111111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2085,16 +2085,21 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     if (loader) loader.style.display = 'block';
     if (btnText) btnText.style.opacity = '0.3';
 
-    // DEINE WEB-APP-URL (die gleiche, die du für die Hallen nutzt)
     const scriptUrl = "https://script.google.com/macros/s/AKfycbz6w8QxV_qTvNunfwG_A7Rvune7gBYqQJEJNkePtWDGuLQEu9wmhQKYqBPHnEzl9Jxm/exec";
 
+    // WICHTIG: Das Datum muss aus deinem UI geholt werden (z.B. Variable 'currentDate' oder ein Element-Text)
+    // Ich nehme hier an, dass 'currentDate' global verfügbar ist oder aus dem Header gelesen wird.
+    const displayDate = document.getElementById('datumAnzeige')?.innerText || ""; 
+
     const payload = {
-        action: "saveMaterial",
+        mode: "saveMaterial", // Geändert von 'action' zu 'mode' (passend zum doPost)
+        pw: SECRET_PASSWORD,  // Sicherstellen, dass SECRET_PASSWORD definiert ist
         material: material,
         kommentar: kommentar,
         time: time,
         slot: slot,
-        klasse: klasse
+        klasse: klasse,
+        date: displayDate     // Das Datum wird für die ID im Sheet benötigt
     };
 
     try {
@@ -2103,7 +2108,9 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
             body: JSON.stringify(payload)
         });
 
-        if (response.ok) {
+        const result = await response.json(); // Antwort lesen für Debugging
+
+        if (response.ok && result.status === "success") {
             if (loader) loader.style.display = 'none';
             if (successIcon) successIcon.style.display = 'block';
             clickedBtn.classList.add('success');
@@ -2114,10 +2121,14 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
             setTimeout(() => {
                 closeEditor();
             }, 1000);
+        } else {
+            console.error("Server-Fehler:", result.msg);
+            alert("Fehler vom Server: " + (result.msg || "Unbekannt"));
+            if (loader) loader.style.display = 'none';
         }
     } catch (error) {
-        console.error("Fehler:", error);
-        alert("Fehler beim Speichern!");
+        console.error("Netzwerk-Fehler:", error);
+        alert("Netzwerk-Fehler beim Speichern!");
         if (loader) loader.style.display = 'none';
     }
 }
