@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport111111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -887,7 +887,7 @@ async function loadPlan() {
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = ""; // Sammel-Variable für bessere Performance
+        let html = ""; 
 
         // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
@@ -900,7 +900,6 @@ async function loadPlan() {
                 html += `<div class="box zeit-box">${row[0]}</div>`;
                 
                 for(let i = 1; i <= 5; i++) {
-                    // Hallen-Belegung prüfen
                     let belegteHallen = [];
                     for (let k = 1; k <= 5; k++) {
                         if (k === i) continue; 
@@ -911,7 +910,6 @@ async function loadPlan() {
                         }
                     }
 
-                    // Zell-Details
                     let val = row[i] || "", teile = val.split(' | ');
                     let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                     let isAusfall = (res === "Ausfall");
@@ -923,7 +921,6 @@ async function loadPlan() {
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    // HTML für die Kachel
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
@@ -938,31 +935,34 @@ async function loadPlan() {
                             <div class="res">${res}</div>
                             
                             ${canEdit ? `
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-                                <option value="">---</option>
-                                ${options.filter(o => {
-                                    const optName = o[0];
-                                    if (res === optName) return true;
-                                    return !belegteHallen.some(belegt => {
-                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        return oParts.some(p => bParts.includes(p));
-                                    });
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                            </select>
+    <select class="main-select" onfocus="this.value='init'" onclick="event.stopPropagation()" onchange="syncMenus(this, 'main', '${row[0]}', ${i}, '${klasse}')">
+        <option value="init" style="display:none;"></option>
+        <option value="">---</option>
+        ${options.filter(o => {
+            const optName = o[0];
+            if (res === optName) return true;
+            return !belegteHallen.some(belegt => {
+                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                return oParts.some(p => bParts.includes(p));
+            });
+        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+    </select>
 
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-                                 <option value="">---</option>
-                                 <option value="ausfall">❌ Ausfall</option>
-                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
-                                 <option value="kommentar">📝 Notiz hinzufügen</option>
-                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-                            </select>` : ''}
+    <select class="extra-select" onfocus="this.value='init'" onclick="event.stopPropagation()" onchange="syncMenus(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
+         <option value="init" style="display:none;"></option>
+         <option value="">---</option>
+         <option value="ausfall">❌ Ausfall</option>
+         <option value="delete_comment">🗑️ Notiz löschen</option>
+         <option value="kommentar">📝 Notiz hinzufügen</option>
+         <option value="perma_delete">🏆 Schuljahr beendet</option>
+    </select>
+` : ''}
                     </div>`;
                 }
             }
         });
-        container.innerHTML = html; // Einmaliges Schreiben ins DOM
+        container.innerHTML = html;
 
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
@@ -1100,60 +1100,7 @@ function buildFinalValue(r, c, neueHalle, neuerKommentar) {
     return finalParts.join(" | ");
 }
 
-    
-// ------------ÄNDERUNGEN------------    
-    
-window.addChange = (el, time, slot, klasse) => { 
-    let res = el.value; 
-    // Sicherer: sucht die Kachel, egal wie tief das Select verschachtelt ist
-    const parent = el.closest('.box'); 
-    const r = parent.getAttribute('data-row');
-    const c = parent.getAttribute('data-col');
-    
-    // Optik-Update
-    parent.classList.remove('ausfall-mode');
-    const resDisplay = parent.querySelector('.res');
-    if(resDisplay) resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
-    parent.style.backgroundColor = configFarben[res] || ""; 
-
-    // String bauen
-    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
-
-    // --- NEU: NEWS-WARTESCHLANGE VERWALTEN & BEREINIGEN ---
-    
-    // 1. Zuerst alte News für diesen Slot entfernen (Reset-Logik)
-    // Das stellt sicher, dass keine "Ausfall"-News gesendet wird, 
-    // wenn man sich umentscheidet und jetzt z.B. "Halle 4" wählt.
-    if (typeof pendingNews !== "undefined") {
-        pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
-    }
-
-    // 2. Nur wenn der NEUE Wert "Outdoor" enthält, News wieder hinzufügen
-    if (res && res.toString().includes("Outdoor")) {
-        console.log("Outdoor-Aktion erkannt für:", res);
-        if (typeof triggerNews === "function") {
-            const newsKlasse = klasse || res.split('|')[0].trim();
-            triggerNews("outdoor", parseInt(slot), newsKlasse);
-        }
-    }
-    // -----------------------------------------------------
-
-    // Datenstand aktualisieren
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-    
-    // In die Speicherliste (Double-Entry verhindern)
-    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal }); 
-
-    // Button-Animation
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'inline-flex'; 
-        void saveBtn.offsetWidth; 
-        saveBtn.classList.add('needs-save');
-    }
-};
+ 
 
 
 // ------------EXTRAMENU------------    
@@ -1193,189 +1140,147 @@ function openExtraMenu(el) {
     
 // ------------ÄNDERUNGEN PER EXTRAMENU------------    
 
-window.handleExtraAction = async (el, time, slot) => {
-    const action = el.value;
-    const parent = el.closest('.box'); 
+window.syncMenus = async (el, type, time, slot, klasse) => {
+    const val = el.value;
+    if (val === "init") return;
+
+    const parent = el.closest('.box');
+    if (!parent) return;
+
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
-    const klasseElem = parent.querySelector('.klasse');
-    const klasse = klasseElem ? klasseElem.innerText.trim() : "";
+    const resField = parent.querySelector('.res');
 
-    // --- 1. NEWS-WARTESCHLANGE BEREINIGEN (RESET) ---
-    // Wir entfernen bei jeder Aktion im Extra-Menü vorsorglich alte News-Einträge für diesen Slot
+    // 1. KOMMUNIKATION: Das andere Menü sofort neutralisieren
+    const otherSelect = parent.querySelector(type === 'main' ? '.extra-select' : '.main-select');
+    if (otherSelect && val !== "") { 
+        otherSelect.value = ""; 
+    }
+
+    // 2. NEWS-WARTESCHLANGE BEREINIGEN (RESET für diesen Slot)
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
     }
 
-    // --- 2. LOGIK FÜR RESET (---) ---
-    if (action === "" || action === "---") {
-        // Optik komplett zurücksetzen
+    let neueHalle = resField ? resField.innerText.trim() : "";
+    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : klasse;
+    let parts = fullString.split('|').map(s => s.trim());
+    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:")) || "";
+
+    // --- 3. AKTIONEN-LOGIK ---
+
+    // A: RESET (--- gewählt)
+    if (val === "" || val === "---") {
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
-        
-        const resElem = parent.querySelector('.res');
-        if (resElem) resElem.innerText = ""; // Halle/Zusatz leeren
-
-        // Kommentar-Icon entfernen
+        if (resField) resField.innerText = "";
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
-
-        // Daten auf reine Klasse zurücksetzen
-        let finalVal = klasse; 
-        if (!currentPlanData[r]) currentPlanData[r] = [];
-        currentPlanData[r][c] = finalVal;
-
-        // In pendingChanges speichern
-        pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
-        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-
-        // Speicher-Button triggern
-        const saveBtn = document.getElementById('saveBtn');
-        if (saveBtn) {
-            saveBtn.style.display = 'inline-flex';
-            saveBtn.classList.add('needs-save');
-        }
-
-        el.value = "";
-        closeAllExtraMenus();
-        return; 
+        
+        parent.querySelectorAll('select').forEach(s => s.value = "");
+        saveAndVisualUpdate(r, c, time, slot, klasse, ""); 
+        return;
     }
 
-    // --- 3. ÜBRIGE VARIABLEN VORBEREITEN ---
-    let fullString = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
-    let parts = fullString.split('|').map(s => s.trim());
-    let commentPart = parts.find(p => p.startsWith("KOMMENTAR:"));
-    let neueHalle = parent.querySelector('.res').innerText.trim();
-
-    // --- 4. AKTIONEN LOGIK ---
-
-    if (action === "perma_delete") {
-        const confirmed = await showCustomConfirm(
-            "Schuljahr beendet", 
-            `Soll das Schuljahr für die Klasse "${klasse}" wirklich beendet werden?`
-        );
-
+    // B: PERMA DELETE (Passwort-Modal Logik)
+    else if (val === "perma_delete") {
+        const confirmed = await showCustomConfirm("Schuljahr beendet", `Klasse "${klasse}" wirklich beenden?`);
         if (confirmed) {
             const modal = document.getElementById('pwModal');
             const input = document.getElementById('modalPwInput');
             const btn = document.getElementById('confirmPwBtn');
-
             if (modal && input && btn) {
                 modal.style.display = 'flex';
-                input.value = '';
-                input.focus();
-
+                input.value = ''; input.focus();
                 btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        
+                        // News Payload (Original-Logik)
                         const dateVal = document.getElementById('datePicker').value;
-                        const recipients = getAffectedColleagues(parseInt(c));
-                        
+                        const recipients = typeof getAffectedColleagues === "function" ? getAffectedColleagues(parseInt(c)) : "";
                         if (recipients) {
-                            const directNewsPayload = {
-                                mode: "saveNews",
-                                id: "ID_" + Date.now() + "_PERMA",
-                                datum: dateVal,
-                                slot: parseInt(c),
-                                tagIndex: new Date(dateVal).getDay(),
-                                klasse: klasse,
-                                verfasser: userKuerzel,
-                                empfaenger: recipients,
-                                text: `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`,
-                                pw: userPw
-                            };
-
-                            fetch(url, {
-                                method: "POST",
-                                body: JSON.stringify(directNewsPayload)
-                            }).then(() => console.log("Perma-News direkt versendet"));
+                            fetch(url, { method: "POST", body: JSON.stringify({
+                                mode: "saveNews", datum: dateVal, slot: parseInt(c), klasse: klasse,
+                                verfasser: userKuerzel, empfaenger: recipients, text: `Halle frei: ${klasse} beendet.`, pw: userPw
+                            })});
                         }
-
-                        const gLoader = document.getElementById('globalLoader');
-                        if (gLoader) gLoader.style.display = 'block';
-                        const planContainer = document.getElementById('plan');
-                        if (planContainer) planContainer.innerHTML = ""; 
-
-                        if (typeof permaDeleteClass === "function") {
-                            await permaDeleteClass(klasse, slot);
-                        }
-                        
-                    } else {
-                        alert("Falsches Passwort!");
-                        input.value = '';
-                        input.focus();
-                    }
+                        if (typeof permaDeleteClass === "function") await permaDeleteClass(klasse, slot);
+                    } else { alert("Falsches Passwort!"); }
                 };
             }
         }
-        el.value = ""; 
-        closeAllExtraMenus(); 
-        return;
-    } 
-    
-    else if (action === "ausfall") {
+        el.value = ""; return;
+    }
+
+    // C: AUSFALL
+    else if (val === "ausfall") {
         neueHalle = "Ausfall";
         parent.classList.add('ausfall-mode');
-        
-        if (typeof triggerNews === "function") {
-            triggerNews("ausfall", parseInt(c), klasse);
-        }
-    } 
-    
-    else if (action === "kommentar") {
+        parent.style.backgroundColor = "";
+        if (typeof triggerNews === "function") triggerNews("ausfall", parseInt(c), klasse);
+    }
+
+    // D: KOMMENTAR (Notiz)
+    else if (val === "kommentar") {
         let existingText = commentPart ? commentPart.replace("KOMMENTAR:", "") : "";
         const text = prompt("Notiz eingeben:", existingText);
         if (text !== null) {
-            let oldStift = parent.querySelector('.stift');
-            if (oldStift) oldStift.remove();
+            let oldStift = parent.querySelector('.stift'); if (oldStift) oldStift.remove();
             if (text.trim() !== "") {
                 commentPart = "KOMMENTAR:" + text.trim();
-                let span = document.createElement('span');
-                span.className = 'stift';
-                span.innerHTML = '<i class="fas fa-comment-dots"></i>';
-                span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text.trim()); };
-                parent.appendChild(span);
-            } else { 
-                commentPart = ""; 
-            }
-        } else { 
-            el.value = ""; closeAllExtraMenus(); return; 
+                createStiftIcon(parent, text.trim());
+            } else { commentPart = ""; }
+        } else { el.value = ""; return; }
+    }
+
+    // E: NOTIZ LÖSCHEN
+    else if (val === "delete_comment") {
+        commentPart = "";
+        let stift = parent.querySelector('.stift'); if (stift) stift.remove();
+    }
+
+    // F: HALLE GEWÄHLT
+    else {
+        neueHalle = val;
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = configFarben[val] || "";
+        if (val.toString().includes("Outdoor")) {
+            if (typeof triggerNews === "function") triggerNews("outdoor", parseInt(c), klasse);
         }
-    } 
-    
-    else if (action === "delete_comment") {
-        commentPart = ""; 
-        let stift = parent.querySelector('.stift');
-        if (stift) stift.remove();
     }
 
-    // --- 5. FINALES UPDATE (Optik & Daten) ---
-    if (neueHalle === "Ausfall") {
-        parent.style.backgroundColor = ""; 
-    } else {
-        parent.style.backgroundColor = configFarben[neueHalle] || "";
-    }
+    // --- 4. FINALE SPEICHERUNG ---
+    if (resField) resField.innerText = neueHalle;
     
-    const resElem = parent.querySelector('.res');
-    if (resElem) resElem.innerText = neueHalle;
+    // String zusammenbauen (nutzt deine buildFinalValue Funktion)
+    let finalVal = typeof buildFinalValue === "function" ? buildFinalValue(r, c, neueHalle, commentPart) : (klasse + (neueHalle ? " | " + neueHalle : "") + (commentPart ? " | " + commentPart : ""));
+    
+    saveAndVisualUpdate(r, c, time, slot, finalVal, neueHalle);
+    setTimeout(() => { if (val === "") el.value = ""; }, 100);
+};
 
-    let finalVal = buildFinalValue(r, c, neueHalle, commentPart);
+// Hilfsfunktionen
+function saveAndVisualUpdate(r, c, time, slot, finalVal, neueHalle) {
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
-    
     pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot));
     pendingChanges.push({ time, slotIndex: slot, val: finalVal });
-    
-    const saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-        saveBtn.style.display = 'inline-flex'; 
-        void saveBtn.offsetWidth; 
-        saveBtn.classList.add('needs-save');
+
+    const sBtn = document.getElementById('saveBtn');
+    if (sBtn) { 
+        sBtn.style.display = 'inline-flex'; 
+        void sBtn.offsetWidth; 
+        sBtn.classList.add('needs-save'); 
     }
-    el.value = ""; 
-    closeAllExtraMenus();
-};
+}
+
+function createStiftIcon(parent, text) {
+    let span = document.createElement('span');
+    span.className = 'stift';
+    span.innerHTML = '<i class="fas fa-comment-dots"></i>';
+    span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text); };
+    parent.appendChild(span);
+}
 
 
  // ------------ALLE MENUS SCHLIESSEN------------
