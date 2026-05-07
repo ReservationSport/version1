@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sportdfgsdgh</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -951,8 +951,9 @@ async function loadPlan() {
 
     <select class="extra-select" onfocus="this.value='init'" onclick="event.stopPropagation()" onchange="syncMenus(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
          <option value="init" style="display:none;"></option>
-         <option value="">---</option>
-         <option value="ausfall">❌ Ausfall</option>
+         ${res && !isAusfall ? `<option value="${res}" style="display:none;" selected>${res}</option>` : ''}
+         <option value="" ${res === "" ? "selected" : ""}>---</option>
+         <option value="ausfall" ${isAusfall ? "selected" : ""}>❌ Ausfall</option>
          <option value="delete_comment">🗑️ Notiz löschen</option>
          <option value="kommentar">📝 Notiz hinzufügen</option>
          <option value="perma_delete">🏆 Schuljahr beendet</option>
@@ -1138,7 +1139,7 @@ function openExtraMenu(el) {
 }
 
     
-// ------------ÄNDERUNGEN PER EXTRAMENU------------    
+// ------------ÄNDERUNGEN------------    
 
 window.syncMenus = async (el, type, time, slot, klasse) => {
     const val = el.value;
@@ -1151,13 +1152,23 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
     const c = parent.getAttribute('data-col');
     const resField = parent.querySelector('.res');
 
-    // 1. KOMMUNIKATION: Das andere Menü sofort neutralisieren
-    const otherSelect = parent.querySelector(type === 'main' ? '.extra-select' : '.main-select');
-    if (otherSelect && val !== "") { 
-        otherSelect.value = ""; 
+    // --- NEU: SPIEGEL-LOGIK (KOMMUNIKATION) ---
+    const mainSelect = parent.querySelector('.main-select');
+    const extraSelect = parent.querySelector('.extra-select');
+
+    if (type === 'main') {
+        if (extraSelect) {
+            updateMirrorOption(extraSelect, val);
+            extraSelect.value = val;
+        }
+    } else if (type === 'extra' && val !== "kommentar" && val !== "delete_comment" && val !== "perma_delete") {
+        if (mainSelect) {
+            updateMirrorOption(mainSelect, val);
+            mainSelect.value = val;
+        }
     }
 
-    // 2. NEWS-WARTESCHLANGE BEREINIGEN (RESET für diesen Slot)
+    // 2. NEWS-WARTESCHLANGE BEREINIGEN
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(c));
     }
@@ -1177,12 +1188,14 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
         let stift = parent.querySelector('.stift');
         if (stift) stift.remove();
         
-        parent.querySelectorAll('select').forEach(s => s.value = "");
+        if (mainSelect) mainSelect.value = "";
+        if (extraSelect) extraSelect.value = "";
+        
         saveAndVisualUpdate(r, c, time, slot, klasse, ""); 
         return;
     }
 
-    // B: PERMA DELETE (Passwort-Modal Logik)
+    // B: PERMA DELETE
     else if (val === "perma_delete") {
         const confirmed = await showCustomConfirm("Schuljahr beendet", `Klasse "${klasse}" wirklich beenden?`);
         if (confirmed) {
@@ -1195,7 +1208,6 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
                 btn.onclick = async () => {
                     if (input.value === userPw) {
                         modal.style.display = 'none';
-                        // News Payload (Original-Logik)
                         const dateVal = document.getElementById('datePicker').value;
                         const recipients = typeof getAffectedColleagues === "function" ? getAffectedColleagues(parseInt(c)) : "";
                         if (recipients) {
@@ -1209,7 +1221,9 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
                 };
             }
         }
-        el.value = ""; return;
+        // Nach Abbruch oder Modal-Öffnen wieder auf aktuellen Stand spiegeln
+        el.value = neueHalle;
+        return;
     }
 
     // C: AUSFALL
@@ -1230,13 +1244,17 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
                 commentPart = "KOMMENTAR:" + text.trim();
                 createStiftIcon(parent, text.trim());
             } else { commentPart = ""; }
-        } else { el.value = ""; return; }
+        }
+        // Nach Notiz-Aktion: Dropdown wieder auf die aktuelle Halle setzen
+        el.value = neueHalle;
+        // String trotzdem speichern, da Notiz geändert wurde
     }
 
     // E: NOTIZ LÖSCHEN
     else if (val === "delete_comment") {
         commentPart = "";
         let stift = parent.querySelector('.stift'); if (stift) stift.remove();
+        el.value = neueHalle;
     }
 
     // F: HALLE GEWÄHLT
@@ -1252,14 +1270,26 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
     // --- 4. FINALE SPEICHERUNG ---
     if (resField) resField.innerText = neueHalle;
     
-    // String zusammenbauen (nutzt deine buildFinalValue Funktion)
     let finalVal = typeof buildFinalValue === "function" ? buildFinalValue(r, c, neueHalle, commentPart) : (klasse + (neueHalle ? " | " + neueHalle : "") + (commentPart ? " | " + commentPart : ""));
     
     saveAndVisualUpdate(r, c, time, slot, finalVal, neueHalle);
-    setTimeout(() => { if (val === "") el.value = ""; }, 100);
 };
 
-// Hilfsfunktionen
+// --- HILFSFUNKTION FÜR DEN SPIEGEL-TRICK ---
+function updateMirrorOption(selectEl, val) {
+    // Sucht eine bereits existierende Spiegel-Option oder erstellt eine neue
+    let opt = selectEl.querySelector('option[data-mirror="true"]');
+    if (!opt) {
+        opt = document.createElement('option');
+        opt.setAttribute('data-mirror', 'true');
+        opt.style.display = 'none'; // Für den Nutzer im Menü unsichtbar
+        selectEl.appendChild(opt);
+    }
+    opt.value = val;
+    opt.innerText = val;
+}
+
+// Hilfsfunktionen (unverändert)
 function saveAndVisualUpdate(r, c, time, slot, finalVal, neueHalle) {
     if (!currentPlanData[r]) currentPlanData[r] = [];
     currentPlanData[r][c] = finalVal;
@@ -1281,7 +1311,6 @@ function createStiftIcon(parent, text) {
     span.onclick = (e) => { e.stopPropagation(); alert('Notiz: ' + text); };
     parent.appendChild(span);
 }
-
 
  // ------------ALLE MENUS SCHLIESSEN------------
         
