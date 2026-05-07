@@ -1,26 +1,14 @@
 <!DOCTYPE html>
-
 <html lang="de">
-
 <head>
-
     <meta charset="UTF-8">
-
-     <title>Reservation Sport</title>
-
+     <title>Reservation Sport123</title>
 <!-- Icons -->
-
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
 <!-- Schriftart -->
-
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 
-
-
-<style>
-
-   
+<style> 
 
     /* ============================================================
 
@@ -29,64 +17,36 @@
        ============================================================ */
 
     body {
-
         font-family: 'Segoe UI', sans-serif;
-
         background: #1a1a1a;
-
         color: white;
-
         padding: 20px;
-
     }
-
-
+    
     /* 2. Das Grid/Die Tabelle wieder schmaler machen */
-
 .grid {
-
     display: grid;
-
     grid-template-columns: 120px repeat(5, 1fr);
-
     gap: 2px;
-
     max-width: 1000px; /* Hier ebenfalls wieder 1000px */
-
     margin: auto;
-
 }
-
-
+    
      .info-box {
-
     grid-column: span 6;
-
     font-size: 20px !important; /* Hier die gewünschte Größe */
-
     padding: 40px !important;   /* Mehr Abstand für eine bessere Optik */
-
     text-align: center;
-
     line-height: 1.5;           /* Angenehmerer Zeilenabstand */
-
     color: #888;                /* Dezentes Grau wie im Screenshot */
-
     font-style: italic;         /* Kursiv wie gewünscht */
-
 }
-
-
-
 
     /* ============================================================
 
        2. NAVIGATION & DATUMSKONTROLLE & News
 
        ============================================================ */
-
-
-   
 
  /* 1. Die Navigationsleiste wieder schmaler machen */
 
@@ -1757,76 +1717,49 @@ async function loadPlan() {
 
                            
 
-                            ${canEdit ? `
+                           ${canEdit ? `
+    <select onfocus="armMenu(this)" onclick="event.stopPropagation()" onchange="handleMenuAction(this, 'main', '${row[0]}', ${i}, '${klasse}')">
+        <option value="ready_to_reset" style="display:none;"></option>
+        <option value="">---</option>
+        ${options.filter(o => {
+            const optName = o[0];
+            if (res === optName) return true;
+            return !belegteHallen.some(belegt => {
+                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                return oParts.some(p => bParts.includes(p));
+            });
+        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+    </select>
 
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-
-                                <option value="">---</option>
-
-                                ${options.filter(o => {
-
-                                    const optName = o[0];
-
-                                    if (res === optName) return true;
-
-                                    return !belegteHallen.some(belegt => {
-
-                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-
-                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-
-                                        return oParts.some(p => bParts.includes(p));
-
-                                    });
-
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-
-                            </select>
-
-
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-
-                                 <option value="">---</option>
-
-                                 <option value="ausfall">❌ Ausfall</option>
-
-                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
-
-                                 <option value="kommentar">📝 Notiz hinzufügen</option>
-
-                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-
-                            </select>` : ''}
-
+    <select class="extra-select" onfocus="armMenu(this)" onclick="event.stopPropagation()" onchange="handleMenuAction(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
+         <option value="ready_to_reset" style="display:none;"></option>
+         <option value="">---</option>
+         <option value="ausfall">❌ Ausfall</option>
+         <option value="perma_delete">🏆 Schuljahr beendet</option>
+         <option value="kommentar">📝 Notiz hinzufügen</option>
+    </select>
+` : ''}
                     </div>`;
-
                 }
-
             }
-
         });
 
         container.innerHTML = html; // Einmaliges Schreiben ins DOM
 
-
     } catch(e) {
 
         console.error("Fehler in loadPlan:", e);
-
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
 
     } finally {
 
         loader.style.display = 'none';
-
         updateNavButtons();
 
     }
 
 }
-
-
-
 // ------------SPEICHERN------------
 
 
@@ -2588,6 +2521,92 @@ window.handleExtraAction = async (el, time, slot) => {
 };
 
 
+
+//-----------RESET VIA (---)-AUSWAHL----------
+
+
+// A: Das Menü beim Anklicken "scharf schalten"
+window.armMenu = (el) => {
+    // Wir setzen den Wert auf einen unsichtbaren Platzhalter
+    el.value = "ready_to_reset"; 
+};
+
+// B: Die zentrale Logik für beide Menüs
+window.handleMenuAction = (el, type, time, slot, klasse) => {
+    const val = el.value;
+    const parent = el.closest('.box');
+    const r = parent.getAttribute('data-row');
+    const c = parent.getAttribute('data-col');
+    const resField = parent.querySelector('.res');
+
+    // Nichts tun, wenn das Menü nur geöffnet und wieder geschlossen wurde
+    if (val === "ready_to_reset") return;
+
+    // --- AKTIONEN ---
+
+    // 1. Der RESET (Nutzer wählt das sichtbare "---")
+    if (val === "") {
+        parent.classList.remove('ausfall-mode');
+        parent.style.backgroundColor = "";
+        if (resField) resField.innerText = "";
+        
+        // Das jeweils andere Menü in dieser Kachel leeren
+        const other = parent.querySelector(type === 'main' ? '.extra-select' : 'select:not(.extra-select)');
+        if (other) other.value = "";
+
+        saveData(r, c, time, slot, klasse); // Speichert den Ur-Zustand (nur Klasse)
+    } 
+    
+    // 2. AUSFALL (aus dem Extra-Menü)
+    else if (val === "ausfall") {
+        parent.classList.add('ausfall-mode');
+        if (resField) resField.innerText = "Ausfall";
+        parent.style.backgroundColor = "";
+
+        const mainSel = parent.querySelector('select:not(.extra-select)');
+        if (mainSel) mainSel.value = "";
+
+        saveData(r, c, time, slot, klasse + " | Ausfall");
+    }
+
+    // 3. EINE HALLE (aus dem Hauptmenü)
+    else if (val !== "perma_delete" && val !== "kommentar") {
+        parent.classList.remove('ausfall-mode');
+        if (resField) resField.innerText = val;
+        parent.style.backgroundColor = configFarben[val] || "";
+
+        const extraSel = parent.querySelector('.extra-select');
+        if (extraSel) extraSel.value = "";
+
+        saveData(r, c, time, slot, klasse + " | " + val);
+    }
+
+    // Menü optisch sofort wieder neutralisieren
+    setTimeout(() => { el.value = ""; }, 100);
+
+    // Speicher-Button zeigen
+    const sBtn = document.getElementById('saveBtn');
+    if (sBtn) { 
+        sBtn.style.display = 'inline-flex'; 
+        sBtn.classList.add('needs-save'); 
+    }
+};
+
+// C: Die Hilfsfunktion zum Speichern der Daten
+window.saveData = (r, c, time, slot, finalVal) => {
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+
+    pendingChanges = pendingChanges.filter(ch => ch.slotIndex !== slot);
+    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+};
+
+
+
+
+
+
+    
 
  // ------------ALLE MENUS SCHLIESSEN------------
 
