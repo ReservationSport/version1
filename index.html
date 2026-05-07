@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport55555555555555</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1602,28 +1602,27 @@ async function loadPlan() {
                             <div class="res">${res}</div>
                             
                             ${canEdit ? `
-                                <select onfocus="armMenu(this)" onclick="event.stopPropagation()" onchange="handleMenuAction(this, 'main', '${row[0]}', ${i}, '${klasse}')">
-                                    <option value="ready_to_reset" style="display:none;"></option>
-                                    <option value="">---</option>
-                                    ${options.filter(o => {
-                                        const optName = o[0];
-                                        if (res === optName) return true;
-                                        return !belegteHallen.some(belegt => {
-                                            let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                            let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                            return oParts.some(p => bParts.includes(p));
-                                        });
-                                    }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                                </select>
+    <select onmousedown="armMenu(this)" onchange="handleMenuAction(this, 'main', '${row[0]}', ${i}, '${klasse}')">
+        <option value="ready_to_reset" style="display:none;"></option>
+        <option value="">---</option>
+        ${options.filter(o => {
+            const optName = o[0];
+            if (res === optName) return true;
+            return !belegteHallen.some(belegt => {
+                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                return oParts.some(p => bParts.includes(p));
+            });
+        }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+    </select>
 
-                                <select class="extra-select" onfocus="armMenu(this)" onclick="event.stopPropagation()" onchange="handleMenuAction(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
-                                     <option value="ready_to_reset" style="display:none;"></option>
-                                     <option value="">---</option>
-                                     <option value="ausfall">❌ Ausfall</option>
-                                     <option value="perma_delete">🏆 Schuljahr beendet</option>
-                                     <option value="kommentar">📝 Notiz hinzufügen</option>
-                                </select>
-                            ` : ''}
+    <select class="extra-select" onmousedown="armMenu(this)" onchange="handleMenuAction(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
+         <option value="ready_to_reset" style="display:none;"></option>
+         <option value="">---</option>
+         <option value="ausfall">❌ Ausfall</option>
+         <option value="perma_delete">🏆 Schuljahr beendet</option>
+         <option value="kommentar">📝 Notiz hinzufügen</option>
+    </select>` : ''}
                     </div>`;
                 }
             }
@@ -2407,7 +2406,11 @@ window.handleExtraAction = async (el, time, slot) => {
 
 
 window.armMenu = (el) => {
-    el.value = "ready_to_reset"; 
+    // Wir erzwingen den Wert auf den Trigger
+    el.value = "ready_to_reset";
+    
+    // Kleiner Trick: Wir merken uns, dass das Menü gerade "scharf" ist
+    el.setAttribute('data-armed', 'true');
 };
 
 window.handleMenuAction = (el, type, time, slot, klasse) => {
