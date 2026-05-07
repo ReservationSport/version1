@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport123</title>
+     <title>Reservation Sport12xexexe3</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2531,74 +2531,62 @@ window.armMenu = (el) => {
     el.value = "ready_to_reset"; 
 };
 
-// B: Die zentrale Logik für beide Menüs
 window.handleMenuAction = (el, type, time, slot, klasse) => {
     const val = el.value;
+    // Falls nur geöffnet und geschlossen: Abbruch
+    if (val === "ready_to_reset") return;
+
+    // Suche die Kachel (wir gehen hoch bis zur .box)
     const parent = el.closest('.box');
+    if (!parent) {
+        console.error("Fehler: .box nicht gefunden!");
+        return;
+    }
+
+    // Zeilen- und Spaltenindex aus den Attributen der Box holen
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const resField = parent.querySelector('.res');
 
-    // Nichts tun, wenn das Menü nur geöffnet und wieder geschlossen wurde
-    if (val === "ready_to_reset") return;
+    console.log("Aktion erkannt:", val, "für Zelle:", r, c); // Test-Log
 
-    // --- AKTIONEN ---
-
-    // 1. Der RESET (Nutzer wählt das sichtbare "---")
-    if (val === "") {
+    // --- DIE LOGIK ---
+    
+    // 1. RESET (--- gewählt)
+    if (val === "" || val === "---") {
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         if (resField) resField.innerText = "";
         
-        // Das jeweils andere Menü in dieser Kachel leeren
+        // Das andere Menü nullen
         const other = parent.querySelector(type === 'main' ? '.extra-select' : 'select:not(.extra-select)');
         if (other) other.value = "";
 
-        saveData(r, c, time, slot, klasse); // Speichert den Ur-Zustand (nur Klasse)
+        saveData(r, c, time, slot, klasse); 
     } 
     
-    // 2. AUSFALL (aus dem Extra-Menü)
+    // 2. AUSFALL
     else if (val === "ausfall") {
         parent.classList.add('ausfall-mode');
         if (resField) resField.innerText = "Ausfall";
         parent.style.backgroundColor = "";
-
-        const mainSel = parent.querySelector('select:not(.extra-select)');
-        if (mainSel) mainSel.value = "";
-
         saveData(r, c, time, slot, klasse + " | Ausfall");
     }
 
-    // 3. EINE HALLE (aus dem Hauptmenü)
-    else if (val !== "perma_delete" && val !== "kommentar") {
+    // 3. HALLE (normal)
+    else if (val !== "ready_to_reset") {
         parent.classList.remove('ausfall-mode');
         if (resField) resField.innerText = val;
-        parent.style.backgroundColor = configFarben[val] || "";
-
-        const extraSel = parent.querySelector('.extra-select');
-        if (extraSel) extraSel.value = "";
-
+        parent.style.backgroundColor = (typeof configFarben !== 'undefined') ? configFarben[val] : "";
         saveData(r, c, time, slot, klasse + " | " + val);
     }
 
-    // Menü optisch sofort wieder neutralisieren
+    // Menü wieder auf Start setzen
     setTimeout(() => { el.value = ""; }, 100);
 
-    // Speicher-Button zeigen
+    // Speicherbutton-Check
     const sBtn = document.getElementById('saveBtn');
-    if (sBtn) { 
-        sBtn.style.display = 'inline-flex'; 
-        sBtn.classList.add('needs-save'); 
-    }
-};
-
-// C: Die Hilfsfunktion zum Speichern der Daten
-window.saveData = (r, c, time, slot, finalVal) => {
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-
-    pendingChanges = pendingChanges.filter(ch => ch.slotIndex !== slot);
-    pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    if (sBtn) { sBtn.style.display = 'inline-flex'; sBtn.classList.add('needs-save'); }
 };
 
 
