@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport67222222222</title>
+     <title>Reservation Sport67676767676767</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -652,95 +652,97 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
        ============================================================ */
 
     
-/* Der abgedunkelte Hintergrund */
+/* Hintergrund-Overlay */
 .eigenesmenu-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(0,0,0,0.8);
+    z-index: 10000;
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Das Fenster-Gehäuse */
+/* Das Fenster */
 .eigenesmenu-container {
-    background: #1e1e1e;
-    color: white;
-    padding: 20px;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 360px;
+    background: #121212;
+    padding: 30px; /* Etwas kompakter als das PW-Modal für die Liste */
+    border-radius: 12px;
     border: 1px solid #333;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.7);
-}
-
-/* Header-Bereich im Menü */
-.eigenesmenu-header {
-    margin-bottom: 20px;
     text-align: center;
+    width: 350px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
 }
 
-.eigenesmenu-title {
-    margin: 0;
-    font-size: 1.3rem;
-    color: #ffffff;
+.eigenesmenu-header h3 {
+    color: #fff;
+    margin: 0 0 8px 0;
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
 }
 
-.eigenesmenu-subtitle {
-    margin: 4px 0 0;
-    font-size: 0.85rem;
+.eigenesmenu-header p {
     color: #888;
+    font-size: 14px;
+    margin-bottom: 25px;
+    line-height: 1.5;
 }
 
-/* Die Liste der Buttons */
+/* Die Buttons im Orange-Stil */
 .eigenesmenu-liste {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
 }
 
-/* Die einzelnen Auswahl-Buttons */
 .eigenesmenu-item {
-    background: #2a2a2a;
+    width: 100%;
+    background: #1a1a1a; /* Dunkler Button-Grund */
+    color: #fff;
     border: 1px solid #444;
-    color: white;
-    padding: 14px 18px;
-    border-radius: 10px;
-    font-size: 1rem;
+    padding: 14px;
+    border-radius: 8px;
     cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
     display: flex;
     align-items: center;
     transition: all 0.2s ease;
-    width: 100%;
-    text-align: left;
+    outline: none;
 }
 
-.eigenesmenu-item:hover {
-    background: #333;
-    border-color: #00aaff;
+/* Der Orange-Effekt beim Hover/Fokus wie beim Input-Feld */
+.eigenesmenu-item:hover, .eigenesmenu-item:focus {
+    border-color: #e67e22;
+    background: #222;
+    box-shadow: 0 0 0 2px rgba(230, 126, 34, 0.2);
 }
 
 .eigenesmenu-icon {
     margin-right: 15px;
-    font-size: 1.2rem;
-    width: 24px;
-    text-align: center;
+    font-size: 18px;
 }
 
-/* Abbrechen-Button */
+/* Der Abbrechen-Link */
 .eigenesmenu-cancel {
-    margin-top: 15px;
-    background: transparent;
-    border: none;
-    color: #666;
-    cursor: pointer;
-    font-size: 0.9rem;
     width: 100%;
-    text-decoration: underline;
+    background: transparent;
+    color: #666;
+    border: none;
+    padding: 10px;
+    margin-top: 15px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: color 0.2s;
 }
 
+.eigenesmenu-cancel:hover {
+    color: #888;
+}
 
     
 </style>
@@ -1627,22 +1629,22 @@ window.closeNews = () => {
 
     
 function openEditor(el, time, slot, klasse) {
-    // Falls noch ein Menü offen ist, entfernen
     const existiert = document.getElementById('eigenesmenu-modal');
     if (existiert) existiert.remove();
+
+    // Wir merken uns die aktuelle Box global für spätere Schritte
+    window.currentEditBox = el; 
 
     const backdrop = document.createElement('div');
     backdrop.className = 'eigenesmenu-backdrop';
     backdrop.id = 'eigenesmenu-modal';
-    
-    // Schließen bei Klick auf den Hintergrund
     backdrop.onclick = closeEditor;
 
     backdrop.innerHTML = `
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
                 <h3 class="eigenesmenu-title">${klasse}</h3>
-                <p class="eigenesmenu-subtitle">${time} Uhr | Slot ${slot}</p>
+                <p class="eigenesmenu-subtitle">Was möchtest du tun?</p>
             </div>
             
             <div class="eigenesmenu-liste">
@@ -1653,13 +1655,13 @@ function openEditor(el, time, slot, klasse) {
                     <span class="eigenesmenu-icon">🎾</span> Material
                 </button>
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('ausfall', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">❌</span> Ausfall
+                    <span class="eigenesmenu-icon">❌</span> Ausfall markieren
                 </button>
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}')">
                     <span class="eigenesmenu-icon">🏆</span> Lehrjahr beendet
                 </button>
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">📝</span> Nachricht
+                    <span class="eigenesmenu-icon">📝</span> Nachricht / Notiz
                 </button>
             </div>
 
