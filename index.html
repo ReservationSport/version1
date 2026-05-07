@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport123</title>
+     <title>Reservation Sport12345667755</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2533,60 +2533,68 @@ window.armMenu = (el) => {
 
 window.handleMenuAction = (el, type, time, slot, klasse) => {
     const val = el.value;
-    // Falls nur geöffnet und geschlossen: Abbruch
+    
+    // 1. Abbruch, wenn nur geöffnet und geschlossen wurde
     if (val === "ready_to_reset") return;
 
-    // Suche die Kachel (wir gehen hoch bis zur .box)
     const parent = el.closest('.box');
-    if (!parent) {
-        console.error("Fehler: .box nicht gefunden!");
-        return;
-    }
+    if (!parent) return;
 
-    // Zeilen- und Spaltenindex aus den Attributen der Box holen
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const resField = parent.querySelector('.res');
 
-    console.log("Aktion erkannt:", val, "für Zelle:", r, c); // Test-Log
-
-    // --- DIE LOGIK ---
-    
-    // 1. RESET (--- gewählt)
+    // --- DER ENTSCHEIDENDE FIX ---
+    // Wenn "---" gewählt wurde (egal ob im Haupt- oder Extramenu)
     if (val === "" || val === "---") {
+        console.log("Reset ausgelöst für:", r, c);
+        
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         if (resField) resField.innerText = "";
         
-        // Das andere Menü nullen
-        const other = parent.querySelector(type === 'main' ? '.extra-select' : 'select:not(.extra-select)');
-        if (other) other.value = "";
+        // WICHTIG: Setze BEIDE Menüs in dieser Kachel hart auf leer zurück
+        const allSelects = parent.querySelectorAll('select');
+        allSelects.forEach(s => s.value = "");
 
         saveData(r, c, time, slot, klasse); 
     } 
     
-    // 2. AUSFALL
+    // 2. AUSFALL (nur aus dem Extramenu)
     else if (val === "ausfall") {
         parent.classList.add('ausfall-mode');
         if (resField) resField.innerText = "Ausfall";
         parent.style.backgroundColor = "";
+        
+        // Hallenmenü leeren
+        const mainSel = parent.querySelector('select:not(.extra-select)');
+        if (mainSel) mainSel.value = "";
+        
         saveData(r, c, time, slot, klasse + " | Ausfall");
     }
 
-    // 3. HALLE (normal)
-    else if (val !== "ready_to_reset") {
+    // 3. EINE HALLE (nur aus dem Hauptmenu)
+    else if (val !== "perma_delete" && val !== "kommentar" && val !== "delete_comment") {
         parent.classList.remove('ausfall-mode');
         if (resField) resField.innerText = val;
         parent.style.backgroundColor = (typeof configFarben !== 'undefined') ? configFarben[val] : "";
+        
+        // Extramenü leeren
+        const extraSel = parent.querySelector('.extra-select');
+        if (extraSel) extraSel.value = "";
+        
         saveData(r, c, time, slot, klasse + " | " + val);
     }
 
-    // Menü wieder auf Start setzen
+    // Nach der Aktion: Das gerade benutzte Menü wieder auf neutral stellen
     setTimeout(() => { el.value = ""; }, 100);
 
-    // Speicherbutton-Check
+    // Save-Button einblenden
     const sBtn = document.getElementById('saveBtn');
-    if (sBtn) { sBtn.style.display = 'inline-flex'; sBtn.classList.add('needs-save'); }
+    if (sBtn) { 
+        sBtn.style.display = 'inline-flex'; 
+        sBtn.classList.add('needs-save'); 
+    }
 };
 
     
