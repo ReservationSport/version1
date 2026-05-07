@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport2342343</title>
+     <title>Reservation Sport555</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1693,7 +1693,6 @@ function handleMenuChoice(choice, time, slot, klasse) {
     const header = container.querySelector('.eigenesmenu-header');
 
     if (choice === 'reservation') {
-        // Prüfen, ob Hallen-Daten da sind
         if (!allOptions || allOptions.length === 0) {
             alert("Hallenliste konnte nicht geladen werden.");
             return;
@@ -1702,61 +1701,75 @@ function handleMenuChoice(choice, time, slot, klasse) {
         header.querySelector('.eigenesmenu-title').innerText = "Halle wählen";
         header.querySelector('.eigenesmenu-subtitle').innerText = "Verfügbare Hallen für " + time;
 
-        // Belegte Hallen im Plan finden
-        let belegteHallen = [];
-        document.querySelectorAll(`.box[data-col="${slot}"]`).forEach(box => {
-            const resDiv = box.querySelector('.res');
-            const resText = resDiv ? resDiv.innerText.trim() : "";
-            if (resText && resText !== "Ausfall") {
-                belegteHallen.push(resText);
+        // 1. Die Zeilennummer der aktuellen Box holen
+        const currentRow = window.currentEditBox.getAttribute('data-row');
+
+        // 2. Belegte Hallen in DIESER ZEILE (gleiches Zeitfenster) finden
+        let belegteEinzelHallen = new Set();
+        
+        // Wir suchen alle Boxen mit der gleichen data-row
+        document.querySelectorAll(`.box[data-row="${currentRow}"]`).forEach(box => {
+            const resText = box.querySelector('.res')?.innerText.trim();
+            
+            // Nur prüfen, wenn nicht "Ausfall" und nicht die Box, die wir gerade editieren
+            if (resText && resText !== "Ausfall" && box !== window.currentEditBox) {
+                // Zerlegt "Halle 1+2" in Einzelteile ["1", "2"]
+                const teile = resText.split(/[\s+,/]+/).filter(p => p.length > 0 && p.toLowerCase() !== "halle");
+                teile.forEach(t => belegteEinzelHallen.add(t.toLowerCase()));
             }
         });
 
-        // Aktuelle Belegung der Kachel (um sie trotz Sperre anzuzeigen)
         const aktuelleRes = window.currentEditBox.querySelector('.res').innerText.trim();
 
-        // Hallenliste filtern
+        // 3. Hallenliste filtern
         const freieHallen = allOptions.filter(o => {
-            const optName = o[0];
+            const optName = o[0]; 
             if (aktuelleRes === optName) return true;
-            return !belegteHallen.some(belegt => {
-                let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                return oParts.some(p => bParts.includes(p));
-            });
+
+            const optTeile = optName.split(/[\s+,/]+/).filter(p => p.length > 0 && p.toLowerCase() !== "halle");
+            
+            // Prüfen, ob eine Überschneidung mit belegten Hallen vorliegt
+            const istBelegt = optTeile.some(t => belegteEinzelHallen.has(t.toLowerCase()));
+            
+            return !istBelegt;
         });
 
-        // HTML zusammenbauen
-        let html = `<div style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
+        // 4. HTML zusammenbauen (mit Loader-Struktur)
+        let html = `<div style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
         
         // Option: Leer machen
         html += `
-            <button class="eigenesmenu-item" style="border-style: dashed; justify-content: center;" onclick="updateSelection('', '${time}', ${slot}, '${klasse}')">
-                --- Leer ---
+            <button class="eigenesmenu-item" style="border-style: dashed; justify-content: center;" onclick="updateSelection('', '${time}', ${slot}, '${klasse}', this)">
+                <span class="btn-text">--- Leer ---</span>
+                <div class="eigenesmenu-loader"></div>
+                <span class="eigenesmenu-success-icon">✓</span>
             </button>`;
 
-        // Die Hallen-Buttons
-       freieHallen.forEach(h => {
-    const highlight = (aktuelleRes === h[0]) ? 'style="border-color: #e67e22; background: rgba(230, 126, 34, 0.1);"' : '';
-    html += `
-        <button class="eigenesmenu-item" ${highlight} onclick="updateSelection('${h[0]}', '${time}', ${slot}, '${klasse}', this)">
-            <span class="eigenesmenu-icon">📍</span> 
-            <span class="btn-text">${h[0]}</span>
-            <div class="eigenesmenu-loader"></div>
-            <span class="eigenesmenu-success-icon">✓</span>
-        </button>`;
-});
+        // Hallen-Buttons generieren
+        freieHallen.forEach(h => {
+            const istAktiv = (aktuelleRes === h[0]);
+            const highlight = istAktiv ? 'style="border-color: #e67e22; background: rgba(230, 126, 34, 0.1);"' : '';
+            
+            html += `
+                <button class="eigenesmenu-item" ${highlight} onclick="updateSelection('${h[0]}', '${time}', ${slot}, '${klasse}', this)">
+                    <span class="eigenesmenu-icon">📍</span> 
+                    <span class="btn-text">${h[0]}</span>
+                    <div class="eigenesmenu-loader"></div>
+                    <span class="eigenesmenu-success-icon">✓</span>
+                </button>`;
+        });
         
         html += `</div>`;
-
-        // Inhalt austauschen
         liste.innerHTML = html;
 
-        // Zurück-Button einfügen (falls man sich verklickt hat)
+        // Zurück-Button
         const backBtn = document.createElement('button');
         backBtn.className = 'eigenesmenu-cancel';
         backBtn.innerText = "← Zurück";
         backBtn.onclick = () => openEditor(window.currentEditBox, time, slot, klasse);
+        
+        const alterBack = container.querySelector('.eigenesmenu-cancel');
+        if (alterBack) alterBack.remove();
         container.appendChild(backBtn);
     }
 }
