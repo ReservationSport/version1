@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport12xexexe3</title>
+     <title>Reservation Sport123</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2589,7 +2589,22 @@ window.handleMenuAction = (el, type, time, slot, klasse) => {
     if (sBtn) { sBtn.style.display = 'inline-flex'; sBtn.classList.add('needs-save'); }
 };
 
+    
+window.saveData = (r, c, time, slot, finalVal) => {
+    // Falls currentPlanData noch nicht existiert, kurz definieren
+    if (typeof currentPlanData === 'undefined') window.currentPlanData = {};
 
+    if (!currentPlanData[r]) currentPlanData[r] = [];
+    currentPlanData[r][c] = finalVal;
+
+    // Warteschlange für den Server-Upload (pendingChanges)
+    if (typeof pendingChanges !== 'undefined') {
+        pendingChanges = pendingChanges.filter(ch => ch.slotIndex !== slot);
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    }
+
+    console.log("Gespeichert:", r, c, finalVal);
+};
 
 
 
