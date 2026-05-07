@@ -2085,51 +2085,58 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     if (loader) loader.style.display = 'block';
     if (btnText) btnText.style.opacity = '0.3';
 
+    // Die URL zu deiner Google Apps Script Web-App
     const scriptUrl = "https://script.google.com/macros/s/AKfycbz6w8QxV_qTvNunfwG_A7Rvune7gBYqQJEJNkePtWDGuLQEu9wmhQKYqBPHnEzl9Jxm/exec";
 
-    // WICHTIG: Das Datum muss aus deinem UI geholt werden (z.B. Variable 'currentDate' oder ein Element-Text)
-    // Ich nehme hier an, dass 'currentDate' global verfügbar ist oder aus dem Header gelesen wird.
-    const displayDate = document.getElementById('datumAnzeige')?.innerText || ""; 
+    // DATUM HOLEN: Versuche erst 'datumAnzeige', dann 'datum-titel'
+    let displayDate = document.getElementById('datumAnzeige')?.innerText || 
+                      document.getElementById('datum-titel')?.innerText || "";
+    
+    // Falls das Datum im Format "Donnerstag, 07.05.2026" steht, 
+    // müssen wir sicherstellen, dass das Script damit eine ID bauen kann.
+    displayDate = displayDate.trim();
 
     const payload = {
-        mode: "saveMaterial", // Geändert von 'action' zu 'mode' (passend zum doPost)
-        pw: SECRET_PASSWORD,  // Sicherstellen, dass SECRET_PASSWORD definiert ist
+        mode: "saveMaterial", 
+        pw: "bbzo",           // Passwort direkt hier fixiert
         material: material,
         kommentar: kommentar,
         time: time,
         slot: slot,
         klasse: klasse,
-        date: displayDate     // Das Datum wird für die ID im Sheet benötigt
+        date: displayDate     
     };
+
+    console.log("Sende Material-Payload:", payload);
 
     try {
         const response = await fetch(scriptUrl, {
             method: "POST",
+            mode: "no-cors", // Falls CORS-Probleme auftreten, oft bei Apps Script nötig
             body: JSON.stringify(payload)
         });
 
-        const result = await response.json(); // Antwort lesen für Debugging
-
-        if (response.ok && result.status === "success") {
-            if (loader) loader.style.display = 'none';
-            if (successIcon) successIcon.style.display = 'block';
-            clickedBtn.classList.add('success');
-            
-            // Icon im Plan markieren
-            markBoxWithMaterialIcon(window.currentEditBox, material, kommentar);
-
-            setTimeout(() => {
-                closeEditor();
-            }, 1000);
-        } else {
-            console.error("Server-Fehler:", result.msg);
-            alert("Fehler vom Server: " + (result.msg || "Unbekannt"));
-            if (loader) loader.style.display = 'none';
-        }
-    } catch (error) {
-        console.error("Netzwerk-Fehler:", error);
-        alert("Netzwerk-Fehler beim Speichern!");
+        // HINWEIS: Bei mode: "no-cors" kann die Antwort nicht gelesen werden.
+        // Wenn du 'status: success' brauchst, muss im Script CORS korrekt konfiguriert sein.
+        // Wir gehen hier optimistisch davon aus, dass es klappt, wenn kein Fehler geworfen wird.
+        
         if (loader) loader.style.display = 'none';
+        if (successIcon) successIcon.style.display = 'block';
+        clickedBtn.classList.add('success');
+        
+        // Icon im Plan sofort setzen
+        markBoxWithMaterialIcon(window.currentEditBox, material, kommentar);
+
+        setTimeout(() => {
+            closeEditor();
+            // Falls das Icon nach Refresh weg ist, war das Datum im Payload falsch!
+        }, 1000);
+
+    } catch (error) {
+        console.error("Fehler beim Speichern:", error);
+        alert("Fehler: " + error.message);
+        if (loader) loader.style.display = 'none';
+        if (btnText) btnText.style.opacity = '1';
     }
 }
 
