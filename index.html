@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sportdfgsdgh</title>
+     <title>Reservation Sport444444444</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1148,6 +1148,16 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
     const parent = el.closest('.box');
     if (!parent) return;
 
+// --- DEBUGGING LOGS ---
+    const mainSelect = parent.querySelector('.main-select');
+    const extraSelect = parent.querySelector('.extra-select');
+    
+    console.log(`--- Auswahl in [${type.toUpperCase()}] Menü ---`);
+    console.log(`Klasse: ${klasse} | Slot: ${slot}`);
+    console.log(`Wert Menu A (Main): "${mainSelect ? mainSelect.value : 'nicht gefunden'}"`);
+    console.log(`Wert Menu B (Extra): "${extraSelect ? extraSelect.value : 'nicht gefunden'}"`);
+    console.log("---------------------------------------");
+    
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const resField = parent.querySelector('.res');
