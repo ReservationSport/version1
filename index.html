@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport4433333333344</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -951,7 +951,9 @@ async function loadPlan() {
 
     <select class="extra-select" onfocus="this.value='init'" onclick="event.stopPropagation()" onchange="syncMenus(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
          <option value="init" style="display:none;"></option>
-         ${res && !isAusfall ? `<option value="${res}" style="display:none;" selected>${res}</option>` : ''}
+         
+         ${res && !isAusfall ? `<option value="${res}" data-mirror="true" style="display:none;" selected>${res}</option>` : ''}
+         
          <option value="" ${res === "" ? "selected" : ""}>---</option>
          <option value="ausfall" ${isAusfall ? "selected" : ""}>❌ Ausfall</option>
          <option value="delete_comment">🗑️ Notiz löschen</option>
@@ -1285,16 +1287,25 @@ window.syncMenus = async (el, type, time, slot, klasse) => {
 
 // --- HILFSFUNKTION FÜR DEN SPIEGEL-TRICK ---
 function updateMirrorOption(selectEl, val) {
-    // Sucht eine bereits existierende Spiegel-Option oder erstellt eine neue
-    let opt = selectEl.querySelector('option[data-mirror="true"]');
-    if (!opt) {
-        opt = document.createElement('option');
-        opt.setAttribute('data-mirror', 'true');
-        opt.style.display = 'none'; // Für den Nutzer im Menü unsichtbar
-        selectEl.appendChild(opt);
+    // 1. Alle vorhandenen 'selected' Attribute im Menü entfernen
+    // Das verhindert, dass '---' visuell kleben bleibt
+    Array.from(selectEl.options).forEach(opt => opt.removeAttribute('selected'));
+
+    // 2. Sucht die Spiegel-Option
+    let mirrorOpt = selectEl.querySelector('option[data-mirror="true"]');
+    
+    if (!mirrorOpt) {
+        mirrorOpt = document.createElement('option');
+        mirrorOpt.setAttribute('data-mirror', 'true');
+        mirrorOpt.style.display = 'none'; 
+        selectEl.appendChild(mirrorOpt);
     }
-    opt.value = val;
-    opt.innerText = val;
+
+    // 3. Wert setzen und EXPLIZIT als ausgewählt markieren
+    mirrorOpt.value = val;
+    mirrorOpt.innerText = val;
+    mirrorOpt.setAttribute('selected', 'selected'); // Physisches Attribut setzen
+    selectEl.value = val; // Logischen Wert setzen
 }
 
 // Hilfsfunktionen (unverändert)
