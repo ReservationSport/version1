@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport111111</title>
+     <title>Reservation Sport67</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -880,14 +880,14 @@ async function loadPlan() {
         allClassTeachers = json.allClassTeachers || {};
         
         const data = json.data;
-        const options = json.options;
+        const options = json.options; // Hallen-Optionen speichern wir für später
         configFarben = {}; 
         options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = ""; // Sammel-Variable für bessere Performance
+        let html = ""; 
 
         // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
@@ -900,18 +900,6 @@ async function loadPlan() {
                 html += `<div class="box zeit-box">${row[0]}</div>`;
                 
                 for(let i = 1; i <= 5; i++) {
-                    // Hallen-Belegung prüfen
-                    let belegteHallen = [];
-                    for (let k = 1; k <= 5; k++) {
-                        if (k === i) continue; 
-                        let cellVal = String(row[k] || "").trim();
-                        if (cellVal !== "") {
-                            let rPart = cellVal.split(' | ')[1] || "";
-                            if (rPart && rPart !== "Ausfall") belegteHallen.push(rPart);
-                        }
-                    }
-
-                    // Zell-Details
                     let val = row[i] || "", teile = val.split(' | ');
                     let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                     let isAusfall = (res === "Ausfall");
@@ -923,46 +911,24 @@ async function loadPlan() {
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    // HTML für die Kachel
+                    // Die gesamte Box wird klickbar, wenn canEdit wahr ist
+                    const clickAction = canEdit ? `onclick="openEditor(this, '${row[0]}', ${i}, '${klasse}')"` : "";
+
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
-                            oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" 
-                            ontouchstart="${canEdit ? 'startTimer(this)' : ''}" 
-                            ontouchend="clearTimer()" 
-                            style="background-color: ${isAusfall ? '' : configFarben[res] || ''}">
+                            ${clickAction}
+                            style="background-color: ${isAusfall ? '' : configFarben[res] || ''}; cursor: ${canEdit ? 'pointer' : 'default'}">
                             
                             ${stiftHtml}
                             <div class="klasse">${klasse}</div>
                             <div class="lehrer-info">${teacher}</div>
                             <div class="res">${res}</div>
-                            
-                            ${canEdit ? `
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
-                                <option value="">---</option>
-                                ${options.filter(o => {
-                                    const optName = o[0];
-                                    if (res === optName) return true;
-                                    return !belegteHallen.some(belegt => {
-                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        return oParts.some(p => bParts.includes(p));
-                                    });
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
-                            </select>
-
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-                                 <option value="">---</option>
-                                 <option value="ausfall">❌ Ausfall</option>
-                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
-                                 <option value="kommentar">📝 Notiz hinzufügen</option>
-                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-                            </select>` : ''}
                     </div>`;
                 }
             }
         });
-        container.innerHTML = html; // Einmaliges Schreiben ins DOM
+        container.innerHTML = html;
 
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
