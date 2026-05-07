@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sportsdfsdf</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -757,6 +757,36 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 }
 .eigenesmenu-liste div::-webkit-scrollbar-thumb:hover {
     background: #e67e22; /* Orange beim Scrollen */
+}
+
+
+    /* Spinner Animation */
+@keyframes eigenesmenu-spin {
+    to { transform: rotate(360deg); }
+}
+
+.eigenesmenu-loader {
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 50%;
+    border-top-color: #e67e22;
+    animation: eigenesmenu-spin 0.6s linear infinite;
+    display: none; /* Standardmäßig aus */
+    margin-left: auto;
+}
+
+.eigenesmenu-success-icon {
+    color: #27ae60;
+    font-weight: bold;
+    display: none; /* Standardmäßig aus */
+    margin-left: auto;
+}
+
+/* Klasse für den Erfolgs-Zustand des Buttons */
+.eigenesmenu-item.success {
+    border-color: #27ae60 !important;
+    background: rgba(39, 174, 96, 0.1) !important;
 }
 
     
@@ -1611,23 +1641,34 @@ function openEditor(el, time, slot, klasse) {
                 <p class="eigenesmenu-subtitle">Was möchtest du tun?</p>
             </div>
             
-            <div class="eigenesmenu-liste">
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">🏟️</span> Reservation Halle
-                </button>
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">🎾</span> Material
-                </button>
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('ausfall', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">❌</span> Ausfall markieren
-                </button>
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">🏆</span> Lehrjahr beendet
-                </button>
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">📝</span> Nachricht / Notiz
-                </button>
-            </div>
+           <div class="eigenesmenu-liste">
+    <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
+        <span class="eigenesmenu-icon">🏟️</span> 
+        <span class="btn-text">Reservation Halle</span>
+    </button>
+
+    <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
+        <span class="eigenesmenu-icon">🎾</span> 
+        <span class="btn-text">Material</span>
+    </button>
+
+    <button class="eigenesmenu-item" onclick="updateSelection('Ausfall', '${time}', ${slot}, '${klasse}', this)">
+        <span class="eigenesmenu-icon">❌</span> 
+        <span class="btn-text">Ausfall markieren</span>
+        <div class="eigenesmenu-loader"></div>
+        <span class="eigenesmenu-success-icon">✓</span>
+    </button>
+
+    <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
+        <span class="eigenesmenu-icon">🏆</span> 
+        <span class="btn-text">Lehrjahr beendet</span>
+    </button>
+
+    <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}', this)">
+        <span class="eigenesmenu-icon">📝</span> 
+        <span class="btn-text">Nachricht / Notiz</span>
+    </button>
+</div>
 
             <button class="eigenesmenu-cancel" onclick="closeEditor()">Abbrechen</button>
         </div>
@@ -1695,13 +1736,16 @@ function handleMenuChoice(choice, time, slot, klasse) {
             </button>`;
 
         // Die Hallen-Buttons
-        freieHallen.forEach(h => {
-            const highlight = (aktuelleRes === h[0]) ? 'style="border-color: #e67e22; background: #222;"' : '';
-            html += `
-                <button class="eigenesmenu-item" ${highlight} onclick="updateSelection('${h[0]}', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">📍</span> ${h[0]}
-                </button>`;
-        });
+       freieHallen.forEach(h => {
+    const highlight = (aktuelleRes === h[0]) ? 'style="border-color: #e67e22; background: rgba(230, 126, 34, 0.1);"' : '';
+    html += `
+        <button class="eigenesmenu-item" ${highlight} onclick="updateSelection('${h[0]}', '${time}', ${slot}, '${klasse}', this)">
+            <span class="eigenesmenu-icon">📍</span> 
+            <span class="btn-text">${h[0]}</span>
+            <div class="eigenesmenu-loader"></div>
+            <span class="eigenesmenu-success-icon">✓</span>
+        </button>`;
+});
         
         html += `</div>`;
 
