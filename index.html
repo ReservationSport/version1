@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport111111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -645,6 +645,46 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 .blink-active {
     animation: highlightBlink 0.8s ease-in-out 3; /* 3 mal blinken */
 }
+
+
+.smart-menu-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 5px;
+}
+
+.menu-switch {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    background: rgba(0,0,0,0.05);
+    border-radius: 4px;
+    padding: 2px;
+}
+
+.switch-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 2px 8px;
+    font-size: 14px;
+    border-radius: 3px;
+    transition: all 0.2s;
+}
+
+.switch-btn.active {
+    background: white;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.combined-select {
+    width: 100%;
+    padding: 4px;
+    font-size: 13px;
+}
+
+
     
 </style>
 
@@ -820,7 +860,6 @@ async function loadPlan() {
     const loader = document.getElementById('globalLoader');
     const sBtn = document.getElementById('saveBtn');
 
-    // 1. Prüfung auf ungespeicherte Änderungen
     if (pendingChanges.length > 0) {
         if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
             dp.value = lastStableDate; 
@@ -831,7 +870,6 @@ async function loadPlan() {
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
-    // 2. RESET: UI und Datenzustand
     if (sBtn) {
         sBtn.style.display = 'none';
         sBtn.classList.remove('needs-save', 'success', 'is-loading');
@@ -844,23 +882,14 @@ async function loadPlan() {
     loader.style.display = 'block'; 
     updateNavButtons();
 
-    // 3. Zeit-Validierung
     const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
     const heute = new Date(); heute.setHours(12,0,0,0);
     const vierWochen = new Date(); vierWochen.setDate(heute.getDate() + 28);
     
-    if (dateObj < heute) { 
-        container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; 
-        loader.style.display = 'none'; 
-        return; 
-    }
-    if (dateObj > vierWochen) { 
-        container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; 
-        loader.style.display = 'none'; 
-        return; 
-    }
-    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
-        container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; 
+    if (dateObj < heute || dateObj > vierWochen || dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
+        let msg = dateObj < heute ? "Lebst du in der Vergangenheit?" : 
+                  dateObj > vierWochen ? "Die Zukunft ist noch nicht bereit..." : "Mach mal Pause! Es ist Wochenende...";
+        container.innerHTML = `<div class="box info-box">${msg}</div>`; 
         loader.style.display = 'none'; 
         return; 
     }
@@ -874,22 +903,20 @@ async function loadPlan() {
             return;
         }
 
-        // 4. Daten-Verarbeitung
         currentPlanData = json.data; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
         
         const data = json.data;
-        const options = json.options;
+        const options = json.options; // Das sind die Hallen-Optionen vom Server
         configFarben = {}; 
         options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = ""; // Sammel-Variable für bessere Performance
+        let html = ""; 
 
-        // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
             if (rowIndex === 0) {
                 html += `<div class="box header-row"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
@@ -900,7 +927,6 @@ async function loadPlan() {
                 html += `<div class="box zeit-box">${row[0]}</div>`;
                 
                 for(let i = 1; i <= 5; i++) {
-                    // Hallen-Belegung prüfen
                     let belegteHallen = [];
                     for (let k = 1; k <= 5; k++) {
                         if (k === i) continue; 
@@ -911,7 +937,6 @@ async function loadPlan() {
                         }
                     }
 
-                    // Zell-Details
                     let val = row[i] || "", teile = val.split(' | ');
                     let klasse = teile[0], res = teile[1] || "", kommentar = teile[2] || "";
                     let isAusfall = (res === "Ausfall");
@@ -923,53 +948,80 @@ async function loadPlan() {
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    // HTML für die Kachel
+                    // Filtert die Hallen für diese spezifische Zelle
+                    const filteredHallen = options.filter(o => {
+                        const optName = o[0];
+                        if (res === optName) return true;
+                        return !belegteHallen.some(belegt => {
+                            let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                            let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
+                            return oParts.some(p => bParts.includes(p));
+                        });
+                    }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('');
+
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                            data-row="${rowIndex}" data-col="${i}"
-                            oncontextmenu="${canEdit ? 'handleContextMenu(event, this)' : ''}" 
-                            ontouchstart="${canEdit ? 'startTimer(this)' : ''}" 
-                            ontouchend="clearTimer()" 
-                            style="background-color: ${isAusfall ? '' : configFarben[res] || ''}">
+                         data-row="${rowIndex}" data-col="${i}"
+                         style="background-color: ${isAusfall ? '' : configFarben[res] || ''}">
                             
-                            ${stiftHtml}
-                            <div class="klasse">${klasse}</div>
-                            <div class="lehrer-info">${teacher}</div>
-                            <div class="res">${res}</div>
+                        ${stiftHtml}
+                        <div class="klasse">${klasse}</div>
+                        <div class="lehrer-info">${teacher}</div>
+                        <div class="res">${res}</div>
+                        
+                        ${canEdit ? `
+                        <div class="smart-menu-container">
+                            <div class="menu-switch">
+                                <button class="switch-btn active" onclick="toggleMenuMode(this, 'hallen')">🏟️</button>
+                                <button class="switch-btn" onclick="toggleMenuMode(this, 'tools')">⚙️</button>
+                            </div>
                             
-                            ${canEdit ? `
-                            <select onclick="event.stopPropagation()" onchange="addChange(this, '${row[0]}', ${i}, '${klasse}');">
+                            <select class="combined-select" 
+                                    data-hallen='${JSON.stringify(filteredHallen).replace(/'/g, "&apos;")}'
+                                    onchange="syncMenus(this, 'combined', '${row[0]}', ${i}, '${klasse}')">
                                 <option value="">---</option>
-                                ${options.filter(o => {
-                                    const optName = o[0];
-                                    if (res === optName) return true;
-                                    return !belegteHallen.some(belegt => {
-                                        let bParts = belegt.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        let oParts = optName.split(/[\s+]+/).filter(p => p.length > 0 && p !== "Halle");
-                                        return oParts.some(p => bParts.includes(p));
-                                    });
-                                }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
+                                ${filteredHallen}
                             </select>
-
-                            <select class="extra-select" onclick="event.stopPropagation()" onchange="handleExtraAction(this, '${row[0]}', ${i})">
-                                 <option value="">---</option>
-                                 <option value="ausfall">❌ Ausfall</option>
-                                 <option value="perma_delete">🏆 Schuljahr beendet</option>
-                                 <option value="kommentar">📝 Notiz hinzufügen</option>
-                                 <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
-                            </select>` : ''}
+                        </div>` : ''}
                     </div>`;
                 }
             }
         });
-        container.innerHTML = html; // Einmaliges Schreiben ins DOM
+        container.innerHTML = html;
 
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
-        container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
+        container.innerHTML = `<div class="box info-box" style="color:red;">Fehler beim Laden!</div>`;
     } finally {
         loader.style.display = 'none';
         updateNavButtons();
+    }
+}
+
+/**
+ * Der Umschalter für das Menü
+ */
+function toggleMenuMode(btn, mode) {
+    const container = btn.closest('.smart-menu-container');
+    const select = container.querySelector('.combined-select');
+    const btns = container.querySelectorAll('.switch-btn');
+    
+    btns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    if (mode === 'hallen') {
+        // Hallen aus dem Daten-Attribut wiederherstellen
+        const hallenHtml = JSON.parse(select.dataset.hallen.replace(/&apos;/g, "'"));
+        select.innerHTML = `<option value="">---</option>${hallenHtml}`;
+    } else {
+        // Tools/Aktionen anzeigen
+        select.innerHTML = `
+            <option value="">Aktion wählen...</option>
+            <option value="ausfall">❌ Ausfall</option>
+            <option value="kommentar">📝 Notiz hinzufügen</option>
+            <option value="delete_comment">🗑️ Notiz löschen</option>
+            <option value="perma_delete">🏆 Schuljahr beendet</option>
+        `;
     }
 }
 
