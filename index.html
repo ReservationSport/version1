@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport55555555555555</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1602,7 +1602,7 @@ async function loadPlan() {
                             <div class="res">${res}</div>
                             
                             ${canEdit ? `
-    <select onmousedown="armMenu(this)" onchange="handleMenuAction(this, 'main', '${row[0]}', ${i}, '${klasse}')">
+    <select onfocus="this.value='ready_to_reset'" onclick="event.stopPropagation()" onchange="handleMenuAction(this, 'main', '${row[0]}', ${i}, '${klasse}')">
         <option value="ready_to_reset" style="display:none;"></option>
         <option value="">---</option>
         ${options.filter(o => {
@@ -1616,13 +1616,15 @@ async function loadPlan() {
         }).map(o => `<option value="${o[0]}" ${res === o[0] ? 'selected' : ''}>${o[0]}</option>`).join('')}
     </select>
 
-    <select class="extra-select" onmousedown="armMenu(this)" onchange="handleMenuAction(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
+    <select class="extra-select" onfocus="this.value='ready_to_reset'" onclick="event.stopPropagation()" onchange="handleMenuAction(this, 'extra', '${row[0]}', ${i}, '${klasse}')">
          <option value="ready_to_reset" style="display:none;"></option>
          <option value="">---</option>
          <option value="ausfall">❌ Ausfall</option>
          <option value="perma_delete">🏆 Schuljahr beendet</option>
          <option value="kommentar">📝 Notiz hinzufügen</option>
-    </select>` : ''}
+         <option value="delete_comment" class="del-opt">🗑️ Notiz löschen</option>
+    </select>
+` : ''}
                     </div>`;
                 }
             }
@@ -2413,10 +2415,11 @@ window.armMenu = (el) => {
     el.setAttribute('data-armed', 'true');
 };
 
+    
 window.handleMenuAction = (el, type, time, slot, klasse) => {
     const val = el.value;
     
-    // 1. Abbruch, wenn nur geöffnet und geschlossen wurde
+    // Nichts tun, wenn nur das Menü geöffnet/geschlossen wurde
     if (val === "ready_to_reset") return;
 
     const parent = el.closest('.box');
@@ -2425,60 +2428,78 @@ window.handleMenuAction = (el, type, time, slot, klasse) => {
     const r = parent.getAttribute('data-row');
     const c = parent.getAttribute('data-col');
     const resField = parent.querySelector('.res');
+    
+    // Aktuelle Halle aus dem UI lesen (falls vorhanden), um sie bei Notiz-Aktionen zu behalten
+    const currentRes = resField ? resField.innerText.trim() : "";
 
-    // --- DER ENTSCHEIDENDE FIX ---
-    // Wenn "---" gewählt wurde (egal ob im Haupt- oder Extramenu)
-    if (val === "" || val === "---") {
-        console.log("Reset ausgelöst für:", r, c);
-        
+    // Variable für das Speicherformat
+    let finalVal = klasse; 
+
+    // --- LOGIK-ZWEIGE ---
+
+    // FALL A: RESET / LÖSCHEN (Klick auf "---")
+    if (val === "" || val === "reset") {
         parent.classList.remove('ausfall-mode');
         parent.style.backgroundColor = "";
         if (resField) resField.innerText = "";
         
-        // WICHTIG: Setze BEIDE Menüs in dieser Kachel hart auf leer zurück
-        const allSelects = parent.querySelectorAll('select');
-        allSelects.forEach(s => s.value = "");
-
-        saveData(r, c, time, slot, klasse); 
+        // Beide Dropdowns in der Kachel optisch leeren
+        parent.querySelectorAll('select').forEach(s => s.value = "");
+        finalVal = klasse; // Nur die Klasse speichern (Rest gelöscht)
     } 
     
-    // 2. AUSFALL (nur aus dem Extramenu)
+    // FALL B: AUSFALL
     else if (val === "ausfall") {
         parent.classList.add('ausfall-mode');
         if (resField) resField.innerText = "Ausfall";
         parent.style.backgroundColor = "";
-        
-        // Hallenmenü leeren
-        const mainSel = parent.querySelector('select:not(.extra-select)');
-        if (mainSel) mainSel.value = "";
-        
-        saveData(r, c, time, slot, klasse + " | Ausfall");
+        finalVal = klasse + " | Ausfall";
     }
 
-    // 3. EINE HALLE (nur aus dem Hauptmenu)
-    else if (val !== "perma_delete" && val !== "kommentar" && val !== "delete_comment") {
+    // FALL C: NOTIZ LÖSCHEN
+    else if (val === "delete_comment") {
+        // Wir behalten die aktuelle Halle (currentRes) bei, löschen aber den Kommentar-Teil
+        finalVal = currentRes ? (klasse + " | " + currentRes) : klasse;
+        
+        // Icon sofort entfernen
+        const stift = parent.querySelector('.stift');
+        if (stift) stift.remove();
+    }
+
+    // FALL D: EINE HALLE GEWÄHLT (Standard)
+    else if (val !== "kommentar" && val !== "perma_delete") {
         parent.classList.remove('ausfall-mode');
         if (resField) resField.innerText = val;
-        parent.style.backgroundColor = (typeof configFarben !== 'undefined') ? configFarben[val] : "";
         
-        // Extramenü leeren
-        const extraSel = parent.querySelector('.extra-select');
-        if (extraSel) extraSel.value = "";
-        
-        saveData(r, c, time, slot, klasse + " | " + val);
+        // Farbe setzen
+        if (window.configFarben && configFarben[val]) {
+            parent.style.backgroundColor = configFarben[val];
+        }
+        finalVal = klasse + " | " + val;
     }
 
-    // Nach der Aktion: Das gerade benutzte Menü wieder auf neutral stellen
-    setTimeout(() => { el.value = ""; }, 100);
+    // --- SPEICHERN ---
+    if (typeof saveData === 'function') {
+        saveData(r, c, time, slot, finalVal);
+    } else {
+        if (!currentPlanData[r]) currentPlanData[r] = [];
+        currentPlanData[r][c] = finalVal;
+        pendingChanges = pendingChanges.filter(ch => ch.slotIndex !== slot);
+        pendingChanges.push({ time, slotIndex: slot, val: finalVal });
+    }
 
-    // Save-Button einblenden
+    // --- UI FEEDBACK ---
     const sBtn = document.getElementById('saveBtn');
     if (sBtn) { 
         sBtn.style.display = 'inline-flex'; 
         sBtn.classList.add('needs-save'); 
     }
-};
 
+    // Dropdown nach kurzer Zeit neutralisieren, damit onfocus wieder greifen kann
+    setTimeout(() => { 
+        el.value = ""; 
+    }, 150);
+};
     
 window.saveData = (r, c, time, slot, finalVal) => {
     // Falls currentPlanData noch nicht existiert, kurz definieren
