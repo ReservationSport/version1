@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport67kjnjouoi</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1771,16 +1771,32 @@ function handleMenuChoice(choice, time, slot, klasse) {
     }
 }
 
-  function updateSelection(wert, time, slot, klasse) {
-    // 1. Deine bestehende Speicher-Logik triggern
-    // Wir übergeben ein Fake-Element mit dem neuen Value
-    addChange({ value: wert }, time, slot, klasse);
+
     
-    // 2. Das Menü schließen
+ function updateSelection(neuerWert, time, slot, klasse) {
+    // 1. Die Box, die wir beim Öffnen in window.currentEditBox gespeichert haben
+    const box = window.currentEditBox;
+    if (!box) return;
+
+    // 2. Wir erstellen ein Fake-Objekt für 'el'
+    // Es muss .value haben und .closest('.box') simulieren
+    const fakeEl = {
+        value: neuerWert,
+        closest: (selector) => {
+            if (selector === '.box') return box;
+            return null;
+        }
+    };
+
+    // 3. Deine Original-Funktion aufrufen
+    // Sie findet jetzt über fakeEl.closest('.box') die richtige r und c
+    window.addChange(fakeEl, time, slot, klasse);
+
+    // 4. Menü schließen
     closeEditor();
-}  
+}
 
-
+    
     
 </script>
 
