@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport1234dadasdasd</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2037,6 +2037,8 @@ function openMaterialDetail(materialName, time, slot, klasse) {
 }
 
 // 3. Funktion: Material endgültig speichern
+
+    
 async function saveMaterialSelection(material, kommentar, time, slot, klasse, clickedBtn) {
     const loader = clickedBtn.querySelector('.eigenesmenu-loader');
     const successIcon = clickedBtn.querySelector('.eigenesmenu-success-icon');
@@ -2045,22 +2047,19 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     if (loader) loader.style.display = 'block';
     if (btnText) btnText.style.opacity = '0.3';
 
-    // Nutze deine bestehende URL-Variable oder die direkte URL
-    const scriptUrl = url; 
+    const scriptUrl = url; // Nutzt deine globale URL-Variable
 
-    // --- DATUM-LOGIK FIX ---
-    // Wir holen das Datum direkt vom Haupt-DatePicker, da dieses das korrekte Format hat
+    // Datum vom DatePicker holen
     const dp = document.getElementById('datePicker');
     let displayDate = dp ? dp.value : "";
 
-    // Fallback: Falls der DatePicker nicht gefunden wird, versuche andere Quellen
     if (!displayDate) {
         displayDate = window.lastStableDate || ""; 
     }
 
     const payload = {
         mode: "saveMaterial", 
-        pw: userPw, // Nutzt deine globale Passwort-Variable          
+        pw: userPw,          
         material: material,
         kommentar: kommentar,
         time: time,
@@ -2085,14 +2084,12 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
             clickedBtn.classList.add('success');
             
             // Icon im Plan sofort setzen
-            // Nutze findBoxByTimeAndSlot um sicherzugehen, dass die richtige Box getroffen wird
             const box = findBoxByTimeAndSlot(time, slot);
             if (box) {
                 markBoxWithMaterialIcon(box, material, kommentar);
             }
 
             setTimeout(() => {
-                // Nutze deine bestehende closeEditor Funktion
                 if (typeof closeEditor === 'function') closeEditor();
             }, 1000);
         } else {
@@ -2106,6 +2103,43 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
         if (btnText) btnText.style.opacity = '1';
     }
 }
+
+
+function markBoxWithMaterialIcon(box, material, kommentar) {
+    if (!box) return;
+
+    // Suche nach einem bereits vorhandenen Icon-Element
+    let iconElem = box.querySelector('.material-indicator');
+
+    // Falls kein Material vorhanden ist, entfernen wir ein evtl. vorhandenes Icon
+    if (!material || material.trim() === "") {
+        if (iconElem) iconElem.remove();
+        return;
+    }
+
+    // Falls noch kein Icon da ist, erstellen wir eines
+    if (!iconElem) {
+        iconElem = document.createElement('div');
+        iconElem.className = 'material-indicator';
+        iconElem.innerHTML = '📦'; // Dein Universal-Icon
+        
+        // Styling: Unten rechts in der Box platzieren
+        iconElem.style.position = 'absolute';
+        iconElem.style.bottom = '4px';
+        iconElem.style.right = '4px';
+        iconElem.style.fontSize = '16px';
+        iconElem.style.zIndex = '5';
+        
+        box.appendChild(iconElem);
+    }
+
+    // Den Hover-Text setzen (Tooltip)
+    // material enthält hier den Text aus deinem Dropdown/Checkboxen
+    iconElem.title = "Material: " + material + (kommentar ? "\nNotiz: " + kommentar : "");
+}
+
+
+
     
     
 </script>
