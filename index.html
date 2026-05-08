@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport12344</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1044,14 +1044,14 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
     
 // ------------STUNDENPLAN LADEN------------
 
-async function loadPlan() {
+window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan');
     const loader = document.getElementById('globalLoader');
     const sBtn = document.getElementById('saveBtn');
 
     // 1. Prüfung auf ungespeicherte Änderungen
-    if (pendingChanges.length > 0) {
+    if (typeof pendingChanges !== 'undefined' && pendingChanges.length > 0) {
         if (!confirm("Du hast ungespeicherte Änderungen. Diese gehen beim Aktualisieren verloren! Trotzdem fortfahren?")) {
             dp.value = lastStableDate; 
             return;
@@ -1071,8 +1071,8 @@ async function loadPlan() {
     lastStableDate = dateVal; 
     
     container.innerHTML = ""; 
-    loader.style.display = 'block'; 
-    updateNavButtons();
+    if (loader) loader.style.display = 'block'; 
+    if (typeof updateNavButtons === 'function') updateNavButtons();
 
     // 3. Zeit-Validierung
     const dateObj = new Date(dateVal); dateObj.setHours(12,0,0,0);
@@ -1081,24 +1081,24 @@ async function loadPlan() {
     
     if (dateObj < heute) { 
         container.innerHTML = `<div class="box info-box">Lebst du in der Vergangenheit?</div>`; 
-        loader.style.display = 'none'; 
+        if (loader) loader.style.display = 'none'; 
         return; 
     }
     if (dateObj > vierWochen) { 
         container.innerHTML = `<div class="box info-box">Die Zukunft ist noch nicht bereit...</div>`; 
-        loader.style.display = 'none'; 
+        if (loader) loader.style.display = 'none'; 
         return; 
     }
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box">Mach mal Pause! Es ist Wochenende...</div>`; 
-        loader.style.display = 'none'; 
+        if (loader) loader.style.display = 'none'; 
         return; 
     }
     
     try {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
-        allOptions = json.options; // Speichere die Hallen global ab
+        allOptions = json.options; 
         
         if (json.error === "SPERRE") {
             container.innerHTML = `<div class="box info-box">${json.msg}</div>`;
@@ -1141,17 +1141,14 @@ async function loadPlan() {
                         : "";
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
-
                     const clickAction = canEdit ? `onclick="openEditor(this, '${row[0]}', ${i}, '${klasse}')"` : "";
 
-                    // NEU: data-time und data-slot hinzugefügt, um die Box für Materialien identifizierbar zu machen
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
                             data-time="${row[0]}" data-slot="${i}"
                             ${clickAction}
                             style="background-color: ${isAusfall ? '' : configFarben[res] || ''}; cursor: ${canEdit ? 'pointer' : 'default'}">
-                            
                             ${stiftHtml}
                             <div class="klasse">${klasse}</div>
                             <div class="lehrer-info">${teacher}</div>
@@ -1162,18 +1159,17 @@ async function loadPlan() {
         });
         container.innerHTML = html;
 
-    // --- NEU: MATERIALIEN DIREKT AUS DEM JSON SETZEN ---
-        // Da wir im Backend (doGet) "materials" mitliefern, nutzen wir diese direkt.
+        // 6. MATERIALIEN SETZEN (Wird ausgeführt, sobald HTML im DOM ist)
         if (json.materials && json.materials.length > 0) {
             json.materials.forEach(item => {
                 const parts = item.id.split("_");
-                const time = parts[1];
-                const slot = parts[2];
-                
-                // Wir nutzen unsere Hilfsfunktion findBoxByTimeAndSlot
-                const box = findBoxByTimeAndSlot(time, slot);
-                if (box) {
-                    markBoxWithMaterialIcon(box, item.material, item.kommentar);
+                if (parts.length >= 3) {
+                    const time = parts[1];
+                    const slot = parts[2];
+                    const box = document.querySelector(`.box[data-time="${time}"][data-slot="${slot}"]`);
+                    if (box && typeof markBoxWithMaterialIcon === 'function') {
+                        markBoxWithMaterialIcon(box, item.material, item.kommentar);
+                    }
                 }
             });
         }
@@ -1182,11 +1178,10 @@ async function loadPlan() {
         console.error("Fehler in loadPlan:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
     } finally {
-        loader.style.display = 'none';
-        updateNavButtons();
-        // Der alte google.script.run Block im finally kann komplett gelöscht werden!
+        if (loader) loader.style.display = 'none';
+        if (typeof updateNavButtons === 'function') updateNavButtons();
     }
-}
+};
 
 window.saveChanges = saveChanges;
 
@@ -2136,6 +2131,62 @@ function markBoxWithMaterialIcon(box, material, kommentar) {
 
 
 
+
+window.saveChanges = async function() {
+    const btn = document.getElementById('saveBtn');
+    const gLoader = document.getElementById('globalLoader'); 
+    
+    if (gLoader) gLoader.style.display = 'block';
+    if (btn) {
+        btn.classList.remove('needs-save', 'success');
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+    }
+
+    try { 
+        const dateVal = document.getElementById('datePicker').value;
+        const response = await fetch(url, { 
+            method: "POST", 
+            body: JSON.stringify({ 
+                date: dateVal, 
+                changes: pendingChanges, 
+                pw: userPw,
+                kuerzel: userKuerzel
+            }) 
+        }); 
+        
+        const result = await response.json();
+
+        if (result.status === "success") {
+            pendingChanges = []; 
+            if (gLoader) gLoader.style.display = 'none';
+            if (btn) {
+                btn.classList.remove('is-loading');
+                btn.classList.add('success'); 
+                setTimeout(() => { 
+                    btn.style.display = 'none'; 
+                    btn.classList.remove('success'); 
+                    btn.disabled = false;
+                }, 1500); 
+            }
+        } else { 
+            throw new Error(result.msg || "Server Error"); 
+        }
+
+    } catch (e) { 
+        console.error("Speicherfehler:", e);
+        if (gLoader) gLoader.style.display = 'none';
+        if (btn) {
+            btn.classList.remove('is-loading');
+            btn.disabled = false;
+            btn.classList.add('needs-save');
+        }
+        alert("Fehler beim Speichern: " + e.message);
+    }
+};
+
+
+    
     
     
 </script>
