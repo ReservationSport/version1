@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1980,25 +1980,6 @@ window.addChange = async (el, time, slot, klasse) => {
 // ------------MATERIAL------------    
 
     
-// 1. Funktion: Das ⚽ Icon an eine Box heften
-function markBoxWithMaterialIcon(boxElement, material, kommentar) {
-    // Altes Icon entfernen, falls vorhanden (für Updates)
-    const oldIcon = boxElement.querySelector('.material-icon');
-    if (oldIcon) oldIcon.remove();
-
-    if (!material || material === "") return;
-
-    const icon = document.createElement('div');
-    icon.className = 'material-icon';
-    icon.innerHTML = '⚽';
-    
-    // Tooltip Text zusammenbauen
-    const tooltipText = kommentar ? `${material}: ${kommentar}` : material;
-    icon.setAttribute('data-tooltip', tooltipText);
-
-    boxElement.appendChild(icon);
-}
-
 // 2. Funktion: Material-Detailfenster öffnen (Ebene 3)
 function openMaterialDetail(materialName, time, slot, klasse) {
     const container = document.querySelector('.eigenesmenu-container');
@@ -2105,34 +2086,36 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
 function markBoxWithMaterialIcon(box, material, kommentar) {
     if (!box) return;
 
-    // Suche nach einem bereits vorhandenen Icon-Element
-    let iconElem = box.querySelector('.material-indicator');
+    // 1. Altes Icon entfernen (verhindert doppelte Icons bei Updates)
+    const oldIcon = box.querySelector('.material-indicator, .material-icon');
+    if (oldIcon) oldIcon.remove();
 
-    // Falls kein Material vorhanden ist, entfernen wir ein evtl. vorhandenes Icon
-    if (!material || material.trim() === "") {
-        if (iconElem) iconElem.remove();
-        return;
-    }
+    // 2. Wenn kein Material da ist, einfach aufhören
+    if (!material || material.trim() === "") return;
 
-    // Falls noch kein Icon da ist, erstellen wir eines
-    if (!iconElem) {
-        iconElem = document.createElement('div');
-        iconElem.className = 'material-indicator';
-        iconElem.innerHTML = '📦'; // Dein Universal-Icon
-        
-        // Styling: Unten rechts in der Box platzieren
-        iconElem.style.position = 'absolute';
-        iconElem.style.bottom = '4px';
-        iconElem.style.right = '4px';
-        iconElem.style.fontSize = '16px';
-        iconElem.style.zIndex = '5';
-        
-        box.appendChild(iconElem);
-    }
+    // 3. Neues Icon-Element erstellen
+    const iconElem = document.createElement('div');
+    iconElem.className = 'material-indicator'; // Einheitliche Klasse
+    
+    // HIER DEIN WUNSCH-EMOJI SETZEN:
+    iconElem.innerHTML = '📋'; 
+    
+    // 4. Styling (Direkt im JS oder über CSS)
+    Object.assign(iconElem.style, {
+        position: 'absolute',
+        bottom: '4px',
+        right: '4px',
+        fontSize: '20px',
+        zIndex: '5',
+        cursor: 'help',
+        filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.5))' // Bessere Sichtbarkeit auf Farben
+    });
+    
+    // 5. Tooltip setzen
+    const tooltipText = "Material: " + material + (kommentar ? "\nNotiz: " + kommentar : "");
+    iconElem.title = tooltipText;
 
-    // Den Hover-Text setzen (Tooltip)
-    // material enthält hier den Text aus deinem Dropdown/Checkboxen
-    iconElem.title = "Material: " + material + (kommentar ? "\nNotiz: " + kommentar : "");
+    box.appendChild(iconElem);
 }
 
 
