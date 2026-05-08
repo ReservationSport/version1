@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2086,36 +2086,52 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
 function markBoxWithMaterialIcon(box, material, kommentar) {
     if (!box) return;
 
-    // 1. Altes Icon entfernen (verhindert doppelte Icons bei Updates)
-    const oldIcon = box.querySelector('.material-indicator, .material-icon');
+    // 1. Altes Icon entfernen
+    const oldIcon = box.querySelector('.material-indicator');
     if (oldIcon) oldIcon.remove();
 
-    // 2. Wenn kein Material da ist, einfach aufhören
-    if (!material || material.trim() === "") return;
+    if (!material || material.trim() === "") {
+        box.style.border = ""; // Rahmen zurücksetzen
+        return;
+    }
 
-    // 3. Neues Icon-Element erstellen
-    const iconElem = document.createElement('div');
-    iconElem.className = 'material-indicator'; // Einheitliche Klasse
-    
-    // HIER DEIN WUNSCH-EMOJI SETZEN:
-    iconElem.innerHTML = '📋'; 
-    
-    // 4. Styling (Direkt im JS oder über CSS)
-    Object.assign(iconElem.style, {
+    // 2. Badge-Element erstellen
+    const badge = document.createElement('div');
+    badge.className = 'material-indicator';
+    badge.innerHTML = '📋'; // Dein Klemmbrett
+
+    // 3. Styling für die Badge-Optik (Ecke oben rechts)
+    Object.assign(badge.style, {
         position: 'absolute',
-        bottom: '4px',
-        right: '4px',
-        fontSize: '20px',
-        zIndex: '5',
-        cursor: 'help',
-        filter: 'drop-shadow(1px 1px 1px rgba(0,0,0,0.5))' // Bessere Sichtbarkeit auf Farben
+        top: '0',
+        right: '0',
+        background: '#e67e22', // Dein Orange
+        color: 'white',
+        padding: '2px 5px',
+        borderBottomLeftRadius: '8px', // Knickt die Ecke optisch ab
+        fontSize: '18px',
+        zIndex: '10',
+        cursor: 'pointer', // Zeigt an, dass es klickbar ist
+        boxShadow: '-1px 1px 4px rgba(0,0,0,0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
     });
-    
-    // 5. Tooltip setzen
-    const tooltipText = "Material: " + material + (kommentar ? "\nNotiz: " + kommentar : "");
-    iconElem.title = tooltipText;
 
-    box.appendChild(iconElem);
+    // 4. Klick-Logik für Handy & Tablet (statt nur Hover)
+    badge.onclick = (e) => {
+        e.stopPropagation(); // Verhindert, dass der Editor der Box aufgeht
+        const info = kommentar ? `${material}\n\nNotiz: ${kommentar}` : material;
+        alert("📋 Material-Info:\n" + info);
+    };
+
+    // 5. Hover-Text für Desktop (bleibt als Bonus, ohne Fragezeichen)
+    badge.title = material + (kommentar ? " (" + kommentar + ")" : "");
+
+    // 6. Die Box selbst hervorheben (optionaler Rahmen)
+    box.style.border = "1px solid #e67e22";
+
+    box.appendChild(badge);
 }
 
 
