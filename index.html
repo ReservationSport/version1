@@ -14,101 +14,129 @@
     /* ============================================================
        1. BASIS-STYLING & LAYOUT
        ============================================================ */
-  body { 
+/* ============================================================
+   1. BASIS & LAYOUT (BODY-FIX)
+   ============================================================ */
+body { 
     font-family: 'Segoe UI', sans-serif; 
     background: #1a1a1a; 
     color: white; 
-    /* 130px = 70px (Header) + 50px (Datum-Zeile) + 10px Sicherheitsabstand */
-    padding: 130px 20px 20px 20px; 
+    /* BERECHNUNG: 70px (Header) + 50px (Datum-Zeile) + 20px Puffer = 140px */
+    padding: 140px 20px 20px 20px; 
     margin: 0;
 }
 
-    /* 2. Das Grid/Die Tabelle wieder schmaler machen */
 .grid { 
     display: grid; 
     grid-template-columns: 120px repeat(5, 1fr); 
     gap: 2px; 
-    max-width: 1000px; /* Hier ebenfalls wieder 1000px */
+    max-width: 1000px; 
     margin: auto; 
 }
 
-     .info-box {
-    grid-column: span 6;
-    font-size: 20px !important; /* Hier die gewünschte Größe */
-    padding: 40px !important;   /* Mehr Abstand für eine bessere Optik */
-    text-align: center;
-    line-height: 1.5;           /* Angenehmerer Zeilenabstand */
-    color: #888;                /* Dezentes Grau wie im Screenshot */
-    font-style: italic;         /* Kursiv wie gewünscht */
-}
-
-
-
-    /* ============================================================
-       2. NAVIGATION & DATUMSKONTROLLE & News
-       ============================================================ */
-
-    
- /* 1. Der Haupt-Container (Der schwarze Balken oben) */
+/* ============================================================
+   2. FIXIERTE NAVIGATION (OBERE SCHWARZE ZEILE)
+   ============================================================ */
 .date-control {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
-    height: 70px; /* Fixe Höhe */
+    height: 70px; /* Fixe Anker-Höhe */
     background: #1a1a1a;
-    z-index: 2000;
+    z-index: 2100; /* Höchster Index: Liegt über allem */
     display: flex;
     align-items: center;
     border-bottom: 1px solid #333;
+    padding: 0; /* Padding wird über nav-left/right gesteuert */
 }
 
-/* 2. Die News-Sektion (Links) */
+/* Dynamische Zentrierung bündig zum 1000px Plan */
 .nav-left {
     flex: 1;
     display: flex;
     justify-content: flex-start;
-    /* Sorgt dafür, dass der News-Button auf der Linie des 1000px Plans startet */
     padding-left: calc((100% - 1000px) / 2); 
 }
 
-/* 3. Das Datum (Exakt Mitte) */
 .nav-center {
     display: flex;
     align-items: center;
     gap: 8px;
-    position: absolute; /* Löst das Datum vom Fluss der anderen Buttons */
+    position: absolute;
     left: 50%;
     transform: translateX(-50%);
     white-space: nowrap;
 }
 
-/* 4. Save & Refresh (Rechts) */
 .nav-right {
     flex: 1;
     display: flex;
     justify-content: flex-end;
-    /* Sorgt dafür, dass Refresh bündig mit dem rechten Rand des Plans (1000px) ist */
     padding-right: calc((100% - 1000px) / 2);
 }
 
-/* Fallback für schmale Bildschirme (Handy/Tablet) */
-@media (max-width: 1050px) {
-    .nav-left { padding-left: 5px; }
-    .nav-right { padding-right: 5px; }
+/* ============================================================
+   3. STICKY DATUMSZEILE (GRAUE ZEILE IM PLAN)
+   ============================================================ */
+.header-row { 
+    grid-column: span 6; 
+    background: #333; 
+    font-size: 14px; 
+    font-weight: bold; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 50px; 
+    cursor: default;
+    
+    /* FIXIERUNG: Dockt exakt unter dem 70px Header an */
+    position: sticky; 
+    top: 70px; 
+    z-index: 1090; 
+    
+    border-bottom: 2px solid #1a1a1a;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3); /* Schatten beim Scrollen */
 }
 
-/* Spezifisches Styling für das Datum im Zentrum */
-#datePicker {
-    padding: 8px;
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 4px;
-    font-family: sans-serif;
+/* ============================================================
+   4. ELEMENT-STYLING (DATEPICKER & BUTTONS)
+   ============================================================ */
+#datePicker { 
+    padding: 0 10px; 
+    background: #333; 
+    color: white; 
+    border: 1px solid #444; 
+    height: 40px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    box-sizing: border-box; 
+    font-family: inherit; 
 }
-    
-/* Der News-Button bleibt im Premium-Style */
+
+.nav-btn, .refresh-btn { 
+    height: 40px; 
+    width: 40px; 
+    background: #333; 
+    border: 1px solid #444; 
+    color: white; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    transition: background 0.2s;
+}
+
+.nav-btn:hover, #datePicker:hover { background: #444; }
+
+.refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
+.refresh-btn:hover { color: #ff9f43; background: #444; }
+
+/* ============================================================
+   5. PREMIUM NEWS BUTTON & BADGE
+   ============================================================ */
 .news-btn-premium {
     position: relative;
     display: flex;
@@ -121,62 +149,43 @@
     height: 40px;
 }
 
-.news-btn-premium:hover {
-    background: #333;
-    border-color: #e67e22;
-}
-
 .news-btn-premium .btn-text {
     color: #fff;
     font-family: 'Segoe UI', sans-serif;
     font-weight: 300;
-    font-size: 13px;
+    font-size: 11px; /* Etwas kleiner für Eleganz */
     letter-spacing: 2px;
     margin-right: 10px;
 }
 
-    
-.news-btn-premium .bell-icon {
-    font-size: 14px; opacity: 0.7;
-}
-
-/* Badge Punkt (Orange) */
 .news-btn-premium .badge {
     position: absolute;
     top: -3px;
     right: -3px;
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
     background: #e67e22;
     border-radius: 50%;
-    border: 1px solid #1a1a1a;
-    box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
+    border: 2px solid #1a1a1a;
 }
 
+/* ============================================================
+   6. INFO & FEHLER
+   ============================================================ */
+.info-box {
+    grid-column: span 6;
+    font-size: 20px !important;
+    padding: 60px 40px !important;
+    text-align: center;
+    color: #888;
+    font-style: italic;
+}
 
-
-    
-    .nav-group { display: flex; gap: 5px; }
-
-   #datePicker { padding: 0 10px; /* Oben/Unten 0, damit die 40px fix bleiben */ background: #333; color: white; border: 1px solid #444; height: 40px; border-radius: 4px; cursor: pointer; box-sizing: border-box; /* Erzwingt, dass Rahmen/Padding in den 40px enthalten sind */ font-family: inherit; /* Verhindert Schrift-Größen-Sprünge */ } 
-
-   .nav-btn, .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-sizing: border-box; /* Auch hier für absolute Symmetrie */ } 
-
-     .nav-btn:hover { background: #444; }
-
-
-    .refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
-    .refresh-btn:hover { color: #ff9f43; background: #444; }
- .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
-        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-
-    /* Diese Klasse blendet die Buttons radikal aus */
-.nav-btn-hidden {
-    /* Sichtbarkeit auf hidden statt display auf none */
-    visibility: hidden !important;
-    /* optional: verhindert, dass man den unsichtbaren Button noch klicken kann */
-    pointer-events: none; 
+/* Symmetrie-Fix für Mobile */
+@media (max-width: 1050px) {
+    .nav-left { padding-left: 10px; }
+    .nav-right { padding-right: 10px; }
+    body { padding-top: 130px; }
 }
 
     /* ============================================================
