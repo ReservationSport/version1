@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2045,33 +2045,22 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     if (loader) loader.style.display = 'block';
     if (btnText) btnText.style.opacity = '0.3';
 
-    const scriptUrl = "https://script.google.com/macros/s/AKfycbz6w8QxV_qTvNunfwG_A7Rvune7gBYqQJEJNkePtWDGuLQEu9wmhQKYqBPHnEzl9Jxm/exec";
+    // Nutze deine bestehende URL-Variable oder die direkte URL
+    const scriptUrl = url; 
 
-    // --- DATUM-LOGIK VERBESSERT ---
-    let displayDate = "";
-    
-    // 1. Versuch: Globales Objekt/Variable (oft in deinem Plan vorhanden)
-    if (typeof window.currentDate !== 'undefined') {
-        displayDate = window.currentDate;
-    } 
-    // 2. Versuch: DOM-Elemente
-    else {
-        displayDate = document.getElementById('datumAnzeige')?.innerText || 
-                      document.getElementById('datum-titel')?.innerText || 
-                      document.querySelector('.datum-titel')?.innerText || "";
-    }
+    // --- DATUM-LOGIK FIX ---
+    // Wir holen das Datum direkt vom Haupt-DatePicker, da dieses das korrekte Format hat
+    const dp = document.getElementById('datePicker');
+    let displayDate = dp ? dp.value : "";
 
-    displayDate = displayDate.trim();
-
-    // Sicherheits-Check: Wenn immer noch leer, Datum aus URL extrahieren
+    // Fallback: Falls der DatePicker nicht gefunden wird, versuche andere Quellen
     if (!displayDate) {
-        const params = new URLSearchParams(window.location.search);
-        displayDate = params.get('date') || "";
+        displayDate = window.lastStableDate || ""; 
     }
 
     const payload = {
         mode: "saveMaterial", 
-        pw: "bbzo",           
+        pw: userPw, // Nutzt deine globale Passwort-Variable          
         material: material,
         kommentar: kommentar,
         time: time,
@@ -2096,10 +2085,15 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
             clickedBtn.classList.add('success');
             
             // Icon im Plan sofort setzen
-            markBoxWithMaterialIcon(window.currentEditBox, material, kommentar);
+            // Nutze findBoxByTimeAndSlot um sicherzugehen, dass die richtige Box getroffen wird
+            const box = findBoxByTimeAndSlot(time, slot);
+            if (box) {
+                markBoxWithMaterialIcon(box, material, kommentar);
+            }
 
             setTimeout(() => {
-                closeEditor();
+                // Nutze deine bestehende closeEditor Funktion
+                if (typeof closeEditor === 'function') closeEditor();
             }, 1000);
         } else {
             throw new Error(result.msg || "Server meldet Fehler");
