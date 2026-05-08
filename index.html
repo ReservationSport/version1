@@ -14,12 +14,14 @@
     /* ============================================================
        1. BASIS-STYLING & LAYOUT
        ============================================================ */
-    body { 
-        font-family: 'Segoe UI', sans-serif; 
-        background: #1a1a1a; 
-        color: white; 
-        padding: 20px; 
-    }
+   body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: #1a1a1a; 
+    color: white; 
+    /* 100px oben schieben den Plan unter den fixierten Header */
+    padding: 100px 20px 20px 20px; 
+    margin: 0;
+}
 
     /* 2. Das Grid/Die Tabelle wieder schmaler machen */
 .grid { 
@@ -47,44 +49,56 @@
        ============================================================ */
 
     
- /* 1. Die Navigationsleiste wieder schmaler machen */
+ /* 1. Der Haupt-Container (Der schwarze Balken oben) */
 .date-control {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width: 100%;
-    max-width: 1000px; /* Zurück auf den Originalwert deiner Tabelle */
-    margin: 0 auto;
-    padding: 10px 0;
-    background: #1a1a1a;
-    position: sticky;
+    position: fixed;   /* Bleibt beim Scrollen oben kleben */
     top: 0;
-    z-index: 1100;
+    left: 0;
+    width: 100%;       /* Volle Breite */
+    height: 65px;      /* Definierte Höhe */
+    background: #1a1a1a;
+    z-index: 2000;
+    border-bottom: 1px solid #333;
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
-.nav-section {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-/* Linke Sektion (News) */
+/* 2. Die News-Sektion (Links) */
 .nav-left {
     flex: 1;
+    display: flex;
     justify-content: flex-start;
+    /* Sorgt dafür, dass der News-Button auf der Linie des 1000px Plans startet */
+    padding-left: calc((100% - 1000px) / 2); 
 }
 
-/* Mittlere Sektion (Datum & alle Pfeile) */
+/* 3. Das Datum (Exakt Mitte) */
 .nav-center {
-    flex: 2; /* Nimmt mehr Platz ein, um sich perfekt zu zentrieren */
-    justify-content: center;
+    display: flex;
+    align-items: center;
     gap: 8px;
+    position: absolute; /* Löst das Datum vom Fluss der anderen Buttons */
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
 }
 
-/* Rechte Sektion (Save & Refresh) */
+/* 4. Save & Refresh (Rechts) */
 .nav-right {
     flex: 1;
+    display: flex;
     justify-content: flex-end;
+    /* Sorgt dafür, dass Refresh bündig mit dem rechten Rand des Plans (1000px) ist */
+    padding-right: calc((100% - 1000px) / 2);
+}
+
+/* Fallback für schmale Bildschirme (Handy/Tablet) */
+@media (max-width: 1050px) {
+    .nav-left { padding-left: 5px; }
+    .nav-right { padding-right: 5px; }
 }
 
 /* Spezifisches Styling für das Datum im Zentrum */
@@ -1182,8 +1196,6 @@ window.loadPlan = async function() {
         if (typeof updateNavButtons === 'function') updateNavButtons();
     }
 };
-
-window.saveChanges = saveChanges;
 
 
 
