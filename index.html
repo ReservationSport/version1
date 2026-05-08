@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport12344</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -14,12 +14,12 @@
     /* ============================================================
        1. BASIS-STYLING & LAYOUT
        ============================================================ */
-   body { 
+  body { 
     font-family: 'Segoe UI', sans-serif; 
     background: #1a1a1a; 
     color: white; 
-    /* 100px oben schieben den Plan unter den fixierten Header */
-    padding: 100px 20px 20px 20px; 
+    /* 130px = 70px (Header) + 50px (Datum-Zeile) + 10px Sicherheitsabstand */
+    padding: 130px 20px 20px 20px; 
     margin: 0;
 }
 
@@ -51,19 +51,16 @@
     
  /* 1. Der Haupt-Container (Der schwarze Balken oben) */
 .date-control {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: fixed;   /* Bleibt beim Scrollen oben kleben */
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;       /* Volle Breite */
-    height: 65px;      /* Definierte Höhe */
+    width: 100%;
+    height: 70px; /* Fixe Höhe */
     background: #1a1a1a;
     z-index: 2000;
+    display: flex;
+    align-items: center;
     border-bottom: 1px solid #333;
-    padding: 0 20px;
-    box-sizing: border-box;
 }
 
 /* 2. Die News-Sektion (Links) */
@@ -221,14 +218,25 @@
     background: #333; 
     font-size: 14px; 
     font-weight: bold; 
+    
+    /* FIXIERUNG: */
     position: sticky; 
-    top: 60px; 
+    /* Wenn der schwarze Balken 70px hoch ist, nutze 70px. 
+       Ist er 65px hoch, nutze 65px. */
+    top: 70px; 
+    
+    /* Muss kleiner sein als .date-control (2000), 
+       aber größer als die Plan-Boxen (1) */
     z-index: 1090; 
+    
     display: flex; 
     align-items: center; 
     justify-content: center; 
     height: 50px; 
     cursor: default;
+    
+    /* Optik-Verbesserung: */
+    border-bottom: 2px solid #1a1a1a; 
 }
 
 /* NUR DEINE ZELLEN: Hier erscheint der Zeigefinger */
