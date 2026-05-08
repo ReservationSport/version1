@@ -1162,33 +1162,29 @@ async function loadPlan() {
         });
         container.innerHTML = html;
 
+    // --- NEU: MATERIALIEN DIREKT AUS DEM JSON SETZEN ---
+        // Da wir im Backend (doGet) "materials" mitliefern, nutzen wir diese direkt.
+        if (json.materials && json.materials.length > 0) {
+            json.materials.forEach(item => {
+                const parts = item.id.split("_");
+                const time = parts[1];
+                const slot = parts[2];
+                
+                // Wir nutzen unsere Hilfsfunktion findBoxByTimeAndSlot
+                const box = findBoxByTimeAndSlot(time, slot);
+                if (box) {
+                    markBoxWithMaterialIcon(box, item.material, item.kommentar);
+                }
+            });
+        }
+
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red;">Server-Fehler beim Laden!</div>`;
     } finally {
         loader.style.display = 'none';
         updateNavButtons();
-
-        // --- NEU: MATERIALIEN NACHLADEN ---
-        // Sobald der Plan gezeichnet ist, holen wir die Icons aus der Materialverwaltung
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run
-                .withSuccessHandler(function(materials) {
-                    if (materials && materials.length > 0) {
-                        materials.forEach(item => {
-                            const parts = item.id.split("_");
-                            const time = parts[1];
-                            const slot = parts[2];
-                            // Suche die Box anhand der neuen data-Attribute
-                            const box = document.querySelector(`.box[data-time="${time}"][data-slot="${slot}"]`);
-                            if (box) {
-                                markBoxWithMaterialIcon(box, item.material, item.kommentar);
-                            }
-                        });
-                    }
-                })
-                .getMaterialsForDate(dateVal);
-        }
+        // Der alte google.script.run Block im finally kann komplett gelöscht werden!
     }
 }
 
