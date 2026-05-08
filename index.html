@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -838,17 +838,6 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
        ============================================================ */
     
 
-/* Das Fussball-Icon ⚽ */
-.material-icon {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    font-size: 14px; /* Dezent, aber sichtbar */
-    z-index: 5;
-    cursor: help;
-    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3));
-}
-
 /* Tooltip Styling (Sprechblase beim Drüberfahren) */
 .material-icon::after {
     content: attr(data-tooltip);
@@ -873,6 +862,27 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         display: block;
     }
 }
+
+
+/* Styling für das Material-Info-Fenster */
+.material-info-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 2000;
+}
+.material-info-content {
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 20px;
+    width: 90%; max-width: 350px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+.material-info-title { color: #e67e22; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
+.material-info-text { color: #ccc; margin-bottom: 20px; line-height: 1.4; white-space: pre-wrap; }
 
     
     
@@ -2086,52 +2096,58 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
 function markBoxWithMaterialIcon(box, material, kommentar) {
     if (!box) return;
 
-    // 1. Altes Icon entfernen
+    // Altes Icon entfernen
     const oldIcon = box.querySelector('.material-indicator');
     if (oldIcon) oldIcon.remove();
 
-    if (!material || material.trim() === "") {
-        box.style.border = ""; // Rahmen zurücksetzen
-        return;
-    }
+    if (!material || material.trim() === "") return;
 
-    // 2. Badge-Element erstellen
+    // Badge erstellen
     const badge = document.createElement('div');
     badge.className = 'material-indicator';
-    badge.innerHTML = '📋'; // Dein Klemmbrett
+    badge.innerHTML = '📋';
 
-    // 3. Styling für die Badge-Optik (Ecke oben rechts)
+    // Styling: Grau wie Zeit-Boxen, keine Rahmen-Änderung an der Box
     Object.assign(badge.style, {
         position: 'absolute',
         top: '0',
         right: '0',
-        background: '#e67e22', // Dein Orange
+        background: '#333', // Das Grau der Zeit-Boxen
         color: 'white',
-        padding: '2px 5px',
-        borderBottomLeftRadius: '8px', // Knickt die Ecke optisch ab
-        fontSize: '18px',
+        padding: '2px 6px',
+        borderBottomLeftRadius: '8px',
+        fontSize: '20px', // Deine gewünschte Größe
         zIndex: '10',
-        cursor: 'pointer', // Zeigt an, dass es klickbar ist
-        boxShadow: '-1px 1px 4px rgba(0,0,0,0.3)',
+        cursor: 'pointer',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center'
     });
 
-    // 4. Klick-Logik für Handy & Tablet (statt nur Hover)
+    // Klick-Event für dein eigenes Layout-Fenster
     badge.onclick = (e) => {
-        e.stopPropagation(); // Verhindert, dass der Editor der Box aufgeht
-        const info = kommentar ? `${material}\n\nNotiz: ${kommentar}` : material;
-        alert("📋 Material-Info:\n" + info);
+        e.stopPropagation();
+        showMaterialDetailPopup(material, kommentar);
     };
 
-    // 5. Hover-Text für Desktop (bleibt als Bonus, ohne Fragezeichen)
-    badge.title = material + (kommentar ? " (" + kommentar + ")" : "");
-
-    // 6. Die Box selbst hervorheben (optionaler Rahmen)
-    box.style.border = "1px solid #e67e22";
-
     box.appendChild(badge);
+}
+
+// Funktion für das eigene Info-Popup
+function showMaterialDetailPopup(material, kommentar) {
+    const overlay = document.createElement('div');
+    overlay.className = 'material-info-overlay';
+    overlay.onclick = () => overlay.remove(); // Schließen beim Klick auf Hintergrund
+
+    overlay.innerHTML = `
+        <div class="material-info-content" onclick="event.stopPropagation()">
+            <div class="material-info-title">📋 Material-Reservierung</div>
+            <div style="color:white; margin-bottom: 5px; font-weight:bold;">${material}</div>
+            <div class="material-info-text">${kommentar ? kommentar : "Keine zusätzliche Notiz vorhanden."}</div>
+            <button class="eigenesmenu-cancel" style="width:100%; margin:0;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
+        </div>
+    `;
+    document.body.appendChild(overlay);
 }
 
 
