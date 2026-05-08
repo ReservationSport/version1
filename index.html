@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport111111111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1111,7 +1111,7 @@ async function loadPlan() {
         allClassTeachers = json.allClassTeachers || {};
         
         const data = json.data;
-        const options = json.options; // Hallen-Optionen speichern wir für später
+        const options = json.options; 
         configFarben = {}; 
         options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
@@ -1142,12 +1142,13 @@ async function loadPlan() {
                     
                     let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
 
-                    // Die gesamte Box wird klickbar, wenn canEdit wahr ist
                     const clickAction = canEdit ? `onclick="openEditor(this, '${row[0]}', ${i}, '${klasse}')"` : "";
 
+                    // NEU: data-time und data-slot hinzugefügt, um die Box für Materialien identifizierbar zu machen
                     html += `
                     <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                             data-row="${rowIndex}" data-col="${i}"
+                            data-time="${row[0]}" data-slot="${i}"
                             ${clickAction}
                             style="background-color: ${isAusfall ? '' : configFarben[res] || ''}; cursor: ${canEdit ? 'pointer' : 'default'}">
                             
@@ -1167,94 +1168,53 @@ async function loadPlan() {
     } finally {
         loader.style.display = 'none';
         updateNavButtons();
-    }
-}
 
-
-// ------------SPEICHERN------------
-
-async function saveChanges() {
-    const btn = document.getElementById('saveBtn');
-    const gLoader = document.getElementById('globalLoader'); 
-    
-    // 1. UI-Startzustand
-    if (gLoader) gLoader.style.display = 'block';
-    
-    btn.classList.remove('needs-save', 'success');
-    btn.classList.add('is-loading');
-    btn.disabled = true;
-
-    try { 
-        const dateVal = document.getElementById('datePicker').value;
-        
-        // 2. Der reine Datenversand (Plan-Änderungen)
-        const response = await fetch(url, { 
-            method: "POST", 
-            body: JSON.stringify({ 
-                date: dateVal, 
-                changes: pendingChanges, 
-                pw: userPw,
-                kuerzel: userKuerzel
-            }) 
-        }); 
-        
-        const result = await response.json();
-
-        // 3. Erfolgskontrolle
-        if (result.status === "success") {
-            
-            // --- NEU: NEWS-WARTESCHLANGE ABARBEITEN ---
-            if (pendingNews && pendingNews.length > 0) {
-                for (let newsItem of pendingNews) {
-                    try {
-                        await fetch(url, {
-                            method: "POST",
-                            body: JSON.stringify(newsItem)
+        // --- NEU: MATERIALIEN NACHLADEN ---
+        // Sobald der Plan gezeichnet ist, holen wir die Icons aus der Materialverwaltung
+        if (typeof google !== 'undefined' && google.script) {
+            google.script.run
+                .withSuccessHandler(function(materials) {
+                    if (materials && materials.length > 0) {
+                        materials.forEach(item => {
+                            const parts = item.id.split("_");
+                            const time = parts[1];
+                            const slot = parts[2];
+                            // Suche die Box anhand der neuen data-Attribute
+                            const box = document.querySelector(`.box[data-time="${time}"][data-slot="${slot}"]`);
+                            if (box) {
+                                markBoxWithMaterialIcon(box, item.material, item.kommentar);
+                            }
                         });
-                    } catch (newsError) {
-                        console.error("Einzelne News konnte nicht gesendet werden:", newsError);
-                        // Wir machen trotzdem weiter, damit die App nicht hängen bleibt
                     }
-                }
-                pendingNews = []; // News-Liste nach Versand leeren
-            }
-            // ------------------------------------------
-
-            pendingChanges = []; // Plan-Änderungen leeren
-            
-            if (gLoader) gLoader.style.display = 'none';
-            
-            // Visuelles Feedback via CSS
-            btn.classList.remove('is-loading');
-            btn.classList.add('success'); 
-
-            // Button nach 1,5 Sek. wieder verstecken und zurücksetzen
-            setTimeout(() => { 
-                btn.style.display = 'none'; 
-                btn.classList.remove('success'); 
-                btn.disabled = false;
-            }, 1500); 
-
-        } else { 
-            throw new Error(result.msg || "Server Error"); 
+                })
+                .getMaterialsForDate(dateVal);
         }
-
-    } catch (e) { 
-        // 4. Fehlerbehandlung
-        console.error("Speicherfehler:", e);
-        
-        if (gLoader) gLoader.style.display = 'none';
-        
-        btn.classList.remove('is-loading');
-        btn.disabled = false;
-        
-        // Bei Fehler lassen wir das 'needs-save' wieder aufleuchten
-        btn.classList.add('needs-save');
-        alert("Fehler beim Speichern: " + e.message);
     }
 }
 
 window.saveChanges = saveChanges;
+
+
+
+    
+/**
+ * Sucht die Box im Plan basierend auf der Uhrzeit und der Spalte (Slot).
+ * @param {string} time - Die Uhrzeit (z.B. "08:00 - 08:45")
+ * @param {number|string} slot - Der Spaltenindex (1 bis 5)
+ * @returns {HTMLElement|null} - Die gefundene Box oder null
+ */
+function findBoxByTimeAndSlot(time, slot) {
+    // Wir nutzen den CSS-Attribut-Selektor, um die Box direkt anzusprechen
+    // Wichtig: slot wird in einen String umgewandelt, da HTML-Attribute Strings sind
+    const selector = `.box[data-time="${time}"][data-slot="${slot}"]`;
+    const box = document.querySelector(selector);
+    
+    if (!box) {
+        console.warn(`Box nicht gefunden für Zeit: ${time}, Slot: ${slot}`);
+    }
+    
+    return box;
+}
 
     
 // ------------TEXTSTRING BILDEN------------    
