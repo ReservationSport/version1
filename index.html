@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -954,6 +954,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let currentPlanData = [], lastStableDate = "", myClasses = [], allClassTeachers = {};
         let pendingNews = [];
         let allOptions = [];
+        let verfügbareMaterialien = [];
 
  // ------------LOGIN RESERVATION------------
         
@@ -1111,6 +1112,11 @@ window.loadPlan = async function() {
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
         
+        // --- NEU: Material-Optionen aus Spalte D für den Editor speichern ---
+        // Wir speichern sie in 'window.materialOptionen', damit sie überall verfügbar sind
+        window.materialOptionen = json.materialsList || []; 
+        // --------------------------------------------------------------------
+        
         const data = json.data;
         const options = json.options; 
         configFarben = {}; 
@@ -1119,7 +1125,8 @@ window.loadPlan = async function() {
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = ""; 
+        let html = "";
+        
 
         // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
@@ -1788,7 +1795,7 @@ function handleMenuChoice(choice, time, slot, klasse) {
         header.querySelector('.eigenesmenu-subtitle').innerText = "Ausrüstung für " + time;
 
         // Deine Liste der Materialien
-        const materialOptionen = ["Dicke Matten", "Trampolin", "Schwedenkasten", "Unihockey-Set", "Kletterseile", "Bänke", "Tischtennis-Tisch"];
+        const materialOptionen = window.materialOptionen;
 
         let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
         
