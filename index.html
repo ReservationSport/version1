@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1519,78 +1519,63 @@ function getExistingComment(r, c) {
  // ------------KLASSE ENTFERNEN------------
 
 async function permaDeleteClass(klasse, slotIndex) {
-    const ball = document.getElementById('globalLoader'); 
-    if (ball) ball.style.display = 'block';
-    
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify({
-                mode: "permaDelete",
-                klasse: klasse,
-                slot: slotIndex,
-                startDate: document.getElementById('datePicker').value,
-                pw: userPw,
-                kuerzel: userKuerzel
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.status === "success") {
-            // Wir verzichten auf das Alert, oder setzen es ans Ende, 
-            // damit der Flow nicht unterbrochen wird.
-            console.log("Erfolg: Klasse entfernt.");
-            
-            // Wichtig: loadPlan() lädt die Daten neu und schaltet den Loader aus
-            await loadPlan(); 
-            
-            // Optionaler Erfolgshinweis nach dem Laden
-            // alert("Die Klasse wurde für alle zukünftigen Termine entfernt.");
-        } else {
-            throw new Error(result.error || "Unbekannter Fehler");
-        }
-    } catch (e) {
-        console.error("PermaDelete Error:", e);
-        alert("Fehler beim dauerhaften Löschen. Bitte Verbindung prüfen.");
-        // Nur im Fehlerfall schalten wir den Loader hier manuell aus
-        if (ball) ball.style.display = 'none';
-    }
-}
+    const modal = document.getElementById('universalModal');
+    const title = document.getElementById('uniTitle');
+    const msg = document.getElementById('uniMessage');
+    const icon = document.getElementById('uniIcon');
+    const confirmBtn = document.getElementById('uniConfirmBtn');
+    const cancelBtn = document.getElementById('uniCancelBtn');
+    const pwContainer = document.getElementById('uniPwContainer');
 
-function closePwModal() {
-    document.getElementById('pwModal').style.display = 'none';
-}
+    // 1. SCHRITT: DIE BESTÄTIGUNG (Industrial Style)
+    icon.innerText = "🗑️";
+    title.innerText = "KLASSE ENTFERNEN";
+    msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum für alle zukünftigen Wochen dauerhaft löschen?`;
+    pwContainer.style.display = "none"; // Kein PW nötig, da userPw global vorhanden
+    confirmBtn.innerText = "JA, ABKLEBEN";
+    modal.style.display = "flex";
 
-function showCustomConfirm(title, message) {
-    return new Promise((resolve) => {
-        const modal = document.getElementById('customModal');
-        const confirmBtn = document.getElementById('modalConfirm');
-        const cancelBtn = document.getElementById('modalCancel');
-        
-        document.getElementById('modalTitle').innerText = title;
-        document.getElementById('modalMessage').innerText = message;
-        
-        modal.style.display = 'flex';
+    cancelBtn.onclick = () => modal.style.display = "none";
 
-        confirmBtn.onclick = () => {
-            modal.style.display = 'none';
-            resolve(true);
-        };
-
-        cancelBtn.onclick = () => {
-            modal.style.display = 'none';
-            resolve(false);
-        };
+    confirmBtn.onclick = async () => {
+        // UI auf "Loading" umstellen
+        confirmBtn.disabled = true;
+        confirmBtn.innerText = "LÖSCHE...";
         
-        // Optional: Schließen bei Klick außerhalb des Kastens
-        modal.onclick = (e) => {
-            if (e.target === modal) {
+        const gLoader = document.getElementById('globalLoader'); 
+        if (gLoader) gLoader.style.display = 'block';
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                body: JSON.stringify({
+                    mode: "permaDelete",
+                    klasse: klasse,
+                    slot: slotIndex,
+                    startDate: document.getElementById('datePicker').value,
+                    pw: userPw, // Nutzt dein gespeichertes Passwort
+                    kuerzel: userKuerzel
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === "success") {
                 modal.style.display = 'none';
-                resolve(false);
+                console.log("Erfolg: Klasse entfernt.");
+                await loadPlan(); // Plan neu laden (schaltet Loader aus)
+            } else {
+                throw new Error(result.error || "Server meldet Fehler");
             }
-        };
-    });
+        } catch (e) {
+            console.error("PermaDelete Error:", e);
+            alert("Fehler beim dauerhaften Löschen.");
+            if (gLoader) gLoader.style.display = 'none';
+        } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerText = "JA, ABKLEBEN";
+        }
+    };
 }
 
 
@@ -2235,69 +2220,27 @@ window.saveChanges = async function() {
 </div>
 
 
+<div id="universalModal" class="modal-overlay">
+    <div class="modal-content">
+        <div id="uniIcon" class="modal-header">⚠️</div>
+        <h3 id="uniTitle">Bestätigung</h3>
+        <p id="uniMessage">Möchtest du fortfahren?</p>
+        
+        <!-- Bereich für das Passwort (wird nur im 2. Schritt eingeblendet) -->
+        <div id="uniPwContainer" style="display:none; margin-bottom: 20px;">
+            <input type="password" id="uniPwInput" placeholder="Passwort" 
+                   style="width: 100%; padding: 10px; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 4px; outline: none; text-align: center;">
+        </div>
 
-<!-- Custom Confirm Modal im PW-Design -->
-<div id="customModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10001; justify-content:center; align-items:center; backdrop-filter: blur(8px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div style="background: #121212; padding: 40px; border-radius: 12px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-        
-        <h2 id="modalTitle" style="color: #fff; margin: 0 0 8px 0; font-size: 22px; font-weight: 500; letter-spacing: -0.5px;">Bestätigung</h2>
-        <p id="modalMessage" style="color: #888; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">Möchtest du fortfahren?</p>
-        
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button id="modalConfirm" 
-                    style="width: 100%; background: #e67e22; color: #fff; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: background 0.2s, transform 0.1s;"
-                    onmouseover="this.style.background='#d35400';" 
-                    onmouseout="this.style.background='#e67e22';"
-                    onmousedown="this.style.transform='scale(0.98)';"
-                    onmouseup="this.style.transform='scale(1)';">
-                Fortfahren
-            </button>
-            <button id="modalCancel" 
-                    style="width: 100%; background: transparent; color: #666; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: color 0.2s;"
-                    onmouseover="this.style.color='#888';" 
-                    onmouseout="this.style.color='#666';">
-                Abbrechen
-            </button>
+        <div class="modal-buttons">
+            <button id="uniCancelBtn" class="btn-cancel">Abbrechen</button>
+            <button id="uniConfirmBtn" class="btn-confirm">Bestätigen</button>
         </div>
     </div>
 </div>
+
     
-    
-    
-<!-- Schlichteres, modernes Passwort-Modal in deinem Farbschema -->
-<div id="pwModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:10000; justify-content:center; align-items:center; backdrop-filter: blur(8px); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div style="background: #121212; padding: 40px; border-radius: 12px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-        
-        <h2 style="color: #fff; margin: 0 0 8px 0; font-size: 22px; font-weight: 500; letter-spacing: -0.5px;">Safety-Check</h2>
-        <p style="color: #888; font-size: 14px; margin-bottom: 30px; line-height: 1.5;">Gib das Passwort ein, um die Klasse virtuell abzukleben:</p>
-        
-        <!-- Input mit Orange-Effekt beim Klicken -->
-        <input type="password" id="modalPwInput" 
-               placeholder="Passwort" 
-               onfocus="this.style.borderColor='#e67e22'; this.style.boxShadow='0 0 0 2px rgba(230, 126, 34, 0.2)';"
-               onblur="this.style.borderColor='#444'; this.style.boxShadow='none';"
-               onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('confirmPwBtn').click(); }"
-               style="width: 100%; padding: 12px 16px; margin-bottom: 24px; border-radius: 8px; border: 1px solid #444; background: #1a1a1a; color: #fff; font-size: 16px; outline: none; box-sizing: border-box; transition: all 0.2s ease;">
-        
-        <!-- Action Buttons -->
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button id="confirmPwBtn" 
-                    style="width: 100%; background: #e67e22; color: #fff; border: none; padding: 14px; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: 600; transition: background 0.2s, transform 0.1s;"
-                    onmouseover="this.style.background='#d35400';" 
-                    onmouseout="this.style.background='#e67e22';"
-                    onmousedown="this.style.transform='scale(0.98)';"
-                    onmouseup="this.style.transform='scale(1)';">
-                Bestätigen
-            </button>
-            <button onclick="closePwModal()" 
-                    style="width: 100%; background: transparent; color: #666; border: none; padding: 10px; border-radius: 8px; cursor: pointer; font-size: 14px; transition: color 0.2s;"
-                    onmouseover="this.style.color='#888';" 
-                    onmouseout="this.style.color='#666';">
-                Abbrechen
-            </button>
-        </div>
-    </div>
-</div>
+
     
 </body>
 </html>
