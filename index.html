@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -11,93 +11,117 @@
 
 <style>
     
-  /* ============================================================
-       1. BASIS-STYLING & LAYOUT
-       ============================================================ */
-    body { 
-        font-family: 'Segoe UI', sans-serif; 
-        background: #1a1a1a; 
-        color: white; 
-        padding: 20px; 
-    }
+/* 1. BASIS & BODY-PUFFER */
+body { 
+    font-family: 'Segoe UI', sans-serif; 
+    background: #1a1a1a; 
+    color: white; 
+    /* WICHTIG: 60px (Nav) + 50px (Datum) + 20px Puffer = 130px */
+    padding-top: 130px; 
+    margin: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+}
 
-    /* 2. Das Grid/Die Tabelle wieder schmaler machen */
+/* 2. DAS GRID */
 .grid { 
     display: grid; 
     grid-template-columns: 120px repeat(5, 1fr); 
     gap: 2px; 
-    max-width: 1000px; /* Hier ebenfalls wieder 1000px */
+    max-width: 1000px; 
     margin: auto; 
 }
 
-     .info-box {
-    grid-column: span 6;
-    font-size: 20px !important; /* Hier die gewünschte Größe */
-    padding: 40px !important;   /* Mehr Abstand für eine bessere Optik */
-    text-align: center;
-    line-height: 1.5;           /* Angenehmerer Zeilenabstand */
-    color: #888;                /* Dezentes Grau wie im Screenshot */
-    font-style: italic;         /* Kursiv wie gewünscht */
-}
-
-
-
-    /* ============================================================
-       2. NAVIGATION & DATUMSKONTROLLE & News
-       ============================================================ */
-
-    
- /* 1. Die Navigationsleiste wieder schmaler machen */
+/* 3. FIXIERTER HEADER (SCHWARZ) */
 .date-control {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    max-width: 1000px; /* Zurück auf den Originalwert deiner Tabelle */
-    margin: 0 auto;
-    padding: 10px 0;
-    background: #1a1a1a;
-    position: sticky;
+    position: fixed;
     top: 0;
-    z-index: 1100;
-}
-
-.nav-section {
+    left: 0;
+    width: 100%;
+    height: 60px; /* Fixer Ankerpunkt */
+    background: #1a1a1a;
+    z-index: 2100; /* Ganz oben */
     display: flex;
     align-items: center;
-    gap: 10px;
+    border-bottom: 1px solid #333;
 }
 
-/* Linke Sektion (News) */
+/* Sektions-Steuerung für bündiges Layout zum 1000px Plan */
 .nav-left {
     flex: 1;
+    display: flex;
     justify-content: flex-start;
+    padding-left: calc((100% - 1000px) / 2); 
 }
 
-/* Mittlere Sektion (Datum & alle Pfeile) */
 .nav-center {
-    flex: 2; /* Nimmt mehr Platz ein, um sich perfekt zu zentrieren */
-    justify-content: center;
+    display: flex;
+    align-items: center;
     gap: 8px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
 }
 
-/* Rechte Sektion (Save & Refresh) */
 .nav-right {
     flex: 1;
+    display: flex;
     justify-content: flex-end;
+    padding-right: calc((100% - 1000px) / 2);
 }
 
-/* Spezifisches Styling für das Datum im Zentrum */
-#datePicker {
-    padding: 8px;
-    background: #2a2a2a;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 4px;
-    font-family: sans-serif;
-}
+/* 4. STICKY DATUMSZEILE (GRAU) */
+.header-row { 
+    grid-column: span 6; 
+    background: #333; 
+    font-size: 14px; 
+    font-weight: bold; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    height: 50px; 
+    cursor: default;
     
-/* Der News-Button bleibt im Premium-Style */
+    /* Stick-Logik */
+    position: sticky; 
+    top: 60px; /* Dockt exakt unter dem schwarzen Header an */
+    z-index: 1090; 
+    border-bottom: 2px solid #1a1a1a;
+}
+
+/* 5. BUTTONS & CONTROLS */
+#datePicker { 
+    padding: 0 10px; 
+    background: #333; 
+    color: white; 
+    border: 1px solid #444; 
+    height: 40px; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    box-sizing: border-box; 
+    font-family: inherit; 
+}
+
+.nav-btn, .refresh-btn { 
+    height: 40px; 
+    width: 40px; 
+    background: #333; 
+    border: 1px solid #444; 
+    color: white; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    border-radius: 4px; 
+    box-sizing: border-box; 
+}
+
+.nav-btn:hover { background: #444; }
+.refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
+.refresh-btn:hover { color: #ff9f43; background: #444; }
+
+/* 6. NEWS BUTTON PREMIUM */
 .news-btn-premium {
     position: relative;
     display: flex;
@@ -110,143 +134,49 @@
     height: 40px;
 }
 
-.news-btn-premium:hover {
-    background: #333;
-    border-color: #e67e22;
-}
-
 .news-btn-premium .btn-text {
     color: #fff;
-    font-family: 'Segoe UI', sans-serif;
-    font-weight: 300;
-    font-size: 13px;
+    font-size: 11px;
     letter-spacing: 2px;
     margin-right: 10px;
 }
 
-    
-.news-btn-premium .bell-icon {
-    font-size: 14px; opacity: 0.7;
-}
-
-/* Badge Punkt (Orange) */
 .news-btn-premium .badge {
     position: absolute;
     top: -3px;
     right: -3px;
-    width: 9px;
-    height: 9px;
+    width: 10px;
+    height: 10px;
     background: #e67e22;
     border-radius: 50%;
-    border: 1px solid #1a1a1a;
-    box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
+    border: 2px solid #1a1a1a;
 }
 
-
-
-    
-    .nav-group { display: flex; gap: 5px; }
-
-   #datePicker { padding: 0 10px; /* Oben/Unten 0, damit die 40px fix bleiben */ background: #333; color: white; border: 1px solid #444; height: 40px; border-radius: 4px; cursor: pointer; box-sizing: border-box; /* Erzwingt, dass Rahmen/Padding in den 40px enthalten sind */ font-family: inherit; /* Verhindert Schrift-Größen-Sprünge */ } 
-
-   .nav-btn, .refresh-btn { height: 40px; width: 40px; background: #333; border: 1px solid #444; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 4px; box-sizing: border-box; /* Auch hier für absolute Symmetrie */ } 
-
-     .nav-btn:hover { background: #444; }
-
-
-    .refresh-btn { color: #e67e22; margin-left: 10px; font-size: 18px; }
-    .refresh-btn:hover { color: #ff9f43; background: #444; }
- .refresh-btn:active i { animation: spin-once 0.5s ease-in-out; }
-        @keyframes spin-once { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-
-    /* Diese Klasse blendet die Buttons radikal aus */
-.nav-btn-hidden {
-    /* Sichtbarkeit auf hidden statt display auf none */
-    visibility: hidden !important;
-    /* optional: verhindert, dass man den unsichtbaren Button noch klicken kann */
-    pointer-events: none; 
-}
-
-
-    /* ============================================================
-       3. ZELLEN-STYLING (BOXES)
-       ============================================================ */
-    /* Grundzustand: Kein Zeigefinger für alle Boxen */
+/* 7. BOXEN & ZEITEN */
 .box { 
     border: 1px solid #444; 
     padding: 5px; 
     background: #262626; 
-    min-height: 50px; 
+    min-height: 80px; 
     display: flex; 
     flex-direction: column; 
     align-items: center; 
     justify-content: center; 
     text-align: center; 
     font-size: 11px; 
-    position: relative !important; 
-    cursor: default; /* Zeigefinger entfernt */
-    overflow: hidden; 
+    position: relative; 
 }
 
-/* Leere Zellen: Keine Interaktion möglich */
-.box.empty { 
-    pointer-events: none; 
-    opacity: 0.5; 
-    cursor: default; 
-}
+.zeit-box { background: #333; font-weight: bold; }
 
-/* Zeit-Spalte und Header: Neutraler Cursor */
-.zeit-box { 
-    background: #333; 
-    font-weight: bold; 
-    cursor: default; 
-}
-
-.header-row { 
-    grid-column: span 6; 
-    background: #333; 
-    font-size: 14px; 
-    font-weight: bold; 
-    
-    /* FIXIERUNG: */
-    position: sticky; 
-    /* Wenn der schwarze Balken 70px hoch ist, nutze 70px. 
-       Ist er 65px hoch, nutze 65px. */
-    top: 70px; 
-    
-    /* Muss kleiner sein als .date-control (2000), 
-       aber größer als die Plan-Boxen (1) */
-    z-index: 1090; 
-    
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    height: 50px; 
-    cursor: default;
-    
-    /* Optik-Verbesserung: */
-    border-bottom: 2px solid #1a1a1a; 
-}
-
-/* NUR DEINE ZELLEN: Hier erscheint der Zeigefinger */
+/* Spezial-Style für deine Boxen */
 .box.is-mine { 
     border: 2px solid #e67e22 !important; 
-    z-index: 10; 
-    cursor: pointer; /* Zeigefinger nur hier */
+    cursor: pointer; 
 }
 
-.box.is-mine:hover {
-    background-color: rgba(230, 126, 34, 0.2) !important;
-    box-shadow: inset 0 0 15px rgba(255, 159, 67, 0.4), 0 0 20px rgba(230, 126, 34, 0.3);
-    transform: scale(1.03);
-    z-index: 100;
-}
-
-/* Fremde Zellen: Sicherstellen, dass kein Finger erscheint */
-.box.not-mine {
-    cursor: default !important;
-}
+/* Ausblenden von Buttons (Save) */
+.nav-btn-hidden { visibility: hidden !important; pointer-events: none; }
 
     /* ============================================================
        4. SPEZIAL-MODI (AUSFALL) und Beendet
