@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1113,8 +1113,9 @@ window.loadPlan = async function() {
         allClassTeachers = json.allClassTeachers || {};
         
         // --- NEU: Material-Optionen aus Spalte D für den Editor speichern ---
-        // Wir speichern sie in 'window.materialOptionen', damit sie überall verfügbar sind
+        // Hier ziehen wir die Liste aus dem Paket und machen sie global verfügbar
         window.materialOptionen = json.materialsList || []; 
+        console.log("Material-Optionen für Menü geladen:", window.materialOptionen);
         // --------------------------------------------------------------------
         
         const data = json.data;
@@ -1125,8 +1126,7 @@ window.loadPlan = async function() {
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
-        let html = "";
-        
+        let html = ""; 
 
         // 5. Plan-Generierung
         data.forEach((row, rowIndex) => {
@@ -1167,7 +1167,7 @@ window.loadPlan = async function() {
         });
         container.innerHTML = html;
 
-        // 6. MATERIALIEN SETZEN (Wird ausgeführt, sobald HTML im DOM ist)
+        // 6. MATERIALIEN SETZEN (Icons im Plan markieren)
         if (json.materials && json.materials.length > 0) {
             json.materials.forEach(item => {
                 const parts = item.id.split("_");
