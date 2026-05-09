@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1711,20 +1711,20 @@ window.closeNews = () => {
     return colleagues.join(",");
 }
 
-// News erstellen
-    function triggerNews(type, slotIndex, klasse) {
-    const dateVal = document.getElementById('datePicker').value;
+function triggerNews(type, slotIndex, klasse) {
+    const datePicker = document.getElementById('datePicker');
+    if (!datePicker) return;
+    const dateVal = datePicker.value;
     
-    // Bestehende News für diesen Slot in der Warteschlange löschen (Korrektur-Schutz)
-    pendingNews = pendingNews.filter(n => n.slot !== slotIndex);
-
     let newsText = "";
     if (type === "ausfall") newsText = `Halle frei: ${klasse} fällt aus.`;
     if (type === "outdoor") newsText = `Halle frei: ${klasse} ist Outdoor.`;
     if (type === "beendet") newsText = `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`;
 
-    // Das News-Objekt vorbereiten
-    pendingNews.push({
+    if (!newsText) return;
+
+    // Das News-Objekt (Payload) vorbereiten
+    const payload = {
         mode: "saveNews",
         id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000), 
         datum: dateVal,
@@ -1732,12 +1732,24 @@ window.closeNews = () => {
         tagIndex: new Date(dateVal).getDay(),
         klasse: klasse,
         verfasser: userKuerzel,
-        empfaenger: getAffectedColleagues(slotIndex), // Empfänger jetzt schon ermitteln
+        empfaenger: typeof getAffectedColleagues === "function" ? getAffectedColleagues(slotIndex) : "", 
         text: newsText,
         pw: userPw
+    };
+
+    // --- SOFORT-VERSAND AN DAS GOOGLE SCRIPT ---
+    // Wir nutzen die URL deines Web-Apps (muss als Variable 'url' definiert sein)
+    fetch(url, {
+        method: "POST",
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        console.log("News erfolgreich an news_db gesendet:", newsText);
+    })
+    .catch(error => {
+        console.error("Fehler beim Senden der News:", error);
+        alert("News konnte nicht gesendet werden. Bitte Internetverbindung prüfen.");
     });
-    
-    console.log("News in Warteschlange: ", newsText);
 }
 
 
@@ -1833,24 +1845,46 @@ function openEditor(el, time, slot, klasse) {
 }
 
 
+    
 function handleAusfallClick(mode, time, slot, klasse, btn) {
+    if (!window.currentEditBox) return;
+
+    // Button sofort sperren, damit niemand doppelt klickt
+    if (btn) {
+        btn.disabled = true;
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    }
+
     if (mode === 'LOESCHEN') {
-        // 1. Visuelles Feedback: "Ausfall" Text sofort aus der Box entfernen
-        if (window.currentEditBox) {
-            // Sucht nach dem Text "Ausfall" und entfernt ihn, lässt den Rest (Klasse/Lehrer) stehen
-            window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
-            // Falls du es simpler machst:
-            // window.currentEditBox.innerText = window.currentEditBox.innerText.replace("Ausfall", "");
-        }
+        // 1. Visuelles Feedback: "Ausfall" Text entfernen
+        window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
         
-        // 2. Ab ins Backend um die Zelle im Sheet zu leeren
+        // 2. Ab ins Backend (Zelle leeren)
         updateSelection('', time, slot, klasse, btn); 
-    } else {
-        // Normaler Ausfall
+        
+        // Hinweis: News-Löschung ist im Sofort-Modus meist nicht nötig, 
+        // da der Eintrag im news_db ja bereits existiert.
+    } 
+    else {
+        // --- MODUS: SETZEN ---
+        
+        // 1. NEWS SOFORT SENDEN
+        // Das triggert die Funktion mit dem fetch-Befehl
+        if (typeof triggerNews === "function") {
+            triggerNews("ausfall", slot, klasse);
+        }
+
+        // 2. Visuelles Feedback in der Box (Vermeidung von Dopplung)
+        if (!window.currentEditBox.innerHTML.includes('Ausfall')) {
+            window.currentEditBox.innerHTML += '<br><i>Ausfall</i>';
+        }
+
+        // 3. Plan im Backend aktualisieren
         updateSelection('Ausfall', time, slot, klasse, btn);
     }
     
-    // Menu schließen nach kleiner Verzögerung oder Erfolg
+    // Menü schließen
     setTimeout(closeEditor, 500);
 }
     
