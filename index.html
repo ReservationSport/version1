@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport11111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1750,21 +1750,26 @@ function openEditor(el, time, slot, klasse) {
     const existiert = document.getElementById('eigenesmenu-modal');
     if (existiert) existiert.remove();
 
-    // 1. STATUS-CHECKS
-    const boxText = el.innerText.trim();
+    // 1. TEXT-ANALYSE
+    const boxText = el.innerText.trim(); // Der komplette Text der Box
     const istAusfall = boxText.includes('Ausfall');
-    
-    // Logik für "Halle ändern":
-    // Wir prüfen, ob die Box mehr Text enthält als nur die Klasse und das Lehrerkürzel.
-    // Wir zählen die Zeilen oder suchen nach Inhalten, die nicht die Klasse/Lehrer sind.
-    // Ein sehr sicherer Weg: Wenn "Ausfall" nicht drin steht, aber mehr als 2 Zeilen Text da sind.
-    const zeilen = el.innerHTML.split(/<br\s*\/?>/i).filter(line => line.trim() !== "");
-    
-    // Wenn wir mehr als 2 Zeilen haben (1. Klasse, 2. Lehrer, 3. Reservierung), 
-    // oder wenn in der Box Begriffe wie "Outdoor", "Halle", "U21" etc. vorkommen.
+
+    // Wir finden heraus, was unter dem Lehrer steht:
+    // Wir teilen den Text in Zeilen auf und filtern leere Zeilen raus
+    const zeilen = boxText.split('\n').map(z => z.trim()).filter(z => z.length > 0);
+
+    /* Logik: 
+       Zeile 0: Klasse
+       Zeile 1: Lehrer-Kürzel
+       Zeile 2+: Raum/Halle/Outdoor...
+    */
     const hatReservierung = !istAusfall && zeilen.length >= 3;
 
-    window.currentEditBox = el; 
+    // DEBUG (optional): Schalte das ein, wenn es immer noch nicht klappt, 
+    // um in der Konsole zu sehen, was der Browser "liest":
+    // console.log("Zeilen erkannt:", zeilen.length, zeilen);
+
+    window.currentEditBox = el;
 
     const backdrop = document.createElement('div');
     backdrop.className = 'eigenesmenu-backdrop';
@@ -1785,7 +1790,7 @@ function openEditor(el, time, slot, klasse) {
             <div class="eigenesmenu-liste">
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">📍</span> 
-                    <span class="btn-text">${hatReservierung ? 'RESERVIERUNG ÄNDERN' : 'HALLE/RAUM'}</span>
+                    <span class="btn-text">${hatReservierung ? 'HALLE/RAUM ÄNDERN' : 'HALLE/RAUM'}</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
