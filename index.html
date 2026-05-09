@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport13324</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1754,11 +1754,20 @@ function openEditor(el, time, slot, klasse) {
     const boxText = el.innerText.trim(); 
     const istAusfall = boxText.includes('Ausfall');
 
-    // Check für Halle/Raum (Zeilenlogik)
-    const zeilen = boxText.split('\n').map(z => z.trim()).filter(z => z.length > 0);
+    // Wir holen uns nur den Text, der NICHT in Badges oder Icons steht
+    // Dazu klonen wir das Element kurz virtuell und entfernen die Icons für die Prüfung
+    const tempEl = el.cloneNode(true);
+    const badges = tempEl.querySelectorAll('.material-indicator, .status-icon');
+    badges.forEach(b => b.remove());
+    
+    const saubererText = tempEl.innerText.trim();
+    // Trennung nach Zeilenumbrüchen, um zu sehen ob Zeile 3 (Raum) existiert
+    const zeilen = saubererText.split('\n').map(z => z.trim()).filter(z => z.length > 0);
+
+    // Echte Reservierung nur, wenn nach Abzug der Icons noch 3 Zeilen Text da sind
     const hatReservierung = !istAusfall && zeilen.length >= 3;
 
-    // Check für Material (Prüfung auf das Badge-Element)
+    // Material-Check: Prüft das Original-Element auf das Badge
     const hatMaterial = el.querySelector('.material-indicator') !== null;
 
     window.currentEditBox = el;
@@ -1814,7 +1823,11 @@ function openEditor(el, time, slot, klasse) {
 
     document.body.appendChild(backdrop);
 }
-function closeEditor() {
+
+    
+    
+    
+    function closeEditor() {
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.remove();
 }
