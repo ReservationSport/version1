@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1a22222</title>
+     <title>Reservation Sport111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1761,36 +1761,36 @@ function openEditor(el, time, slot, klasse) {
     backdrop.innerHTML = `
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
-                <h3 class="eigenesmenu-title">${klasse}</h3>
-                <p class="eigenesmenu-subtitle">Was möchtest du tun?</p>
+                <h3 class="eigenesmenu-title">TASK MANAGER</h3>
+                <p class="eigenesmenu-subtitle">Was möchtest du für die ${klasse} tun?</p>
             </div>
             
            <div class="eigenesmenu-liste">
     <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">🏟️</span> 
-        <span class="btn-text">Reservation Halle</span>
+        <span class="eigenesmenu-icon">📍</span> 
+        <span class="btn-text">HALLE/RAUM</span>
     </button>
 
     <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">🎾</span> 
-        <span class="btn-text">Material</span>
+        <span class="eigenesmenu-icon">📦</span> 
+        <span class="btn-text">MATERIAL</span>
     </button>
 
     <button class="eigenesmenu-item" onclick="updateSelection('Ausfall', '${time}', ${slot}, '${klasse}', this)">
         <span class="eigenesmenu-icon">❌</span> 
-        <span class="btn-text">Ausfall markieren</span>
+        <span class="btn-text">AUSFALL</span>
         <div class="eigenesmenu-loader"></div>
         <span class="eigenesmenu-success-icon">✓</span>
     </button>
 
     <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">🏆</span> 
-        <span class="btn-text">Lehrjahr beenden</span>
+        <span class="eigenesmenu-icon">🏁</span> 
+        <span class="btn-text">ABKLEBEN</span>
     </button>
 
     <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">📝</span> 
-        <span class="btn-text">Nachricht / Notiz</span>
+        <span class="eigenesmenu-icon">💬</span> 
+        <span class="btn-text">NACHRICHT</span>
     </button>
 </div>
 
@@ -2187,7 +2187,7 @@ function markBoxWithMaterialIcon(box, material, kommentar) {
     // Badge erstellen
     const badge = document.createElement('div');
     badge.className = 'material-indicator';
-    badge.innerHTML = '📋';
+    badge.innerHTML = '📦';
 
     // Styling (wie gehabt)
     Object.assign(badge.style, {
@@ -2229,7 +2229,7 @@ function showMaterialDetailPopup(material, kommentar) {
     overlay.innerHTML = `
         <div class="material-info-content" onclick="event.stopPropagation()" style="max-width: 400px; padding: 25px;">
             <div class="material-info-title" style="margin-bottom: 20px; font-size: 1.4rem;">
-                📋 Material-Reservierung
+                📦 Material-Reservierung
             </div>
             
             <div style="color:#ff8c00; margin-bottom: 20px; font-weight:bold; line-height: 1.5; font-size: 1.1rem; text-align: left; padding-left: 10px;">
