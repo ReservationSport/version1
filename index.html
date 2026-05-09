@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport11111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1750,10 +1750,14 @@ function openEditor(el, time, slot, klasse) {
     const existiert = document.getElementById('eigenesmenu-modal');
     if (existiert) existiert.remove();
 
-    // Prüfen, ob in der Box bereits ein Ausfall steht
+    // STATUS-CHECKS
     const istAusfall = el.innerText.includes('Ausfall');
+    
+    // Prüfen, ob bereits eine Halle/Raum gewählt wurde
+    // Wir schauen, ob in der Box bereits Text unterhalb der Klasse existiert, 
+    // der NICHT "Ausfall" ist.
+    const hatHalle = el.querySelector('.hallen-info') !== null || el.innerText.includes('Halle'); 
 
-    // Wir merken uns die aktuelle Box global für spätere Schritte
     window.currentEditBox = el; 
 
     const backdrop = document.createElement('div');
@@ -1765,38 +1769,37 @@ function openEditor(el, time, slot, klasse) {
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
                 <h3 class="eigenesmenu-title">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle">Wähle eine Aktion für die ${klasse}?</p>
+                <p class="eigenesmenu-subtitle">UNIT: <span style="color: #ff8c00;">${klasse}</span></p>
             </div>
             
-           <div class="eigenesmenu-liste">
-    <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">📍</span> 
-        <span class="btn-text">HALLE/RAUM</span>
-    </button>
+            <div class="eigenesmenu-liste">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
+                    <span class="eigenesmenu-icon">📍</span> 
+                    <span class="btn-text">${hatHalle ? 'HALLE ÄNDERN' : 'HALLE/RAUM'}</span>
+                </button>
 
-    <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">📦</span> 
-        <span class="btn-text">MATERIAL</span>
-    </button>
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
+                    <span class="eigenesmenu-icon">📦</span> 
+                    <span class="btn-text">MATERIAL</span>
+                </button>
 
-    // ... innerhalb von backdrop.innerHTML ...
-<button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${slot}, '${klasse}', this)">
-    <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
-    <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL'}</span>
-    <div class="eigenesmenu-loader"></div>
-    <span class="eigenesmenu-success-icon">✓</span>
-</button>
+                <button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${slot}, '${klasse}', this)">
+                    <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
+                    <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL'}</span>
+                    <div class="eigenesmenu-loader"></div>
+                    <span class="eigenesmenu-success-icon">✓</span>
+                </button>
 
-    <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">🏁</span> 
-        <span class="btn-text">ABKLEBEN</span>
-    </button>
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
+                    <span class="eigenesmenu-icon">🏁</span> 
+                    <span class="btn-text">ABKLEBEN</span>
+                </button>
 
-    <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">💬</span> 
-        <span class="btn-text">NACHRICHT</span>
-    </button>
-</div>
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}', this)">
+                    <span class="eigenesmenu-icon">💬</span> 
+                    <span class="btn-text">NACHRICHT</span>
+                </button>
+            </div>
 
             <button class="eigenesmenu-cancel" onclick="closeEditor()">Abbrechen</button>
         </div>
