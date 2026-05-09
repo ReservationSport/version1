@@ -1834,41 +1834,24 @@ function openEditor(el, time, slot, klasse) {
 
 
 function handleAusfallClick(mode, time, slot, klasse, btn) {
-    if (!window.currentEditBox) return;
-
-    // 1. Sofortige Klicksperre, um Mehrfachtrigger zu verhindern
-    if (btn) {
-        btn.disabled = true; // Button deaktivieren
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.5';
-    }
-
     if (mode === 'LOESCHEN') {
-        // Text nur entfernen, wenn er wirklich existiert (vermeidet Fehler beim Ersetzen)
-        if (window.currentEditBox.innerHTML.includes('Ausfall')) {
-            window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/gi, "");
+        // 1. Visuelles Feedback: "Ausfall" Text sofort aus der Box entfernen
+        if (window.currentEditBox) {
+            // Sucht nach dem Text "Ausfall" und entfernt ihn, lässt den Rest (Klasse/Lehrer) stehen
+            window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
+            // Falls du es simpler machst:
+            // window.currentEditBox.innerText = window.currentEditBox.innerText.replace("Ausfall", "");
         }
         
-        // Backend-Update (leerer String löscht im Sheet)
+        // 2. Ab ins Backend um die Zelle im Sheet zu leeren
         updateSelection('', time, slot, klasse, btn); 
     } else {
-        // WICHTIG: Prüfen, ob "Ausfall" bereits in der Box steht
-        // (Verhindert das "Ausfall Ausfall" Problem aus deiner Grafik)
-        const schonAusfall = window.currentEditBox.innerText.includes('Ausfall');
-        
-        if (!schonAusfall) {
-            // Nur hinzufügen, wenn es noch nicht da ist
-            window.currentEditBox.innerHTML += '<br><i>Ausfall</i>';
-        }
-        
-        // Backend-Update
+        // Normaler Ausfall
         updateSelection('Ausfall', time, slot, klasse, btn);
     }
     
-    // 2. Das Menü sofort schließen.
-    // Das löst das Problem mit dem "Verschwinden": Wenn das Backend den Plan im Hintergrund 
-    // neu lädt, stirbt das Menü-Element sowieso. Ein sofortiges Schließen ist sauberer.
-    closeEditor();
+    // Menu schließen nach kleiner Verzögerung oder Erfolg
+    setTimeout(closeEditor, 500);
 }
     
 
