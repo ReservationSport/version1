@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1765,7 +1765,7 @@ function openEditor(el, time, slot, klasse) {
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
                 <h3 class="eigenesmenu-title">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle">UNIT: <span style="color: #ff8c00;">${klasse}</span></p>
+                <p class="eigenesmenu-subtitle">Wähle eine Aktion für die ${klasse}?</p>
             </div>
             
            <div class="eigenesmenu-liste">
@@ -1779,12 +1779,13 @@ function openEditor(el, time, slot, klasse) {
         <span class="btn-text">MATERIAL</span>
     </button>
 
-    <button class="eigenesmenu-item" onclick="updateSelection('${istAusfall ? 'Ausfall löschen' : 'Ausfall'}', '${time}', ${slot}, '${klasse}', this)">
-        <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
-        <span class="btn-text">${istAusfall ? 'AUSFALL LÖSCHEN' : 'AUSFALL'}</span>
-        <div class="eigenesmenu-loader"></div>
-        <span class="eigenesmenu-success-icon">✓</span>
-    </button>
+    // ... innerhalb von backdrop.innerHTML ...
+<button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${slot}, '${klasse}', this)">
+    <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
+    <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL'}</span>
+    <div class="eigenesmenu-loader"></div>
+    <span class="eigenesmenu-success-icon">✓</span>
+</button>
 
     <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
         <span class="eigenesmenu-icon">🏁</span> 
@@ -1810,6 +1811,27 @@ function closeEditor() {
 }
 
 
+function handleAusfallClick(mode, time, slot, klasse, btn) {
+    if (mode === 'LOESCHEN') {
+        // 1. Visuelles Feedback: "Ausfall" Text sofort aus der Box entfernen
+        if (window.currentEditBox) {
+            // Sucht nach dem Text "Ausfall" und entfernt ihn, lässt den Rest (Klasse/Lehrer) stehen
+            window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
+            // Falls du es simpler machst:
+            // window.currentEditBox.innerText = window.currentEditBox.innerText.replace("Ausfall", "");
+        }
+        
+        // 2. Ab ins Backend um die Zelle im Sheet zu leeren
+        updateSelection('', time, slot, klasse, btn); 
+    } else {
+        // Normaler Ausfall
+        updateSelection('Ausfall', time, slot, klasse, btn);
+    }
+    
+    // Menu schließen nach kleiner Verzögerung oder Erfolg
+    setTimeout(closeEditor, 500);
+}
+    
 
 //----------------AUSWAHL IM MENU---------------
 
