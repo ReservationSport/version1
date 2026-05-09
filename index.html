@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sportsdfsf</title>
+     <title>Reservation Sportsdfsf111111111111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1836,32 +1836,35 @@ function openEditor(el, time, slot, klasse) {
 function handleAusfallClick(mode, time, slot, klasse, btn) {
     if (!window.currentEditBox) return;
 
+    // Klick-Sperre am Button sofort aktivieren
+    if (btn) {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.5';
+    }
+
     if (mode === 'LOESCHEN') {
-        // 1. Visuelles Feedback: "Ausfall" sofort entfernen
-        // Wir löschen den kursiven Ausfall-Text und den Zeilenumbruch
+        // Nur löschen, wenn es auch da ist
         window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
-        
-        // 2. Ab ins Backend (leerer String löscht die Zelle)
         updateSelection('', time, slot, klasse, btn); 
     } else {
-        // 1. Visuelles Feedback: "Ausfall" sofort hinzufügen
-        // Wir prüfen kurz, ob es schon drin steht, um Dopplungen zu vermeiden
-        if (!window.currentEditBox.innerHTML.includes('Ausfall')) {
+        // WICHTIG: Erst prüfen, ob "Ausfall" schon im Text steht (verhindert Dopplung)
+        const schonAusfall = window.currentEditBox.innerText.includes('Ausfall');
+        
+        if (!schonAusfall) {
+            // Nur hinzufügen, wenn noch nicht vorhanden
             window.currentEditBox.innerHTML += '<br><i>Ausfall</i>';
         }
-
-        // 2. Ab ins Backend
         updateSelection('Ausfall', time, slot, klasse, btn);
     }
     
-    // 3. Button sperren, um Mehrfachklicks während des Speicherns zu verhindern
-    if (btn) {
-        btn.style.pointerEvents = 'none';
-        btn.style.opacity = '0.7';
-    }
-
-    // Menu schließen nach kleiner Verzögerung
-    setTimeout(closeEditor, 600);
+    // Das Modal NICHT sofort per Timeout schließen, falls updateSelection 
+    // ohnehin einen Seiten-Refresh triggert. 
+    // Wenn du es manuell schließen willst, erhöhe den Timeout:
+    setTimeout(() => {
+        if (document.getElementById('eigenesmenu-modal')) {
+            closeEditor();
+        }
+    }, 800); 
 }
     
 
