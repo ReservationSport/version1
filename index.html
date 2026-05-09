@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport13324</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1750,24 +1750,16 @@ function openEditor(el, time, slot, klasse) {
     const existiert = document.getElementById('eigenesmenu-modal');
     if (existiert) existiert.remove();
 
-    // 1. TEXT-ANALYSE
-    const boxText = el.innerText.trim(); // Der komplette Text der Box
+    // 1. STATUS-ANALYSEN
+    const boxText = el.innerText.trim(); 
     const istAusfall = boxText.includes('Ausfall');
 
-    // Wir finden heraus, was unter dem Lehrer steht:
-    // Wir teilen den Text in Zeilen auf und filtern leere Zeilen raus
+    // Check für Halle/Raum (Zeilenlogik)
     const zeilen = boxText.split('\n').map(z => z.trim()).filter(z => z.length > 0);
-
-    /* Logik: 
-       Zeile 0: Klasse
-       Zeile 1: Lehrer-Kürzel
-       Zeile 2+: Raum/Halle/Outdoor...
-    */
     const hatReservierung = !istAusfall && zeilen.length >= 3;
 
-    // DEBUG (optional): Schalte das ein, wenn es immer noch nicht klappt, 
-    // um in der Konsole zu sehen, was der Browser "liest":
-    // console.log("Zeilen erkannt:", zeilen.length, zeilen);
+    // Check für Material (Prüfung auf das Badge-Element)
+    const hatMaterial = el.querySelector('.material-indicator') !== null;
 
     window.currentEditBox = el;
 
@@ -1790,29 +1782,29 @@ function openEditor(el, time, slot, klasse) {
             <div class="eigenesmenu-liste">
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">📍</span> 
-                    <span class="btn-text">${hatReservierung ? 'HALLE/RAUM ÄNDERN' : 'HALLE/RAUM'}</span>
+                    <span class="btn-text">${hatReservierung ? 'HALLE/RAUM ÄNDERN' : 'HALLE/RAUM RESERVIEREN'}</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">📦</span> 
-                    <span class="btn-text">MATERIAL</span>
+                    <span class="btn-text">${hatMaterial ? 'MATERIAL ÄNDERN' : 'MATERIAL BUCHEN'}</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
-                    <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL'}</span>
+                    <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                     <div class="eigenesmenu-loader"></div>
                     <span class="eigenesmenu-success-icon">✓</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">🏁</span> 
-                    <span class="btn-text">ABKLEBEN</span>
+                    <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">💬</span> 
-                    <span class="btn-text">NACHRICHT</span>
+                    <span class="btn-text">NACHRICHT ERFASSEN</span>
                 </button>
             </div>
 
@@ -1822,7 +1814,6 @@ function openEditor(el, time, slot, klasse) {
 
     document.body.appendChild(backdrop);
 }
-
 function closeEditor() {
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.remove();
