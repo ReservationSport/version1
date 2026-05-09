@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1697,7 +1697,7 @@ function openEditor(el, time, slot, klasse) {
 
     <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}', this)">
         <span class="eigenesmenu-icon">🏆</span> 
-        <span class="btn-text">Lehrjahr beendet</span>
+        <span class="btn-text">Lehrjahr beenden</span>
     </button>
 
     <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}', this)">
@@ -1720,7 +1720,7 @@ function closeEditor() {
 
 
 
-//----------------HALLENRESERVATION---------------
+//----------------AUSWAHL IM MENU---------------
 
     
 function handleMenuChoice(choice, time, slot, klasse) {
@@ -1784,17 +1784,15 @@ function handleMenuChoice(choice, time, slot, klasse) {
         addBackButton(container, time, slot, klasse);
     }
 
-    // --- NEUE LOGIK FÜR MATERIAL-AUSWAHL ---
+    // --- LOGIK FÜR MATERIAL-AUSWAHL ---
     else if (choice === 'material') {
         header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
         header.querySelector('.eigenesmenu-subtitle').innerText = "Ausrüstung für " + time;
 
-        // Deine Liste der Materialien
         const materialOptionen = window.materialOptionen;
 
         let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
         
-        // Option: Material entfernen
         html += `
             <button class="eigenesmenu-item" style="border-style: dashed;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
                 <span class="eigenesmenu-icon">❌</span> 
@@ -1803,7 +1801,6 @@ function handleMenuChoice(choice, time, slot, klasse) {
                 <span class="eigenesmenu-success-icon">✓</span>
             </button>`;
 
-        // Material-Buttons generieren
         materialOptionen.forEach(mat => {
             html += `
                 <button class="eigenesmenu-item" onclick="openMaterialDetail('${mat}', '${time}', ${slot}, '${klasse}')">
@@ -1816,6 +1813,15 @@ function handleMenuChoice(choice, time, slot, klasse) {
         html += `</div>`;
         liste.innerHTML = html;
         addBackButton(container, time, slot, klasse);
+    }
+
+    // --- NEUE LOGIK FÜR LEHRJAHR BEENDEN ---
+    else if (choice === 'beendet') {
+        // Menü sofort schließen
+        if (typeof closeEditor === 'function') closeEditor();
+        
+        // Den zweistufigen Reset-Prozess starten
+        startYearReset();
     }
 }
 
