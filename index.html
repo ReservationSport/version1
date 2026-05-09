@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234fasdsadsa</title>
+     <title>Reservation Sport1a</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2147,13 +2147,17 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
 
         const result = await response.json();
 
-        if (result.status === "success") {
+       if (result.status === "success") {
             if (loader) loader.style.display = 'none';
             if (successIcon) successIcon.style.display = 'block';
             clickedBtn.classList.add('success');
             
             const box = findBoxByTimeAndSlot(time, slot);
-            if (box) markBoxWithMaterialIcon(box, material, kommentar);
+            if (box) {
+                // Falls 'kommentar' als Parameter leer war, nehmen wir den Inhalt des Textfelds
+                const finalKommentar = kommentar || (document.getElementById('material-kommentar-input') ? document.getElementById('material-kommentar-input').value : "");
+                markBoxWithMaterialIcon(box, material, finalKommentar);
+            }
 
             setTimeout(() => {
                 if (typeof closeEditor === 'function') closeEditor();
@@ -2173,26 +2177,42 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     
 function markBoxWithMaterialIcon(box, material, kommentar) {
     if (!box) return;
+
+    // Altes Icon entfernen, falls vorhanden
     const oldIcon = box.querySelector('.material-indicator');
     if (oldIcon) oldIcon.remove();
+
     if (!material || material.trim() === "") return;
 
+    // Badge erstellen
     const badge = document.createElement('div');
     badge.className = 'material-indicator';
     badge.innerHTML = '📋';
 
+    // Styling (wie gehabt)
     Object.assign(badge.style, {
-        position: 'absolute', top: '0', right: '0',
-        background: '#333', color: 'white',
-        padding: '2px 6px', borderBottomLeftRadius: '8px',
-        fontSize: '20px', zIndex: '10', cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center'
+        position: 'absolute',
+        top: '0',
+        right: '0',
+        background: '#333',
+        color: 'white',
+        padding: '2px 6px',
+        borderBottomLeftRadius: '8px',
+        fontSize: '20px',
+        zIndex: '10',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
     });
 
+    // Klick-Event: Hier MUSS der kommentar rein
     badge.onclick = (e) => {
         e.stopPropagation();
-        showMaterialDetailPopup(material, kommentar);
+        // Wir stellen sicher, dass 'kommentar' nicht undefined ist
+        showMaterialDetailPopup(material, kommentar || "");
     };
+
     box.appendChild(badge);
 }
 
