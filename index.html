@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1a</title>
+     <title>Reservation Sport1a22222</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -2223,19 +2223,40 @@ function showMaterialDetailPopup(material, kommentar) {
     overlay.className = 'material-info-overlay';
     overlay.onclick = () => overlay.remove(); 
 
-    // Formatiert "Matte, Ball" zu "• Matte <br> • Ball"
+    // Liste formatieren
     const materialList = material.split(', ').map(item => `• ${item}`).join('<br>');
 
     overlay.innerHTML = `
-        <div class="material-info-content" onclick="event.stopPropagation()">
-            <div class="material-info-title">📋 Material-Reservierung</div>
-            <div style="color:#ff8c00; margin-bottom: 10px; font-weight:bold; line-height: 1.4;">
+        <div class="material-info-content" onclick="event.stopPropagation()" style="max-width: 400px; padding: 25px;">
+            <div class="material-info-title" style="margin-bottom: 20px; font-size: 1.4rem;">
+                📋 Material-Reservierung
+            </div>
+            
+            <div style="color:#ff8c00; margin-bottom: 20px; font-weight:bold; line-height: 1.5; font-size: 1.1rem; text-align: left; padding-left: 10px;">
                 ${materialList}
             </div>
-            <div class="material-info-text" style="background: #222; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-                ${kommentar ? kommentar : "Keine zusätzliche Notiz vorhanden."}
+
+            <!-- Der Kommentar-Kasten -->
+            <div class="kommentar-kasten" style="
+                background: #1a1a1a; 
+                border-left: 4px solid #ff8c00; 
+                padding: 15px; 
+                border-radius: 4px; 
+                margin-bottom: 25px;
+                text-align: left;
+                box-shadow: inset 0 0 10px rgba(0,0,0,0.5);">
+                
+                <div style="color: #666; font-size: 0.75rem; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 1px;">
+                    Zusatz-Details:
+                </div>
+                
+                <div style="color: #eee; line-height: 1.4; font-style: italic;">
+                    ${kommentar ? kommentar : "Keine Notizen hinterlegt."}
+                </div>
             </div>
-            <button class="eigenesmenu-cancel" style="width:100%; margin:0;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
+
+            <button class="eigenesmenu-cancel" style="width:100%; margin:0; background: #333; color: #ccc;" 
+                onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
         </div>
     `;
     document.body.appendChild(overlay);
