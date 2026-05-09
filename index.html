@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport1234fasdsadsa</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1022,6 +1022,7 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
         let pendingNews = [];
         let allOptions = [];
         let verfügbareMaterialien = [];
+        let selectedMaterials = []; // Speichert nur, was der User gerade angeklickt hat
 
  // ------------LOGIN RESERVATION------------
         
@@ -1871,36 +1872,49 @@ function handleMenuChoice(choice, time, slot, klasse) {
         addBackButton(container, time, slot, klasse);
     }
 
-    // --- LOGIK FÜR MATERIAL-AUSWAHL ---
-    else if (choice === 'material') {
-        header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
-        header.querySelector('.eigenesmenu-subtitle').innerText = "Ausrüstung für " + time;
+    // --- LOGIK FÜR MATERIAL-AUSWAHL (in index.html) ---
+else if (choice === 'material') {
+    header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
+    header.querySelector('.eigenesmenu-subtitle').innerText = "Ausrüstung für " + time;
 
-        const materialOptionen = window.materialOptionen;
+    const materialOptionen = window.materialOptionen;
+    
+    // Auswahl beim Öffnen des Menüs jedes Mal leeren
+    selectedMaterials = []; 
 
-        let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
-        
+    let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
+    
+    // Löschen-Button (Einmal-Aktion)
+    html += `
+        <button class="eigenesmenu-item" style="border-style: dashed; margin-bottom: 10px;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
+            <span class="eigenesmenu-icon">❌</span> 
+            <span class="btn-text">Kein Material / Löschen</span>
+        </button>`;
+
+    // Die Material-Optionen mit der neuen toggle-Logik
+    materialOptionen.forEach(mat => {
         html += `
-            <button class="eigenesmenu-item" style="border-style: dashed;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
-                <span class="eigenesmenu-icon">❌</span> 
-                <span class="btn-text">Kein Material / Löschen</span>
-                <div class="eigenesmenu-loader"></div>
-                <span class="eigenesmenu-success-icon">✓</span>
+            <button class="eigenesmenu-item material-selectable" data-mat="${mat}" onclick="toggleMaterialSelection('${mat}', this)">
+                <span class="eigenesmenu-icon">📦</span> 
+                <span class="btn-text">${mat}</span>
+                <span class="check-indicator" style="margin-left: auto; color: #444; font-size: 16px;">○</span>
             </button>`;
+    });
+    
+    html += `</div>`;
 
-        materialOptionen.forEach(mat => {
-            html += `
-                <button class="eigenesmenu-item" onclick="openMaterialDetail('${mat}', '${time}', ${slot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">📦</span> 
-                    <span class="btn-text">${mat}</span>
-                    <span style="margin-left: auto; color: #666; font-size: 12px;">❯</span>
-                </button>`;
-        });
-        
-        html += `</div>`;
-        liste.innerHTML = html;
-        addBackButton(container, time, slot, klasse);
-    }
+    // Der "WEITER"-Button (wird über toggleMaterialSelection gesteuert)
+    html += `
+        <div id="materialNextStep" style="margin-top: 15px; display: none;">
+            <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold;" 
+                    onclick="openMaterialDetail(selectedMaterials.join(', '), '${time}', ${slot}, '${klasse}')">
+                WEITER ZU DEN DETAILS ❯
+            </button>
+        </div>`;
+
+    liste.innerHTML = html;
+    addBackButton(container, time, slot, klasse);
+}
 
     // --- NEUE LOGIK FÜR LEHRJAHR BEENDEN ---
  else if (choice === 'beendet') {
@@ -2067,12 +2081,12 @@ window.addChange = async (el, time, slot, klasse) => {
 // ------------MATERIAL------------    
 
     
-// 2. Funktion: Material-Detailfenster öffnen (Ebene 3)
 function openMaterialDetail(materialName, time, slot, klasse) {
     const container = document.querySelector('.eigenesmenu-container');
     const liste = container.querySelector('.eigenesmenu-liste');
     const header = container.querySelector('.eigenesmenu-header');
 
+    // Zeigt alle gewählten Materialien im Titel an
     header.querySelector('.eigenesmenu-title').innerText = materialName;
     header.querySelector('.eigenesmenu-subtitle').innerText = "Details & Kommentar hinzufügen";
 
@@ -2080,11 +2094,11 @@ function openMaterialDetail(materialName, time, slot, klasse) {
         <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
             <textarea id="material-kommentar-input" 
                 style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #222; color: white; font-family: inherit; resize: none;"
-                placeholder="z.B. Nur 4 Matten, Trampolin klein..."></textarea>
+                placeholder="z.B. Mengen, Größen oder spezifische Wünsche..."></textarea>
             
-            <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; border: none;" 
+            <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold; border: none;" 
                 onclick="saveMaterialSelection('${materialName}', document.getElementById('material-kommentar-input').value, '${time}', ${slot}, '${klasse}', this)">
-                <span class="btn-text">Reservierung speichern</span>
+                <span class="btn-text">RESERVIERUNG SPEICHERN</span>
                 <div class="eigenesmenu-loader"></div>
                 <span class="eigenesmenu-success-icon">✓</span>
             </button>
@@ -2092,16 +2106,15 @@ function openMaterialDetail(materialName, time, slot, klasse) {
     `;
     liste.innerHTML = html;
     
-    // Zurück-Button zu der Material-Liste
+    // Zurück-Button Logik (Ebene 2 wieder aufrufen)
+    if(container.querySelector('.eigenesmenu-cancel')) container.querySelector('.eigenesmenu-cancel').remove();
     const backBtn = document.createElement('button');
     backBtn.className = 'eigenesmenu-cancel';
     backBtn.innerText = "← Zurück zur Auswahl";
     backBtn.onclick = () => handleMenuChoice('material', time, slot, klasse);
-    if(container.querySelector('.eigenesmenu-cancel')) container.querySelector('.eigenesmenu-cancel').remove();
     container.appendChild(backBtn);
 }
 
-// 3. Funktion: Material endgültig speichern
 
     
 async function saveMaterialSelection(material, kommentar, time, slot, klasse, clickedBtn) {
@@ -2112,19 +2125,12 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
     if (loader) loader.style.display = 'block';
     if (btnText) btnText.style.opacity = '0.3';
 
-    const scriptUrl = url; // Nutzt deine globale URL-Variable
-
-    // Datum vom DatePicker holen
     const dp = document.getElementById('datePicker');
-    let displayDate = dp ? dp.value : "";
-
-    if (!displayDate) {
-        displayDate = window.lastStableDate || ""; 
-    }
+    let displayDate = dp ? dp.value : (window.lastStableDate || ""); 
 
     const payload = {
         mode: "saveMaterial", 
-        pw: userPw,          
+        pw: userPw,           
         material: material,
         kommentar: kommentar,
         time: time,
@@ -2133,10 +2139,8 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
         date: displayDate     
     };
 
-    console.log("Sende Material-Payload:", payload);
-
     try {
-        const response = await fetch(scriptUrl, {
+        const response = await fetch(url, {
             method: "POST",
             body: JSON.stringify(payload)
         });
@@ -2148,11 +2152,8 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
             if (successIcon) successIcon.style.display = 'block';
             clickedBtn.classList.add('success');
             
-            // Icon im Plan sofort setzen
             const box = findBoxByTimeAndSlot(time, slot);
-            if (box) {
-                markBoxWithMaterialIcon(box, material, kommentar);
-            }
+            if (box) markBoxWithMaterialIcon(box, material, kommentar);
 
             setTimeout(() => {
                 if (typeof closeEditor === 'function') closeEditor();
@@ -2160,9 +2161,7 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
         } else {
             throw new Error(result.msg || "Server meldet Fehler");
         }
-
     } catch (error) {
-        console.error("Fehler beim Speichern:", error);
         alert("Fehler: " + error.message);
         if (loader) loader.style.display = 'none';
         if (btnText) btnText.style.opacity = '1';
@@ -2170,57 +2169,52 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
 }
 
 
+
+    
 function markBoxWithMaterialIcon(box, material, kommentar) {
     if (!box) return;
-
-    // Altes Icon entfernen
     const oldIcon = box.querySelector('.material-indicator');
     if (oldIcon) oldIcon.remove();
-
     if (!material || material.trim() === "") return;
 
-    // Badge erstellen
     const badge = document.createElement('div');
     badge.className = 'material-indicator';
     badge.innerHTML = '📋';
 
-    // Styling: Grau wie Zeit-Boxen, keine Rahmen-Änderung an der Box
     Object.assign(badge.style, {
-        position: 'absolute',
-        top: '0',
-        right: '0',
-        background: '#333', // Das Grau der Zeit-Boxen
-        color: 'white',
-        padding: '2px 6px',
-        borderBottomLeftRadius: '8px',
-        fontSize: '20px', // Deine gewünschte Größe
-        zIndex: '10',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
+        position: 'absolute', top: '0', right: '0',
+        background: '#333', color: 'white',
+        padding: '2px 6px', borderBottomLeftRadius: '8px',
+        fontSize: '20px', zIndex: '10', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center'
     });
 
-    // Klick-Event für dein eigenes Layout-Fenster
     badge.onclick = (e) => {
         e.stopPropagation();
         showMaterialDetailPopup(material, kommentar);
     };
-
     box.appendChild(badge);
 }
 
-// Funktion für das eigene Info-Popup
+
+    
 function showMaterialDetailPopup(material, kommentar) {
     const overlay = document.createElement('div');
     overlay.className = 'material-info-overlay';
-    overlay.onclick = () => overlay.remove(); // Schließen beim Klick auf Hintergrund
+    overlay.onclick = () => overlay.remove(); 
+
+    // Formatiert "Matte, Ball" zu "• Matte <br> • Ball"
+    const materialList = material.split(', ').map(item => `• ${item}`).join('<br>');
 
     overlay.innerHTML = `
         <div class="material-info-content" onclick="event.stopPropagation()">
             <div class="material-info-title">📋 Material-Reservierung</div>
-            <div style="color:white; margin-bottom: 5px; font-weight:bold;">${material}</div>
-            <div class="material-info-text">${kommentar ? kommentar : "Keine zusätzliche Notiz vorhanden."}</div>
+            <div style="color:#ff8c00; margin-bottom: 10px; font-weight:bold; line-height: 1.4;">
+                ${materialList}
+            </div>
+            <div class="material-info-text" style="background: #222; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+                ${kommentar ? kommentar : "Keine zusätzliche Notiz vorhanden."}
+            </div>
             <button class="eigenesmenu-cancel" style="width:100%; margin:0;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
         </div>
     `;
@@ -2228,7 +2222,31 @@ function showMaterialDetailPopup(material, kommentar) {
 }
 
 
+    
+    
+function toggleMaterialSelection(mat, btn) {
+    const indicator = btn.querySelector('.check-indicator');
+    const nextStep = document.getElementById('materialNextStep');
 
+    if (selectedMaterials.includes(mat)) {
+        selectedMaterials = selectedMaterials.filter(item => item !== mat);
+        btn.style.background = ""; 
+        indicator.innerText = "○";
+        indicator.style.color = "#444";
+    } else {
+        selectedMaterials.push(mat);
+        btn.style.background = "rgba(255, 140, 0, 0.2)"; 
+        indicator.innerText = "●";
+        indicator.style.color = "#ff8c00";
+    }
+
+    if (nextStep) {
+        nextStep.style.display = selectedMaterials.length > 0 ? "block" : "none";
+    }
+}
+
+
+    
 
 window.saveChanges = async function() {
     const btn = document.getElementById('saveBtn');
