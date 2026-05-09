@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234566</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1824,7 +1824,7 @@ function handleMenuChoice(choice, time, slot, klasse) {
         }
 
         header.querySelector('.eigenesmenu-title').innerText = "Halle/Raum wählen";
-        header.querySelector('.eigenesmenu-subtitle').innerText = "Verfügbare Hallen/Räume für " + ${klasse} + " reservieren";
+        header.querySelector('.eigenesmenu-subtitle').innerText = "Verfügbare Hallen/Räume für ${klasse} reservieren";
 
         const currentRow = window.currentEditBox.getAttribute('data-row');
         let belegteEinzelHallen = new Set();
@@ -1875,7 +1875,7 @@ function handleMenuChoice(choice, time, slot, klasse) {
     // --- LOGIK FÜR MATERIAL-AUSWAHL (in index.html) ---
 else if (choice === 'material') {
     header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
-    header.querySelector('.eigenesmenu-subtitle').innerText = "Verfügbares Material für " + ${klasse} + " reservieren";
+    header.querySelector('.eigenesmenu-subtitle').innerText = "Verfügbares Material für ${klasse} reservieren";
 
     const materialOptionen = window.materialOptionen;
     
