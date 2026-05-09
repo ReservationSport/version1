@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport11111</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1750,13 +1750,19 @@ function openEditor(el, time, slot, klasse) {
     const existiert = document.getElementById('eigenesmenu-modal');
     if (existiert) existiert.remove();
 
-    // STATUS-CHECKS
-    const istAusfall = el.innerText.includes('Ausfall');
+    // 1. STATUS-CHECKS
+    const boxText = el.innerText.trim();
+    const istAusfall = boxText.includes('Ausfall');
     
-    // Prüfen, ob bereits eine Halle/Raum gewählt wurde
-    // Wir schauen, ob in der Box bereits Text unterhalb der Klasse existiert, 
-    // der NICHT "Ausfall" ist.
-    const hatHalle = el.querySelector('.hallen-info') !== null || el.innerText.includes('Halle'); 
+    // Logik für "Halle ändern":
+    // Wir prüfen, ob die Box mehr Text enthält als nur die Klasse und das Lehrerkürzel.
+    // Wir zählen die Zeilen oder suchen nach Inhalten, die nicht die Klasse/Lehrer sind.
+    // Ein sehr sicherer Weg: Wenn "Ausfall" nicht drin steht, aber mehr als 2 Zeilen Text da sind.
+    const zeilen = el.innerHTML.split(/<br\s*\/?>/i).filter(line => line.trim() !== "");
+    
+    // Wenn wir mehr als 2 Zeilen haben (1. Klasse, 2. Lehrer, 3. Reservierung), 
+    // oder wenn in der Box Begriffe wie "Outdoor", "Halle", "U21" etc. vorkommen.
+    const hatReservierung = !istAusfall && zeilen.length >= 3;
 
     window.currentEditBox = el; 
 
@@ -1769,13 +1775,17 @@ function openEditor(el, time, slot, klasse) {
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
                 <h3 class="eigenesmenu-title">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle">UNIT: <span style="color: #ff8c00;">${klasse}</span></p>
+                <p class="eigenesmenu-subtitle" style="color: #ffffff; line-height: 1.4;">
+                    Welche Aktion möchtest du für die 
+                    <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
+                    vornehmen?
+                </p>
             </div>
             
             <div class="eigenesmenu-liste">
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">📍</span> 
-                    <span class="btn-text">${hatHalle ? 'HALLE ÄNDERN' : 'HALLE/RAUM'}</span>
+                    <span class="btn-text">${hatReservierung ? 'RESERVIERUNG ÄNDERN' : 'HALLE/RAUM'}</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}', this)">
