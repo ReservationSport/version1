@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1234</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1518,7 +1518,7 @@ function getExistingComment(r, c) {
 
  // ------------KLASSE ENTFERNEN------------
 
-async function startYearReset(klasse) { // 'klasse' wird hier empfangen
+async function startYearReset(klasse) {
     const modal = document.getElementById('universalModal');
     const title = document.getElementById('uniTitle');
     const msg = document.getElementById('uniMessage');
@@ -1528,19 +1528,32 @@ async function startYearReset(klasse) { // 'klasse' wird hier empfangen
     const cancelBtn = document.getElementById('uniCancelBtn');
     const pwInput = document.getElementById('uniPwInput');
 
-    // 1. SCHRITT: DIE BESTÄTIGUNG (Industrial Style)
+    // --- SCHRITT 1: DIE BESTÄTIGUNG ---
     icon.innerText = "🗑️";
     title.innerText = "KLASSE ABKLEBEN";
-    msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum für alle zukünftigen Wochen dauerhaft löschen?`;
-    pwContainer.style.display = "none"; 
+    msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum dauerhaft löschen?`;
+    
+    // Wir zeigen das Passwortfeld SOFORT an für den Safety-Check
+    pwContainer.style.display = "block"; 
+    pwInput.value = "";
     confirmBtn.innerText = "JA, ABKLEBEN";
     modal.style.display = "flex";
+    
+    setTimeout(() => pwInput.focus(), 100); // Fokus auf das Feld legen
 
     cancelBtn.onclick = () => modal.style.display = "none";
 
     confirmBtn.onclick = async () => {
-        // Ermittlung des Slot-Index (Spalte) aus der aktuell bearbeiteten Box
-        const slotIndex = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : null;
+        // Validierung: Wurde überhaupt etwas eingegeben?
+        const eingabePw = pwInput.value;
+        if (!eingabePw) {
+            alert("Bitte gib das Passwort zur Bestätigung ein.");
+            return;
+        }
+
+        // Slot-Index aus der aktuellen Box holen
+        const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : "";
+        const dateVal = document.getElementById('datePicker').value;
 
         // UI auf "Loading" umstellen
         confirmBtn.disabled = true;
@@ -1555,9 +1568,9 @@ async function startYearReset(klasse) { // 'klasse' wird hier empfangen
                 body: JSON.stringify({
                     mode: "permaDelete",
                     klasse: klasse,
-                    slot: slotIndex, // Jetzt definiert
-                    startDate: document.getElementById('datePicker').value,
-                    pw: userPw, 
+                    slot: slotVal,
+                    startDate: dateVal,
+                    pw: eingabePw, // Hier wird das NEU eingegebene Passwort gesendet
                     kuerzel: userKuerzel
                 })
             });
@@ -1569,13 +1582,16 @@ async function startYearReset(klasse) { // 'klasse' wird hier empfangen
                 console.log("Erfolg: Klasse entfernt.");
                 await loadPlan(); 
             } else {
-                throw new Error(result.error || "Server meldet Fehler");
+                // Wenn das Passwort falsch war, meldet der Server hier den Fehler
+                alert("Fehler: " + (result.error || "Passwort falsch oder Server-Fehler"));
+                confirmBtn.disabled = false;
+                confirmBtn.innerText = "JA, ABKLEBEN";
+                if (gLoader) gLoader.style.display = 'none';
             }
         } catch (e) {
             console.error("PermaDelete Error:", e);
-            alert("Fehler beim dauerhaften Löschen.");
+            alert("Verbindungsfehler!");
             if (gLoader) gLoader.style.display = 'none';
-        } finally {
             confirmBtn.disabled = false;
             confirmBtn.innerText = "JA, ABKLEBEN";
         }
