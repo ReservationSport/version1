@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -884,6 +884,63 @@ select { width: 100%; height: 100%; position: absolute; top: 0; left: 0; opacity
 .material-info-title { color: #e67e22; font-weight: bold; margin-bottom: 10px; font-size: 1.1rem; }
 .material-info-text { color: #ccc; margin-bottom: 20px; line-height: 1.4; white-space: pre-wrap; }
 
+
+  /* ============================================================
+      10. Klasse abkleben
+       ============================================================ */
+
+
+/* Passwort-Container & Feld Zentrierung */
+#uniPwContainer {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+#uniPwInput {
+    width: 100%; /* Füllt den verfügbaren Platz im Modal-Padding */
+    max-width: 300px; /* Begrenzt die Breite für eine bessere Optik */
+    box-sizing: border-box; 
+    padding: 12px;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 1.1rem;
+    letter-spacing: 3px;
+    outline: none;
+}
+
+#uniPwInput:focus {
+    border-color: #ff8c00;
+}
+
+/* Button-Logik für den Loader */
+.uni-btn-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.mini-loader {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top: 2px solid #fff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: none; /* Standardmäßig versteckt */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
     
     
 </style>
@@ -1528,39 +1585,47 @@ async function startYearReset(klasse) {
     const cancelBtn = document.getElementById('uniCancelBtn');
     const pwInput = document.getElementById('uniPwInput');
 
-    // --- SCHRITT 1: DIE BESTÄTIGUNG ---
+    // Setup: Texte & Icons
     icon.innerText = "🗑️";
     title.innerText = "KLASSE ABKLEBEN";
-    msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum dauerhaft löschen?`;
+    msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum für alle zukünftigen Wochen dauerhaft löschen?`;
     
-    // Wir zeigen das Passwortfeld SOFORT an für den Safety-Check
-    pwContainer.style.display = "block"; 
+    // Layout & Passwort-Feld
+    pwContainer.style.display = "flex"; 
     pwInput.value = "";
-    confirmBtn.innerText = "JA, ABKLEBEN";
-    modal.style.display = "flex";
+    pwInput.style.borderColor = "#333";
     
-    setTimeout(() => pwInput.focus(), 100); // Fokus auf das Feld legen
+    // Button-Initialisierung mit "JETZT ABKLEBEN!"
+    confirmBtn.innerHTML = `
+        <div class="uni-btn-content">
+            <div class="mini-loader" id="uniBtnLoader"></div>
+            <span id="uniBtnText">JETZT ABKLEBEN!</span>
+        </div>
+    `;
+    confirmBtn.disabled = false;
+    
+    modal.style.display = "flex";
+    setTimeout(() => pwInput.focus(), 150);
 
     cancelBtn.onclick = () => modal.style.display = "none";
 
     confirmBtn.onclick = async () => {
-        // Validierung: Wurde überhaupt etwas eingegeben?
         const eingabePw = pwInput.value;
         if (!eingabePw) {
-            alert("Bitte gib das Passwort zur Bestätigung ein.");
+            pwInput.style.borderColor = "#e74c3c"; // Rot bei fehlender Eingabe
+            pwInput.focus();
             return;
         }
 
-        // Slot-Index aus der aktuellen Box holen
+        // Loader aktivieren
+        const loader = document.getElementById('uniBtnLoader');
+        const btnText = document.getElementById('uniBtnText');
+        loader.style.display = "block";
+        btnText.innerText = "LÖSCHE...";
+        confirmBtn.disabled = true;
+
         const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : "";
         const dateVal = document.getElementById('datePicker').value;
-
-        // UI auf "Loading" umstellen
-        confirmBtn.disabled = true;
-        confirmBtn.innerText = "LÖSCHE...";
-        
-        const gLoader = document.getElementById('globalLoader'); 
-        if (gLoader) gLoader.style.display = 'block';
 
         try {
             const response = await fetch(url, {
@@ -1570,7 +1635,7 @@ async function startYearReset(klasse) {
                     klasse: klasse,
                     slot: slotVal,
                     startDate: dateVal,
-                    pw: eingabePw, // Hier wird das NEU eingegebene Passwort gesendet
+                    pw: eingabePw,
                     kuerzel: userKuerzel
                 })
             });
@@ -1582,18 +1647,20 @@ async function startYearReset(klasse) {
                 console.log("Erfolg: Klasse entfernt.");
                 await loadPlan(); 
             } else {
-                // Wenn das Passwort falsch war, meldet der Server hier den Fehler
-                alert("Fehler: " + (result.error || "Passwort falsch oder Server-Fehler"));
-                confirmBtn.disabled = false;
-                confirmBtn.innerText = "JA, ABKLEBEN";
-                if (gLoader) gLoader.style.display = 'none';
+                alert("Fehler: " + (result.error || "Passwort falsch"));
+                resetBtn();
             }
         } catch (e) {
-            console.error("PermaDelete Error:", e);
+            console.error(e);
             alert("Verbindungsfehler!");
-            if (gLoader) gLoader.style.display = 'none';
+            resetBtn();
+        }
+
+        // Hilfsfunktion zum Zurücksetzen des Buttons bei Fehlern
+        function resetBtn() {
+            loader.style.display = "none";
+            btnText.innerText = "JETZT ABKLEBEN!";
             confirmBtn.disabled = false;
-            confirmBtn.innerText = "JA, ABKLEBEN";
         }
     };
 }
