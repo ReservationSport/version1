@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1518,18 +1518,19 @@ function getExistingComment(r, c) {
 
  // ------------KLASSE ENTFERNEN------------
 
-async function permaDeleteClass(klasse, slotIndex) {
+async function startYearReset() {
     const modal = document.getElementById('universalModal');
     const title = document.getElementById('uniTitle');
     const msg = document.getElementById('uniMessage');
     const icon = document.getElementById('uniIcon');
+    const pwContainer = document.getElementById('uniPwContainer');
     const confirmBtn = document.getElementById('uniConfirmBtn');
     const cancelBtn = document.getElementById('uniCancelBtn');
-    const pwContainer = document.getElementById('uniPwContainer');
+    const pwInput = document.getElementById('uniPwInput');
 
     // 1. SCHRITT: DIE BESTÄTIGUNG (Industrial Style)
     icon.innerText = "🗑️";
-    title.innerText = "KLASSE ENTFERNEN";
+    title.innerText = "KLASSE ABKLEBEN";
     msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum für alle zukünftigen Wochen dauerhaft löschen?`;
     pwContainer.style.display = "none"; // Kein PW nötig, da userPw global vorhanden
     confirmBtn.innerText = "JA, ABKLEBEN";
