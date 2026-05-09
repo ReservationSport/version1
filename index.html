@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sportsdfsf</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1834,24 +1834,34 @@ function openEditor(el, time, slot, klasse) {
 
 
 function handleAusfallClick(mode, time, slot, klasse, btn) {
+    if (!window.currentEditBox) return;
+
     if (mode === 'LOESCHEN') {
-        // 1. Visuelles Feedback: "Ausfall" Text sofort aus der Box entfernen
-        if (window.currentEditBox) {
-            // Sucht nach dem Text "Ausfall" und entfernt ihn, lässt den Rest (Klasse/Lehrer) stehen
-            window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
-            // Falls du es simpler machst:
-            // window.currentEditBox.innerText = window.currentEditBox.innerText.replace("Ausfall", "");
-        }
+        // 1. Visuelles Feedback: "Ausfall" sofort entfernen
+        // Wir löschen den kursiven Ausfall-Text und den Zeilenumbruch
+        window.currentEditBox.innerHTML = window.currentEditBox.innerHTML.replace(/<br>\s*<i>Ausfall<\/i>/i, "");
         
-        // 2. Ab ins Backend um die Zelle im Sheet zu leeren
+        // 2. Ab ins Backend (leerer String löscht die Zelle)
         updateSelection('', time, slot, klasse, btn); 
     } else {
-        // Normaler Ausfall
+        // 1. Visuelles Feedback: "Ausfall" sofort hinzufügen
+        // Wir prüfen kurz, ob es schon drin steht, um Dopplungen zu vermeiden
+        if (!window.currentEditBox.innerHTML.includes('Ausfall')) {
+            window.currentEditBox.innerHTML += '<br><i>Ausfall</i>';
+        }
+
+        // 2. Ab ins Backend
         updateSelection('Ausfall', time, slot, klasse, btn);
     }
     
-    // Menu schließen nach kleiner Verzögerung oder Erfolg
-    setTimeout(closeEditor, 500);
+    // 3. Button sperren, um Mehrfachklicks während des Speicherns zu verhindern
+    if (btn) {
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+    }
+
+    // Menu schließen nach kleiner Verzögerung
+    setTimeout(closeEditor, 600);
 }
     
 
