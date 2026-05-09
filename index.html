@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport</title>
+     <title>Reservation Sport1234</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1532,13 +1532,16 @@ async function startYearReset(klasse) { // 'klasse' wird hier empfangen
     icon.innerText = "🗑️";
     title.innerText = "KLASSE ABKLEBEN";
     msg.innerText = `Möchtest du die Klasse ${klasse} ab diesem Datum für alle zukünftigen Wochen dauerhaft löschen?`;
-    pwContainer.style.display = "none"; // Kein PW nötig, da userPw global vorhanden
+    pwContainer.style.display = "none"; 
     confirmBtn.innerText = "JA, ABKLEBEN";
     modal.style.display = "flex";
 
     cancelBtn.onclick = () => modal.style.display = "none";
 
     confirmBtn.onclick = async () => {
+        // Ermittlung des Slot-Index (Spalte) aus der aktuell bearbeiteten Box
+        const slotIndex = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : null;
+
         // UI auf "Loading" umstellen
         confirmBtn.disabled = true;
         confirmBtn.innerText = "LÖSCHE...";
@@ -1552,9 +1555,9 @@ async function startYearReset(klasse) { // 'klasse' wird hier empfangen
                 body: JSON.stringify({
                     mode: "permaDelete",
                     klasse: klasse,
-                    slot: slotIndex,
+                    slot: slotIndex, // Jetzt definiert
                     startDate: document.getElementById('datePicker').value,
-                    pw: userPw, // Nutzt dein gespeichertes Passwort
+                    pw: userPw, 
                     kuerzel: userKuerzel
                 })
             });
@@ -1564,7 +1567,7 @@ async function startYearReset(klasse) { // 'klasse' wird hier empfangen
             if (result.status === "success") {
                 modal.style.display = 'none';
                 console.log("Erfolg: Klasse entfernt.");
-                await loadPlan(); // Plan neu laden (schaltet Loader aus)
+                await loadPlan(); 
             } else {
                 throw new Error(result.error || "Server meldet Fehler");
             }
