@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-     <title>Reservation Sport1111</title>
+     <title>Reservation Sport</title>
 <!-- Icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <!-- Schriftart -->
@@ -1870,17 +1870,17 @@ function handleAusfallClick(mode, time, slot, klasse, btn) {
         // --- MODUS: SETZEN ---
         
         // 1. NEWS SOFORT SENDEN
-        // Das triggert die Funktion mit dem fetch-Befehl
         if (typeof triggerNews === "function") {
             triggerNews("ausfall", slot, klasse);
         }
 
-        // 2. Visuelles Feedback in der Box (Vermeidung von Dopplung)
-        if (!window.currentEditBox.innerHTML.includes('Ausfall')) {
-            window.currentEditBox.innerHTML += '<br><i>Ausfall</i>';
-        }
+        // 2. OPTISCHES FEEDBACK (Nur CSS, kein Text!)
+        // Wir fügen nur die Klasse hinzu. Dein CSS macht die Box dann schwarz.
+        // Das verhindert, dass das Wort "Ausfall" doppelt erscheint.
+        window.currentEditBox.classList.add('ausfall-mode');
 
         // 3. Plan im Backend aktualisieren
+        // Das Backend schreibt dann beim Refresh das Wort "Ausfall" einmalig rein.
         updateSelection('Ausfall', time, slot, klasse, btn);
     }
     
