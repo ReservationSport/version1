@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -133,13 +133,13 @@ body {
 }
 
 /* 3. DAS GRID-SYSTEM */
-#plan-container { 
-    display: grid; 
-    /* Zeitspalte fest 100px, Rest teilt sich den Platz auf 5 Hallen auf */
-    grid-template-columns: 100px repeat(5, 1fr); 
-    gap: 3px; 
-    max-width: 1000px; 
-    margin: 20px auto; 
+#plan-container {
+    display: grid !important;
+    grid-template-columns: 100px repeat(5, 1fr) !important;
+    gap: 1px; /* Minimaler Spalt für die feinen Linien */
+    background-color: #444; /* Linienfarbe durch Background + Gap */
+    border: 1px solid #444;
+    max-width: 100%; /* Nutzt den verfügbaren Platz */
 }
 
 /* Trennlinien im Grid */
@@ -178,32 +178,31 @@ body {
 }
 
 /* 4. DIE BOXEN (SLOTS) */
+/* Box-Größe und Schrift aus Bild 2 */
 .box {
-    background: var(--slot-empty);
-    border: 1px solid var(--border-color);
-    min-height: 80px;
-    padding: 8px;
-    position: relative;
+    background: #262626;
+    min-height: 65px; /* Etwas flacher als vorher */
+    padding: 5px 2px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
-    justify-content: space-around;
-    text-align: center;
-    transition: all 0.2s;
-    border-radius: 4px;
-    overflow: hidden;
+    line-height: 1.2;
 }
 
 /* Inhalte innerhalb der Box */
-.box .klasse-label {
-    font-weight: bold;
-    font-size: 1.2em;
-    color: var(--text-light);
+/* Schriftgrößen-Feintuning */
+.klasse-label {
+    font-size: 14px; /* Kompakter wie in Bild 2 */
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-.box .halle-label {
-    font-size: 0.9em;
+.halle-label {
+    font-size: 10px;
     color: #aaa;
+    font-style: italic;
+    margin-top: 2px;
 }
 
 /* 5. INTERAKTIONS-LOGIK & ZUSTÄNDE */
