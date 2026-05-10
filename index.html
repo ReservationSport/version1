@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -195,35 +195,87 @@ body {
 }
 
 /* ============================================================
-   5. LOGIN (PROFI-LOOK)
+   5. LOGIN-OVERLAY & CARD-DESIGN (DEIN ORIGINAL)
    ============================================================ */
 #loginOverlay { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-    background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
+    background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 100%), 
+                url('https://raw.githubusercontent.com/ReservationSport/ReservationSport/refs/heads/main/Logo.png');
     background-size: cover; background-position: center; z-index: 20000; 
-    display: flex; justify-content: center; align-items: center; backdrop-filter: blur(18px); 
+    display: flex; justify-content: center; align-items: center; 
+    font-family: 'Inter', sans-serif; backdrop-filter: blur(18px); 
 }
 
 .login-card {
     background: rgba(20, 20, 20, 0.7); padding: 50px 40px; border-radius: 28px;
-    border: 1px solid rgba(255, 255, 255, 0.08); width: 100%; max-width: 360px; text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
+    width: 100%; max-width: 360px; text-align: center;
 }
 
+.login-card h2 { 
+    color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; 
+    letter-spacing: -1.5px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); 
+}
+
+.login-card input { 
+    padding: 16px 20px; margin: 10px 0; background: rgba(0, 0, 0, 0.4); 
+    border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; border-radius: 14px; 
+    width: 100%; font-size: 16px; outline: none; box-sizing: border-box; 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-card input:focus { 
+    border-color: #e67e22; background: rgba(0, 0, 0, 0.6); 
+    box-shadow: 0 0 20px rgba(230, 126, 34, 0.2); 
+}
+
+/* ============================================================
+   6. LOGIN-BUTTON MIT BLITZ-EFFEKT
+   ============================================================ */
 #loginBtn { 
-    padding: 18px; margin-top: 25px; width: 100%;
+    padding: 18px; margin-top: 25px; 
     background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
-    color: white; border: none; border-radius: 16px; cursor: pointer;
-    font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; text-transform: uppercase;
-    position: relative; overflow: hidden; box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
+    color: white; border: none; border-radius: 16px; cursor: pointer; width: 100%; 
+    font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; 
+    text-transform: uppercase; letter-spacing: 1.5px;
+    box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    position: relative; overflow: hidden; z-index: 1;
 }
 
+#loginBtn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+
+/* Dynamischer Blitz */
 #loginBtn::after {
     content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    transform: skewX(-25deg); transition: 0.6s ease-in-out;
+    transform: skewX(-25deg); transition: 0.6s ease-in-out; z-index: 3;
 }
 #loginBtn:hover::after { left: 150%; }
 
+/* ============================================================
+   7. HÜPFENDER BASKETBALL
+   ============================================================ */
+.basketball-container {
+    margin-top: 30px;
+    font-size: 40px;
+    display: flex;
+    justify-content: center;
+}
+
+.basketball {
+    display: inline-block;
+    animation: initialBounce 1.5s ease-out forwards;
+}
+
+@keyframes initialBounce {
+    0%   { transform: translateY(-150px); animation-timing-function: ease-in; }
+    30%  { transform: translateY(0);      animation-timing-function: ease-out; }
+    50%  { transform: translateY(-60px);  animation-timing-function: ease-in; }
+    70%  { transform: translateY(0);      animation-timing-function: ease-out; }
+    85%  { transform: translateY(-20px);  animation-timing-function: ease-in; }
+    100% { transform: translateY(0); }
+}
 
 /* ============================================================
    6. MODALS & SIDEBAR
@@ -485,24 +537,26 @@ body {
 
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
-    <div id="loginOverlay">
-        <div class="login-card">
-            <h2>BBZO <span>Sport</span></h2>
-            <input type="text" id="userKuerzel" placeholder="Kürzel (z.B. xy)" autocomplete="username"
-                   onfocus="document.getElementById('loginError').innerText=''"
-                   oninput="document.getElementById('loginError').innerText=''">
-            
-            <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"
-                   onfocus="document.getElementById('loginError').innerText=''"
-                   oninput="document.getElementById('loginError').innerText=''"
-                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleLogin(); }">
+   <div id="loginOverlay">
+    <div class="login-card">
+        <h2>BBZO <span>Sport</span></h2>
+        
+        <input type="text" id="userKuerzel" placeholder="Kürzel" autocomplete="username"
+               onfocus="document.getElementById('loginError').innerText=''"
+               oninput="document.getElementById('loginError').innerText=''">
+        
+        <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"
+               onfocus="document.getElementById('loginError').innerText=''"
+               oninput="document.getElementById('loginError').innerText=''"
+               onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleLogin(); }">
 
-            <button id="loginBtn" onclick="handleLogin()">Login</button>
-            
-            <div id="loginBall" class="sport-loader" style="margin-top: 30px; font-size: 28px;">🏀</div>
-            <p id="loginError"></p>
-        </div>
+        <button id="loginBtn" onclick="handleLogin()">ON YOUR MARKS...</button>
+        
+        <div id="loginBall" class="basketball-bounce">🏀</div>
+        
+        <p id="loginError"></p>
     </div>
+</div>
 
    <div class="date-control">
     <div class="nav-section nav-left">
