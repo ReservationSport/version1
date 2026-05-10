@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -206,6 +206,12 @@ body {
     font-family: 'Inter', sans-serif; backdrop-filter: blur(18px); 
 }
 
+#loginOverlay.fade-out {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+}
+
 .login-card {
     background: rgba(20, 20, 20, 0.7); padding: 50px 40px; border-radius: 28px;
     border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.5); 
@@ -245,6 +251,9 @@ body {
 
 #loginBtn:hover { transform: translateY(-3px); filter: brightness(1.1); }
 
+/* Verstecken wenn aktiv geladen wird */
+#loginBtn.loading { display: none !important; }
+
 /* Dynamischer Blitz */
 #loginBtn::after {
     content: ''; position: absolute; top: 0; left: -150%; width: 60%; height: 100%;
@@ -254,27 +263,39 @@ body {
 #loginBtn:hover::after { left: 150%; }
 
 /* ============================================================
-   7. HÜPFENDER BASKETBALL
+   7. HÜPFENDER BASKETBALL (LOADER-EDITION)
    ============================================================ */
-.basketball-container {
+#loginBall {
+    display: none; /* Erst beim Klick sichtbar */
     margin-top: 30px;
-    font-size: 40px;
-    display: flex;
-    justify-content: center;
+    font-size: 50px; /* Schön groß */
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
 }
 
-.basketball {
-    display: inline-block;
-    animation: initialBounce 1.5s ease-out forwards;
+/* Wird von handleLogin() hinzugefügt */
+#loginBall.active {
+    display: inline-block !important;
+    animation: bounceAndGrow 0.8s infinite alternate ease-in-out;
 }
 
-@keyframes initialBounce {
-    0%   { transform: translateY(-150px); animation-timing-function: ease-in; }
-    30%  { transform: translateY(0);      animation-timing-function: ease-out; }
-    50%  { transform: translateY(-60px);  animation-timing-function: ease-in; }
-    70%  { transform: translateY(0);      animation-timing-function: ease-out; }
-    85%  { transform: translateY(-20px);  animation-timing-function: ease-in; }
-    100% { transform: translateY(0); }
+@keyframes bounceAndGrow {
+    0% { 
+        transform: translateY(0) scale(1); 
+        animation-timing-function: ease-out;
+    }
+    100% { 
+        transform: translateY(-45px) scale(1.5); /* Springt hoch und wird massiv größer */
+        animation-timing-function: ease-in;
+    }
+}
+
+/* Fehlertext Styling */
+#loginError {
+    color: #ff4757;
+    font-size: 14px;
+    margin-top: 15px;
+    min-height: 20px;
+    font-weight: 600;
 }
 
 /* ============================================================
@@ -537,7 +558,7 @@ body {
 
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
-   <div id="loginOverlay">
+<div id="loginOverlay">
     <div class="login-card">
         <h2>BBZO <span>Sport</span></h2>
         
@@ -674,60 +695,65 @@ body {
         document.getElementById('datePicker').value = today;
     });
 
-    /* ============================================================
-       3. LOGIN-LOGIK (Optimiert für Slot-Index)
-       ============================================================ */
+  /* ============================================================
+   3. LOGIN-LOGIK (Optimiert für Slot-Index)
+   ============================================================ */
+
+async function handleLogin() {
+    const btn = document.getElementById('loginBtn');
+    const ball = document.getElementById('loginBall');
+    const errorDiv = document.getElementById('loginError');
     
-    async function handleLogin() {
-        const btn = document.getElementById('loginBtn');
-        const ball = document.getElementById('loginBall');
-        const errorDiv = document.getElementById('loginError');
-        
-        // IDs aus deinem verschmolzenen HTML
-        const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
-        const pwVal = document.getElementById('pw').value;
+    // IDs aus deinem verschmolzenen HTML
+    const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
+    const pwVal = document.getElementById('pw').value;
 
-        if (!kuerzelVal) { 
-            errorDiv.innerText = "Kürzel fehlt!"; 
-            return; 
-        }
+    if (!kuerzelVal) { 
+        errorDiv.innerText = "Kürzel fehlt!"; 
+        return; 
+    }
 
-        // Visuelles Feedback (Basketball fängt an zu hüpfen)
-        btn.style.visibility = 'hidden'; 
-        ball.classList.add('active'); 
-        errorDiv.innerText = "";
+    // Visuelles Feedback: Button verstecken, Basketball hüpft
+    btn.style.visibility = 'hidden'; 
+    ball.classList.add('active'); 
+    errorDiv.innerText = "";
 
-        try {
-            // Mode "login" prüft Passwort und Kürzel in der code.gs
-            const response = await fetch(`${url}?mode=login&pw=${encodeURIComponent(pwVal)}&kuerzel=${encodeURIComponent(kuerzelVal)}`);
-            const json = await response.json();
+    try {
+        // Mode "login" prüft Passwort und Kürzel in der code.gs
+        const response = await fetch(`${url}?mode=login&pw=${encodeURIComponent(pwVal)}&kuerzel=${encodeURIComponent(kuerzelVal)}`);
+        const json = await response.json();
 
-            if (json.error) {
-                errorDiv.innerText = json.error === "Falsches Passwort" ? "Passwort inkorrekt!" : "Fehler: " + json.error;
-                btn.style.visibility = 'visible';
-                ball.classList.remove('active');
-            } else {
-                // Erfolg: Daten lokal speichern
-                userPw = pwVal;
-                userKuerzel = kuerzelVal;
-                
-                // Login-Maske ausblenden
-                document.getElementById('loginOverlay').classList.add('fade-out');
-                setTimeout(() => {
-                    document.getElementById('loginOverlay').style.display = 'none';
-                    // News-Button einblenden
-                    document.getElementById('news-btn-container').style.display = 'block';
-                    // Plan laden
-                    loadPlan();
-                }, 500);
-            }
-        } catch (e) {
-            errorDiv.innerText = "Verbindung fehlgeschlagen.";
+        if (json.error) {
+            errorDiv.innerText = json.error === "Falsches Passwort" ? "Passwort inkorrekt!" : "Fehler: " + json.error;
+            // Zurücksetzen bei Fehler
             btn.style.visibility = 'visible';
             ball.classList.remove('active');
-            console.error("Login Error:", e);
+        } else {
+            // Erfolg: Daten lokal speichern
+            userPw = pwVal;
+            userKuerzel = kuerzelVal;
+            
+            // Login-Maske ausblenden (Fade-out Effekt)
+            document.getElementById('loginOverlay').classList.add('fade-out');
+            
+            setTimeout(() => {
+                document.getElementById('loginOverlay').style.display = 'none';
+                
+                // News-Button & Interface einblenden
+                const newsContainer = document.getElementById('news-btn-container');
+                if(newsContainer) newsContainer.style.display = 'block';
+                
+                // Plan laden
+                loadPlan();
+            }, 500);
         }
+    } catch (e) {
+        errorDiv.innerText = "Verbindung fehlgeschlagen.";
+        btn.style.visibility = 'visible';
+        ball.classList.remove('active');
+        console.error("Login Error:", e);
     }
+}
 
     /* ============================================================
        4. SICHERHEITSABFRAGE (Falls doch mal was hängt)
