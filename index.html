@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -14,85 +14,30 @@
 
 
 
-    /* 2. ZENTRALE STYLING-VARIABLEN (Dunkles Design-Option integriert) */
-    :root {
-        --primary-color: #34495e;
-        --accent-color: #3498db;
-        --bg-color: #1a1a1a; /* Zurück auf Dunkel, wie in deinem neuen Entwurf */
-        --text-light: #ffffff;
-        --border-color: #333;
-        --slot-empty: #2c2c2c;
-        --slot-booked: #34495e;
-        --slot-u21: #b45f06; /* Markantes Orange für U21 */
-    }
+/* 1. GLOBALE EINSTELLUNGEN & FONTS */
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;700&display=swap');
 
-    body { 
-        font-family: 'Oswald', sans-serif; /* Oswald bleibt für den Sport-Look besser */
-        background: var(--bg-color); 
-        color: var(--text-light); 
-        padding: 20px; 
-        margin: 0;
-    }
+:root {
+    --primary-color: #34495e;
+    --accent-color: #3498db;
+    --bg-color: #1a1a1a;
+    --text-light: #ffffff;
+    --border-color: #333;
+    --slot-empty: #262626;
+    --slot-booked: #34495e;
+    --slot-u21: #b45f06;
+    --highlight-orange: #e67e22;
+}
 
-    /* 3. DAS GRID-SYSTEM (Optimiert auf 1000px & 6 Spalten) */
-    #plan-container { 
-        display: grid; 
-        /* Zeitspalte 100px + 5 Hallenspalten */
-        grid-template-columns: 100px repeat(5, 1fr); 
-        gap: 3px; 
-        max-width: 1000px; 
-        margin: auto; 
-    }
+body { 
+    font-family: 'Oswald', sans-serif; 
+    background: var(--bg-color); 
+    color: var(--text-light); 
+    padding: 20px; 
+    margin: 0;
+}
 
-    /* INFO-BOX für Sperrtage oder Fehler (Nutzung der vollen Breite) */
-    .info-box {
-        grid-column: span 6; /* Deckt Zeit + alle 5 Hallen ab */
-        font-size: 20px;
-        padding: 40px;
-        text-align: center;
-        line-height: 1.5;
-        color: #888;
-        font-style: italic;
-        background: rgba(255,255,255,0.05);
-        border-radius: 8px;
-        margin: 20px 0;
-    }
-
-    .box {
-        background: var(--slot-empty);
-        border: 1px solid var(--border-color);
-        min-height: 80px;
-        padding: 10px;
-        position: relative;
-        cursor: pointer;
-        transition: all 0.2s;
-        border-radius: 4px;
-        display: flex;
-        flex-direction: column;
-        font-size: 0.95em;
-    }
-
-    .box:hover {
-        border-color: var(--accent-color);
-        background: #333;
-    }
-
-    .time-label {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        background: #333;
-        color: var(--accent-color);
-        border-radius: 4px;
-    }
-
-    /* Status-Klassen für die Slot-Logik */
-    .box.booked { background: var(--slot-booked); border-left: 4px solid var(--accent-color); }
-    .box.u21 { background: var(--slot-u21); color: white; }
-
-
-
+/* 2. NAVIGATION & DATE-CONTROL (Sticky oben) */
 .date-control {
     display: flex;
     justify-content: space-between;
@@ -108,11 +53,24 @@
 }
 
 .nav-section { display: flex; align-items: center; gap: 10px; }
-.nav-left { flex: 1; }
 .nav-center { flex: 2; justify-content: center; gap: 12px; }
-.nav-right { flex: 1; justify-content: flex-end; }
 
-/* News Premium Style */
+.nav-btn, .refresh-btn, #datePicker {
+    height: 40px;
+    background: #333;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 4px;
+    box-sizing: border-box;
+    padding: 0 10px;
+}
+
+.nav-btn { width: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.nav-btn:hover { background: #444; color: var(--accent-color); }
+
+.refresh-btn { width: 40px; color: var(--highlight-orange); cursor: pointer; }
+
+/* News Button Style */
 .news-btn-premium {
     position: relative;
     display: flex;
@@ -126,100 +84,121 @@
     transition: all 0.2s;
 }
 
-.news-btn-premium:hover { background: #333; border-color: #e67e22; }
-
-.news-btn-premium .btn-text {
-    color: #fff;
-    font-size: 11px;
-    letter-spacing: 2px;
-    margin-right: 10px;
-}
-
-/* Der Badge-Punkt (glühendes Orange) */
 .news-btn-premium .badge {
     position: absolute;
     top: 8px;
     right: 8px;
     width: 8px;
     height: 8px;
-    background: #e67e22;
+    background: var(--highlight-orange);
     border-radius: 50%;
     box-shadow: 0 0 8px rgba(230, 126, 34, 0.8);
 }
 
-/* Symmetrische Steuerelemente */
-.nav-btn, .refresh-btn, #datePicker {
-    height: 40px;
-    background: #333;
-    border: 1px solid #444;
-    color: white;
-    border-radius: 4px;
-    box-sizing: border-box;
+/* 3. DAS GRID-SYSTEM */
+#plan-container { 
+    display: grid; 
+    /* Zeitspalte fest 100px, Rest teilt sich den Platz auf 5 Hallen auf */
+    grid-template-columns: 100px repeat(5, 1fr); 
+    gap: 3px; 
+    max-width: 1000px; 
+    margin: 20px auto; 
 }
 
-.nav-btn { width: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.nav-btn:hover { background: #444; color: var(--accent-color); }
+/* HEADER & ZEIT-SPALTE */
+.zeit-box, .header-box { 
+    background: #111 !important; 
+    color: var(--accent-color); 
+    font-weight: bold; 
+    border: 1px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    font-size: 14px;
+    min-height: 40px;
+}
 
-.refresh-btn { width: 40px; color: #e67e22; margin-left: 10px; cursor: pointer; }
-.refresh-btn:hover { background: #444; }
+/* 4. DIE BOXEN (SLOTS) */
+.box {
+    background: var(--slot-empty);
+    border: 1px solid var(--border-color);
+    min-height: 80px;
+    padding: 8px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    text-align: center;
+    transition: all 0.2s;
+    border-radius: 4px;
+    overflow: hidden;
+}
 
-/* Visibility-Klasse für Wochenenden */
+/* Inhalte innerhalb der Box */
+.box .klasse-label {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: var(--text-light);
+}
+
+.box .halle-label {
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+/* 5. INTERAKTIONS-LOGIK & ZUSTÄNDE */
+.box.empty { pointer-events: none; opacity: 0.3; }
+
+.box.is-mine { 
+    border: 2px solid var(--highlight-orange) !important; 
+    z-index: 10; 
+    cursor: pointer; 
+}
+
+.box.is-mine:hover {
+    background-color: rgba(230, 126, 34, 0.15) !important;
+    transform: scale(1.02);
+}
+
+.box.not-mine { cursor: default; opacity: 0.8; }
+
+/* Spezial-Status */
+.box.booked { background: var(--slot-booked); border-left: 4px solid var(--accent-color); }
+.box.u21 { background: var(--slot-u21); color: white; }
+
+.box.ausfall-mode {
+    background-color: #000 !important;
+    border-color: #ff0000 !important;
+}
+.box.ausfall-mode .halle-label { color: #ff0000; font-weight: bold; }
+
+/* Material-Icon Position */
+.mat-icon {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 12px;
+    color: var(--highlight-orange);
+}
+
+/* Info-Box für Sperrtage */
+.info-box {
+    grid-column: span 6;
+    font-size: 18px;
+    padding: 30px;
+    text-align: center;
+    color: #888;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+}
+
+/* Visibility für Navigation */
 .nav-btn-hidden { visibility: hidden !important; pointer-events: none; }
 
 
 
-/* 3. ZELLEN-STYLING (SLOTS) */
-.box { 
-    border: 1px solid #333; 
-    padding: 5px; 
-    background: #262626; 
-    min-height: 60px; /* Etwas mehr Platz für Material-Icons */
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center; 
-    font-size: 11px; 
-    position: relative; 
-    cursor: default; 
-    overflow: hidden; 
-    transition: all 0.2s;
-}
-
-/* Zeit-Spalte & Header */
-.zeit-box { background: #111 !important; color: var(--accent-color); font-weight: bold; border-color: #444; }
-
-.header-row { 
-    grid-column: span 6; 
-    background: #333; 
-    font-size: 14px; 
-    font-weight: bold; 
-    position: sticky; 
-    top: 70px; /* Angepasst an deine Sticky-Nav */
-    z-index: 1090; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    height: 40px; 
-}
-
-/* INTERAKTIONS-LOGIK (Wichtig für Slot-Index) */
-.box.empty { pointer-events: none; opacity: 0.3; }
-
-/* Eigene Boxen: Markant hervorgehoben */
-.box.is-mine { 
-    border: 2px solid #e67e22 !important; 
-    z-index: 10; 
-    cursor: pointer; 
-}
-.box.is-mine:hover {
-    background-color: rgba(230, 126, 34, 0.15) !important;
-    box-shadow: inset 0 0 10px rgba(230, 126, 34, 0.2);
-    transform: scale(1.02);
-}
-
-/* Fremde Boxen: Ausgegraut oder neutral */
-.box.not-mine { cursor: default; opacity: 0.8; }
 
 /* 4. SPEZIAL-ZUSTÄNDE */
 .box.ausfall-mode { 
