@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111111111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -142,6 +142,27 @@ body {
     margin: 20px auto; 
 }
 
+/* Trennlinien im Grid */
+.divider-thin, .divider-thick {
+    grid-column: span 6; /* Erstreckt sich über Zeit + 5 Hallen */
+    margin: 2px 0;
+    pointer-events: none; /* Man kann nicht darauf klicken */
+}
+
+.divider-thin {
+    height: 2px;
+    background-color: #444; /* Dezentes Grau */
+    border-radius: 2px;
+}
+
+.divider-thick {
+    height: 6px;
+    background-color: var(--highlight-orange); /* Dein Orange als Akzent für die Mittagspause */
+    opacity: 0.8;
+    border-radius: 3px;
+    margin: 5px 0;
+}
+    
 /* HEADER & ZEIT-SPALTE */
 .zeit-box, .header-box { 
     background: #111 !important; 
@@ -1045,10 +1066,20 @@ window.loadPlan = async function() {
         // GRID GENERIERUNG (12 Zeit-Slots x 5 Hallen)
         // json.data[0] ist die Kopfzeile (Zeiten/Hallen), wir starten ab Index 1
         currentPlanData.forEach((row, rowIndex) => {
-            if (rowIndex === 0) return; // Header überspringen (wird durch CSS/Festwerte gelöst)
+    if (rowIndex === 0) return;
 
-            // Zeit-Spalte (Ganz links)
-            html += `<div class="box zeit-box">${row[0]}</div>`;
+    // --- NEU: Trennlinien einfügen ---
+    if (rowIndex === 4 || rowIndex === 10) {
+        html += `<div class="divider-thin"></div>`;
+    }
+    if (rowIndex === 7) {
+        html += `<div class="divider-thick"></div>`;
+    }
+
+    // Zeit-Spalte
+    html += `<div class="box zeit-box">${row[0]}</div>`;
+    
+    // Hallen 1 bis 5 ... (Rest bleibt gleich)
             
             // Hallen 1 bis 5
             for(let i = 1; i <= 5; i++) {
