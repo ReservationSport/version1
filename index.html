@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -683,7 +683,7 @@ body {
         </div>
     </div>
 
-    <div class="grid" id="plan"></div>
+    <div id="plan-container"></div>
 
     <div id="newsSidebar" style="display:none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 10px;">
@@ -945,7 +945,7 @@ body {
 
 window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
-    const container = document.getElementById('plan');
+    const container = document.getElementById('plan-container'); 
     const loader = document.getElementById('global-loader'); // ID angepasst an HTML
 
     const dateVal = dp.value;
