@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1436,20 +1436,32 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         btn.disabled = true;
     }
 
+    // --- SICHERHEITS-CHECK FÜR DEN SLOT ---
+    // Falls 'slot' undefined ist (was dein Sheet-Problem verursacht), 
+    // versuchen wir ihn aus dem globalen 'currentEditBox'-Element zu lesen.
+    const finalSlot = slot || (window.currentEditBox ? window.currentEditBox.getAttribute('data-slot') : null);
+
+    if (!finalSlot || finalSlot === "undefined") {
+        console.error("Kritischer Fehler: Slot-Nummer konnte nicht ermittelt werden!");
+        alert("Fehler: Der Slot wurde nicht erkannt. Bitte Seite neu laden.");
+        if (btn) btn.disabled = false;
+        return;
+    }
+
     // 1. Datum vom Plan holen
     const datePicker = document.getElementById('datePicker');
     const dateVal = datePicker ? datePicker.value : new Date().toISOString().split('T')[0];
     
-    // 2. Die eindeutige ID erstellen (Nur Datum und Slot-Nummer)
-    // Beispiel: "2026-05-12_15"
-    const uniqueId = `${dateVal}_${slot}`;
+    // 2. Die eindeutige ID erstellen
+    // Jetzt mit 'finalSlot', damit nie wieder "undefined" im Sheet steht.
+    const uniqueId = `${dateVal}_${finalSlot}`;
 
     const payload = {
         mode: "saveMaterial",
-        id: uniqueId,          // Eindeutiger Schlüssel für das Sheet (Spalte A)
-        date: dateVal,
-        time: time,            // Zur Information mitgesendet
-        slot: slot,            // Die Slot-ID (1-60)
+        id: uniqueId,          // Spalte A (ID)
+        date: dateVal,         // Hilfsdatum
+        time: time,            
+        slot: finalSlot,       // Die tatsächliche Nummer
         klasse: klasse,
         material: mat,
         kommentar: detail,
@@ -1466,8 +1478,6 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
 
         if (result.status === "success") {
             // Erfolg: Menü schließen und Plan aktualisieren
-            // Das loadPlan() muss nun im Backend so gebaut sein, 
-            // dass es die Material-Daten für dieses Datum mitliefert.
             if (typeof closeEditor === 'function') closeEditor();
             if (typeof loadPlan === 'function') await loadPlan();
         } else {
@@ -1487,6 +1497,8 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     }
 }
 
+
+    
 /* ============================================================
    13. SOFORT-SPEICHERN (AUTO-SAVE)
    ============================================================ */
