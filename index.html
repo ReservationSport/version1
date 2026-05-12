@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -918,11 +918,9 @@ window.loadPlan = async function() {
     if (loader) loader.style.display = 'block'; 
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
-    // Zeit-Validierung
     const dateObj = new Date(dateVal); 
     dateObj.setHours(12,0,0,0);
     
-    // Check: Wochenende
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6;">Mach mal Pause! Es ist Wochenende... 🏖️</div>`; 
         if (loader) loader.style.display = 'none'; 
@@ -930,7 +928,6 @@ window.loadPlan = async function() {
     }
 
     try {
-        // Fetch Daten vom Server (URL enthält Datum, PW und Kürzel)
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
@@ -939,13 +936,11 @@ window.loadPlan = async function() {
             return;
         }
 
-        // Globale Daten-Zuweisung
         currentPlanData = json.data; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
         window.materialOptionen = json.materialsList || []; 
         
-        // Farben-Mapping
         configFarben = {}; 
         if (json.options) {
             json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
@@ -956,7 +951,7 @@ window.loadPlan = async function() {
         
         let html = ""; 
 
-        // HEADER: Datum oben links
+        // HEADER
         html += `<div class="box header-row" style="grid-column: span 6;">
                     <span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span>
                  </div>`;
@@ -965,14 +960,11 @@ window.loadPlan = async function() {
         currentPlanData.forEach((row, rowIndex) => {
             if (rowIndex === 0) return;
 
-            // Trennlinien
             if (rowIndex === 4 || rowIndex === 10) html += `<div class="divider-thin"></div>`;
             if (rowIndex === 7) html += `<div class="divider-thick"></div>`;
 
-            // Zeit-Spalte
             html += `<div class="box zeit-box">${row[0]}</div>`;
             
-            // Hallen 1 bis 5
             for(let i = 1; i <= 5; i++) {
                 let val = row[i] || "";
                 let teile = val.split(' | ');
@@ -980,6 +972,10 @@ window.loadPlan = async function() {
                 let resHalle = teile[1] || "";
                 let kommentar = teile[2] || "";
                 
+                // --- NEU: ABSOLUTEN SLOT-INDEX BERECHNEN (1-60) ---
+                // Dieselbe Logik wie im Editor, damit die IDs zusammenpassen
+                const absoluteSlot = ((rowIndex - 1) * 5) + i;
+
                 let isAusfall = (resHalle === "Ausfall");
                 let canEdit = myClasses.some(c => klasse.trim() === c.trim() && klasse.trim() !== "");
                 
@@ -991,13 +987,13 @@ window.loadPlan = async function() {
 
                 const clickAction = canEdit ? `onclick="openEditor(this, '${row[0]}', ${i}, '${klasse}')"` : "";
 
-                // WICHTIG: data-slot ist hier die Hallen-Nummer (i)
+                // WICHTIG: data-slot bekommt jetzt den absoluteSlot (1-60)
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                         data-row="${rowIndex}" 
                         data-col="${i}"
                         data-time="${row[0]}" 
-                        data-slot="${i}"
+                        data-slot="${absoluteSlot}"
                         ${clickAction}
                         style="background-color: ${isAusfall ? '' : configFarben[resHalle] || ''}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         ${stiftHtml}
@@ -1010,21 +1006,17 @@ window.loadPlan = async function() {
 
         container.innerHTML = html;
 
-        // --- MATERIAL-ICONS NACHTRÄGLICH LADEN ---
-        // Das Backend muss im JSON ein Array "materials" mitliefern
+        // --- MATERIAL-ICONS RENDERN ---
         if (json.materials && json.materials.length > 0) {
+            console.log("Material-Daten empfangen:", json.materials);
             json.materials.forEach(item => {
-                // item.id ist "2026-05-12_15"
+                // item.id ist z.B. "2026-05-12_42"
                 const parts = item.id.split("_"); 
                 if (parts.length >= 2) {
-                    const datePart = parts[0]; // Das Datum
-                    const slotNum = parts[1]; // Die Slot-Zahl (1-60 bzw. die Spalte im Raster)
+                    const slotNum = parts[1]; // Die Zahl nach dem Unterstrich (z.B. 42)
 
-                    // Wir suchen die Box, die zu diesem Slot gehört. 
-                    // Hinweis: Wenn 'data-slot' nur 1-5 ist, müssen wir eventuell über rowIndex/colIndex gehen.
-                    // Falls dein System 1-60 IDs verwendet, muss die Box data-id="${slotId}" haben.
-                    // Hier suchen wir basierend auf deinem Raster (Row/Slot):
-                    const box = document.querySelector(`.box[data-row="${item.rowIndex}"][data-slot="${item.slot}"]`);
+                    // Suche die Box mit dem passenden 1-60 Slot
+                    const box = document.querySelector(`.box[data-slot="${slotNum}"]`);
                     
                     if (box && typeof markBoxWithMaterialIcon === 'function') {
                         markBoxWithMaterialIcon(box, item.material, item.kommentar);
