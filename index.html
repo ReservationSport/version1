@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO3333</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1431,31 +1431,37 @@ function toggleMaterialSelection(mat, btn) {
 
     
 function openMaterialDetail(materialString, time, slot, klasse) {
-    // 1. Das Modal-Root finden
+    console.log("Details-Ansicht wird geladen...");
+
+    // 1. Das Modal-Haupt-Element finden
     const root = document.getElementById('eigenesmenu-modal');
     if (!root) {
-        console.error("Modal nicht gefunden!");
+        console.error("Modal 'eigenesmenu-modal' nicht gefunden!");
         return;
     }
 
+    // 2. Unter-Elemente suchen
     const liste = root.querySelector('.eigenesmenu-liste');
     const header = root.querySelector('.eigenesmenu-header');
 
-    // 2. Header-Texte sicher anpassen
+    // 3. Header-Texte sicher ändern (Jedes Element einzeln prüfen!)
     if (header) {
         const titleEl = header.querySelector('.eigenesmenu-title');
-        const subtitleEl = header.querySelector('.eigenesmenu-subtitle');
-
-        // Nur ändern, wenn das Element wirklich existiert (verhindert den Crash)
         if (titleEl) {
             titleEl.innerText = "DETAILS & MENGEN";
+        } else {
+            console.warn("Element '.eigenesmenu-title' im Header nicht gefunden.");
         }
+
+        const subtitleEl = header.querySelector('.eigenesmenu-subtitle');
         if (subtitleEl) {
             subtitleEl.innerHTML = `Gewählt: <span style="color:#ff8c00">${materialString}</span>`;
         }
+    } else {
+        console.warn("Element '.eigenesmenu-header' nicht gefunden.");
     }
 
-    // 3. Formular in die Liste schreiben
+    // 4. Formular für die Details generieren
     if (liste) {
         liste.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
@@ -1471,18 +1477,22 @@ function openMaterialDetail(materialString, time, slot, klasse) {
             </div>
         `;
 
-        // Fokus auf das Textfeld
+        // Fokus auf die Textarea setzen
         setTimeout(() => {
             const input = document.getElementById('material-kommentar-input');
             if (input) input.focus();
         }, 150);
     }
 
-    // 4. Zurück-Button Logik
+    // 5. Zurück-Button Logik (Ebene 2 wieder aufrufen)
     const backBtn = root.querySelector('.eigenesmenu-cancel');
     if (backBtn) {
         backBtn.innerText = "← ZURÜCK";
-        backBtn.onclick = () => handleMaterialUI(time, slot, klasse, root);
+        backBtn.onclick = () => {
+            if (typeof handleMaterialUI === 'function') {
+                handleMaterialUI(time, slot, klasse, root);
+            }
+        };
     }
 }
 
