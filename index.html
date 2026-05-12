@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1434,29 +1434,38 @@ function toggleMaterialSelection(mat, btn) {
  * Finales Speichern im Backend
  */
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
-    // 1. Loader-Logik
+    // 1. UI Feedback: Loader zeigen & Button sperren
+    let loader, btnText;
     if (btn) {
-        const loader = btn.querySelector('.eigenesmenu-loader');
-        const btnText = btn.querySelector('.btn-text');
+        loader = btn.querySelector('.eigenesmenu-loader');
+        btnText = btn.querySelector('.btn-text');
         if (loader) loader.style.display = 'block';
         if (btnText) btnText.style.opacity = '0.3';
         btn.disabled = true;
     }
 
-    // 2. DATEN-SICHERUNG: Wir holen uns den Slot zur Not direkt vom Editor-Element
-    // Dein System nutzt vermutlich 'currentEditSlot' oder 'window.currentEditBox'
+    // 2. DATEN-AKQUISE: Absolute Slot-ID (1-60) sicherstellen
+    // Wir nehmen den übergebenen Slot ODER den globalen Sicherheits-Anker
     const finalSlot = slot || window.currentEditSlot; 
+    
     const datePicker = document.getElementById('datePicker');
     const dateVal = datePicker ? datePicker.value : "";
 
-    // VALIDIERUNG: Wenn ID-Teile fehlen, brechen wir ab und loggen den Grund
-    if (!finalSlot || !dateVal) {
-        console.error("Abbruch: Slot oder Datum fehlt!", { finalSlot, dateVal });
-        alert("Fehler: Daten unvollständig. Bitte Slot neu anklicken.");
-        if (btn) btn.disabled = false;
+    // 3. VALIDIERUNG: Verhindert "undefined"-Einträge im Sheet
+    if (!finalSlot || finalSlot === "undefined" || !dateVal) {
+        console.error("Speichern abgebrochen: Fehlende Daten", { finalSlot, dateVal });
+        alert("Fehler: Die Slot-ID (1-60) konnte nicht ermittelt werden. Bitte schließen und erneut versuchen.");
+        
+        // UI Reset im Fehlerfall
+        if (btn) {
+            btn.disabled = false;
+            if (loader) loader.style.display = 'none';
+            if (btnText) btnText.style.opacity = '1';
+        }
         return;
     }
 
+    // Eindeutige ID für das Sheet (z.B. 2026-05-12_42)
     const uniqueId = `${dateVal}_${finalSlot}`;
 
     const payload = {
@@ -1472,28 +1481,35 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         kuerzel: typeof userKuerzel !== 'undefined' ? userKuerzel : ""
     };
 
-    console.log("Sende Payload an Google:", payload);
+    console.log("📤 Sende Material-Daten:", payload);
 
     try {
+        // 'url' muss global definiert sein
         const response = await fetch(url, {
             method: "POST",
             body: JSON.stringify(payload)
         });
+
+        if (!response.ok) throw new Error("Netzwerk-Antwort war nicht ok");
+
         const result = await response.json();
 
         if (result.status === "success") {
+            console.log("✅ Speichern erfolgreich");
             if (typeof closeEditor === 'function') closeEditor();
             if (typeof loadPlan === 'function') await loadPlan();
         } else {
-            throw new Error(result.msg || "Serverfehler");
+            throw new Error(result.msg || "Server hat einen Fehler gemeldet");
         }
     } catch (e) {
-        console.error("Material Save Error:", e);
-        alert("Speichern fehlgeschlagen: " + e.message);
+        console.error("❌ Material Save Error:", e);
+        alert("Verbindung zum Google Sheet fehlgeschlagen: " + e.message);
+        
+        // Button wieder benutzbar machen
         if (btn) {
             btn.disabled = false;
-            const loader = btn.querySelector('.eigenesmenu-loader');
             if (loader) loader.style.display = 'none';
+            if (btnText) btnText.style.opacity = '1';
         }
     }
 }
