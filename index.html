@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO3333</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1427,46 +1427,58 @@ function toggleMaterialSelection(mat, btn) {
     }
 }
 
-/**
- * Ersetzt das alte prompt() durch das neue In-Menu-Detail-Formular
- */
+
+
+    
 function openMaterialDetail(materialString, time, slot, klasse) {
+    // 1. Das Modal-Root finden
     const root = document.getElementById('eigenesmenu-modal');
-    if (!root) return;
+    if (!root) {
+        console.error("Modal nicht gefunden!");
+        return;
+    }
 
     const liste = root.querySelector('.eigenesmenu-liste');
     const header = root.querySelector('.eigenesmenu-header');
 
-    // Header Texte anpassen
+    // 2. Header-Texte sicher anpassen
     if (header) {
-        const title = header.querySelector('.eigenesmenu-title');
-        const subtitle = header.querySelector('.eigenesmenu-subtitle');
-        if (title) title.innerText = "Details & Mengen";
-        if (subtitle) subtitle.innerHTML = `Gewählt: <span style="color:#ff8c00">${materialString}</span>`;
+        const titleEl = header.querySelector('.eigenesmenu-title');
+        const subtitleEl = header.querySelector('.eigenesmenu-subtitle');
+
+        // Nur ändern, wenn das Element wirklich existiert (verhindert den Crash)
+        if (titleEl) {
+            titleEl.innerText = "DETAILS & MENGEN";
+        }
+        if (subtitleEl) {
+            subtitleEl.innerHTML = `Gewählt: <span style="color:#ff8c00">${materialString}</span>`;
+        }
     }
 
-    // Das Formular für die Details (statt prompt)
-    liste.innerHTML = `
-        <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
-            <textarea id="material-kommentar-input" 
-                style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: white; font-family: inherit; resize: none; outline: none;"
-                placeholder="z.B. 4x Volleybälle, 2x Matten klein..."></textarea>
-            
-            <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold; border: none;" 
-                onclick="saveMaterialSelection('${materialString}', document.getElementById('material-kommentar-input').value, '${time}', ${slot}, '${klasse}', this)">
-                <span class="btn-text">RESERVIERUNG SPEICHERN</span>
-                <div class="eigenesmenu-loader" style="display:none;"></div>
-            </button>
-        </div>
-    `;
+    // 3. Formular in die Liste schreiben
+    if (liste) {
+        liste.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+                <textarea id="material-kommentar-input" 
+                    style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: white; font-family: inherit; resize: none; outline: none;"
+                    placeholder="z.B. 4x Volleybälle, 2x Matten klein..."></textarea>
+                
+                <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold; border: none;" 
+                    onclick="saveMaterialSelection('${materialString}', document.getElementById('material-kommentar-input').value, '${time}', ${slot}, '${klasse}', this)">
+                    <span class="btn-text">RESERVIERUNG SPEICHERN</span>
+                    <div class="eigenesmenu-loader" style="display:none;"></div>
+                </button>
+            </div>
+        `;
 
-    // Fokus setzen
-    setTimeout(() => {
-        const field = document.getElementById('material-kommentar-input');
-        if (field) field.focus();
-    }, 150);
+        // Fokus auf das Textfeld
+        setTimeout(() => {
+            const input = document.getElementById('material-kommentar-input');
+            if (input) input.focus();
+        }, 150);
+    }
 
-    // Zurück-Button umbauen
+    // 4. Zurück-Button Logik
     const backBtn = root.querySelector('.eigenesmenu-cancel');
     if (backBtn) {
         backBtn.innerText = "← ZURÜCK";
