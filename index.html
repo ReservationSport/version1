@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1677,62 +1677,71 @@ function handleReservationUI(time, slot, klasse) {
 
 
     function handleMaterialUI(time, slot, klasse) {
-    // 1. Die Container suchen (MÜSSEN EXAKT SO IM HTML STEHEN)
-    const container = document.querySelector('.eigenesmenu-container');
-    const liste = container.querySelector('.eigenesmenu-liste');
-    const header = container.querySelector('.eigenesmenu-header');
+    console.log("handleMaterialUI gestartet für:", klasse);
 
-    // Sicherheitscheck: Wenn einer dieser Container fehlt, bricht das Script hier ab
-    if (!container || !liste || !header) {
-        console.error("Fehler: Menü-Container nicht gefunden! Prüfe die CSS-Klassen.");
+    // 1. Suche nach dem Modal-Container
+    const container = document.querySelector('.eigenesmenu-container');
+    if (!container) {
+        console.error("KRITISCH: .eigenesmenu-container nicht im DOM!");
+        alert("Fehler: Menü-Container nicht gefunden.");
         return;
     }
 
-    // 2. Header aktualisieren
-    header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
-    header.querySelector('.eigenesmenu-subtitle').innerText = `Verfügbares Material für ${klasse} reservieren`;
+    // 2. Suche nach den Unter-Elementen
+    const liste = container.querySelector('.eigenesmenu-liste');
+    const title = container.querySelector('.eigenesmenu-title');
+    const subtitle = container.querySelector('.eigenesmenu-subtitle');
 
-    // 3. Material-Optionen (Fallback, falls window.materialOptionen leer ist)
-    const materialOptionen = window.materialOptionen || ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen", "⏱️ Stoppuhr"];
+    if (!liste) {
+        console.error("KRITISCH: .eigenesmenu-liste nicht im container gefunden!");
+        return;
+    }
+
+    // 3. UI Texte ändern (Sicherheits-Check mit Optional Chaining)
+    if (title) title.innerText = "MATERIAL WÄHLEN";
+    if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00">${klasse}</span>?`;
+
+    // 4. Liste aufbauen
+    const optionen = (window.materialOptionen && window.materialOptionen.length > 0) 
+                     ? window.materialOptionen 
+                     : ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen", "⏱️ Stoppuhr"];
     
-    // Globalen Speicher leeren
     selectedMaterials = []; 
 
-    // 4. HTML für die Liste zusammenbauen
-    let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
+    let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
     
-    // Löschen-Option
+    // Löschen
     html += `
-        <button class="eigenesmenu-item" style="border-style: dashed; margin-bottom: 10px;" 
-                onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
-            <span class="eigenesmenu-icon">❌</span> <span class="btn-text">Kein Material / Löschen</span>
+        <button class="eigenesmenu-item" style="border: 1px dashed #555;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
+            <span class="eigenesmenu-icon">❌</span> <span class="btn-text">Material entfernen</span>
         </button>`;
 
-    // Die auswählbaren Buttons
-    materialOptionen.forEach(mat => {
+    optionen.forEach(mat => {
         html += `
-            <button class="eigenesmenu-item material-selectable" data-mat="${mat}" onclick="toggleMaterialSelection('${mat}', this)">
+            <button class="eigenesmenu-item material-selectable" onclick="toggleMaterialSelection('${mat}', this)">
                 <span class="eigenesmenu-icon">📦</span> <span class="btn-text">${mat}</span>
-                <span class="check-indicator" style="margin-left: auto; color: #444; font-size: 16px;">○</span>
+                <span class="check-indicator" style="margin-left: auto; color: #666;">○</span>
             </button>`;
     });
-    
-    html += `</div>`;
-
-    // Der "WEITER"-Button
-    html += `
-        <div id="materialNextStep" style="margin-top: 15px; display: none;">
+    html += `</div>
+        <div id="materialNextStep" style="display: none; margin-top: 15px;">
             <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold;" 
                     onclick="openMaterialDetail(selectedMaterials.join(', '), '${time}', ${slot}, '${klasse}')">
-                WEITER ZU DEN DETAILS ❯
+                WEITER ❯
             </button>
         </div>`;
 
-    // 5. In das DOM schreiben
     liste.innerHTML = html;
 
-    // 6. Zurück-Button hinzufügen (Ebene 1 aufrufen)
-    addBackButton(container, time, slot, klasse);
+    // 5. Den Abbrechen-Button zum Zurück-Button umfunktionieren
+    const cancelBtn = container.querySelector('.eigenesmenu-cancel');
+    if (cancelBtn) {
+        cancelBtn.innerText = "← ZURÜCK";
+        cancelBtn.onclick = (e) => {
+            e.stopPropagation();
+            openEditor(window.currentEditBox, time, slot, klasse);
+        };
+    }
 }
 
 
