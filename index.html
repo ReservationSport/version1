@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1317,10 +1317,16 @@ function openEditor(el, time, slot, klasse) {
     // Falls noch ein altes Menü offen ist, entfernen
     closeEditor();
 
-    // --- NEU: SICHERHEITS-ANKER ---
-    // Wir speichern den Slot global, damit saveMaterialSelection() 
-    // ihn immer findet, selbst wenn die Parameter-Kette reißt.
-    window.currentEditSlot = slot;
+    // --- NEU: BERECHNUNG DES ABSOLUTEN SLOTS (1-60) ---
+    // Wir nutzen data-row (1-12) und slot (Halle 1-5)
+    const rowIndex = parseInt(el.getAttribute('data-row')) || 1;
+    const colIndex = parseInt(slot); // Das ist die Halle 1-5
+    
+    // Formel: (Reihe - 1) * 5 Hallen + aktuelle Halle
+    const absoluteSlot = ((rowIndex - 1) * 5) + colIndex;
+
+    // Sicherheits-Anker für Folge-Menüs
+    window.currentEditSlot = absoluteSlot;
     window.currentEditBox = el;
 
     // 1. STATUS-ANALYSE DER BOX
@@ -1348,33 +1354,33 @@ function openEditor(el, time, slot, klasse) {
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">TASK MANAGER</h3>
                 <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
                     Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
-                    (${time})
+                    (${time}) | Slot: ${absoluteSlot}
                 </p>
             </div>
             
             <div class="eigenesmenu-liste">
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${slot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${absoluteSlot}, '${klasse}')">
                     <span class="eigenesmenu-icon">📍</span> 
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${slot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${absoluteSlot}, '${klasse}')">
                     <span class="eigenesmenu-icon">📦</span> 
                     <span class="btn-text">${hatMaterial ? 'MATERIAL BEARBEITEN' : 'MATERIAL BUCHEN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${slot}, '${klasse}', this)">
+                <button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${absoluteSlot}, '${klasse}', this)">
                     <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
                     <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'HALLE FREIGEBEN (AUSFALL)'}</span>
                     <div class="eigenesmenu-loader" style="display:none;"></div>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${slot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${absoluteSlot}, '${klasse}')">
                     <span class="eigenesmenu-icon">🏁</span> 
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${slot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${absoluteSlot}, '${klasse}')">
                     <span class="eigenesmenu-icon">💬</span> 
                     <span class="btn-text">NOTIZ / KOMMENTAR</span>
                 </button>
