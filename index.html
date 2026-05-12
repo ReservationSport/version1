@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1601,46 +1601,63 @@ function closeEditor() {
  * Verarbeitet die Wahl aus dem Task Manager (Haupt-Weiche)
  */
 function handleMenuChoice(action, time, slot, klasse) {
-    // Falls wir eine Aktion wählen, die ein neues Menü-Layout innerhalb 
-    // des bestehenden Containers braucht, schließen wir nicht komplett,
-    // sondern steuern die Unterfunktionen an.
-    
+    console.log("Aktion gewählt:", action); // Debug-Hilfe für die Handy-Konsole
+
     switch(action) {
         case 'reservation':
-            // Öffnet die Hallenauswahl direkt im aktuellen Menü-Container
-            // (Diese Logik hast du bereits im handleMenuChoice-Teil weiter oben)
-            handleReservationUI(time, slot, klasse); 
+            // Prüfen, ob die Funktion existiert, dann UI umschalten
+            if (typeof handleReservationUI === 'function') {
+                handleReservationUI(time, slot, klasse);
+            } else {
+                console.error("handleReservationUI nicht gefunden!");
+            }
             break;
             
         case 'material':
-            // Wechselt zur Material-Auswahl-Liste
-            handleMaterialUI(time, slot, klasse);
+            // Wechselt zur Material-Auswahl (Ebene 2)
+            if (typeof handleMaterialUI === 'function') {
+                handleMaterialUI(time, slot, klasse);
+            } else {
+                console.error("handleMaterialUI nicht gefunden!");
+            }
             break;
 
         case 'ausfall':
-            // Da der Ausfall-Button im HTML direkt handleAusfallClick() aufruft,
-            // ist dieser Case hier nur als Sicherheits-Backup gedacht.
-            const istBereitsAusfall = window.currentEditBox.classList.contains('ausfall-mode');
+            // Sicherheits-Logik für Ausfall
+            const istBereitsAusfall = window.currentEditBox ? window.currentEditBox.classList.contains('ausfall-mode') : false;
             handleAusfallClick(istBereitsAusfall ? 'LOESCHEN' : 'SETZEN', time, slot, klasse, null);
             break;
 
         case 'beendet':
-            // Schließt das Menü und öffnet das Sicherheits-Modal zum Abkleben
+            // Menü schließen und Jahr-Reset (Abkleben) starten
             closeEditor();
-            startYearReset(klasse);
+            if (typeof startYearReset === 'function') {
+                startYearReset(klasse);
+            }
             break;
 
         case 'nachricht':
-            // Notiz-Funktion (falls du den CommentEditor nutzt)
+            // Notiz-Funktion: Entweder Editor oder simpler Prompt
             if (typeof openCommentEditor === 'function') {
                 closeEditor();
                 openCommentEditor(time, slot, klasse);
             } else {
-                // Alternativ ein einfacher Prompt, wenn kein Editor-Modul da ist
                 const note = prompt("Notiz für " + klasse + " erfassen:", "");
-                if (note !== null) updateSelection(undefined, time, slot, klasse, null, note);
+                // Falls abgebrochen wurde (null), nichts tun. Sonst speichern.
+                if (note !== null) {
+                    // Wir nutzen hier direkt updateSelection oder eine Speicherfunktion deiner Wahl
+                    if (typeof updateSelection === 'function') {
+                        updateSelection(undefined, time, slot, klasse, null, note);
+                    } else {
+                        // Fallback: Falls du Material-Notizen meintest
+                        saveMaterialSelection("Notiz", note, time, slot, klasse);
+                    }
+                }
             }
             break;
+            
+        default:
+            console.warn("Unbekannte Aktion im Task Manager:", action);
     }
 }
 
