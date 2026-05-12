@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -755,6 +755,23 @@ async function handleLogin() {
     }
 }
 
+
+/* ============================================================
+   HILFSFUNKTION: Slot-Index zu Daten-Mapping
+   ============================================================ */
+function getDataBySlotIndex(index) {
+    // Da wir 6 Spalten haben (Zeit + 5 Tage):
+    const spaltenAnzahl = 6;
+    const zeile = Math.floor(index / spaltenAnzahl);
+    const spalte = index % spaltenAnzahl;
+
+    // Sicherheitscheck: Existiert die Zeile/Spalte in den Daten?
+    if (currentPlanData[zeile] && currentPlanData[zeile][spalte]) {
+        return currentPlanData[zeile][spalte];
+    }
+    return null;
+}
+    
     /* ============================================================
        4. SICHERHEITSABFRAGE (Falls doch mal was hängt)
        ============================================================ */
