@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -471,34 +471,39 @@ body {
 
 /* 10. MATERIAL-VISUALS & TOOLTIPS */
 .material-icon {
-    position: relative;
-    display: inline-block;
-    cursor: help;
+    position: absolute; /* Absolut innerhalb der .box */
+    top: 5px;
+    right: 5px;
     color: #e67e22;
     font-size: 14px;
-    margin-top: 5px;
+    z-index: 10;
+    cursor: help;
 }
 
 .material-icon::after {
     content: attr(data-tooltip);
     position: absolute;
-    bottom: 130%;
-    right: 50%;
-    transform: translateX(50%);
-    background: #333;
+    bottom: 125%;
+    right: 0; /* Rechtsbündig mit dem Icon, damit es nicht links rausragt */
+    background: rgba(40, 40, 40, 0.95);
     color: #fff;
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 6px 10px;
+    border-radius: 4px;
     font-size: 11px;
-    white-space: nowrap;
+    white-space: pre-wrap; /* Erlaubt Zeilenumbrüche bei langen Kommentaren */
+    width: max-content;
+    max-width: 150px;
     display: none;
     z-index: 1000;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     border: 1px solid #e67e22;
+    pointer-events: none; /* Verhindert Flackern beim Drüberfahren */
 }
 
 @media (hover: hover) {
-    .material-icon:hover::after { display: block; }
+    .material-icon:hover::after { 
+        display: block; 
+    }
 }
 
 /* Material Info-Fenster (für Mobile-Klick) */
@@ -672,7 +677,7 @@ body {
     /* ============================================================
        1. GLOBALE KONFIGURATION & VARIABLEN
        ============================================================ */
-    const url = "https://script.google.com/macros/s/AKfycbyWMo4qSrsdBFkZPUK_TJQbfDtKQH0yPNXXnW0LrifGy5MsvvdBU2OOlTiTtCD5BtrY/exec"; 
+    const url = "https://script.google.com/macros/s/AKfycbzKI8FtEwGg4EYzmXDAdHbdTpjXW4duOHgGaBvtAtuYTV60ATvc0qAglJP2kB1fOm-L/exec"; 
     
     // Status-Variablen
     let userPw = "", userKuerzel = "";
@@ -902,7 +907,7 @@ function getDataBySlotIndex(index) {
 
 
 /* ============================================================
-   7. STUNDENPLAN LADEN & GRID-GENERIERUNG
+   7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
    ============================================================ */
 
 window.loadPlan = async function() {
@@ -918,9 +923,9 @@ window.loadPlan = async function() {
     if (loader) loader.style.display = 'block'; 
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
-    const dateObj = new Date(dateVal); 
-    dateObj.setHours(12,0,0,0);
+    const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
+    // Wochenende abfangen
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6;">Mach mal Pause! Es ist Wochenende... 🏖️</div>`; 
         if (loader) loader.style.display = 'none'; 
@@ -931,12 +936,12 @@ window.loadPlan = async function() {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        if (json.error === "SPERRE") {
+        if (json.status === "error") {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6;">${json.msg}</div>`;
             return;
         }
 
-        currentPlanData = json.data; 
+        const plan = json.plan; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
         window.materialOptionen = json.materialsList || []; 
@@ -949,81 +954,80 @@ window.loadPlan = async function() {
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
+        // DEINE EXAKTEN LEKTIONSZEITEN
+        const zeiten = [
+            "07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", // Lektion 1-3
+            "10:00 - 10:45", "10:50 - 11:35", "11:40 - 12:25", // Lektion 4-6
+            "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", // Lektion 7-9
+            "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00"  // Lektion 10-12
+        ];
+
         let html = ""; 
 
-        // HEADER
+        // HEADER (Datum & Wochentag)
         html += `<div class="box header-row" style="grid-column: span 6;">
                     <span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span>
                  </div>`;
 
         // GRID GENERIERUNG
-        currentPlanData.forEach((row, rowIndex) => {
-            if (rowIndex === 0) return;
+        zeiten.forEach((zeitStr, rowIndex) => {
+            const lektionNum = rowIndex + 1; // 1 bis 12
 
-            if (rowIndex === 4 || rowIndex === 10) html += `<div class="divider-thin"></div>`;
-            if (rowIndex === 7) html += `<div class="divider-thick"></div>`;
+            // TRENNSTRICH LOGIK
+            // Nach Lektion 3 (rowIndex 2) und nach Lektion 9 (rowIndex 8) -> dünner Strich
+            if (lektionNum === 4 || lektionNum === 10) {
+                html += `<div class="divider-thin"></div>`;
+            }
+            // Nach Lektion 6 (rowIndex 5) -> dicker Strich (Mittagspause)
+            if (lektionNum === 7) {
+                html += `<div class="divider-thick"></div>`;
+            }
 
-            html += `<div class="box zeit-box">${row[0]}</div>`;
+            // 1. Zeit-Box (Spalte A)
+            html += `<div class="box zeit-box">${zeitStr}</div>`;
             
+            // 2. Die 5 Hallen-Slots (Spalten B bis F)
             for(let i = 1; i <= 5; i++) {
-                let val = row[i] || "";
-                let teile = val.split(' | ');
-                let klasse = teile[0] || "";
-                let resHalle = teile[1] || "";
-                let kommentar = teile[2] || "";
-                
-                // --- NEU: ABSOLUTEN SLOT-INDEX BERECHNEN (1-60) ---
-                // Dieselbe Logik wie im Editor, damit die IDs zusammenpassen
-                const absoluteSlot = ((rowIndex - 1) * 5) + i;
+                const absoluteSlot = (rowIndex * 5) + i; // Slot 1 bis 60
+                const slotData = plan[absoluteSlot] || {};
 
-                let isAusfall = (resHalle === "Ausfall");
-                let canEdit = myClasses.some(c => klasse.trim() === c.trim() && klasse.trim() !== "");
+                const klasse = slotData.klasse || "";
+                const halle = slotData.halle || "";
+                const material = slotData.material || "";
+                const matKommentar = slotData.kommentar || "";
+                const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
                 
-                let teacher = klasse.split('/').map(k => allClassTeachers[k.trim()] || "").filter(t => t !== "").join(" / ");
+                const isAusfall = (halle === "Ausfall");
+                const canEdit = myClasses.some(c => klasse.trim() === c.trim() && klasse.trim() !== "");
                 
-                let stiftHtml = (kommentar.startsWith("KOMMENTAR:")) 
-                    ? `<span class="stift" onclick="event.stopPropagation(); alert('Notiz: ${kommentar.replace('KOMMENTAR:', '')}')"><i class="fas fa-comment-dots"></i></span>` 
-                    : "";
+                // Material-Icon mit Tooltip
+                let materialHtml = "";
+                if (material) {
+                    const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
+                    materialHtml = `
+                        <span class="material-icon" data-tooltip="${tooltipText}">
+                            <i class="fas fa-box-open"></i>
+                        </span>`;
+                }
 
-                const clickAction = canEdit ? `onclick="openEditor(this, '${row[0]}', ${i}, '${klasse}')"` : "";
+                const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
 
-                // WICHTIG: data-slot bekommt jetzt den absoluteSlot (1-60)
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-row="${rowIndex}" 
-                        data-col="${i}"
-                        data-time="${row[0]}" 
                         data-slot="${absoluteSlot}"
+                        data-time="${zeitStr}" 
                         ${clickAction}
-                        style="background-color: ${isAusfall ? '' : configFarben[resHalle] || ''}; cursor: ${canEdit ? 'pointer' : 'default'}">
-                        ${stiftHtml}
+                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
+                        
+                        ${materialHtml}
                         <div class="klasse-label">${klasse}</div>
-                        <div class="lehrer-info">${teacher}</div>
-                        <div class="halle-label">${resHalle}</div>
+                        <div class="lehrer-info">${lehrer}</div>
+                        <div class="halle-label">${halle}</div>
                 </div>`;
             }
         });
 
         container.innerHTML = html;
-
-        // --- MATERIAL-ICONS RENDERN ---
-        if (json.materials && json.materials.length > 0) {
-            console.log("Material-Daten empfangen:", json.materials);
-            json.materials.forEach(item => {
-                // item.id ist z.B. "2026-05-12_42"
-                const parts = item.id.split("_"); 
-                if (parts.length >= 2) {
-                    const slotNum = parts[1]; // Die Zahl nach dem Unterstrich (z.B. 42)
-
-                    // Suche die Box mit dem passenden 1-60 Slot
-                    const box = document.querySelector(`.box[data-slot="${slotNum}"]`);
-                    
-                    if (box && typeof markBoxWithMaterialIcon === 'function') {
-                        markBoxWithMaterialIcon(box, item.material, item.kommentar);
-                    }
-                }
-            });
-        }
 
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
@@ -1034,6 +1038,8 @@ window.loadPlan = async function() {
     }
 };
 
+
+    
 
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS
@@ -1509,78 +1515,40 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
 
     
 /* ============================================================
-   13. SOFORT-SPEICHERN (AUTO-SAVE)
+   13. SOFORT-SPEICHERN (AUTO-SAVE) - DB VERSION
    ============================================================ */
 
-/**
- * Schreibt eine Änderung in die Warteschlange und triggert sofort den Versand.
- * Berücksichtigt das neue Format "Klasse | Halle" ohne Kommentare.
- */
 window.addChange = async function(el, time, slot, klasse) {
     const val = el.value; // Die gewählte Halle oder "Ausfall"
-    
-    // Parent Box finden für Row-Index und visuelle Updates
     const parent = el.closest ? el.closest('.box') : window.currentEditBox;
     if (!parent) return;
 
-    const row = parent.getAttribute('data-row');
-    const col = slot; // Wir nutzen direkt den übergebenen Slot-Index
+    // Wir brauchen den absoluten Slot (1-60)
+    const absoluteSlot = parent.getAttribute('data-slot'); 
+    const dateVal = document.getElementById('datePicker').value;
 
-    // 1. Visuelles Feedback (Optik der Box im Grid)
+    // Visuelles Feedback
     if (val === "Ausfall") {
         parent.classList.add('ausfall-mode');
     } else {
         parent.classList.remove('ausfall-mode');
     }
 
-    // 2. Text in der Box aktualisieren (nur die Halle anzeigen)
-    const resDisplay = parent.querySelector('.res');
-    if (resDisplay) {
-        resDisplay.innerText = (val === "" || val === "---") ? "" : val;
-    }
-
-    // 3. String für Google Sheets bauen (Format: "Klasse | Halle")
-    // Die Hilfsfunktion buildFinalValue sorgt dafür, dass die Klasse erhalten bleibt.
-    const finalVal = buildFinalValue(row, col, (val === "---" ? "" : val));
-
-    // 4. In pendingChanges pushen (mit den korrekten Keys für dein Backend)
-    // Wir filtern alte Einträge für denselben Slot raus, falls der User schnell klickt.
-    pendingChanges = pendingChanges.filter(ch => !(ch.row === parseInt(row) && ch.col === parseInt(col)));
-    
-    pendingChanges.push({
-        row: parseInt(row),
-        col: parseInt(col),
-        value: finalVal
-    });
-
-    // 5. Lokalen Datenstand (Cache) aktualisieren
-    if (!currentPlanData[row]) currentPlanData[row] = [];
-    currentPlanData[row][col] = finalVal;
-
-    // 6. Sofort-Versand triggern
-    await saveImmediately();
-};
-
-/**
- * Der eigentliche Versand an Google Apps Script.
- * Verarbeitet die Warteschlange und gibt Feedback.
- */
-async function saveImmediately() {
-    if (pendingChanges.length === 0) return;
-
-    // Kopie der Änderungen für den Versand
-    const changesToSend = [...pendingChanges];
-    
+    // Das Payload-Objekt für die Datenbank-Zeile
     const payload = {
         pw: userPw,
-        kuerzel: userKuerzel,
-        date: document.getElementById('datePicker').value,
-        changes: changesToSend
+        id: `${dateVal}_${absoluteSlot}`,
+        date: dateVal,
+        slot: absoluteSlot,
+        klasse: klasse,
+        halle: (val === "---" ? "" : val) // Feld für Spalte E
     };
 
-    // Warteschlange leeren, damit bei schnellen Klicks nichts doppelt gesendet wird
-    pendingChanges = [];
+    // Sofort-Versand
+    await saveImmediately(payload);
+};
 
+async function saveImmediately(payload) {
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -1590,16 +1558,13 @@ async function saveImmediately() {
         const result = await response.json();
         
         if (result.status === "success") {
-            console.log("✅ Auto-Save erfolgreich:", changesToSend);
+            console.log("✅ DB-Update erfolgreich:", payload.id);
         } else {
-            // Falls der Server einen Fehler meldet, Änderungen zurück in die Liste (optional)
-            throw new Error(result.error || "Server-Fehler");
+            throw new Error(result.msg || "Server-Fehler");
         }
     } catch (e) {
         console.error("❌ Auto-Save Fehler:", e);
-        // Bei Fehler: Den Button wieder auf "Speichern erforderlich" setzen, 
-        // falls du ein globales Warn-Icon hast.
-        alert("Speichern fehlgeschlagen! Bitte Verbindung prüfen.");
+        alert("Speichern der Hallen-Reservation fehlgeschlagen!");
     }
 }
 
@@ -1898,32 +1863,43 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     }, 150);
 }
 
+
+
+
     
 
-/**
- * Speichert das Material permanent im Backend
- */
-async function saveMaterialSelection(material, kommentar, time, slot, klasse, clickedBtn) {
-    const loader = clickedBtn.querySelector('.eigenesmenu-loader');
-    const successIcon = clickedBtn.querySelector('.eigenesmenu-success-icon');
-    const btnText = clickedBtn.querySelector('.btn-text');
+async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
+    // 1. UI Feedback
+    let loader, btnText;
+    if (btn) {
+        loader = btn.querySelector('.eigenesmenu-loader');
+        btnText = btn.querySelector('.btn-text');
+        if (loader) loader.style.display = 'block';
+        if (btnText) btnText.style.opacity = '0.3';
+        btn.disabled = true;
+    }
 
-    if (loader) loader.style.display = 'block';
-    if (btnText) btnText.style.opacity = '0.3';
-    clickedBtn.disabled = true;
+    const finalSlot = slot || window.currentEditSlot; 
+    const datePicker = document.getElementById('datePicker');
+    const dateVal = datePicker ? datePicker.value : "";
 
-    const dp = document.getElementById('datePicker');
-    let displayDate = dp ? dp.value : (window.lastStableDate || ""); 
+    if (!finalSlot || finalSlot === "undefined" || !dateVal) {
+        alert("Fehler: Slot-ID oder Datum fehlt.");
+        if (btn) { btn.disabled = false; if(loader) loader.style.display='none'; }
+        return;
+    }
+
+    // Die neue zentrale ID (z.B. 2026-05-12_42)
+    const uniqueId = `${dateVal}_${finalSlot}`;
 
     const payload = {
-        mode: "saveMaterial", 
-        pw: userPw,           
-        material: material,
-        kommentar: kommentar,
-        time: time,
-        slot: slot,
-        klasse: klasse,
-        date: displayDate     
+        pw: typeof userPw !== 'undefined' ? userPw : "",
+        id: uniqueId,
+        date: dateVal,
+        slot: finalSlot,
+        klasse: klasse || "",
+        material: mat,            // Feld für Spalte F
+        kommentar: detail || ""   // Feld für Spalte G
     };
 
     try {
@@ -1935,31 +1911,27 @@ async function saveMaterialSelection(material, kommentar, time, slot, klasse, cl
         const result = await response.json();
 
         if (result.status === "success") {
-            if (loader) loader.style.display = 'none';
-            if (successIcon) successIcon.style.display = 'block';
-            clickedBtn.classList.add('success');
-            
-            // Lokale UI sofort updaten (Icon an die Box kleben)
-            const box = findBoxByTimeAndSlot(time, slot);
-            if (box) {
-                markBoxWithMaterialIcon(box, material, kommentar);
-            }
-
-            // Nach Erfolg das Menü schließen
-            setTimeout(() => {
-                if (typeof closeEditor === 'function') closeEditor();
-            }, 800);
+            if (typeof closeEditor === 'function') closeEditor();
+            if (typeof loadPlan === 'function') await loadPlan();
         } else {
-            throw new Error(result.msg || "Fehler beim Speichern");
+            throw new Error(result.msg || "Server-Fehler");
         }
-    } catch (error) {
-        alert("Fehler: " + error.message);
-        if (loader) loader.style.display = 'none';
-        if (btnText) btnText.style.opacity = '1';
-        clickedBtn.disabled = false;
+    } catch (e) {
+        alert("Fehler beim Speichern: " + e.message);
+        if (btn) {
+            btn.disabled = false;
+            if (loader) loader.style.display = 'none';
+            if (btnText) btnText.style.opacity = '1';
+        }
     }
 }
 
+
+
+    
+
+
+    
 /**
  * Hilfsfunktion: Setzt das Paket-Icon an die entsprechende Stundenplan-Box
  */
