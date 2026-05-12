@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO2222</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1614,13 +1614,10 @@ function handleMenuChoice(action, time, slot, klasse) {
             break;
             
         case 'material':
-            // Wechselt zur Material-Auswahl (Ebene 2)
-            if (typeof handleMaterialUI === 'function') {
-                handleMaterialUI(time, slot, klasse);
-            } else {
-                console.error("handleMaterialUI nicht gefunden!");
-            }
-            break;
+    // Wir suchen das aktive Modal direkt
+    const activeModal = document.getElementById('eigenesmenu-modal');
+    handleMaterialUI(time, slot, klasse, activeModal); // Modal mitgeben!
+    break;
 
         case 'ausfall':
             // Sicherheits-Logik für Ausfall
@@ -1676,46 +1673,47 @@ function handleReservationUI(time, slot, klasse) {
 
 
 
-    function handleMaterialUI(time, slot, klasse) {
-    console.log("handleMaterialUI gestartet für:", klasse);
+   function handleMaterialUI(time, slot, klasse, modalElement) {
+    console.log("handleMaterialUI aktiv!");
 
-    // 1. Suche nach dem Modal-Container
-    const container = document.querySelector('.eigenesmenu-container');
-    if (!container) {
-        console.error("KRITISCH: .eigenesmenu-container nicht im DOM!");
-        alert("Fehler: Menü-Container nicht gefunden.");
+    // Falls modalElement nicht mitkam, suchen wir es zur Sicherheit
+    const root = modalElement || document.getElementById('eigenesmenu-modal');
+    
+    if (!root) {
+        console.error("Modal nicht gefunden!");
         return;
     }
 
-    // 2. Suche nach den Unter-Elementen
-    const liste = container.querySelector('.eigenesmenu-liste');
-    const title = container.querySelector('.eigenesmenu-title');
-    const subtitle = container.querySelector('.eigenesmenu-subtitle');
+    // Wir suchen die Liste und den Header NUR innerhalb dieses Modals
+    const liste = root.querySelector('.eigenesmenu-liste');
+    const title = root.querySelector('.eigenesmenu-title');
+    const subtitle = root.querySelector('.eigenesmenu-subtitle');
 
     if (!liste) {
-        console.error("KRITISCH: .eigenesmenu-liste nicht im container gefunden!");
+        console.error("Liste-Container fehlt im Modal!");
         return;
     }
 
-    // 3. UI Texte ändern (Sicherheits-Check mit Optional Chaining)
+    // 1. Titel & Untertitel sofort ändern
     if (title) title.innerText = "MATERIAL WÄHLEN";
     if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00">${klasse}</span>?`;
 
-    // 4. Liste aufbauen
+    // 2. HTML für die Materialliste
     const optionen = (window.materialOptionen && window.materialOptionen.length > 0) 
                      ? window.materialOptionen 
-                     : ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen", "⏱️ Stoppuhr"];
+                     : ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen", "⏱️ Stoppuhr", "🥅 Tore"];
     
     selectedMaterials = []; 
 
     let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
     
-    // Löschen
+    // Lösch-Button
     html += `
         <button class="eigenesmenu-item" style="border: 1px dashed #555;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
             <span class="eigenesmenu-icon">❌</span> <span class="btn-text">Material entfernen</span>
         </button>`;
 
+    // Die Buttons
     optionen.forEach(mat => {
         html += `
             <button class="eigenesmenu-item material-selectable" onclick="toggleMaterialSelection('${mat}', this)">
@@ -1723,24 +1721,23 @@ function handleReservationUI(time, slot, klasse) {
                 <span class="check-indicator" style="margin-left: auto; color: #666;">○</span>
             </button>`;
     });
+
     html += `</div>
         <div id="materialNextStep" style="display: none; margin-top: 15px;">
             <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold;" 
                     onclick="openMaterialDetail(selectedMaterials.join(', '), '${time}', ${slot}, '${klasse}')">
-                WEITER ❯
+                DETAILS / MENGE ❯
             </button>
         </div>`;
 
+    // 3. Inhalt austauschen
     liste.innerHTML = html;
 
-    // 5. Den Abbrechen-Button zum Zurück-Button umfunktionieren
-    const cancelBtn = container.querySelector('.eigenesmenu-cancel');
-    if (cancelBtn) {
-        cancelBtn.innerText = "← ZURÜCK";
-        cancelBtn.onclick = (e) => {
-            e.stopPropagation();
-            openEditor(window.currentEditBox, time, slot, klasse);
-        };
+    // 4. Den unteren Abbrechen-Button in "Zurück" verwandeln
+    const backBtn = root.querySelector('.eigenesmenu-cancel');
+    if (backBtn) {
+        backBtn.innerText = "← ZURÜCK";
+        backBtn.onclick = () => openEditor(window.currentEditBox, time, slot, klasse);
     }
 }
 
