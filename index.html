@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1657,25 +1657,41 @@ function handleReservationUI(time, slot, klasse) {
     }
 }
 
-function handleMaterialUI(time, slot, klasse) {
+
+
+    function handleMaterialUI(time, slot, klasse) {
+    // 1. Die Container suchen (MÜSSEN EXAKT SO IM HTML STEHEN)
     const container = document.querySelector('.eigenesmenu-container');
     const liste = container.querySelector('.eigenesmenu-liste');
     const header = container.querySelector('.eigenesmenu-header');
 
+    // Sicherheitscheck: Wenn einer dieser Container fehlt, bricht das Script hier ab
+    if (!container || !liste || !header) {
+        console.error("Fehler: Menü-Container nicht gefunden! Prüfe die CSS-Klassen.");
+        return;
+    }
+
+    // 2. Header aktualisieren
     header.querySelector('.eigenesmenu-title').innerText = "Material wählen";
     header.querySelector('.eigenesmenu-subtitle').innerText = `Verfügbares Material für ${klasse} reservieren`;
 
-    const materialOptionen = window.materialOptionen || ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen"];
+    // 3. Material-Optionen (Fallback, falls window.materialOptionen leer ist)
+    const materialOptionen = window.materialOptionen || ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen", "⏱️ Stoppuhr"];
+    
+    // Globalen Speicher leeren
     selectedMaterials = []; 
 
+    // 4. HTML für die Liste zusammenbauen
     let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">`;
     
-    // Löschen-Button
+    // Löschen-Option
     html += `
-        <button class="eigenesmenu-item" style="border-style: dashed; margin-bottom: 10px;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
+        <button class="eigenesmenu-item" style="border-style: dashed; margin-bottom: 10px;" 
+                onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
             <span class="eigenesmenu-icon">❌</span> <span class="btn-text">Kein Material / Löschen</span>
         </button>`;
 
+    // Die auswählbaren Buttons
     materialOptionen.forEach(mat => {
         html += `
             <button class="eigenesmenu-item material-selectable" data-mat="${mat}" onclick="toggleMaterialSelection('${mat}', this)">
@@ -1684,7 +1700,10 @@ function handleMaterialUI(time, slot, klasse) {
             </button>`;
     });
     
-    html += `</div>
+    html += `</div>`;
+
+    // Der "WEITER"-Button
+    html += `
         <div id="materialNextStep" style="margin-top: 15px; display: none;">
             <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold;" 
                     onclick="openMaterialDetail(selectedMaterials.join(', '), '${time}', ${slot}, '${klasse}')">
@@ -1692,7 +1711,10 @@ function handleMaterialUI(time, slot, klasse) {
             </button>
         </div>`;
 
+    // 5. In das DOM schreiben
     liste.innerHTML = html;
+
+    // 6. Zurück-Button hinzufügen (Ebene 1 aufrufen)
     addBackButton(container, time, slot, klasse);
 }
 
