@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1077,35 +1077,39 @@ window.loadPlan = async function() {
     
 
 /* ============================================================
-   8. HILFSFUNKTIONEN FÜR DATEN-STRINGS
+   8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
    ============================================================ */
 
+/**
+ * Findet die HTML-Box im Grid basierend auf dem absoluten Slot (1-60).
+ * Der Zeit-String dient als zusätzlicher Sicherheitscheck.
+ */
 function findBoxByTimeAndSlot(time, slot) {
-    return document.querySelector(`.box[data-time="${time}"][data-slot="${slot}"]`);
+    // Da die Slot-ID (1-60) eindeutig ist, reicht diese eigentlich aus
+    return document.querySelector(`.box[data-slot="${slot}"]`);
 }
 
 /**
- * Baut den finalen String für das Google Sheet.
- * Format: "Klasse | Halle"
+ * Baut das Daten-Objekt für das Google Sheet Update.
+ * WICHTIG: In der DB-Version schicken wir kein "Klasse | Halle" mehr,
+ * sondern die reinen Werte, die das Backend dann in die richtigen Spalten schreibt.
  */
-function buildFinalValue(r, c, neueHalle, neueKlasse) {
-    // 1. Bestehende Daten holen (um die Klasse zu behalten, falls nur Halle ändert)
-    let aktuellerWert = (currentPlanData[r] && currentPlanData[r][c]) ? currentPlanData[r][c] : "";
+function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKommentar) {
+    // Wir holen uns die Basis-Daten des Slots, falls vorhanden
+    // 'plan' ist das Objekt, das wir beim Laden vom Server erhalten haben
+    const aktuellerSlot = (window.currentPlan && window.currentPlan[slotId]) ? window.currentPlan[slotId] : {};
 
-    // 2. Zerlegen in Klasse und Halle
-    let teile = aktuellerWert.split(' | ').map(t => t.trim());
+    // Logik: Nutze den neuen Wert, falls vorhanden, sonst den alten aus dem Speicher
+    const updateObj = {
+        slot: slotId,
+        klasse: (neueKlasse !== undefined) ? neueKlasse : (aktuellerSlot.klasse || ""),
+        halle: (neueHalle !== undefined) ? neueHalle : (aktuellerSlot.halle || ""),
+        material: (neuesMaterial !== undefined) ? neuesMaterial : (aktuellerSlot.material || ""),
+        kommentar: (neuerKommentar !== undefined) ? neuerKommentar : (aktuellerSlot.kommentar || "")
+    };
 
-    // 3. Neue Werte setzen oder alte beibehalten
-    // Index 0: Klasse, Index 1: Halle
-    let klasse = neueKlasse || teile[0] || "";
-    let halle  = (neueHalle !== undefined) ? neueHalle : (teile[1] || "");
-
-    // 4. String zusammensetzen
-    // Falls die Halle leer ist, schreiben wir nur die Klasse (z.B. für "Halle löschen")
-    let finalString = halle ? `${klasse} | ${halle}` : klasse;
-
-    console.log(`🛠 String-Update [R:${r} C:${c}]: "${finalString}"`);
-    return finalString;
+    console.log(`🛠 Update-Daten für Slot ${slotId} vorbereitet:`, updateObj);
+    return updateObj;
 }
 
 
@@ -1554,11 +1558,10 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
    ============================================================ */
 
 window.addChange = async function(el, time, slot, klasse) {
-    const val = el.value; // Die gewählte Halle oder "Ausfall"
+    const val = el.value; 
     const parent = el.closest ? el.closest('.box') : window.currentEditBox;
     if (!parent) return;
 
-    // Wir brauchen den absoluten Slot (1-60)
     const absoluteSlot = parent.getAttribute('data-slot'); 
     const dateVal = document.getElementById('datePicker').value;
 
@@ -1569,39 +1572,24 @@ window.addChange = async function(el, time, slot, klasse) {
         parent.classList.remove('ausfall-mode');
     }
 
-    // Das Payload-Objekt für die Datenbank-Zeile
+    // Wir senden genau das, was die Tabellen-Spalten erwarten
     const payload = {
+        // 'action' ist nur für das Script-Handling (doPost) wichtig
+        action: "saveBooking", 
         pw: userPw,
-        id: `${dateVal}_${absoluteSlot}`,
+        kuerzel: userKuerzel,
+        
+        // Diese Felder landen in der Tabelle:
         date: dateVal,
         slot: absoluteSlot,
         klasse: klasse,
-        halle: (val === "---" ? "" : val) // Feld für Spalte E
+        halle: (val === "---" ? "" : val),
+        material: "", 
+        kommentar: ""
     };
 
-    // Sofort-Versand
     await saveImmediately(payload);
 };
-
-async function saveImmediately(payload) {
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-        
-        if (result.status === "success") {
-            console.log("✅ DB-Update erfolgreich:", payload.id);
-        } else {
-            throw new Error(result.msg || "Server-Fehler");
-        }
-    } catch (e) {
-        console.error("❌ Auto-Save Fehler:", e);
-        alert("Speichern der Hallen-Reservation fehlgeschlagen!");
-    }
-}
 
 
 /* ============================================================
