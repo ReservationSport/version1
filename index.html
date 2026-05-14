@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -946,7 +946,6 @@ window.loadPlan = async function() {
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
-    // Wochenende abfangen (Statisch im Frontend)
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">
             <i class="fas fa-umbrella-beach" style="margin-bottom:10px; font-size: 2rem;"></i><br>
@@ -960,14 +959,11 @@ window.loadPlan = async function() {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // 1. Harte Fehler abfangen (z.B. falsches Passwort)
         if (json.status === "error" && json.error !== "SPERRE") {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; color: red;">${json.msg}</div>`;
             return;
         }
 
-        // 2. SPERRZEITEN / FEIERTAGE abfangen (Dynamisch aus DB)
-        // Wir prüfen json.sperrMsg, das wir im Backend hinzugefügt haben
         if (json.sperrMsg) {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem; border: 1px solid #e67e22;">
                 <i class="fas fa-calendar-check" style="margin-bottom:10px; font-size: 2rem;"></i><br>
@@ -984,8 +980,12 @@ window.loadPlan = async function() {
         window.materialOptionen = json.materialsList || []; 
         
         configFarben = {}; 
+        let hallenOptionenHTML = `<option value="">---</option>`;
         if (json.options) {
-            json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
+            json.options.forEach(opt => {
+                configFarben[opt[0]] = opt[1];
+                hallenOptionenHTML += `<option value="${opt[0]}">${opt[0]}</option>`;
+            });
         }
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
@@ -999,27 +999,18 @@ window.loadPlan = async function() {
         ];
 
         let html = ""; 
-
-        // HEADER (Datum & Wochentag)
         html += `<div class="box header-row" style="grid-column: span 6;">
                     <span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span>
                  </div>`;
 
-        // GRID GENERIERUNG
         zeiten.forEach((zeitStr, rowIndex) => {
             const lektionNum = rowIndex + 1;
 
-            if (lektionNum === 4 || lektionNum === 10) {
-                html += `<div class="divider-thin"></div>`;
-            }
-            if (lektionNum === 7) {
-                html += `<div class="divider-thick"></div>`;
-            }
+            if (lektionNum === 4 || lektionNum === 10) html += `<div class="divider-thin"></div>`;
+            if (lektionNum === 7) html += `<div class="divider-thick"></div>`;
 
-            // Zeit-Box
             html += `<div class="box zeit-box">${zeitStr}</div>`;
             
-            // Hallen-Slots
             for(let i = 1; i <= 5; i++) {
                 const absoluteSlot = (rowIndex * 5) + i; 
                 const slotData = plan[absoluteSlot] || {};
@@ -1039,12 +1030,20 @@ window.loadPlan = async function() {
                 let materialHtml = "";
                 if (material) {
                     const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
-                    materialHtml = `
-                        <span class="material-icon" data-tooltip="${tooltipText}">
-                            <i class="fas fa-box-open"></i>
-                        </span>`;
+                    materialHtml = `<span class="material-icon" data-tooltip="${tooltipText}"><i class="fas fa-box-open"></i></span>`;
                 }
 
+                // Auswahlmenü nur generieren, wenn man Schreibrechte hat
+                let selectHtml = "";
+                if (canEdit) {
+                    selectHtml = `
+                        <select class="hallen-wahl" onchange="addChange(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')" onclick="event.stopPropagation()">
+                            ${hallenOptionenHTML.replace(`value="${halle}"`, `value="${halle}" selected`)}
+                            <option value="Ausfall" ${halle === "Ausfall" ? "selected" : ""}>Ausfall</option>
+                        </select>`;
+                }
+
+                // Wenn kein canEdit, dann wird openEditor NICHT aufgerufen, stattdessen zeigen wir nur die Info
                 const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
 
                 html += `
@@ -1058,6 +1057,7 @@ window.loadPlan = async function() {
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
+                        ${selectHtml}
                 </div>`;
             }
         });
@@ -1350,34 +1350,26 @@ async function triggerNews(type, slotIndex, klasse) {
 /**
  * Öffnet das Aktions-Menü für einen spezifischen Slot
  */
-function openEditor(el, time, slot, klasse) {
+window.openEditor = function(el, time, slot, klasse) {
     // Falls noch ein altes Menü offen ist, entfernen
     closeEditor();
 
-    // --- NEU: BERECHNUNG DES ABSOLUTEN SLOTS (1-60) ---
-    // Wir nutzen data-row (1-12) und slot (Halle 1-5)
-    const rowIndex = parseInt(el.getAttribute('data-row')) || 1;
-    const colIndex = parseInt(slot); // Das ist die Halle 1-5
-    
-    // Formel: (Reihe - 1) * 5 Hallen + aktuelle Halle
-    const absoluteSlot = ((rowIndex - 1) * 5) + colIndex;
+    // --- OPTIMIERT: ABSOLUTEN SLOT DIREKT AUSLESEN ---
+    // Wir nehmen den Slot, der direkt von loadPlan an die Box übergeben wurde
+    // Falls 'slot' als Argument nicht die ID ist, holen wir sie vom Attribut
+    const absoluteSlot = el.getAttribute('data-slot') || slot;
 
     // Sicherheits-Anker für Folge-Menüs
     window.currentEditSlot = absoluteSlot;
     window.currentEditBox = el;
 
     // 1. STATUS-ANALYSE DER BOX
-    const boxText = el.innerText.trim(); 
-    const istAusfall = el.classList.contains('ausfall-mode') || boxText.includes('Ausfall');
-
-    // Wir prüfen, ob bereits eine Reservierung (Halle) eingetragen ist
-    const tempEl = el.cloneNode(true);
-    tempEl.querySelectorAll('.material-indicator, .status-icon, .stift').forEach(b => b.remove());
-    const saubererText = tempEl.innerText.trim();
-    const zeilen = saubererText.split('\n').map(z => z.trim()).filter(z => z.length > 0);
-
-    const hatReservierung = !istAusfall && zeilen.length >= 3;
-    const hatMaterial = el.querySelector('.material-indicator') !== null;
+    const isAusfall = el.classList.contains('ausfall-mode');
+    const hatMaterial = el.querySelector('.material-icon') !== null; // Geändert auf dein Icon-Klasse
+    
+    // Prüfen, ob eine Halle eingetragen ist (Inhalt des Labels nicht leer)
+    const halleLabel = el.querySelector('.halle-label')?.innerText.trim() || "";
+    const hatReservierung = !isAusfall && halleLabel !== "";
 
     // 2. DAS MENÜ-MODAL ERSTELLEN
     const backdrop = document.createElement('div');
@@ -1391,33 +1383,28 @@ function openEditor(el, time, slot, klasse) {
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">TASK MANAGER</h3>
                 <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
                     Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
-                    (${time}) | Slot: ${absoluteSlot}
+                    <br><small style="opacity: 0.7;">${time} | Slot: ${absoluteSlot}</small>
                 </p>
             </div>
             
             <div class="eigenesmenu-liste">
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', ${absoluteSlot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">📍</span> 
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', ${absoluteSlot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">📦</span> 
                     <span class="btn-text">${hatMaterial ? 'MATERIAL BEARBEITEN' : 'MATERIAL BUCHEN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleAusfallClick('${istAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', ${absoluteSlot}, '${klasse}', this)">
-                    <span class="eigenesmenu-icon">${istAusfall ? '🔄' : '❌'}</span> 
-                    <span class="btn-text">${istAusfall ? 'AUSFALL AUFHEBEN' : 'HALLE FREIGEBEN (AUSFALL)'}</span>
+                <button class="eigenesmenu-item" onclick="handleAusfallClick('${isAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', '${absoluteSlot}', '${klasse}', this)">
+                    <span class="eigenesmenu-icon">${isAusfall ? '🔄' : '❌'}</span> 
+                    <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'HALLE FREIGEBEN (AUSFALL)'}</span>
                     <div class="eigenesmenu-loader" style="display:none;"></div>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', ${absoluteSlot}, '${klasse}')">
-                    <span class="eigenesmenu-icon">🏁</span> 
-                    <span class="btn-text">KLASSE ABKLEBEN</span>
-                </button>
-
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', ${absoluteSlot}, '${klasse}')">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">💬</span> 
                     <span class="btn-text">NOTIZ / KOMMENTAR</span>
                 </button>
@@ -1428,9 +1415,13 @@ function openEditor(el, time, slot, klasse) {
     `;
 
     document.body.appendChild(backdrop);
-    setTimeout(() => backdrop.style.opacity = "1", 10);
+    
+    // Animation
+    requestAnimationFrame(() => {
+        backdrop.style.opacity = "1";
+        backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(0)";
+    });
 }
-
 
 /* ============================================================
    12. MATERIAL-LOGIK (TOGGLE & DETAILS)
