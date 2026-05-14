@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -977,6 +977,7 @@ window.loadPlan = async function() {
         }
 
         const plan = json.plan; 
+        window.lastPlanData = json.plan; // Speichert den aktuellen Plan global für das Menü
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
         window.materialOptionen = json.materialsList || []; 
@@ -1636,58 +1637,86 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
 
 
     
-/**
- * Verwandelt den Task Manager in die Hallen-Auswahl
- */
 function handleReservationUI(time, slot, klasse) {
-    // 1. Zugriff über die spezifischen IDs aus openEditor
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
+    if (!container) return;
 
-    if (!container) {
-        console.error("Fehler: Menü-Liste (menu-options-list) nicht gefunden!");
-        return;
+    if (subtitle) subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00;">${klasse}</span>`;
+
+    // 1. REIHEN-INDEX ERMITTELN
+    // Wir müssen wissen, welche anderen Slots zur selben Zeit (selbe Zeile) gehören.
+    const currentSlot = parseInt(slot);
+    const rowIndex = Math.floor((currentSlot - 1) / 5);
+    const startSlot = (rowIndex * 5) + 1;
+    const endSlot = startSlot + 4;
+
+    // 2. BESETZTE HALLEN DIESER ZEIT ANALYSIEREN
+    let besetzteHallen = [];
+    for (let s = startSlot; s <= endSlot; s++) {
+        // Wir ignorieren den Slot, den wir gerade bearbeiten
+        if (s === currentSlot) continue;
+
+        const data = window.lastPlanData ? window.lastPlanData[s] : null; // Annahme: plan ist global
+        if (data && data.halle && data.halle !== "Ausfall") {
+            // Falls "Halle 1+2", fügen wir beide einzeln zur Sperrliste hinzu
+            if (data.halle.includes('+')) {
+                const teile = data.halle.split('+').map(t => t.trim());
+                besetzteHallen.push(...teile);
+            }
+            besetzteHallen.push(data.halle.trim());
+        }
     }
 
-    // 2. Header-Text aktualisieren
-    if (subtitle) {
-        subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
-    }
-
-    // 3. Hallenliste definieren
-    // Wir nutzen bevorzugt die Namen aus deiner configFarben, falls vorhanden
-    const hallen = (typeof configFarben !== 'undefined' && Object.keys(configFarben).length > 0) 
-                   ? Object.keys(configFarben) 
-                   : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
-    
-    // 4. Den Inhalt der Liste komplett NEU aufbauen
+    // 3. HALLENLISTE GENERIEREN
+    const hallen = Object.keys(configFarben).length > 0 ? Object.keys(configFarben) : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
     let html = "";
     
     hallen.forEach(h => {
-        // Optional: Farbe als dezenten linken Rand anzeigen
-        const borderStyle = (typeof configFarben !== 'undefined' && configFarben[h]) 
-                            ? `border-left: 5px solid ${configFarben[h]};` 
-                            : "";
+        // Logik für Doppelhallen-Check:
+        // Eine Halle ist gesperrt, wenn:
+        // a) Sie exakt so schon belegt ist
+        // b) Sie Teil einer belegten Doppelhalle ist (Halle 1 ist gesperrt wenn 1+2 belegt)
+        // c) Sie eine Doppelhalle ist und eine der Einzelhallen belegt ist (1+2 gesperrt wenn 1 belegt)
+        
+        let istGesperrt = false;
+        const hClean = h.trim();
 
-        html += `
-            <button class="eigenesmenu-item" 
-                    style="justify-content: center; background: #333; margin-bottom: 8px; ${borderStyle}" 
-                    onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}')">
-                <span class="btn-text">${h}</span>
-            </button>`;
+        if (hClean.includes('+')) {
+            const hTeile = hClean.split('+').map(t => t.trim());
+            istGesperrt = hTeile.some(teil => besetzteHallen.includes(teil));
+        } else {
+            istGesperrt = besetzteHallen.includes(hClean);
+        }
+
+        if (istGesperrt) {
+            // Deaktivierter Button für besetzte Hallen
+            html += `
+                <button class="eigenesmenu-item" style="justify-content: center; opacity: 0.3; cursor: not-allowed; background: #222;" disabled>
+                    <span class="btn-text" style="text-decoration: line-through;">${h} (besetzt)</span>
+                </button>`;
+        } else {
+            // Normaler Button für freie Hallen
+            const borderStyle = configFarben[h] ? `border-left: 5px solid ${configFarben[h]};` : "";
+            html += `
+                <button class="eigenesmenu-item" style="justify-content: center; background: #333; margin-bottom: 8px; ${borderStyle}" 
+                        onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}')">
+                    <span class="btn-text">${h}</span>
+                </button>`;
+        }
     });
 
-    // 5. Button zum Löschen der Halle (leerer String wird an DB gesendet)
+    // Lösch-Option
     html += `
-        <button class="eigenesmenu-item" 
-                style="justify-content: center; background: #222; border: 1px solid #444; margin-top: 10px;" 
+        <button class="eigenesmenu-item" style="justify-content: center; background: #222; border: 1px solid #444; margin-top: 10px;" 
                 onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}')">
             <span class="btn-text" style="color: #ff6666;">❌ RESERVIERUNG LÖSCHEN</span>
         </button>`;
 
-    // 6. CRITICAL: Die alten Buttons (Material, etc.) werden hier gelöscht und ersetzt
     container.innerHTML = html;
 }
+
+    
 
 /**
  * Hilfsfunktion: Speichert die Wahl und aktualisiert den Plan
