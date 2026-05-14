@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1654,43 +1654,46 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
  * Verwandelt den Task Manager in die Hallen-Auswahl
  */
 function handleReservationUI(time, slot, klasse) {
+    // 1. Die Liste suchen, in der die Buttons liegen
     const container = document.querySelector('.eigenesmenu-liste');
-    const header = document.querySelector('.eigenesmenu-subtitle');
-    if (!container) return;
+    const subtitle = document.querySelector('.eigenesmenu-subtitle');
 
-    // 1. Header anpassen, damit der User weiß, wo er ist
-    if (header) {
-        header.innerHTML = `Halle wählen für <span style="color: #ff8c00;">${klasse}</span>`;
+    if (!container) {
+        console.error("Container '.eigenesmenu-liste' wurde im DOM nicht gefunden!");
+        return;
     }
 
-    // 2. Hallenliste generieren (Nutzt die Farben aus der Config)
-    // Wir nehmen die Schlüssel aus configFarben, da das deine definierten Hallen sind
-    const hallen = Object.keys(configFarben).length > 0 
-                   ? Object.keys(configFarben) 
-                   : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
+    // 2. Titel im Header aktualisieren (Das klappt bei dir ja schon)
+    if (subtitle) {
+        subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00;">${klasse}</span>`;
+    }
+
+    // 3. Die Hallenliste definieren 
+    // (Hier kannst du auch Object.keys(configFarben) nutzen, falls vorhanden)
+    const hallen = ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
     
+    // 4. Den Inhalt der Liste komplett NEU aufbauen
     let html = "";
     
     hallen.forEach(h => {
-        // Wir nutzen eine dezente Border in der Hallenfarbe für die Buttons
-        const haloColor = configFarben[h] || "#444";
+        // Wir erstellen für jede Halle einen neuen Button
         html += `
             <button class="eigenesmenu-item" 
-                    style="border-left: 5px solid ${haloColor}; justify-content: center;" 
+                    style="justify-content: center; background: #333; margin-bottom: 8px;" 
                     onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}')">
                 <span class="btn-text">${h}</span>
             </button>`;
     });
 
-    // 3. Option zum Löschen der Reservation
+    // 5. Button zum Löschen der Halle hinzufügen
     html += `
         <button class="eigenesmenu-item" 
-                style="margin-top: 15px; background: #331111; border: 1px solid #552222; justify-content: center;" 
+                style="justify-content: center; background: #222; border: 1px solid #444; margin-top: 10px;" 
                 onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}')">
-            <span class="eigenesmenu-icon">🗑️</span>
-            <span class="btn-text" style="color: #ff6666;">RESERVATION LÖSCHEN</span>
+            <span class="btn-text" style="color: #888;">❌ Reservierung löschen</span>
         </button>`;
 
+    // CRITICAL: Hier wird die alte Taskmanager-Liste mit der neuen Hallen-Liste überschrieben
     container.innerHTML = html;
 }
 
