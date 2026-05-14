@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1637,22 +1637,17 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
 
 
     
-/**
- * Verwandelt den Task Manager in die Hallen-Auswahl mit Verfügbarkeits-Check
- */
 function handleReservationUI(time, slot, klasse) {
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
     if (!container) return;
 
-    // Aktuelle Halle aus der Box auslesen (für den Lösch-Button-Check)
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
 
     if (subtitle) {
         subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
     }
 
-    // 1. REIHEN-INDEX & BELEGUNG ERMITTELN
     const currentSlot = parseInt(slot);
     const rowIndex = Math.floor((currentSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
@@ -1661,16 +1656,10 @@ function handleReservationUI(time, slot, klasse) {
     let besetzteHallen = [];
     for (let s = startSlot; s <= endSlot; s++) {
         if (s === currentSlot) continue;
-
         const data = window.lastPlanData ? window.lastPlanData[s] : null;
         if (data && data.halle && data.halle !== "Ausfall") {
             const hName = data.halle.trim();
-            
-            // Outdoor-Ausnahme: Wird nicht als "blockierend" gewertet
-            if (hName.toLowerCase().includes("aussenplatz") || hName.toLowerCase().includes("outdoor")) {
-                continue; 
-            }
-
+            if (hName.toLowerCase().includes("aussenplatz") || hName.toLowerCase().includes("outdoor")) continue; 
             if (hName.includes('+')) {
                 besetzteHallen.push(...hName.split('+').map(t => t.trim()));
             }
@@ -1678,12 +1667,21 @@ function handleReservationUI(time, slot, klasse) {
         }
     }
 
-    // 2. HALLENLISTE GENERIEREN
+    let html = "";
+
+    // --- NEU: LÖSCHEN AN ERSTER STELLE ---
+    if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
+        html += `
+            <button class="eigenesmenu-item" 
+                    style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 15px;" 
+                    onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this)">
+                <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ RESERVIERUNG LÖSCHEN</span>
+            </button>`;
+    }
+
     const hallen = (typeof configFarben !== 'undefined' && Object.keys(configFarben).length > 0) 
                    ? Object.keys(configFarben) 
                    : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21", "Aussenplatz"];
-    
-    let html = "";
     
     hallen.forEach(h => {
         const hClean = h.trim();
@@ -1705,48 +1703,32 @@ function handleReservationUI(time, slot, klasse) {
                     <span class="btn-text" style="text-decoration: line-through; color: #666;">${h}</span>
                 </button>`;
         } else {
-            const borderStyle = (typeof configFarben !== 'undefined' && configFarben[h]) 
-                                ? `border-left: 5px solid ${configFarben[h]};` 
-                                : "";
+            const borderStyle = configFarben[h] ? `border-left: 5px solid ${configFarben[h]};` : "";
             html += `
                 <button class="eigenesmenu-item" style="justify-content: center; background: #333; margin-bottom: 8px; ${borderStyle}" 
-                        onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}')">
+                        onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this)">
                 <span class="btn-text">${h}</span>
             </button>`;
         }
     });
-
-    // 3. LÖSCH-OPTION (Nur anzeigen, wenn aktuell eine Halle reserviert ist)
-    if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
-        html += `
-            <button class="eigenesmenu-item" 
-                    style="justify-content: center; background: #222; border: 1px solid #444; margin-top: 15px;" 
-                    onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}')">
-                <span class="btn-text" style="color: #ff6666; font-weight: bold;">❌ RESERVIERUNG LÖSCHEN</span>
-            </button>`;
-    }
 
     container.innerHTML = html;
 }
 
     
 
-/**
- * Hilfsfunktion: Speichert die Wahl und aktualisiert den Plan
- */
-window.applyHalleSelection = async function(neueHalle, time, slot, klasse) {
-    // 1. Visuelles Feedback: Die Liste durch einen Loader ersetzen
-    // Wir nutzen die ID 'menu-options-list' für maximale Präzision
-    const listContainer = document.getElementById('menu-options-list');
-    if (listContainer) {
-        listContainer.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; padding: 20px;">
-                <div class="eigenesmenu-loader"></div>
-                <p style="color: #e67e22; margin-top: 10px; font-size: 0.8em;">Speichere ${neueHalle}...</p>
-            </div>`;
-    }
+window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) {
+    if (!btn) return;
 
-    // 2. Daten-Paket schnüren
+    // 1. Sicherheit: Menü gegen Mehrfachklicks sperren
+    const container = document.getElementById('menu-options-list');
+    if (container) container.style.pointerEvents = "none";
+    
+    // 2. Visuelles Feedback direkt im Button
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = `<div class="eigenesmenu-loader" style="width:16px; height:16px; border-width:2px;"></div>`;
+    btn.style.background = "#444";
+
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -1757,23 +1739,43 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse) {
         halle: neueHalle
     };
 
+    // 3. Timeout-Sicherung (Falls der Server nicht antwortet, System nach 8s freigeben)
+    const safetyTimeout = setTimeout(() => {
+        alert("Zeitüberschreitung beim Speichern. Bitte Seite neu laden.");
+        if (container) container.style.pointerEvents = "auto";
+        btn.innerHTML = originalContent;
+    }, 8000);
+
     try {
-        // 3. Ab an die Datenbank
         const result = await saveImmediately(payload);
         
-        // 4. Abschluss-Aktionen
-        // Wir schließen das Menü erst, wenn die DB geantwortet hat
-        closeEditor();
-        
-        // Plan neu laden, um die neue Farbe und Halle sofort im Grid zu sehen
-        await loadPlan(); 
-        
+        if (result && result.status === "success") {
+            // Erfolg: Button kurz grün aufleuchten lassen
+            btn.style.background = "#27ae60"; 
+            btn.innerHTML = "✓ Gespeichert";
+            
+            clearTimeout(safetyTimeout);
+
+            // Warten bis der Plan im Hintergrund wirklich neu geladen wurde
+            await loadPlan(); 
+            
+            // Erst jetzt das Fenster schließen
+            setTimeout(closeEditor, 300);
+        } else {
+            throw new Error("Server-Fehler");
+        }
     } catch (e) {
-        console.error("Fehler beim Speichern der Halle:", e);
-        alert("Konnte Halle nicht speichern. Bitte Internetverbindung prüfen.");
+        clearTimeout(safetyTimeout);
+        console.error("Speicherfehler:", e);
+        btn.style.background = "#c0392b";
+        btn.innerHTML = "Fehler!";
         
-        // Bei Fehler Menü schließen, damit der User es neu versuchen kann
-        closeEditor();
+        // Nach kurzem Schütteln wieder freigeben
+        setTimeout(() => {
+            if (container) container.style.pointerEvents = "auto";
+            btn.innerHTML = originalContent;
+            btn.style.background = "";
+        }, 2000);
     }
 };
 
