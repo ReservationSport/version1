@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1331,35 +1331,21 @@ async function triggerNews(type, slotIndex, klasse) {
 
 
 
-/* ============================================================
-   11. TASK MANAGER (EIGENES KONTEXT-MENÜ)
-   ============================================================ */
-
 /**
  * Öffnet das Aktions-Menü für einen spezifischen Slot
  */
 window.openEditor = function(el, time, slot, klasse) {
-    // Falls noch ein altes Menü offen ist, entfernen
     closeEditor();
 
-    // --- OPTIMIERT: ABSOLUTEN SLOT DIREKT AUSLESEN ---
-    // Wir nehmen den Slot, der direkt von loadPlan an die Box übergeben wurde
-    // Falls 'slot' als Argument nicht die ID ist, holen wir sie vom Attribut
     const absoluteSlot = el.getAttribute('data-slot') || slot;
-
-    // Sicherheits-Anker für Folge-Menüs
     window.currentEditSlot = absoluteSlot;
     window.currentEditBox = el;
 
-    // 1. STATUS-ANALYSE DER BOX
     const isAusfall = el.classList.contains('ausfall-mode');
-    const hatMaterial = el.querySelector('.material-icon') !== null; // Geändert auf dein Icon-Klasse
-    
-    // Prüfen, ob eine Halle eingetragen ist (Inhalt des Labels nicht leer)
+    const hatMaterial = el.querySelector('.material-icon') !== null;
     const halleLabel = el.querySelector('.halle-label')?.innerText.trim() || "";
     const hatReservierung = !isAusfall && halleLabel !== "";
 
-    // 2. DAS MENÜ-MODAL ERSTELLEN
     const backdrop = document.createElement('div');
     backdrop.className = 'eigenesmenu-backdrop';
     backdrop.id = 'eigenesmenu-modal';
@@ -1369,13 +1355,13 @@ window.openEditor = function(el, time, slot, klasse) {
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
+                <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
                     Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
                     <br><small style="opacity: 0.7;">${time} | Slot: ${absoluteSlot}</small>
                 </p>
             </div>
             
-            <div class="eigenesmenu-liste">
+            <div class="eigenesmenu-liste" id="menu-options-list">
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">📍</span> 
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
@@ -1386,7 +1372,7 @@ window.openEditor = function(el, time, slot, klasse) {
                     <span class="btn-text">${hatMaterial ? 'MATERIAL BEARBEITEN' : 'MATERIAL BUCHEN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleAusfallClick('${isAusfall ? 'LOESCHEN' : 'SETZEN'}', '${time}', '${absoluteSlot}', '${klasse}', this)">
+                <button class="eigenesmenu-item" onclick="handleMenuChoice('ausfall', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">${isAusfall ? '🔄' : '❌'}</span> 
                     <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'HALLE FREIGEBEN (AUSFALL)'}</span>
                     <div class="eigenesmenu-loader" style="display:none;"></div>
@@ -1404,12 +1390,12 @@ window.openEditor = function(el, time, slot, klasse) {
 
     document.body.appendChild(backdrop);
     
-    // Animation
     requestAnimationFrame(() => {
         backdrop.style.opacity = "1";
-        backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(0)";
+        const container = backdrop.querySelector('.eigenesmenu-container');
+        if(container) container.style.transform = "translateY(0)";
     });
-}
+};
 
 /* ============================================================
    12. MATERIAL-LOGIK (TOGGLE & DETAILS)
@@ -1654,46 +1640,52 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
  * Verwandelt den Task Manager in die Hallen-Auswahl
  */
 function handleReservationUI(time, slot, klasse) {
-    // 1. Die Liste suchen, in der die Buttons liegen
-    const container = document.querySelector('.eigenesmenu-liste');
-    const subtitle = document.querySelector('.eigenesmenu-subtitle');
+    // 1. Zugriff über die spezifischen IDs aus openEditor
+    const container = document.getElementById('menu-options-list');
+    const subtitle = document.getElementById('menu-subtitle');
 
     if (!container) {
-        console.error("Container '.eigenesmenu-liste' wurde im DOM nicht gefunden!");
+        console.error("Fehler: Menü-Liste (menu-options-list) nicht gefunden!");
         return;
     }
 
-    // 2. Titel im Header aktualisieren (Das klappt bei dir ja schon)
+    // 2. Header-Text aktualisieren
     if (subtitle) {
-        subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00;">${klasse}</span>`;
+        subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
     }
 
-    // 3. Die Hallenliste definieren 
-    // (Hier kannst du auch Object.keys(configFarben) nutzen, falls vorhanden)
-    const hallen = ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
+    // 3. Hallenliste definieren
+    // Wir nutzen bevorzugt die Namen aus deiner configFarben, falls vorhanden
+    const hallen = (typeof configFarben !== 'undefined' && Object.keys(configFarben).length > 0) 
+                   ? Object.keys(configFarben) 
+                   : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
     
     // 4. Den Inhalt der Liste komplett NEU aufbauen
     let html = "";
     
     hallen.forEach(h => {
-        // Wir erstellen für jede Halle einen neuen Button
+        // Optional: Farbe als dezenten linken Rand anzeigen
+        const borderStyle = (typeof configFarben !== 'undefined' && configFarben[h]) 
+                            ? `border-left: 5px solid ${configFarben[h]};` 
+                            : "";
+
         html += `
             <button class="eigenesmenu-item" 
-                    style="justify-content: center; background: #333; margin-bottom: 8px;" 
+                    style="justify-content: center; background: #333; margin-bottom: 8px; ${borderStyle}" 
                     onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}')">
                 <span class="btn-text">${h}</span>
             </button>`;
     });
 
-    // 5. Button zum Löschen der Halle hinzufügen
+    // 5. Button zum Löschen der Halle (leerer String wird an DB gesendet)
     html += `
         <button class="eigenesmenu-item" 
                 style="justify-content: center; background: #222; border: 1px solid #444; margin-top: 10px;" 
                 onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}')">
-            <span class="btn-text" style="color: #888;">❌ Reservierung löschen</span>
+            <span class="btn-text" style="color: #ff6666;">❌ RESERVIERUNG LÖSCHEN</span>
         </button>`;
 
-    // CRITICAL: Hier wird die alte Taskmanager-Liste mit der neuen Hallen-Liste überschrieben
+    // 6. CRITICAL: Die alten Buttons (Material, etc.) werden hier gelöscht und ersetzt
     container.innerHTML = html;
 }
 
@@ -1701,10 +1693,18 @@ function handleReservationUI(time, slot, klasse) {
  * Hilfsfunktion: Speichert die Wahl und aktualisiert den Plan
  */
 window.applyHalleSelection = async function(neueHalle, time, slot, klasse) {
-    // Visuelles Feedback im Menü
-    const container = document.querySelector('.eigenesmenu-liste');
-    if (container) container.innerHTML = `<div class="eigenesmenu-loader" style="margin: 20px auto;"></div>`;
+    // 1. Visuelles Feedback: Die Liste durch einen Loader ersetzen
+    // Wir nutzen die ID 'menu-options-list' für maximale Präzision
+    const listContainer = document.getElementById('menu-options-list');
+    if (listContainer) {
+        listContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; padding: 20px;">
+                <div class="eigenesmenu-loader"></div>
+                <p style="color: #e67e22; margin-top: 10px; font-size: 0.8em;">Speichere ${neueHalle}...</p>
+            </div>`;
+    }
 
+    // 2. Daten-Paket schnüren
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -1716,12 +1716,21 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse) {
     };
 
     try {
-        await saveImmediately(payload);
+        // 3. Ab an die Datenbank
+        const result = await saveImmediately(payload);
+        
+        // 4. Abschluss-Aktionen
+        // Wir schließen das Menü erst, wenn die DB geantwortet hat
         closeEditor();
-        await loadPlan(); // Plan neu laden, um die neue Farbe in der Box zu sehen
+        
+        // Plan neu laden, um die neue Farbe und Halle sofort im Grid zu sehen
+        await loadPlan(); 
+        
     } catch (e) {
         console.error("Fehler beim Speichern der Halle:", e);
-        alert("Konnte Halle nicht speichern.");
+        alert("Konnte Halle nicht speichern. Bitte Internetverbindung prüfen.");
+        
+        // Bei Fehler Menü schließen, damit der User es neu versuchen kann
         closeEditor();
     }
 };
