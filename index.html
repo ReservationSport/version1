@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -946,6 +946,7 @@ window.loadPlan = async function() {
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
+    // Wochenende
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">
             <i class="fas fa-umbrella-beach" style="margin-bottom:10px; font-size: 2rem;"></i><br>
@@ -964,6 +965,7 @@ window.loadPlan = async function() {
             return;
         }
 
+        // Sperrzeit / Feiertag
         if (json.sperrMsg) {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem; border: 1px solid #e67e22;">
                 <i class="fas fa-calendar-check" style="margin-bottom:10px; font-size: 2rem;"></i><br>
@@ -979,13 +981,10 @@ window.loadPlan = async function() {
         allClassTeachers = json.allClassTeachers || {};
         window.materialOptionen = json.materialsList || []; 
         
+        // Farben aus Config laden
         configFarben = {}; 
-        let hallenOptionenHTML = `<option value="">---</option>`;
         if (json.options) {
-            json.options.forEach(opt => {
-                configFarben[opt[0]] = opt[1];
-                hallenOptionenHTML += `<option value="${opt[0]}">${opt[0]}</option>`;
-            });
+            json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
         }
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
@@ -1033,17 +1032,8 @@ window.loadPlan = async function() {
                     materialHtml = `<span class="material-icon" data-tooltip="${tooltipText}"><i class="fas fa-box-open"></i></span>`;
                 }
 
-                // Auswahlmenü nur generieren, wenn man Schreibrechte hat
-                let selectHtml = "";
-                if (canEdit) {
-                    selectHtml = `
-                        <select class="hallen-wahl" onchange="addChange(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')" onclick="event.stopPropagation()">
-                            ${hallenOptionenHTML.replace(`value="${halle}"`, `value="${halle}" selected`)}
-                            <option value="Ausfall" ${halle === "Ausfall" ? "selected" : ""}>Ausfall</option>
-                        </select>`;
-                }
-
-                // Wenn kein canEdit, dann wird openEditor NICHT aufgerufen, stattdessen zeigen wir nur die Info
+                // KEIN Dropdown mehr hier drin!
+                // Click-Action öffnet nur den Editor
                 const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
 
                 html += `
@@ -1057,7 +1047,6 @@ window.loadPlan = async function() {
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
-                        ${selectHtml}
                 </div>`;
             }
         });
@@ -1072,7 +1061,6 @@ window.loadPlan = async function() {
         updateNavButtons();
     }
 };
-
 
     
 
@@ -1604,77 +1592,136 @@ function closeEditor() {
 /**
  * Verarbeitet die Wahl aus dem Task Manager (Haupt-Weiche)
  */
-function handleMenuChoice(action, time, slot, klasse) {
-    console.log("Aktion gewählt:", action); // Debug-Hilfe für die Handy-Konsole
+window.handleMenuChoice = function(action, time, slot, klasse) {
+    console.log("Aktion gewählt:", action); 
 
     switch(action) {
         case 'reservation':
-            // Prüfen, ob die Funktion existiert, dann UI umschalten
-            if (typeof handleReservationUI === 'function') {
-                handleReservationUI(time, slot, klasse);
-            } else {
-                console.error("handleReservationUI nicht gefunden!");
-            }
+            // Öffnet die Hallenauswahl direkt im bestehenden Menü-Container
+            handleReservationUI(time, slot, klasse);
             break;
             
         case 'material':
-    // Wir suchen das aktive Modal direkt
-    const activeModal = document.getElementById('eigenesmenu-modal');
-    handleMaterialUI(time, slot, klasse, activeModal); // Modal mitgeben!
-    break;
+            const activeModal = document.getElementById('eigenesmenu-modal');
+            if (typeof handleMaterialUI === 'function') {
+                handleMaterialUI(time, slot, klasse, activeModal);
+            }
+            break;
 
         case 'ausfall':
-            // Sicherheits-Logik für Ausfall
+            // Wir prüfen den aktuellen Status direkt an der Box
             const istBereitsAusfall = window.currentEditBox ? window.currentEditBox.classList.contains('ausfall-mode') : false;
-            handleAusfallClick(istBereitsAusfall ? 'LOESCHEN' : 'SETZEN', time, slot, klasse, null);
+            // Wir nutzen den Button-Trigger aus dem DOM für den Loader
+            const btn = document.querySelector('.eigenesmenu-item:nth-child(3)'); 
+            handleAusfallClick(istBereitsAusfall ? 'LOESCHEN' : 'SETZEN', time, slot, klasse, btn);
             break;
 
         case 'beendet':
-            // Menü schließen und Jahr-Reset (Abkleben) starten
-            closeEditor();
-            if (typeof startYearReset === 'function') {
-                startYearReset(klasse);
+            if (confirm(`Möchtest du die Klasse ${klasse} wirklich für das restliche Schuljahr abkleben?`)) {
+                closeEditor();
+                if (typeof startYearReset === 'function') startYearReset(klasse);
             }
             break;
 
         case 'nachricht':
-            // Notiz-Funktion: Entweder Editor oder simpler Prompt
-            if (typeof openCommentEditor === 'function') {
-                closeEditor();
-                openCommentEditor(time, slot, klasse);
-            } else {
-                const note = prompt("Notiz für " + klasse + " erfassen:", "");
-                // Falls abgebrochen wurde (null), nichts tun. Sonst speichern.
-                if (note !== null) {
-                    // Wir nutzen hier direkt updateSelection oder eine Speicherfunktion deiner Wahl
-                    if (typeof updateSelection === 'function') {
-                        updateSelection(undefined, time, slot, klasse, null, note);
-                    } else {
-                        // Fallback: Falls du Material-Notizen meintest
-                        saveMaterialSelection("Notiz", note, time, slot, klasse);
-                    }
-                }
+            const note = prompt("Notiz für " + klasse + " erfassen:", "");
+            if (note !== null) {
+                // Wir senden ein Payload mit dem Kommentar an die DB
+                const payload = {
+                    action: "saveBooking",
+                    pw: userPw,
+                    kuerzel: userKuerzel,
+                    date: document.getElementById('datePicker').value,
+                    slot: slot,
+                    klasse: klasse,
+                    kommentar: note
+                };
+                saveImmediately(payload).then(() => {
+                    closeEditor();
+                    loadPlan();
+                });
             }
             break;
             
         default:
             console.warn("Unbekannte Aktion im Task Manager:", action);
     }
+};
+
+
+    
+/**
+ * Verwandelt den Task Manager in die Hallen-Auswahl
+ */
+function handleReservationUI(time, slot, klasse) {
+    const container = document.querySelector('.eigenesmenu-liste');
+    const header = document.querySelector('.eigenesmenu-subtitle');
+    if (!container) return;
+
+    // 1. Header anpassen, damit der User weiß, wo er ist
+    if (header) {
+        header.innerHTML = `Halle wählen für <span style="color: #ff8c00;">${klasse}</span>`;
+    }
+
+    // 2. Hallenliste generieren (Nutzt die Farben aus der Config)
+    // Wir nehmen die Schlüssel aus configFarben, da das deine definierten Hallen sind
+    const hallen = Object.keys(configFarben).length > 0 
+                   ? Object.keys(configFarben) 
+                   : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21"];
+    
+    let html = "";
+    
+    hallen.forEach(h => {
+        // Wir nutzen eine dezente Border in der Hallenfarbe für die Buttons
+        const haloColor = configFarben[h] || "#444";
+        html += `
+            <button class="eigenesmenu-item" 
+                    style="border-left: 5px solid ${haloColor}; justify-content: center;" 
+                    onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}')">
+                <span class="btn-text">${h}</span>
+            </button>`;
+    });
+
+    // 3. Option zum Löschen der Reservation
+    html += `
+        <button class="eigenesmenu-item" 
+                style="margin-top: 15px; background: #331111; border: 1px solid #552222; justify-content: center;" 
+                onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}')">
+            <span class="eigenesmenu-icon">🗑️</span>
+            <span class="btn-text" style="color: #ff6666;">RESERVATION LÖSCHEN</span>
+        </button>`;
+
+    container.innerHTML = html;
 }
 
 /**
- * Diese Hilfsfunktionen kapseln deine UI-Logik von oben, 
- * damit handleMenuChoice übersichtlich bleibt.
+ * Hilfsfunktion: Speichert die Wahl und aktualisiert den Plan
  */
-function handleReservationUI(time, slot, klasse) {
-    // Hier wird der Inhalt des Modals auf die Hallen-Liste umgeschrieben
-    // (Der Code, den du im vorherigen Schritt als 'LOGIK FÜR HALLEN-RESERVATION' hattest)
-    if (typeof handleMenuChoice === 'function') {
-        // Da du die Logik bereits in deiner handleMenuChoice-Variante (alt) hattest,
-        // stellen wir sicher, dass sie hier ausgeführt wird.
-    }
-}
+window.applyHalleSelection = async function(neueHalle, time, slot, klasse) {
+    // Visuelles Feedback im Menü
+    const container = document.querySelector('.eigenesmenu-liste');
+    if (container) container.innerHTML = `<div class="eigenesmenu-loader" style="margin: 20px auto;"></div>`;
 
+    const payload = {
+        action: "saveBooking",
+        pw: userPw,
+        kuerzel: userKuerzel,
+        date: document.getElementById('datePicker').value,
+        slot: slot,
+        klasse: klasse,
+        halle: neueHalle
+    };
+
+    try {
+        await saveImmediately(payload);
+        closeEditor();
+        await loadPlan(); // Plan neu laden, um die neue Farbe in der Box zu sehen
+    } catch (e) {
+        console.error("Fehler beim Speichern der Halle:", e);
+        alert("Konnte Halle nicht speichern.");
+        closeEditor();
+    }
+};
 
 
    function handleMaterialUI(time, slot, klasse, modalElement) {
@@ -2014,6 +2061,49 @@ function showMaterialDetailPopup(material, kommentar) {
 }
 
 
+
+    /**
+ * Der "Postbote": Sendet Daten an das Google Apps Script
+ */
+window.saveImmediately = async function(payload) {
+    // Falls die URL nicht global definiert ist, hier prüfen
+    if (typeof url === 'undefined') {
+        console.error("Die Variable 'url' (Web-App URL) ist nicht definiert!");
+        return;
+    }
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            mode: "no-cors", // Wichtig für Google Apps Script
+            cache: "no-cache",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload)
+        });
+
+        // Hinweis: Bei mode: 'no-cors' kann die Antwort nicht gelesen werden, 
+        // aber die Daten kommen trotzdem an. 
+        // Wenn du eine Bestätigung brauchst, nutze das normale fetch:
+        
+        /* const res = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+        return result; 
+        */
+
+        console.log("Speicherbefehl gesendet:", payload);
+        return { status: "success" }; 
+
+    } catch (e) {
+        console.error("Kritischer Fehler beim Speichern:", e);
+        alert("Verbindung zum Server fehlgeschlagen!");
+    }
+};
+    
 
 
 </script>
