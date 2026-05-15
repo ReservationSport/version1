@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -665,8 +665,8 @@ body {
 
     <div class="nav-section nav-center">
         <div class="nav-group">
-            <button class="nav-btn" onclick="changeDate(-7)" title="Woche zurück"><i class="fas fa-angle-double-left"></i></button>
-            <button id="prev-day" class="nav-btn" onclick="changeDate(-1)"><i class="fas fa-angle-left"></i></button>
+            <button class="nav-btn" onclick="changeDate(-7)" title="1 Woche zurück"><i class="fas fa-angle-double-left"></i></button>
+            <button id="prev-day" class="nav-btn" onclick="changeDate(-1)" title="1 Tag zürück"><i class="fas fa-angle-left"></i></button>
         </div>
         
         <button class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-home"></i></button>
@@ -674,8 +674,8 @@ body {
         <input type="date" id="datePicker" onchange="loadPlan()">
         
         <div class="nav-group">
-            <button id="next-day" class="nav-btn" onclick="changeDate(1)"><i class="fas fa-angle-right"></i></button>
-            <button class="nav-btn" onclick="changeDate(7)" title="Woche vor"><i class="fas fa-angle-double-right"></i></button>
+            <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor"><i class="fas fa-angle-right"></i></button>
+            <button class="nav-btn" onclick="changeDate(7)" title="1 Woche vor"><i class="fas fa-angle-double-right"></i></button>
         </div>
     </div>
 
@@ -1404,8 +1404,8 @@ window.openEditor = function(el, time, slot, klasse) {
             <div class="eigenesmenu-header">
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">TASK MANAGER</h3>
                 <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
-                    Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
-                    <br><small style="opacity: 0.7;">${time} | Slot: ${absoluteSlot}</small>
+                    Aktionsmenu für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
+                    <br><small style="opacity: 0.7;">Wähle eine Aktion für die Klasse</small>
                 </p>
             </div>
             
@@ -1422,7 +1422,7 @@ window.openEditor = function(el, time, slot, klasse) {
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('ausfall', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">${isAusfall ? '🔄' : '❌'}</span> 
-                    <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'HALLE FREIGEBEN (AUSFALL)'}</span>
+                    <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL MARKIEREN'}</span>
                     <div class="eigenesmenu-loader" style="display:none;"></div>
                 </button>
 
@@ -1692,7 +1692,7 @@ function handleReservationUI(time, slot, klasse) {
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
 
     if (subtitle) {
-        subtitle.innerHTML = `Halle wählen für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
+        subtitle.innerHTML = `Wähle die Räumlichkeiten für die <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
     }
 
     const currentSlot = parseInt(slot);
