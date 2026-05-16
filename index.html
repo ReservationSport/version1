@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1078,13 +1078,14 @@ window.loadPlan = async function() {
                 // --- GEÄNDERTER BEREICH: MATERIAL-ICON GENERIERUNG ---
                 let materialHtml = "";
 if (material) {
-    const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
+    // Der Text, der beim Klicken und Hovern angezeigt wird
+    const tooltipText = matKommentar ? `${material}\nKommentar: ${matKommentar}` : material;
     
     materialHtml = `
         <span class="material-icon" 
-              data-tooltip="${tooltipText}" 
-              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;"
-              onclick="event.stopPropagation(); event.preventDefault(); if(typeof handleMaterialUI === 'function') { handleMaterialUI('${zeitStr}', '${absoluteSlot}', '${klasse}'); }">
+              data-tooltip="${matKommentar ? material + ': ' + matKommentar : material}" 
+              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: info !important; display: inline-block; padding: 4px;"
+              onclick="event.stopPropagation(); event.preventDefault(); alert('📋 GEBUCHTES MATERIAL:\\n\\nKlasse: ${klasse}\\nZeit: ${zeitStr}\\n\\n➔ ${tooltipText.replace(/'/g, "\\'")}');">
             <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
         </span>`;
 }
@@ -1848,40 +1849,15 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
 
 
 function handleMaterialUI(time, slot, klasse, modalElement) {
-    console.log("handleMaterialUI aktiv für Slot:", slot);
+    console.log("handleMaterialUI aktiv!");
 
-    // 1. Box retten: Falls wir direkt aufs Icon klicken, referenzieren wir die korrekte Grid-Box
-    if (!window.currentEditBox || window.currentEditBox.getAttribute('data-slot') !== String(slot)) {
-        window.currentEditBox = document.querySelector(`[data-slot="${slot}"]`);
-    }
-    const aktuelleBox = window.currentEditBox;
-
-    // 2. WICHTIGER DIREKTKLICK-CHECK: Wenn das Modal noch zu ist, öffnen wir es sauber über den Editor
-    let root = modalElement || document.getElementById('eigenesmenu-modal');
-    
-    // Falls das Modal nicht existiert oder unsichtbar ist (display: none / kein Inhalt)
-    if (!root || root.style.display === 'none' || !root.innerHTML.trim()) {
-        if (typeof openEditor === 'function' && aktuelleBox) {
-            // Wir öffnen zuerst den Standard-Editor, damit das Gerüst steht
-            openEditor(aktuelleBox, time, slot, klasse);
-            // Greife das frisch geöffnete Modal ab
-            root = document.getElementById('eigenesmenu-modal');
-        }
-    }
-
-    // Falls es immer noch fehlt, Notfall-Ausweichsuche
-    if (!root) {
-        root = document.getElementById('task-manager-modal') 
-               || document.querySelector('.eigenesmenu-backdrop')
-               || document.querySelector('.modal-container');
-    }
-
+    // Holt das geöffnete Haupt-Modal
+    const root = modalElement || document.getElementById('eigenesmenu-modal');
     if (!root) {
         console.error("Modal nicht gefunden!");
         return;
     }
 
-    // 3. Container im Modal greifen
     const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
     const title = root.querySelector('.eigenesmenu-title');
     const subtitle = root.querySelector('#menu-subtitle') || root.querySelector('.eigenesmenu-subtitle');
@@ -1891,23 +1867,21 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         return;
     }
 
-    // Sicherstellen, dass das Modal nun wirklich sichtbar ist
-    root.style.display = 'block';
-
-    // 4. Titel & Untertitel anpassen
+    // 1. Titel & Untertitel im Modal anpassen
     if (title) title.innerText = "MATERIAL WÄHLEN";
     if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
 
-    // Prüfen, ob in der aktuellen Box bereits ein Material-Icon existiert
+    // 2. Prüfen, ob in der aktuellen Box bereits ein Material-Icon existiert
+    const aktuelleBox = window.currentEditBox || document.querySelector(`[data-slot="${slot}"]`);
     const hatBereitsMaterial = aktuelleBox?.querySelector('.material-icon') !== null;
 
-    // 5. DYNAMISCHE MATERIALIEN AUS CONFIG HOLEN
+    // 3. DYNAMISCHE MATERIALIEN AUS CONFIG-SHEET HOLEN
     const optionen = window.materialOptionen || [];
     window.selectedMaterials = []; 
 
     let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
     
-    // --- LÖSCH-BUTTON AN ERSTER STELLE (nur wenn schon Material vorhanden) ---
+    // --- LÖSCH-BUTTON AN ERSTER STELLE (wird angezeigt, wenn bereits Material gebucht ist) ---
     if (hatBereitsMaterial) {
         html += `
             <button class="eigenesmenu-item" 
@@ -1917,13 +1891,14 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             </button>`;
     }
 
-    // Fallback falls leer
+    // Falls die Liste leer ist oder noch lädt
     if (optionen.length === 0) {
         html += `
             <div style="color: #666; text-align: center; padding: 20px; font-size: 0.9em;">
                 Keine Materialien im Sheet 'konfiguration' gefunden oder Daten laden noch...
             </div>`;
     } else {
+        // Die echten Auswahl-Buttons generieren
         optionen.forEach(mat => {
             html += `
                 <button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${mat}', this)">
@@ -1942,16 +1917,17 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             </button>
         </div>`;
 
-    // Inhalt austauschen
+    // 4. Inhalt im Modal austauschen
     liste.innerHTML = html;
 
-    // 6. Den unteren Abbrechen-Button in "Zurück" verwandeln
+    // 5. Den unteren Abbrechen-Button in "Zurück" verwandeln
     const backBtn = root.querySelector('.eigenesmenu-cancel');
     if (backBtn) {
         backBtn.innerText = "← ZURÜCK";
         backBtn.onclick = () => {
             if (root.style.pointerEvents === "none") return;
             
+            // Bringt den User sauber zurück in die Hauptansicht des Task-Managers
             if (typeof openEditor === 'function' && aktuelleBox) {
                 openEditor(aktuelleBox, time, slot, klasse);
             } else if (typeof closeEditor === 'function') {
@@ -1960,7 +1936,6 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         };
     }
 }
-
 /* ============================================================
    15. DATEN-SYNCHRONISATION (addChange)
    ============================================================ */
