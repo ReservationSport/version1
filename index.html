@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -536,7 +536,6 @@ body {
 
 
     
-
 /* 10. MATERIAL-VISUALS & TOOLTIPS */
 .material-icon {
     position: absolute; /* Absolut innerhalb der .box */
@@ -545,7 +544,9 @@ body {
     color: #e67e22;
     font-size: 14px;
     z-index: 10;
-    cursor: help;
+    cursor: pointer !important;    /* FIX 1: Ändert das Fragezeichen zur Klick-Hand */
+    pointer-events: auto !important; /* FIX 2: Garantiert, dass Klicks abgefangen werden */
+    padding: 4px;                  /* Erleichtert das Treffen auf mobilen Geräten */
 }
 
 .material-icon::after {
@@ -1839,60 +1840,72 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
 };
 
 
-   function handleMaterialUI(time, slot, klasse, modalElement) {
+  function handleMaterialUI(time, slot, klasse, modalElement) {
     console.log("handleMaterialUI aktiv!");
 
-    // Falls modalElement nicht mitkam, suchen wir es zur Sicherheit
     const root = modalElement || document.getElementById('eigenesmenu-modal');
-    
     if (!root) {
         console.error("Modal nicht gefunden!");
         return;
     }
 
-    // Wir suchen die Liste und den Header NUR innerhalb dieses Modals
-    const liste = root.querySelector('.eigenesmenu-liste');
+    const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
     const title = root.querySelector('.eigenesmenu-title');
-    const subtitle = root.querySelector('.eigenesmenu-subtitle');
+    const subtitle = root.querySelector('#menu-subtitle') || root.querySelector('.eigenesmenu-subtitle');
 
     if (!liste) {
         console.error("Liste-Container fehlt im Modal!");
         return;
     }
 
-    // 1. Titel & Untertitel sofort ändern
+    // 1. Titel & Untertitel anpassen
     if (title) title.innerText = "MATERIAL WÄHLEN";
-    if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00">${klasse}</span>?`;
+    if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
 
-    // 2. HTML für die Materialliste
-    const optionen = (window.materialOptionen && window.materialOptionen.length > 0) 
-                     ? window.materialOptionen 
-                     : ["🏀 Bälle", "🎽 Westen", "🍦 Hütchen", "⏱️ Stoppuhr", "🥅 Tore"];
+    // Prüfen, ob in der aktuellen Box bereits ein Material-Icon existiert
+    const hatBereitsMaterial = window.currentEditBox?.querySelector('.material-icon') !== null;
+
+    // 2. DYNAMISCHE MATERIALIEN AUS DEINEM CONFIG-SHEET HOLEN
+    // Wir werfen die Dummy-Bälle und -Tore komplett raus!
+    const optionen = window.materialOptionen || [];
     
-    selectedMaterials = []; 
+    window.selectedMaterials = []; 
 
     let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
     
-    // Lösch-Button
-    html += `
-        <button class="eigenesmenu-item" style="border: 1px dashed #555;" onclick="saveMaterialSelection('', '', '${time}', ${slot}, '${klasse}', this)">
-            <span class="eigenesmenu-icon">❌</span> <span class="btn-text">Material entfernen</span>
-        </button>`;
-
-    // Die Buttons
-    optionen.forEach(mat => {
+    // --- LÖSCH-BUTTON AN ERSTER STELLE (nur wenn schon Material vorhanden) ---
+    if (hatBereitsMaterial) {
         html += `
-            <button class="eigenesmenu-item material-selectable" onclick="toggleMaterialSelection('${mat}', this)">
-                <span class="eigenesmenu-icon">📦</span> <span class="btn-text">${mat}</span>
-                <span class="check-indicator" style="margin-left: auto; color: #666;">○</span>
+            <button class="eigenesmenu-item" 
+                    style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" 
+                    onclick="applyMaterialDelete('${time}', '${slot}', '${klasse}', this)">
+                <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIAL LÖSCHEN</span>
             </button>`;
-    });
+    }
+
+    // Falls das Sheet noch lädt oder leer ist, zeigen wir einen Hinweis statt Dummys
+    if (optionen.length === 0) {
+        html += `
+            <div style="color: #666; text-align: center; padding: 20px; font-size: 0.9em;">
+                Keine Materialien im Sheet 'konfiguration' gefunden oder Daten laden noch...
+            </div>`;
+    } else {
+        // Die echten Buttons aus deinem Google Sheet generieren
+        optionen.forEach(mat => {
+            html += `
+                <button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${mat}', this)">
+                    <span class="eigenesmenu-icon">📦</span> 
+                    <span class="btn-text">${mat}</span>
+                    <span class="check-indicator" style="margin-left: auto; color: #666; font-weight: bold;">○</span>
+                </button>`;
+        });
+    }
 
     html += `</div>
         <div id="materialNextStep" style="display: none; margin-top: 15px;">
-            <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold;" 
-                    onclick="openMaterialDetail(selectedMaterials.join(', '), '${time}', ${slot}, '${klasse}')">
-                DETAILS / MENGE ❯
+            <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
+                    onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${slot}', '${klasse}')">
+                <span class="btn-text">DETAILS / MENGE ❯</span>
             </button>
         </div>`;
 
@@ -1903,7 +1916,10 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
     const backBtn = root.querySelector('.eigenesmenu-cancel');
     if (backBtn) {
         backBtn.innerText = "← ZURÜCK";
-        backBtn.onclick = () => openEditor(window.currentEditBox, time, slot, klasse);
+        backBtn.onclick = () => {
+            if (root.style.pointerEvents === "none") return;
+            openEditor(window.currentEditBox, time, slot, klasse);
+        };
     }
 }
 
@@ -1991,14 +2007,15 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     const root = document.getElementById('eigenesmenu-modal');
     if (!root) return;
 
-    const liste = root.querySelector('.eigenesmenu-liste');
+    // Nutzt die ID für die Liste (bzw. Fallback auf Klasse)
+    const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
     const header = root.querySelector('.eigenesmenu-header');
 
     // 1. Header sicher neu bauen
     if (header) {
         header.innerHTML = `
             <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">DETAILS & MENGEN</h3>
-            <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
+            <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
                 Gewählt: <span style="color:#ff8c00; font-weight:bold;">${materialString}</span>
             </p>
         `;
@@ -2012,10 +2029,9 @@ function openMaterialDetail(materialString, time, slot, klasse) {
                     style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: white; font-family: inherit; resize: none; outline: none;"
                     placeholder="Anzahl, Größen oder Notizen hier eintragen..."></textarea>
                 
-                <button class="eigenesmenu-item" style="background: #ff8c00; color: black; justify-content: center; font-weight: bold; border: none;" 
-                    onclick="saveMaterialSelection('${materialString}', document.getElementById('material-kommentar-input').value, '${time}', ${slot}, '${klasse}', this)">
+                <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold; border: none; padding-right: 18px;" 
+                    onclick="saveMaterialSelection('${materialString}', document.getElementById('material-kommentar-input').value, '${time}', '${slot}', '${klasse}', this)">
                     <span class="btn-text">RESERVIERUNG SPEICHERN</span>
-                    <div class="eigenesmenu-loader" style="display:none;"></div>
                 </button>
             </div>
         `;
@@ -2026,6 +2042,8 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     if (backBtn) {
         backBtn.innerText = "← ZURÜCK";
         backBtn.onclick = () => {
+            // Verhindert das Zurückgehen, wenn das Modal gesperrt ist (während des Speicherns)
+            if (root.style.pointerEvents === "none") return;
             if (typeof handleMaterialUI === 'function') {
                 handleMaterialUI(time, slot, klasse, root);
             }
@@ -2045,23 +2063,41 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     
 
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
-    // 1. UI Feedback
-    let loader, btnText;
-    if (btn) {
-        loader = btn.querySelector('.eigenesmenu-loader');
-        btnText = btn.querySelector('.btn-text');
-        if (loader) loader.style.display = 'block';
-        if (btnText) btnText.style.opacity = '0.3';
-        btn.disabled = true;
+    // 1. Klick-Sperre für das gesamte Modal & Backdrop aktivieren
+    const modal = document.getElementById('eigenesmenu-modal');
+    if (modal) {
+        modal.style.pointerEvents = "none"; 
     }
 
+    // 2. UI Feedback direkt im Button initialisieren
+    let originalText = "RESERVIERUNG SPEICHERN";
+    if (btn) {
+        const btnTextEl = btn.querySelector('.btn-text');
+        if (btnTextEl) originalText = btnTextEl.innerText;
+        
+        btn.style.position = "relative";
+        btn.style.paddingRight = "50px"; // Platz für den Loader rechts schaffen
+        btn.innerHTML = `
+            <span class="btn-text">${originalText}</span>
+            <div class="inline-loader-container">
+                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
+            </div>
+        `;
+    }
+
+    // 3. Daten-Validierung (deine originale Logik)
     const finalSlot = slot || window.currentEditSlot; 
     const datePicker = document.getElementById('datePicker');
     const dateVal = datePicker ? datePicker.value : "";
 
     if (!finalSlot || finalSlot === "undefined" || !dateVal) {
         alert("Fehler: Slot-ID oder Datum fehlt.");
-        if (btn) { btn.disabled = false; if(loader) loader.style.display='none'; }
+        // Im Fehlerfall sofort zurücksetzen
+        if (modal) modal.style.pointerEvents = "auto";
+        if (btn) {
+            btn.style.paddingRight = "18px";
+            btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
+        }
         return;
     }
 
@@ -2078,7 +2114,18 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         kommentar: detail || ""   // Feld für Spalte G
     };
 
+    // 4. Sicherheits-Timeout (Falls die Internetverbindung laggt)
+    const safetyTimeout = setTimeout(() => {
+        alert("Zeitüberschreitung beim Speichern. Bitte Seite neu laden.");
+        if (modal) modal.style.pointerEvents = "auto";
+        if (btn) {
+            btn.style.paddingRight = "18px";
+            btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
+        }
+    }, 8000);
+
     try {
+        // 5. Daten an das Apps Script Web App senden
         const response = await fetch(url, {
             method: "POST",
             body: JSON.stringify(payload)
@@ -2087,21 +2134,51 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         const result = await response.json();
 
         if (result.status === "success") {
-            if (typeof closeEditor === 'function') closeEditor();
-            if (typeof loadPlan === 'function') await loadPlan();
+            clearTimeout(safetyTimeout);
+
+            // 6. Erfolg: Loader durch grünen Haken ersetzen
+            if (btn) {
+                const loaderContainer = btn.querySelector('.inline-loader-container');
+                if (loaderContainer) {
+                    loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+                }
+                // Ganzer Button leuchtet kurz grün auf
+                btn.style.transition = "background 0.3s ease";
+                btn.style.background = "rgba(39, 174, 96, 0.4)"; 
+            }
+
+            // 7. Plan im Hintergrund neu laden, bevor das Menü zugeht
+            if (typeof loadPlan === 'function') {
+                await loadPlan();
+            }
+            
+            // Erst jetzt sanft schließen
+            setTimeout(() => {
+                if (typeof closeEditor === 'function') closeEditor();
+            }, 400);
+
         } else {
             throw new Error(result.msg || "Server-Fehler");
         }
     } catch (e) {
+        clearTimeout(safetyTimeout);
         alert("Fehler beim Speichern: " + e.message);
+        
+        // 8. Fehler-Zustand für das Interface
+        if (modal) modal.style.pointerEvents = "auto";
         if (btn) {
-            btn.disabled = false;
-            if (loader) loader.style.display = 'none';
-            if (btnText) btnText.style.opacity = '1';
+            btn.style.background = "rgba(192, 57, 43, 0.5)";
+            btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="margin-left:10px;">❌</span>`;
+            
+            // Nach 2 Sekunden den Button wieder normal schalten
+            setTimeout(() => {
+                btn.style.background = "";
+                btn.style.paddingRight = "18px";
+                btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
+            }, 2000);
         }
     }
 }
-
 
 
     
