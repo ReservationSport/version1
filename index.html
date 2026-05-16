@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2181,6 +2181,96 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
 }
 
 
+
+    /* ============================================================
+   NEUE HILFSFUNKTION: MATERIAL LÖSCHEN (GLOBAL)
+   ============================================================ */
+window.applyMaterialDelete = async function(time, slot, klasse, btn) {
+    if (!btn) return;
+
+    // 1. Klick-Sperre für das gesamte Modal & Backdrop aktivieren
+    const modal = document.getElementById('eigenesmenu-modal');
+    if (modal) {
+        modal.style.pointerEvents = "none"; 
+    }
+
+    // 2. Button-Größe fixieren und Inline-Loader rechts einbetten
+    const originalText = btn.querySelector('.btn-text').innerText;
+    btn.style.position = "relative";
+    btn.style.paddingRight = "50px"; // Platz für den Loader rechts schaffen
+    btn.innerHTML = `
+        <span class="btn-text">${originalText}</span>
+        <div class="inline-loader-container">
+            <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
+        </div>
+    `;
+
+    // 3. IDs für dein Google Sheets Backend ermitteln
+    const finalSlot = slot || window.currentEditSlot; 
+    const dateVal = document.getElementById('datePicker')?.value || "";
+    const uniqueId = `${dateVal}_${finalSlot}`;
+
+    // Wir senden leere Strings für Material und Kommentar, um es im Sheet zu löschen
+    const payload = {
+        pw: typeof userPw !== 'undefined' ? userPw : "",
+        id: uniqueId,
+        date: dateVal,
+        slot: finalSlot,
+        klasse: klasse || "",
+        material: "",      // Spalte F leeren
+        kommentar: ""      // Spalte G leeren
+    };
+
+    // Sicherheits-Timeout (8 Sekunden)
+    const safetyTimeout = setTimeout(() => {
+        alert("Zeitüberschreitung beim Löschen. Bitte Seite neu laden.");
+        if (modal) modal.style.pointerEvents = "auto";
+        if (typeof handleMaterialUI === 'function') handleMaterialUI(time, slot, klasse, modal); 
+    }, 8000);
+
+    try {
+        // 4. POST-Request an deine Apps Script URL senden
+        const response = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        
+        if (result.status === "success") {
+            clearTimeout(safetyTimeout);
+
+            // 5. Erfolg: Loader durch grünen Haken ersetzen
+            const loaderContainer = btn.querySelector('.inline-loader-container');
+            if (loaderContainer) {
+                loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+            }
+            btn.style.transition = "background 0.3s ease";
+            btn.style.background = "rgba(39, 174, 96, 0.4)"; 
+
+            // 6. Plan im Hintergrund neu laden
+            if (typeof loadPlan === 'function') {
+                await loadPlan();
+            } 
+            
+            // 7. Erst nach erfolgreichem Laden das Menü schließen
+            setTimeout(() => {
+                if (typeof closeEditor === 'function') closeEditor();
+            }, 400);
+
+        } else {
+            throw new Error(result.msg || "Server-Fehler beim Löschen");
+        }
+    } catch (e) {
+        clearTimeout(safetyTimeout);
+        console.error("Material-Löschfehler:", e);
+        alert("Löschen fehlgeschlagen: " + e.message);
+        
+        // Bei Fehler: Menü wieder freigeben und UI zurücksetzen
+        if (modal) modal.style.pointerEvents = "auto";
+        if (typeof handleMaterialUI === 'function') handleMaterialUI(time, slot, klasse, modal);
+    }
+};
     
 
 
