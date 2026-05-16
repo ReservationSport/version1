@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1075,14 +1075,23 @@ window.loadPlan = async function() {
                     klasse.trim() !== ""
                 );
                 
+                // --- GEÄNDERTER BEREICH: MATERIAL-ICON GENERIERUNG ---
                 let materialHtml = "";
                 if (material) {
                     const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
-                    materialHtml = `<span class="material-icon" data-tooltip="${tooltipText}"><i class="fas fa-box-open"></i></span>`;
+                    
+                    // Das Span fängt Klicks & Hover ab; Das i-Tag lässt Events durchfallen (pointer-events: none)
+                    materialHtml = `
+                        <span class="material-icon" 
+                              data-tooltip="${tooltipText}" 
+                              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;"
+                              onclick="event.stopPropagation(); event.preventDefault(); if(typeof handleMaterialUI === 'function') { handleMaterialUI('${zeitStr}', '${absoluteSlot}', '${klasse}', document.getElementById('eigenesmenu-modal')); }">
+                            <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
+                        </span>`;
                 }
+                // --- ENDE DES GEÄNDERTEN BEREICHS ---
 
-                // KEIN Dropdown mehr hier drin!
-                // Click-Action öffnet nur den Editor
+                // Click-Action öffnet nur den Editor beim Klick auf die restliche Box
                 const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
 
                 html += `
@@ -1110,7 +1119,6 @@ window.loadPlan = async function() {
         updateNavButtons();
     }
 };
-
     
 
 /* ============================================================
