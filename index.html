@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1848,10 +1848,16 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
 };
 
 
-  function handleMaterialUI(time, slot, klasse, modalElement) {
+ function handleMaterialUI(time, slot, klasse, modalElement) {
     console.log("handleMaterialUI aktiv!");
 
-    const root = modalElement || document.getElementById('eigenesmenu-modal');
+    // FLEXIBLE SUCHE: Findet das Modal über verschiedene IDs oder Klassen, falls die Standard-ID abweicht
+    const root = modalElement 
+                 || document.getElementById('eigenesmenu-modal') 
+                 || document.getElementById('task-manager-modal') 
+                 || document.querySelector('.eigenesmenu-backdrop')
+                 || document.querySelector('.modal-container');
+
     if (!root) {
         console.error("Modal nicht gefunden!");
         return;
@@ -1866,15 +1872,21 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
         return;
     }
 
+    // Falls das Modal als Backdrop geladen wurde, stellen wir sicher, dass es sichtbar ist
+    if (root.classList.contains('eigenesmenu-backdrop') || root.style.display === 'none') {
+        root.style.display = 'block';
+    }
+
     // 1. Titel & Untertitel anpassen
     if (title) title.innerText = "MATERIAL WÄHLEN";
     if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
 
     // Prüfen, ob in der aktuellen Box bereits ein Material-Icon existiert
-    const hatBereitsMaterial = window.currentEditBox?.querySelector('.material-icon') !== null;
+    // Falls window.currentEditBox nicht gesetzt ist, suchen wir die Box im Grid über das data-slot Attribut
+    const aktuelleBox = window.currentEditBox || document.querySelector(`[data-slot="${slot}"]`);
+    const hatBereitsMaterial = aktuelleBox?.querySelector('.material-icon') !== null;
 
     // 2. DYNAMISCHE MATERIALIEN AUS DEINEM CONFIG-SHEET HOLEN
-    // Wir werfen die Dummy-Bälle und -Tore komplett raus!
     const optionen = window.materialOptionen || [];
     
     window.selectedMaterials = []; 
@@ -1926,11 +1938,16 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
         backBtn.innerText = "← ZURÜCK";
         backBtn.onclick = () => {
             if (root.style.pointerEvents === "none") return;
-            openEditor(window.currentEditBox, time, slot, klasse);
+            
+            // Falls openEditor existiert und wir eine valide Box haben, gehen wir zurück, ansonsten schließen wir das Menü
+            if (typeof openEditor === 'function' && aktuelleBox) {
+                openEditor(aktuelleBox, time, slot, klasse);
+            } else if (typeof closeEditor === 'function') {
+                closeEditor();
+            }
         };
     }
 }
-
 
 /* ============================================================
    15. DATEN-SYNCHRONISATION (addChange)
