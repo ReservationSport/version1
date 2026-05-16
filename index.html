@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1075,21 +1075,22 @@ window.loadPlan = async function() {
                     klasse.trim() !== ""
                 );
                 
-                // --- GEÄNDERTER BEREICH: MATERIAL-ICON GENERIERUNG ---
+                // --- KORRIGIERTER BEREICH: MATERIAL-ICON GENERIERUNG ---
                 let materialHtml = "";
-if (material) {
-    // Der Text, der beim Klicken und Hovern angezeigt wird
-    const tooltipText = matKommentar ? `${material}\nKommentar: ${matKommentar}` : material;
-    
-    materialHtml = `
-        <span class="material-icon" 
-              data-tooltip="${matKommentar ? material + ': ' + matKommentar : material}" 
-              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: info !important; display: inline-block; padding: 4px;"
-              onclick="event.stopPropagation(); event.preventDefault(); alert('📋 GEBUCHTES MATERIAL:\\n\\nKlasse: ${klasse}\\nZeit: ${zeitStr}\\n\\n➔ ${tooltipText.replace(/'/g, "\\'")}');">
-            <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
-        </span>`;
-}
-                // --- ENDE DES GEÄNDERTEN BEREICHS ---
+                if (material) {
+                    // Verhindert echten Zeilenumbruch im HTML-String; nutzt stattdessen maskierte Zeichen
+                    const detailInfo = matKommentar ? `${material} (Kommentar: ${matKommentar})` : material;
+                    const cleanDetailInfo = detailInfo.replace(/'/g, "\\'");
+                    
+                    materialHtml = `
+                        <span class="material-icon" 
+                              data-tooltip="${matKommentar ? material + ': ' + matKommentar : material}" 
+                              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: info !important; display: inline-block; padding: 4px;"
+                              onclick="event.stopPropagation(); event.preventDefault(); alert('📋 GEBUCHTES MATERIAL:\\n\\nKlasse: ${klasse}\\nZeit: ${zeitStr}\\n\\n➔ ${cleanDetailInfo}');">
+                            <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
+                        </span>`;
+                }
+                // --- ENDE DES KORRIGIERTEN BEREICHS ---
 
                 // Click-Action öffnet nur den Editor beim Klick auf die restliche Box
                 const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
