@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1944,15 +1944,26 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     
 
 
-    function handleReservationUI(time, slot, klasse) {
+   function handleReservationUI(time, slot, klasse) {
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
+    
+    // --- NEU: Den Titel des Modals greifen ---
+    const root = document.getElementById('eigenesmenu-modal');
+    const titleEl = root ? root.querySelector('.eigenesmenu-title') : null;
+    
     if (!container) return;
 
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
 
+    // --- NEU: Titel dynamisch anpassen ---
+    if (titleEl) {
+        titleEl.innerText = "HALLE/RAUM WÄHLEN";
+        titleEl.style.color = "#ff9800"; // Passt zum restlichen edlen Orange
+    }
+
     if (subtitle) {
-        subtitle.innerHTML = `Wähle die Räumlichkeiten für die <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
+        subtitle.innerHTML = `Welchen Raum möchtest du gerne reservieren für die Klasse <span style="color: #ff8c00; font-weight: bold;">${klasse}</span>`;
     }
 
     const currentSlot = parseInt(slot);
@@ -2010,7 +2021,6 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
                     <span class="btn-text" style="text-decoration: line-through; color: #666;">${h}</span>
                 </button>`;
         } else {
-            // Abgleich mit der aktuell gebuchten Halle
             const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
             const configBorderColor = configFarben[h] || "#444";
             
@@ -2018,13 +2028,17 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
             let iconHtml = "";
 
             if (istAktuelleWahl) {
-                // ANPASSUNG: Dezent analog zum Löschen-Button (Dunkles Orange-Braun #442d11)
                 buttonStyle = `justify-content: flex-start; background: #442d11 !important; color: #ffca88 !important; font-weight: bold !important; border: 1px solid #774c11 !important; margin-bottom: 8px;`;
                 iconHtml = `<span class="eigenesmenu-icon" style="margin-right: 10px; color: #ff8c00;">🔸</span>`;
             } else {
-                // Standard-Button Style
+                // Standard-Button Style mit orangefarbenem SVG-Icon statt Emoji
                 buttonStyle = `justify-content: flex-start; background: #333; margin-bottom: 8px; border-left: 5px solid ${configBorderColor}; border-top: 1px solid #444; border-right: 1px solid #444; border-bottom: 1px solid #444;`;
-                iconHtml = `<span class="eigenesmenu-icon" style="margin-right: 10px;">🏠</span>`;
+                
+                // Ein sauberes, oranges Haus-Icon (Farbe: #ff9800)
+                iconHtml = `
+                    <svg class="eigenesmenu-icon" style="margin-right: 10px; width: 16px; height: 16px; fill: #ff9800; vertical-align: middle;" viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>`;
             }
 
             html += `
@@ -2039,7 +2053,6 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 
     container.innerHTML = html;
 }
-
     
 
 window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) {
@@ -2184,7 +2197,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         <div id="materialNextStep" style="display: none; margin-top: 15px;">
             <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
                     onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${slot}', '${klasse}')">
-                <span class="btn-text">DETAILS EINGEBEN❯</span>
+                <span class="btn-text">DETAILS EINGEBEN ❯</span>
             </button>
         </div>`;
 
