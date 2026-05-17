@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1699,6 +1699,91 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             console.warn("Unbekannte Aktion im Task Manager:", action);
     }
 };
+
+    
+
+
+/**
+ * Verarbeitet das Setzen oder Löschen des Ausfalls (wird von case 'ausfall' aufgerufen)
+ */
+window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
+    console.log("handleAusfallClick getriggert. Modus:", mode);
+
+    // 1. Klick-Blocker & Loader aktivieren analog zur Hallen-Auswahl
+    const modal = document.getElementById('eigenesmenu-modal');
+    if (modal) modal.style.pointerEvents = "none";
+
+    let originalText = "Ausfall markieren";
+    if (btn) {
+        originalText = btn.innerText;
+        btn.style.position = "relative";
+        btn.innerHTML = `
+            <span class="btn-text">${originalText}</span>
+            <div class="inline-loader-container">
+                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
+            </div>
+        `;
+    }
+
+    // Wenn der Modus 'LOESCHEN' ist, leeren wir die Halle, bei 'SETZEN' schreiben wir "Ausfall"
+    const zielHalle = (mode === 'LOESCHEN') ? "" : "Ausfall";
+    
+    const textMeldung = (mode === 'LOESCHEN') 
+        ? `Möchtest du den Ausfall für die Klasse ${klasse} wieder aufheben?` 
+        : `Möchtest du die Lektion der Klasse ${klasse} im Slot ${slot} wirklich als AUSFALL markieren?`;
+
+    if (!confirm(textMeldung)) {
+        // Abbrechen: Menü reaktivieren und Button zurücksetzen
+        if (modal) modal.style.pointerEvents = "auto";
+        if (btn) btn.innerText = originalText;
+        return;
+    }
+
+    // 2. Das Payload exakt so aufbauen, wie es dein Google Script von saveImmediately erwartet
+    const payload = {
+        action: "saveBooking",
+        pw: userPw,
+        kuerzel: userKuerzel,
+        date: document.getElementById('datePicker').value,
+        slot: slot,
+        klasse: klasse,
+        halle: zielHalle
+    };
+
+    // 3. Daten sofort absenden
+    saveImmediately(payload)
+        .then((result) => {
+            if (result && result.status === "success") {
+                // Erfolg: Loader durch Haken ersetzen
+                const loaderContainer = btn?.querySelector('.inline-loader-container');
+                if (loaderContainer) {
+                    loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+                }
+
+                // Plan im Hintergrund neu laden und Editor schließen
+                loadPlan().then(() => {
+                    setTimeout(closeEditor, 400);
+                });
+            } else {
+                throw new Error("Server meldete keinen Erfolg");
+            }
+        })
+        .catch((err) => {
+            console.error("Fehler beim Ausfall-Speichern:", err);
+            if (btn) {
+                btn.style.background = "rgba(192, 57, 43, 0.5)";
+                btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="margin-left:10px;">❌</span>`;
+            }
+            setTimeout(() => {
+                if (modal) modal.style.pointerEvents = "auto";
+                if (btn) {
+                    btn.style.background = "";
+                    btn.innerText = originalText;
+                }
+            }, 1500);
+        });
+};
+
 
     
 
