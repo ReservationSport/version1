@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -592,6 +592,95 @@ body {
 }
 
 
+/* --- CONTAINER FÜR DIE MITTIGE AUSRICHTUNG --- */
+.details-mengen-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Zentriert alle inneren Elemente horizontal */
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 0;
+}
+
+/* --- DAS TEXTAREA-KOMMENTARFELD (JETZT MITTIG) --- */
+.details-mengen-content textarea {
+    width: 100%;
+    max-width: 290px; /* Perfekte Breite für ein kompaktes Modal */
+    height: 120px;
+    background: #151515;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-sizing: border-box;
+    resize: none;
+    outline: none;
+    font-family: sans-serif;
+    margin: 0 auto 20px auto; /* Zentriert sich selbst im Fluss + Abstand unten */
+    transition: border-color 0.2s ease;
+}
+
+.details-mengen-content textarea:focus {
+    border-color: #d35400; /* Edles, mattes Orange beim Tippen */
+}
+
+/* --- DER SPEICHER-BUTTON (MATT & DEZENT, RECHTS PLATZ FÜR LOADER) --- */
+#btn-save-reservation,
+.btn-save-reservation {
+    width: 100%;
+    max-width: 290px;
+    padding: 14px 18px; /* Standard-Polsterung */
+    background: #b84a00; /* Sattes, mattes Ziegel-Orange (nicht grell) */
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Wichtig für die absolute Positionierung des Loaders */
+    transition: all 0.2s ease;
+    margin: 0 auto;
+}
+
+#btn-save-reservation:hover,
+.btn-save-reservation:hover {
+    background: #a04000; /* Etwas dunkler beim Draufzeigen */
+}
+
+/* --- INLINE-LOADER AUS DEINER FUNKTION RECHTS POSITIONIEREN --- */
+.inline-loader-container {
+    position: absolute;
+    right: 18px; /* Fixiert den Loader am rechten Rand des Buttons */
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+}
+
+/* --- DER ZURÜCK-BUTTON --- */
+.btn-back-link {
+    background: none;
+    border: none;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    cursor: pointer;
+    margin-top: 15px;
+    transition: color 0.2s ease;
+}
+
+.btn-back-link:hover {
+    color: #aaa;
+}
+
+
+    
 
   /* ============================================================
    11. SPEZIAL-MODAL: MODERNES ORANGE-DESIGN FOR RESET
@@ -2095,7 +2184,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         <div id="materialNextStep" style="display: none; margin-top: 15px;">
             <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
                     onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${slot}', '${klasse}')">
-                <span class="btn-text">DETAILS / MENGE ❯</span>
+                <span class="btn-text">DETAILS EINGEBEN❯</span>
             </button>
         </div>`;
 
@@ -2201,32 +2290,34 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     const root = document.getElementById('eigenesmenu-modal');
     if (!root) return;
 
-    // Nutzt die ID für die Liste (bzw. Fallback auf Klasse)
     const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
     const header = root.querySelector('.eigenesmenu-header');
 
-    // 1. Header sicher neu bauen
+    // 1. Header sicher neu bauen (Modernes, dezenters Orange)
     if (header) {
         header.innerHTML = `
-            <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">DETAILS & MENGEN</h3>
-            <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
-                Gewählt: <span style="color:#ff8c00; font-weight:bold;">${materialString}</span>
+            <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #ff9800;">DETAILS & MENGEN</h3>
+            <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #eee; margin: 10px 0 0 0; font-size: 0.9em;">
+                Gewählt: <span style="color:#ff9800; font-weight:bold;">${materialString}</span>
             </p>
         `;
     }
 
-    // 2. Formular in die Liste schreiben
+    // 2. Formular in die Liste schreiben (Zentriert, mattes Orange & Loader-kompatibel)
     if (liste) {
         liste.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 15px; padding: 10px;">
+            <div class="details-mengen-content" style="display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; padding: 10px 0;">
+                
                 <textarea id="material-kommentar-input" 
-                    style="width: 100%; height: 100px; padding: 12px; border-radius: 8px; border: 1px solid #444; background: #111; color: white; font-family: inherit; resize: none; outline: none;"
+                    style="width: 100%; max-width: 290px; height: 120px; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #151515; color: white; font-family: inherit; resize: none; outline: none; margin: 0 auto 20px auto; box-sizing: border-box;"
                     placeholder="Anzahl, Größen oder Notizen hier eintragen..."></textarea>
                 
-                <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold; border: none; padding-right: 18px;" 
+                <button class="eigenesmenu-item" id="btn-save-reservation"
+                    style="width: 100%; max-width: 290px; background: #b84a00; color: white; justify-content: center; font-weight: bold; border: none; padding: 14px 18px; border-radius: 8px; position: relative; margin: 0 auto; box-sizing: border-box; transition: background 0.2s ease;" 
                     onclick="saveMaterialSelection('${materialString}', document.getElementById('material-kommentar-input').value, '${time}', '${slot}', '${klasse}', this)">
                     <span class="btn-text">RESERVIERUNG SPEICHERN</span>
                 </button>
+                
             </div>
         `;
     }
@@ -2236,7 +2327,6 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     if (backBtn) {
         backBtn.innerText = "← ZURÜCK";
         backBtn.onclick = () => {
-            // Verhindert das Zurückgehen, wenn das Modal gesperrt ist (während des Speicherns)
             if (root.style.pointerEvents === "none") return;
             if (typeof handleMaterialUI === 'function') {
                 handleMaterialUI(time, slot, klasse, root);
@@ -2252,10 +2342,6 @@ function openMaterialDetail(materialString, time, slot, klasse) {
 }
 
 
-
-
-    
-
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     // 1. Klick-Sperre für das gesamte Modal & Backdrop aktivieren
     const modal = document.getElementById('eigenesmenu-modal');
@@ -2269,33 +2355,29 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         const btnTextEl = btn.querySelector('.btn-text');
         if (btnTextEl) originalText = btnTextEl.innerText;
         
-        btn.style.position = "relative";
-        btn.style.paddingRight = "50px"; // Platz für den Loader rechts schaffen
+        // Loader wird absolut am rechten Rand des Buttons platziert
         btn.innerHTML = `
             <span class="btn-text">${originalText}</span>
-            <div class="inline-loader-container">
-                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
+            <div class="inline-loader-container" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
+                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
             </div>
         `;
     }
 
-    // 3. Daten-Validierung (deine originale Logik)
+    // 3. Daten-Validierung
     const finalSlot = slot || window.currentEditSlot; 
     const datePicker = document.getElementById('datePicker');
     const dateVal = datePicker ? datePicker.value : "";
 
     if (!finalSlot || finalSlot === "undefined" || !dateVal) {
         alert("Fehler: Slot-ID oder Datum fehlt.");
-        // Im Fehlerfall sofort zurücksetzen
         if (modal) modal.style.pointerEvents = "auto";
         if (btn) {
-            btn.style.paddingRight = "18px";
             btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
         }
         return;
     }
 
-    // Die neue zentrale ID (z.B. 2026-05-12_42)
     const uniqueId = `${dateVal}_${finalSlot}`;
 
     const payload = {
@@ -2304,16 +2386,15 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         date: dateVal,
         slot: finalSlot,
         klasse: klasse || "",
-        material: mat,            // Feld für Spalte F
-        kommentar: detail || ""   // Feld für Spalte G
+        material: mat,            
+        kommentar: detail || ""   
     };
 
-    // 4. Sicherheits-Timeout (Falls die Internetverbindung laggt)
+    // 4. Sicherheits-Timeout
     const safetyTimeout = setTimeout(() => {
         alert("Zeitüberschreitung beim Speichern. Bitte Seite neu laden.");
         if (modal) modal.style.pointerEvents = "auto";
         if (btn) {
-            btn.style.paddingRight = "18px";
             btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
         }
     }, 8000);
@@ -2336,17 +2417,15 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
                 if (loaderContainer) {
                     loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
                 }
-                // Ganzer Button leuchtet kurz grün auf
                 btn.style.transition = "background 0.3s ease";
                 btn.style.background = "rgba(39, 174, 96, 0.4)"; 
             }
 
-            // 7. Plan im Hintergrund neu laden, bevor das Menü zugeht
+            // 7. Plan im Hintergrund neu laden
             if (typeof loadPlan === 'function') {
                 await loadPlan();
             }
             
-            // Erst jetzt sanft schließen
             setTimeout(() => {
                 if (typeof closeEditor === 'function') closeEditor();
             }, 400);
@@ -2362,18 +2441,15 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         if (modal) modal.style.pointerEvents = "auto";
         if (btn) {
             btn.style.background = "rgba(192, 57, 43, 0.5)";
-            btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="margin-left:10px;">❌</span>`;
+            btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%);">❌</span>`;
             
-            // Nach 2 Sekunden den Button wieder normal schalten
             setTimeout(() => {
-                btn.style.background = "";
-                btn.style.paddingRight = "18px";
+                btn.style.background = "#b84a00"; // Zurück zum neuen, matten Orange
                 btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
             }, 2000);
         }
     }
 }
-
 
 
     /* ============================================================
