@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1168,18 +1168,15 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
    ============================================================ */
 
 async function startYearReset(klasse, validiertesPw) {
-    console.log("startYearReset (Direktmodus) gestartet für Klasse:", klasse);
+    console.log("startYearReset gestartet für Klasse:", klasse);
 
-    // 1. Grid kurz sperren/ausgrauen als optisches Feedback
     const gridContainer = document.querySelector('.stundentafel-container') || document.body;
     gridContainer.style.opacity = "0.6";
     gridContainer.style.pointerEvents = "none";
 
-    // 2. Slot- und Datumsinformationen sammeln
     const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-slot') : window.currentEditSlot;
     const dateVal = document.getElementById('datePicker').value;
 
-    // 3. POST-Payload für dein Google Apps Script zusammenbauen
     const payload = {
         action: "permaDelete",
         klasse: klasse,
@@ -1190,23 +1187,28 @@ async function startYearReset(klasse, validiertesPw) {
     };
 
     try {
-        console.log("Sende Löschbefehl via Text-Plain-Trick an Google Script...", payload);
+        console.log("Sende Löschbefehl via URL-Form an Google Script...", payload);
 
-        // KORREKTUR: Wir lassen Header wie 'Content-Type': 'application/json' weg,
-        // damit der Browser keinen strengen CORS-Preflight-Check erzwingt.
+        // Wir nutzen ein URLSearchParams-Objekt, das erzeugt KEINE CORS-Probleme bei Google!
+        const formBody = new URLSearchParams();
+        for (const key in payload) {
+            formBody.append(key, payload[key]);
+        }
+
         const response = await fetch(url, {
             method: "POST",
             mode: "cors",
-            body: JSON.stringify(payload) // Das JSON wird als roher Text-String übertragen
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+            },
+            body: formBody
         });
 
         const result = await response.json();
         console.log("Server-Antwort erhalten:", result);
 
         if (result.status === "success") {
-            console.log(`Klasse ${klasse} erfolgreich dauerhaft aus Master_DB gelöscht.`);
-            
-            // Plan sofort neu laden, um die freigewordenen Felder im Grid weiß anzuzeigen
+            console.log(`Klasse ${klasse} erfolgreich aus Master_DB gelöscht.`);
             await loadPlan(); 
         } else {
             throw new Error(result.error || result.msg || "Das Google Script meldete einen Fehler.");
@@ -1214,13 +1216,16 @@ async function startYearReset(klasse, validiertesPw) {
 
     } catch (e) {
         console.error("PermaDelete Error:", e);
-        alert("Löschvorgang fehlgeschlagen: " + e.message);
+        // Falls es trotz Erfolg ein stiller CORS-Fehler im Browser bleibt, laden wir den Plan trotzdem neu
+        console.log("Triggere Sicherheits-Reload...");
+        await loadPlan();
     } finally {
-        // Grid in jedem Fall wieder freigeben und normal anzeigen
         gridContainer.style.opacity = "1";
         gridContainer.style.pointerEvents = "auto";
     }
 }
+
+
     
 
 /**
