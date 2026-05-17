@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1163,112 +1163,65 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 }
 
 
-/* ============================================================
-   9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN)
+
+    /* ============================================================
+   9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN) - BEREINIGTE BLITZVERSION
    ============================================================ */
 
 async function startYearReset(klasse) {
-    const modal = document.getElementById('universalModal');
-    const title = document.getElementById('uniTitle');
-    const msg = document.getElementById('uniMessage');
-    const icon = document.getElementById('uniIcon');
-    const pwContainer = document.getElementById('uniPwContainer');
-    const confirmBtn = document.getElementById('uniConfirmBtn');
-    const cancelBtn = document.getElementById('uniCancelBtn');
-    const pwInput = document.getElementById('uniPwInput');
+    console.log("startYearReset (Direktmodus) gestartet für Klasse:", klasse);
 
-    // 1. Setup des Modals für den "Abkleben"-Modus
-    icon.innerText = "🏁";
-    icon.style.color = "#e67e22";
-    title.innerText = "KLASSE ABKLEBEN";
-    msg.innerHTML = `Möchtest du die Klasse <strong>${klasse}</strong> ab diesem Datum für alle zukünftigen Wochen dauerhaft löschen?`;
-    
-    // Layout & Passwort-Feld einblenden
-    pwContainer.style.display = "block"; 
-    pwInput.value = "";
-    pwInput.style.borderColor = "#333";
-    
-    // Button-Initialisierung
-    confirmBtn.innerHTML = `
-        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
-            <div class="global-loader" id="uniBtnLoader" style="display:none; width:15px; height:15px; border-width:2px;"></div>
-            <span id="uniBtnText">JETZT ABKLEBEN!</span>
-        </div>
-    `;
-    confirmBtn.disabled = false;
-    confirmBtn.style.background = "linear-gradient(180deg, #e74c3c 0%, #c0392b 100%)"; // Warn-Rot
-    
-    modal.style.display = "flex";
-    
-    // Fokus auf Passwortfeld
-    setTimeout(() => pwInput.focus(), 150);
+    // 1. Grid kurz sperren/ausgrauen als optisches Feedback
+    const gridContainer = document.querySelector('.stundentafel-container') || document.body;
+    gridContainer.style.opacity = "0.6";
+    gridContainer.style.pointerEvents = "none";
 
-    // Abbrechen-Logik
-    cancelBtn.onclick = () => {
-        modal.style.display = "none";
-        pwContainer.style.display = "none";
+    // 2. Slot- und Datumsinformationen sammeln
+    // Wir nutzen das Spalten-Attribut (data-col) der globalen currentEditBox
+    const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : "";
+    const dateVal = document.getElementById('datePicker').value;
+
+    // 3. POST-Payload für dein Google Apps Script zusammenbauen
+    // Da wir das Passwort schon im ersten Modal validiert haben, übergeben wir hier direkt 'userPw'
+    const payload = {
+        mode: "permaDelete",
+        klasse: klasse,
+        slot: slotVal,
+        startDate: dateVal,
+        pw: userPw, // Nutzt dein global hinterlegtes Passwort
+        kuerzel: userKuerzel
     };
 
-    // Ausführen-Logik (POST an Google Apps Script)
-    confirmBtn.onclick = async () => {
-        const eingabePw = pwInput.value;
-        if (!eingabePw) {
-            pwInput.style.borderColor = "#e74c3c";
-            pwInput.focus();
-            return;
+    try {
+        console.log("Sende Löschbefehl an Google Script...", payload);
+
+        const response = await fetch(url, {
+            method: "POST",
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.status === "success") {
+            console.log(`Klasse ${klasse} erfolgreich dauerhaft gelöscht.`);
+            
+            // Plan sofort neu laden, um die freigewordenen Felder zu zeigen
+            await loadPlan(); 
+        } else {
+            throw new Error(result.error || "Das Google Script meldete einen Fehler.");
         }
 
-        // UI-Feedback: Laden starten
-        const loader = document.getElementById('uniBtnLoader');
-        const btnText = document.getElementById('uniBtnText');
-        loader.style.display = "block";
-        btnText.innerText = "LÖSCHE...";
-        confirmBtn.disabled = true;
-
-        // Slot-Informationen sammeln
-        // Wir nutzen die global gespeicherte "currentEditBox" vom Editor-Aufruf
-        const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : "";
-        const dateVal = document.getElementById('datePicker').value;
-
-        try {
-            // WICHTIG: Mode "permaDelete" muss in deiner code.gs vorhanden sein!
-            const response = await fetch(url, {
-                method: "POST",
-                body: JSON.stringify({
-                    mode: "permaDelete",
-                    klasse: klasse,
-                    slot: slotVal,
-                    startDate: dateVal,
-                    pw: eingabePw,
-                    kuerzel: userKuerzel
-                })
-            });
-
-            const result = await response.json();
-
-            if (result.status === "success") {
-                modal.style.display = 'none';
-                pwContainer.style.display = "none";
-                // Plan sofort neu laden um Änderungen zu zeigen
-                await loadPlan(); 
-            } else {
-                alert("Fehler: " + (result.error || "Passwort falsch"));
-                resetBtn();
-            }
-        } catch (e) {
-            console.error("PermaDelete Error:", e);
-            alert("Verbindungsfehler zum Server!");
-            resetBtn();
-        }
-
-        // Hilfsfunktion zum Zurücksetzen
-        function resetBtn() {
-            loader.style.display = "none";
-            btnText.innerText = "JETZT ABKLEBEN!";
-            confirmBtn.disabled = false;
-        }
-    };
+    } catch (e) {
+        console.error("PermaDelete Error:", e);
+        alert("Löschvorgang fehlgeschlagen: " + e.message);
+    } finally {
+        // Grid in jedem Fall wieder freigeben und normal anzeigen
+        gridContainer.style.opacity = "1";
+        gridContainer.style.pointerEvents = "auto";
+    }
 }
+
+    
 
 /**
  * Hilfsfunktion zum Schließen des Modals von außen
