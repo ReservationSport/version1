@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1637,6 +1637,8 @@ function closeEditor() {
     }
 }
 
+
+
 /**
  * Verarbeitet die Wahl aus dem Task Manager (Haupt-Weiche)
  */
@@ -1661,7 +1663,9 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             const istBereitsAusfall = window.currentEditBox ? window.currentEditBox.classList.contains('ausfall-mode') : false;
             // Wir nutzen den Button-Trigger aus dem DOM für den Loader
             const btn = document.querySelector('.eigenesmenu-item:nth-child(3)'); 
-            handleAusfallClick(istBereitsAusfall ? 'LOESCHEN' : 'SETZEN', time, slot, klasse, btn);
+            if (typeof handleAusfallClick === 'function') {
+                handleAusfallClick(istBereitsAusfall ? 'LOESCHEN' : 'SETZEN', time, slot, klasse, btn);
+            }
             break;
 
         case 'beendet':
@@ -1695,7 +1699,6 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             console.warn("Unbekannte Aktion im Task Manager:", action);
     }
 };
-
 
     
 function handleReservationUI(time, slot, klasse) {
@@ -1764,12 +1767,24 @@ function handleReservationUI(time, slot, klasse) {
                     <span class="btn-text" style="text-decoration: line-through; color: #666;">${h}</span>
                 </button>`;
         } else {
-            const borderStyle = configFarben[h] ? `border-left: 5px solid ${configFarben[h]};` : "";
+            // Abgleich mit der aktuell gebuchten Halle
+            const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
+            
+            // Basis-Rahmenfarbe aus configFarben ermitteln
+            const configBorderColor = configFarben[h] || "#444";
+            
+            // Wenn diese Halle aktuell ausgewählt ist, färben wir sie orange ein
+            const buttonStyle = istAktuelleWahl
+                ? `justify-content: flex-start; background: #e67e22 !important; color: #fff !important; font-weight: bold !important; border: 1px solid #ff8c00 !important; box-shadow: 0 0 8px rgba(230, 126, 34, 0.4); margin-bottom: 8px;`
+                : `justify-content: flex-start; background: #333; margin-bottom: 8px; border-left: 5px solid ${configBorderColor}; border-top: 1px solid #444; border-right: 1px solid #444; border-bottom: 1px solid #444;`;
+
             html += `
-                <button class="eigenesmenu-item" style="justify-content: center; background: #333; margin-bottom: 8px; ${borderStyle}" 
+                <button class="eigenesmenu-item" style="${buttonStyle}" 
                         onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this)">
-                <span class="btn-text">${h}</span>
-            </button>`;
+                    <span class="eigenesmenu-icon" style="margin-right: 10px;">${istAktuelleWahl ? '🔸' : '🏠'}</span>
+                    <span class="btn-text">${h}</span>
+                    ${istAktuelleWahl ? '<span style="margin-left: auto; font-size: 0.7rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: normal;">AKTUELL</span>' : ''}
+                </button>`;
         }
     });
 
@@ -1852,6 +1867,8 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
     }
 };
 
+
+    
 
 function handleMaterialUI(time, slot, klasse, modalElement) {
     console.log("handleMaterialUI aktiv!");
