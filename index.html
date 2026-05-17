@@ -320,12 +320,9 @@ body {
 }
 
 /* ============================================================
-   6. MODALS & SIDEBAR
+   6. SIDEBAR
    ============================================================ */
-.modal-content {
-    background: #111; border: 1px solid #333; padding: 24px; border-radius: 12px;
-    width: 320px; text-align: center; color: #eee;
-}
+
 
 #newsSidebar {
     position: fixed; top: 0; left: 0; height: 100%; width: 300px;
@@ -594,33 +591,87 @@ body {
     text-align: center;
 }
 
-/* 11. SPEZIAL-MODAL: ABKLEBEN / UNIVERSAL-PASSWORT */
-#uniPwInput {
+
+
+  /* ============================================================
+   11. SPEZIAL-MODAL: MODERNES ORANGE-DESIGN FOR RESET
+   ============================================================ */
+
+/* Das Eingabefeld für das Passwort */
+#modal-reset-password {
     width: 100%;
-    max-width: 250px;
     padding: 12px;
-    background: #000;
-    border: 1px solid #e67e22;
-    color: #fff;
-    border-radius: 8px;
+    background: #000 !important;
+    border: 1px solid #ff9800 !important; /* Unser neues Orange */
+    color: #fff !important;
+    border-radius: 8px !important;
     text-align: center;
-    font-size: 1.2rem;
-    letter-spacing: 5px;
-    margin: 20px 0;
+    font-size: 1.1rem !important;
+    letter-spacing: 4px;
     outline: none;
-    box-shadow: inset 0 0 10px rgba(230, 126, 34, 0.2);
+    box-sizing: border-box;
+    box-shadow: inset 0 0 10px rgba(255, 152, 0, 0.1);
+    transition: all 0.2s ease-in-out;
 }
 
-.mini-loader {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.2);
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    display: none;
+#modal-reset-password:focus {
+    border-color: #f57c00 !important;
+    box-shadow: 0 0 12px rgba(255, 152, 0, 0.4), inset 0 0 10px rgba(255, 152, 0, 0.2) !important;
 }
 
+/* Gemeinsame Basis für die Knöpfe im Modal */
+.reset-modal-btn {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    margin: 0;
+    transition: all 0.2s ease-in-out;
+}
 
+/* ORANGE LOOK: JA, ABKLEBEN */
+#btn-confirm-reset {
+    background: #ff9800;
+    color: #121212;
+}
+
+#btn-confirm-reset:hover {
+    background: #f57c00;
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+    transform: translateY(-1px);
+}
+
+#btn-confirm-reset:active {
+    transform: translateY(1px);
+}
+
+/* DEZENTER LOOK: ABBRECHEN BUTTON */
+#btn-cancel-reset {
+    background: #333;
+    color: #ccc;
+}
+
+/* Reagieren beim Draufzeigen (Hover) */
+#btn-cancel-reset:hover {
+    background: #444 !important;
+    color: #fff !important;
+    transform: translateY(-1px);
+}
+
+#btn-cancel-reset:active {
+    transform: translateY(1px);
+}  
+
+
+    
 
 </style>
 
@@ -718,23 +769,7 @@ body {
         </div>
     </div>
 
-    <div id="universalModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content">
-            <div id="uniIcon" class="modal-header">⚠️</div>
-            <h3 id="uniTitle">Bestätigung</h3>
-            <p id="uniMessage">Möchtest du fortfahren?</p>
-            
-            <div id="uniPwContainer" style="display:none; margin-bottom: 20px;">
-                <input type="password" id="uniPwInput" placeholder="Passwort" 
-                       style="width: 100%; padding: 12px; background: #000; border: 1px solid #e67e22; color: #fff; border-radius: 8px; text-align: center; letter-spacing: 3px; outline: none;">
-            </div>
 
-            <div class="modal-buttons">
-                <button id="uniCancelBtn" class="btn-cancel" onclick="closeModal()">Abbrechen</button>
-                <button id="uniConfirmBtn" class="btn-confirm">Bestätigen</button>
-            </div>
-        </div>
-    </div>
 
 </body>
 
@@ -1223,16 +1258,6 @@ async function startYearReset(klasse, validiertesPw) {
 
     
 
-/**
- * Hilfsfunktion zum Schließen des Modals von außen
- */
-function closeModal() {
-    document.getElementById('universalModal').style.display = 'none';
-    document.getElementById('uniPwContainer').style.display = 'none';
-}
-
-
-
 /* ============================================================
    10. NEWS-ZENTRALE & AUTOMATISCHE NOTIFIKATIONEN
    ============================================================ */
@@ -1659,42 +1684,38 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
 };
 
 
-
 /**
  * Öffnet ein dediziertes Passwort-Modal über dem Grid für das Abkleben
  */
 window.openPasswordModalForReset = function(time, slot, klasse) {
-    // Falls noch ein altes Passwort-Modal existiert, sicherheitshalber entfernen
     const altesModal = document.getElementById('password-reset-modal');
     if (altesModal) altesModal.remove();
 
     const backdrop = document.createElement('div');
     backdrop.className = 'eigenesmenu-backdrop';
     backdrop.id = 'password-reset-modal';
-    // WICHTIG: Höherer z-index, damit es absolut sicher ÜBER der Stundentafel und dem Task-Manager liegt
     backdrop.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 99999; opacity: 0; transition: opacity 0.2s ease;";
 
     backdrop.innerHTML = `
-        <div class="eigenesmenu-container" style="transform: translateY(20px); transition: transform 0.2s ease; width: 90%; max-width: 360px;">
+        <div class="eigenesmenu-container" style="transform: translateY(20px); transition: transform 0.2s ease; width: 90%; max-width: 360px; background: #111; border: 1px solid #333; padding: 24px; border-radius: 12px; color: #eee; text-align: center;">
             <div class="eigenesmenu-header">
-                <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">BESTÄTIGUNG ERFORDERLICH</h3>
-                <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
-                    Möchtest du die Klasse <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> wirklich für das restliche Schuljahr abkleben?
+                <div style="font-size: 2rem; margin-bottom: 10px;">⚠️</div>
+                <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.25em; color: #ff9800; letter-spacing: 0.5px;">BESTÄTIGUNG ERFORDERLICH</h3>
+                <p class="eigenesmenu-subtitle" style="color: #eee; margin: 12px 0 0 0; font-size: 0.95em; line-height: 1.4;">
+                    Möchtest du die Klasse <span style="color: #ff9800; font-weight: bold;">${klasse}</span> wirklich für das restliche Schuljahr abkleben?
                 </p>
             </div>
             
-            <div style="padding: 15px 0;">
-                <label style="color: #bbb; display: block; margin-bottom: 8px; font-size: 0.85em;">Admin-Passwort eingeben:</label>
-                <input type="password" id="modal-reset-password" placeholder="Passwort..." 
-                       style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; border-radius: 4px; color: #fff; box-sizing: border-box; font-size: 1em;">
+            <div style="padding: 20px 0 10px 0;">
+                <input type="password" id="modal-reset-password" placeholder="Passwort...">
             </div>
 
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button id="btn-confirm-reset" class="eigenesmenu-item" style="justify-content: center; background: #442222; border: 1px solid #663333; margin: 0; flex: 1;">
-                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">JA, ABKLEBEN</span>
-                </button>
-                <button id="btn-cancel-reset" class="eigenesmenu-cancel" style="margin: 0; flex: 1; background: #333; color: #ccc;">
+            <div style="display: flex; gap: 12px; margin-top: 15px;">
+                <button id="btn-cancel-reset" class="reset-modal-btn">
                     Abbrechen
+                </button>
+                <button id="btn-confirm-reset" class="reset-modal-btn">
+                    <span class="btn-text">JA, ABKLEBEN</span>
                 </button>
             </div>
         </div>
@@ -1702,40 +1723,34 @@ window.openPasswordModalForReset = function(time, slot, klasse) {
 
     document.body.appendChild(backdrop);
 
-    // Elemente für die Logik greifen
     const passwordInput = backdrop.querySelector('#modal-reset-password');
     const confirmBtn = backdrop.querySelector('#btn-confirm-reset');
     const cancelBtn = backdrop.querySelector('#btn-cancel-reset');
 
-    // Schließen-Funktion für dieses spezifische Modal
     const closeResetModal = () => {
         backdrop.style.opacity = "0";
         backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(20px)";
         setTimeout(() => backdrop.remove(), 200);
     };
 
-    // Events zuweisen
+    // Abbrechen reagiert jetzt perfekt auf Klick & das neue CSS steuert das Hovern
     cancelBtn.onclick = closeResetModal;
 
     confirmBtn.onclick = function() {
         const eingegebenesPw = passwordInput.value.trim();
 
-        // Abgleich mit deinem globalen/hinterlegten Passwort (userPw)
         if (eingegebenesPw === userPw) {
-            // Passwort korrekt -> Loader im Button anzeigen
-            confirmBtn.innerHTML = '<div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px; margin: 0 auto;"></div>';
+            confirmBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
             confirmBtn.style.pointerEvents = "none";
             backdrop.style.pointerEvents = "none";
 
-            // Schließen und Action ausführen
             closeResetModal(); 
-            closeEditor(); // Schließt auch den darunterliegenden Task Manager
+            if (typeof closeEditor === 'function') closeEditor(); 
             
-           if (typeof startYearReset === 'function') {
-            startYearReset(klasse, eingegebenesPw); 
+            if (typeof startYearReset === 'function') {
+                startYearReset(klasse, eingegebenesPw); 
             }
         } else {
-            // Passwort falsch
             passwordInput.style.borderColor = "#c0392b";
             passwordInput.value = "";
             passwordInput.placeholder = "Falsches Passwort!";
@@ -1743,16 +1758,14 @@ window.openPasswordModalForReset = function(time, slot, klasse) {
         }
     };
 
-    // Absenden mit der Enter-Taste erlauben
     passwordInput.onkeydown = function(e) {
         if (e.key === 'Enter') confirmBtn.click();
     };
 
-    // Einblenden-Animation starten
     requestAnimationFrame(() => {
         backdrop.style.opacity = "1";
         backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(0)";
-        passwordInput.focus(); // Direkt ins Passwortfeld springen
+        passwordInput.focus();
     });
 };
 
