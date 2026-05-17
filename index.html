@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1702,20 +1702,20 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
 
     
 
-
 /**
- * Verarbeitet das Setzen oder Löschen des Ausfalls (wird von case 'ausfall' aufgerufen)
+ * Verarbeitet das Setzen oder Löschen des Ausfalls (Blitz-Version ohne Popup)
  */
 window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
-    console.log("handleAusfallClick getriggert. Modus:", mode);
+    console.log("handleAusfallClick (Direktmodus) getriggert. Modus:", mode);
 
-    // 1. Klick-Blocker & Loader aktivieren analog zur Hallen-Auswahl
+    // 1. Klick-Blocker & Loader aktivieren
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "none";
 
     let originalText = "Ausfall markieren";
     if (btn) {
-        originalText = btn.innerText;
+        // Wir holen uns den echten Text direkt aus dem Button, damit es für beide Modi passt
+        originalText = btn.querySelector('.btn-text')?.innerText || btn.innerText;
         btn.style.position = "relative";
         btn.innerHTML = `
             <span class="btn-text">${originalText}</span>
@@ -1725,21 +1725,10 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         `;
     }
 
-    // Wenn der Modus 'LOESCHEN' ist, leeren wir die Halle, bei 'SETZEN' schreiben wir "Ausfall"
+    // Modus-Weiche: 'LOESCHEN' setzt die Halle auf leer, 'SETZEN' bucht "Ausfall"
     const zielHalle = (mode === 'LOESCHEN') ? "" : "Ausfall";
     
-    const textMeldung = (mode === 'LOESCHEN') 
-        ? `Möchtest du den Ausfall für die Klasse ${klasse} wieder aufheben?` 
-        : `Möchtest du die Lektion der Klasse ${klasse} im Slot ${slot} wirklich als AUSFALL markieren?`;
-
-    if (!confirm(textMeldung)) {
-        // Abbrechen: Menü reaktivieren und Button zurücksetzen
-        if (modal) modal.style.pointerEvents = "auto";
-        if (btn) btn.innerText = originalText;
-        return;
-    }
-
-    // 2. Das Payload exakt so aufbauen, wie es dein Google Script von saveImmediately erwartet
+    // Payload für dein Google Script zusammenbauen
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -1750,40 +1739,49 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         halle: zielHalle
     };
 
-    // 3. Daten sofort absenden
+    // 2. Daten ohne Verzögerung direkt absenden
     saveImmediately(payload)
         .then((result) => {
             if (result && result.status === "success") {
-                // Erfolg: Loader durch Haken ersetzen
+                // Erfolg: Loader durch grünen Haken ersetzen
                 const loaderContainer = btn?.querySelector('.inline-loader-container');
                 if (loaderContainer) {
-                    loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+                    loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em; margin-left: 8px;">✓</span>`;
                 }
 
-                // Plan im Hintergrund neu laden und Editor schließen
+                if (btn) {
+                    // Der Button leuchtet genau wie die Hallen-Auswahl wunderschön grün auf
+                    btn.style.transition = "background 0.3s ease";
+                    btn.style.background = "rgba(39, 174, 96, 0.4)"; 
+                }
+
+                // Grid im Hintergrund neu laden und Editor zeitnah schließen
                 loadPlan().then(() => {
                     setTimeout(closeEditor, 400);
                 });
             } else {
-                throw new Error("Server meldete keinen Erfolg");
+                throw new Error("Server-Fehler beim Speichern");
             }
         })
         .catch((err) => {
             console.error("Fehler beim Ausfall-Speichern:", err);
+            
+            // Fehler-Animation für den Button
             if (btn) {
                 btn.style.background = "rgba(192, 57, 43, 0.5)";
                 btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="margin-left:10px;">❌</span>`;
             }
+            
+            // Nach 1.5 Sekunden UI wieder freigeben bei Fehler
             setTimeout(() => {
                 if (modal) modal.style.pointerEvents = "auto";
                 if (btn) {
                     btn.style.background = "";
-                    btn.innerText = originalText;
+                    btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
                 }
             }, 1500);
         });
 };
-
 
     
 
