@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1491,10 +1491,13 @@ window.openEditor = function(el, time, slot, klasse) {
             </div>
             
             <div class="eigenesmenu-liste" id="menu-options-list">
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
-                    <span class="eigenesmenu-icon">📍</span> 
-                    <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
-                </button>
+    <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')" style="display: flex; align-items: center;">
+        
+        <img src="halle.png" alt="Halle" style="width: 18px; height: 18px; margin-right: 10px; object-fit: contain; vertical-align: middle;">
+        
+        <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
+    </button>
+</div>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="eigenesmenu-icon">📦</span> 
