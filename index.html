@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1164,7 +1164,7 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 
 
 /* ============================================================
-   9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN) - BEREINIGTE BLITZVERSION
+   9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN) - FINALE VERSION
    ============================================================ */
 
 async function startYearReset(klasse, validiertesPw) {
@@ -1176,17 +1176,16 @@ async function startYearReset(klasse, validiertesPw) {
     gridContainer.style.pointerEvents = "none";
 
     // 2. Slot- und Datumsinformationen sammeln
-    // KORREKTUR: Wir greifen jetzt exakt auf 'data-slot' zu!
     const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-slot') : window.currentEditSlot;
     const dateVal = document.getElementById('datePicker').value;
 
     // 3. POST-Payload für dein Google Apps Script zusammenbauen
-    // Nutzt das validierte Passwort aus dem Modal, Fallback auf das globale userPw
+    // Übergibt 'action': 'permaDelete' und das validierte Passwort aus dem Modal
     const payload = {
         action: "permaDelete",
         klasse: klasse,
         slot: slotVal,
-        startDate: dateVal,
+        startDate: dateVal, // Google Script berechnet daraus automatisch den Wochentag
         pw: validiertesPw || userPw, 
         kuerzel: userKuerzel
     };
@@ -1203,9 +1202,9 @@ async function startYearReset(klasse, validiertesPw) {
         console.log("Server-Antwort erhalten:", result);
 
         if (result.status === "success") {
-            console.log(`Klasse ${klasse} erfolgreich dauerhaft gelöscht.`);
+            console.log(`Klasse ${klasse} erfolgreich dauerhaft aus Master_DB gelöscht.`);
             
-            // Plan sofort neu laden, um die freigewordenen Felder zu zeigen
+            // Plan sofort neu laden, um die freigewordenen Felder im Grid weiß anzuzeigen
             await loadPlan(); 
         } else {
             throw new Error(result.error || result.msg || "Das Google Script meldete einen Fehler.");
@@ -1221,8 +1220,8 @@ async function startYearReset(klasse, validiertesPw) {
     }
 }
 
-
     
+
     
 
 /**
