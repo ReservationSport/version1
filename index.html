@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1163,12 +1163,11 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 }
 
 
-
-    /* ============================================================
+/* ============================================================
    9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN) - BEREINIGTE BLITZVERSION
    ============================================================ */
 
-async function startYearReset(klasse) {
+async function startYearReset(klasse, validiertesPw) {
     console.log("startYearReset (Direktmodus) gestartet für Klasse:", klasse);
 
     // 1. Grid kurz sperren/ausgrauen als optisches Feedback
@@ -1177,18 +1176,18 @@ async function startYearReset(klasse) {
     gridContainer.style.pointerEvents = "none";
 
     // 2. Slot- und Datumsinformationen sammeln
-    // Wir nutzen das Spalten-Attribut (data-col) der globalen currentEditBox
-    const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-col') : "";
+    // KORREKTUR: Wir greifen jetzt exakt auf 'data-slot' zu!
+    const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-slot') : window.currentEditSlot;
     const dateVal = document.getElementById('datePicker').value;
 
     // 3. POST-Payload für dein Google Apps Script zusammenbauen
-    // Da wir das Passwort schon im ersten Modal validiert haben, übergeben wir hier direkt 'userPw'
+    // Nutzt das validierte Passwort aus dem Modal, Fallback auf das globale userPw
     const payload = {
         mode: "permaDelete",
         klasse: klasse,
         slot: slotVal,
         startDate: dateVal,
-        pw: userPw, // Nutzt dein global hinterlegtes Passwort
+        pw: validiertesPw || userPw, 
         kuerzel: userKuerzel
     };
 
@@ -1201,6 +1200,7 @@ async function startYearReset(klasse) {
         });
 
         const result = await response.json();
+        console.log("Server-Antwort erhalten:", result);
 
         if (result.status === "success") {
             console.log(`Klasse ${klasse} erfolgreich dauerhaft gelöscht.`);
@@ -1208,7 +1208,7 @@ async function startYearReset(klasse) {
             // Plan sofort neu laden, um die freigewordenen Felder zu zeigen
             await loadPlan(); 
         } else {
-            throw new Error(result.error || "Das Google Script meldete einen Fehler.");
+            throw new Error(result.error || result.msg || "Das Google Script meldete einen Fehler.");
         }
 
     } catch (e) {
@@ -1221,6 +1221,8 @@ async function startYearReset(klasse) {
     }
 }
 
+
+    
     
 
 /**
@@ -1731,8 +1733,8 @@ window.openPasswordModalForReset = function(time, slot, klasse) {
             closeResetModal(); 
             closeEditor(); // Schließt auch den darunterliegenden Task Manager
             
-            if (typeof startYearReset === 'function') {
-                startYearReset(klasse);
+           if (typeof startYearReset === 'function') {
+            startYearReset(klasse, eingegebenesPw); 
             }
         } else {
             // Passwort falsch
