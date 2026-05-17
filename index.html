@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1701,7 +1701,9 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
 };
 
     
-function handleReservationUI(time, slot, klasse) {
+
+
+    function handleReservationUI(time, slot, klasse) {
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
     if (!container) return;
@@ -1733,7 +1735,7 @@ function handleReservationUI(time, slot, klasse) {
 
     let html = "";
 
-    // --- NEU: LÖSCHEN AN ERSTER STELLE ---
+    // --- LÖSCHEN AN ERSTER STELLE ---
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <button class="eigenesmenu-item" 
@@ -1769,21 +1771,27 @@ function handleReservationUI(time, slot, klasse) {
         } else {
             // Abgleich mit der aktuell gebuchten Halle
             const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
-            
-            // Basis-Rahmenfarbe aus configFarben ermitteln
             const configBorderColor = configFarben[h] || "#444";
             
-            // Wenn diese Halle aktuell ausgewählt ist, färben wir sie orange ein
-            const buttonStyle = istAktuelleWahl
-                ? `justify-content: flex-start; background: #e67e22 !important; color: #fff !important; font-weight: bold !important; border: 1px solid #ff8c00 !important; box-shadow: 0 0 8px rgba(230, 126, 34, 0.4); margin-bottom: 8px;`
-                : `justify-content: flex-start; background: #333; margin-bottom: 8px; border-left: 5px solid ${configBorderColor}; border-top: 1px solid #444; border-right: 1px solid #444; border-bottom: 1px solid #444;`;
+            let buttonStyle = "";
+            let iconHtml = "";
+
+            if (istAktuelleWahl) {
+                // ANPASSUNG: Dezent analog zum Löschen-Button (Dunkles Orange-Braun #442d11)
+                buttonStyle = `justify-content: flex-start; background: #442d11 !important; color: #ffca88 !important; font-weight: bold !important; border: 1px solid #774c11 !important; margin-bottom: 8px;`;
+                iconHtml = `<span class="eigenesmenu-icon" style="margin-right: 10px; color: #ff8c00;">🔸</span>`;
+            } else {
+                // Standard-Button Style
+                buttonStyle = `justify-content: flex-start; background: #333; margin-bottom: 8px; border-left: 5px solid ${configBorderColor}; border-top: 1px solid #444; border-right: 1px solid #444; border-bottom: 1px solid #444;`;
+                iconHtml = `<span class="eigenesmenu-icon" style="margin-right: 10px;">🏠</span>`;
+            }
 
             html += `
                 <button class="eigenesmenu-item" style="${buttonStyle}" 
                         onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this)">
-                    <span class="eigenesmenu-icon" style="margin-right: 10px;">${istAktuelleWahl ? '🔸' : '🏠'}</span>
+                    ${iconHtml}
                     <span class="btn-text">${h}</span>
-                    ${istAktuelleWahl ? '<span style="margin-left: auto; font-size: 0.7rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #fff; font-weight: normal;">AKTUELL</span>' : ''}
+                    ${istAktuelleWahl ? '<span style="margin-left: auto; font-size: 0.7rem; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; color: #ff8c00; border: 1px solid rgba(255,140,0,0.2); font-weight: normal;">AKTUELL</span>' : ''}
                 </button>`;
         }
     });
