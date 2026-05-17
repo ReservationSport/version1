@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1164,11 +1164,11 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 
 
 /* ============================================================
-   9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN) - CORS-SICHERE VERSION
+   9. KLASSE ABKLEBEN (PERMANENT LÖSCHEN) - BOMBENSICHERE GET-VERSION
    ============================================================ */
 
 async function startYearReset(klasse, validiertesPw) {
-    console.log("startYearReset gestartet für Klasse:", klasse);
+    console.log("startYearReset (GET-Modus) gestartet für Klasse:", klasse);
 
     const gridContainer = document.querySelector('.stundentafel-container') || document.body;
     gridContainer.style.opacity = "0.6";
@@ -1176,32 +1176,26 @@ async function startYearReset(klasse, validiertesPw) {
 
     const slotVal = window.currentEditBox ? window.currentEditBox.getAttribute('data-slot') : window.currentEditSlot;
     const dateVal = document.getElementById('datePicker').value;
+    const finalesPw = validiertesPw || userPw;
 
-    const payload = {
+    // Wir bauen die Parameter direkt in die URL ein (GET-Request)
+    const params = new URLSearchParams({
         action: "permaDelete",
         klasse: klasse,
         slot: slotVal,
-        startDate: dateVal, 
-        pw: validiertesPw || userPw, 
+        startDate: dateVal,
+        pw: finalesPw,
         kuerzel: userKuerzel
-    };
+    });
+
+    const targetUrl = `${url}?${params.toString()}`;
 
     try {
-        console.log("Sende Löschbefehl via URL-Form an Google Script...", payload);
+        console.log("Sende Löschbefehl via GET an Google Script...");
 
-        // Wir nutzen ein URLSearchParams-Objekt, das erzeugt KEINE CORS-Probleme bei Google!
-        const formBody = new URLSearchParams();
-        for (const key in payload) {
-            formBody.append(key, payload[key]);
-        }
-
-        const response = await fetch(url, {
-            method: "POST",
-            mode: "cors",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-            },
-            body: formBody
+        const response = await fetch(targetUrl, {
+            method: "GET",
+            mode: "cors"
         });
 
         const result = await response.json();
@@ -1209,6 +1203,7 @@ async function startYearReset(klasse, validiertesPw) {
 
         if (result.status === "success") {
             console.log(`Klasse ${klasse} erfolgreich aus Master_DB gelöscht.`);
+            // Jetzt, wo CORS nicht mehr blockiert, läuft loadPlan garantiert sauber an!
             await loadPlan(); 
         } else {
             throw new Error(result.error || result.msg || "Das Google Script meldete einen Fehler.");
@@ -1216,8 +1211,8 @@ async function startYearReset(klasse, validiertesPw) {
 
     } catch (e) {
         console.error("PermaDelete Error:", e);
-        // Falls es trotz Erfolg ein stiller CORS-Fehler im Browser bleibt, laden wir den Plan trotzdem neu
-        console.log("Triggere Sicherheits-Reload...");
+        alert("Löschvorgang fehlgeschlagen: " + e.message);
+        // Falls irgendwas hängen bleibt, zur Sicherheit neu laden
         await loadPlan();
     } finally {
         gridContainer.style.opacity = "1";
