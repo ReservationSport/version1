@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1675,11 +1675,9 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             }
             break;
 
-        case 'beendet':
-            if (confirm(`Möchtest du die Klasse ${klasse} wirklich für das restliche Schuljahr abkleben?`)) {
-                closeEditor();
-                if (typeof startYearReset === 'function') startYearReset(klasse);
-            }
+       case 'beendet':
+            // Kein Browser-Confirm! Wir öffnen direkt das eigene Passwort-Modal drüber.
+            openPasswordModalForReset(time, slot, klasse);
             break;
 
         case 'nachricht':
@@ -1705,6 +1703,104 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
         default:
             console.warn("Unbekannte Aktion im Task Manager:", action);
     }
+};
+
+
+
+/**
+ * Öffnet ein dediziertes Passwort-Modal über dem Grid für das Abkleben
+ */
+window.openPasswordModalForReset = function(time, slot, klasse) {
+    // Falls noch ein altes Passwort-Modal existiert, sicherheitshalber entfernen
+    const altesModal = document.getElementById('password-reset-modal');
+    if (altesModal) altesModal.remove();
+
+    const backdrop = document.createElement('div');
+    backdrop.className = 'eigenesmenu-backdrop';
+    backdrop.id = 'password-reset-modal';
+    // WICHTIG: Höherer z-index, damit es absolut sicher ÜBER der Stundentafel und dem Task-Manager liegt
+    backdrop.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 99999; opacity: 0; transition: opacity 0.2s ease;";
+
+    backdrop.innerHTML = `
+        <div class="eigenesmenu-container" style="transform: translateY(20px); transition: transform 0.2s ease; width: 90%; max-width: 360px;">
+            <div class="eigenesmenu-header">
+                <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22;">BESTÄTIGUNG ERFORDERLICH</h3>
+                <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em;">
+                    Möchtest du die Klasse <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> wirklich für das restliche Schuljahr abkleben?
+                </p>
+            </div>
+            
+            <div style="padding: 15px 0;">
+                <label style="color: #bbb; display: block; margin-bottom: 8px; font-size: 0.85em;">Admin-Passwort eingeben:</label>
+                <input type="password" id="modal-reset-password" placeholder="Passwort..." 
+                       style="width: 100%; padding: 10px; background: #222; border: 1px solid #444; border-radius: 4px; color: #fff; box-sizing: border-box; font-size: 1em;">
+            </div>
+
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="btn-confirm-reset" class="eigenesmenu-item" style="justify-content: center; background: #442222; border: 1px solid #663333; margin: 0; flex: 1;">
+                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">JA, ABKLEBEN</span>
+                </button>
+                <button id="btn-cancel-reset" class="eigenesmenu-cancel" style="margin: 0; flex: 1; background: #333; color: #ccc;">
+                    Abbrechen
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(backdrop);
+
+    // Elemente für die Logik greifen
+    const passwordInput = backdrop.querySelector('#modal-reset-password');
+    const confirmBtn = backdrop.querySelector('#btn-confirm-reset');
+    const cancelBtn = backdrop.querySelector('#btn-cancel-reset');
+
+    // Schließen-Funktion für dieses spezifische Modal
+    const closeResetModal = () => {
+        backdrop.style.opacity = "0";
+        backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(20px)";
+        setTimeout(() => backdrop.remove(), 200);
+    };
+
+    // Events zuweisen
+    cancelBtn.onclick = closeResetModal;
+
+    confirmBtn.onclick = function() {
+        const eingegebenesPw = passwordInput.value.trim();
+
+        // Abgleich mit deinem globalen/hinterlegten Passwort (userPw)
+        if (eingegebenesPw === userPw) {
+            // Passwort korrekt -> Loader im Button anzeigen
+            confirmBtn.innerHTML = '<div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px; margin: 0 auto;"></div>';
+            confirmBtn.style.pointerEvents = "none";
+            backdrop.style.pointerEvents = "none";
+
+            // Schließen und Action ausführen
+            closeResetModal(); 
+            closeEditor(); // Schließt auch den darunterliegenden Task Manager
+            
+            if (typeof startYearReset === 'function') {
+                startYearReset(klasse);
+            }
+        } else {
+            // Passwort falsch
+            passwordInput.style.borderColor = "#c0392b";
+            passwordInput.value = "";
+            passwordInput.placeholder = "Falsches Passwort!";
+            passwordInput.focus();
+        }
+    };
+
+    // Absenden mit der Enter-Taste erlauben
+    passwordInput.onkeydown = function(e) {
+        if (e.key === 'Enter') confirmBtn.click();
+    };
+
+    // Einblenden-Animation starten
+    requestAnimationFrame(() => {
+        backdrop.style.opacity = "1";
+        backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(0)";
+        passwordInput.focus(); // Direkt ins Passwortfeld springen
+    });
 };
 
     
