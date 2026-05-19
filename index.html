@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1603,11 +1603,21 @@ async function showNews() {
             return;
         }
 
-        const response = await fetch(`${zielUrl}?action=getNews`);
+        // Passwort auslesen, um den API-Schutz zu bedienen
+        const aktuellesPasswort = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
+
+        // GET-Request inklusive PW-Schnittstelle absetzen
+        const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(aktuellesPasswort)}`);
         const allNews = await response.json();
 
         // Lade-Hinweis entfernen
         loaderInfo.remove();
+
+        // Falls das Apps Script einen Fehler zurückwirft (z.B. falsches Passwort)
+        if (allNews.status === "error") {
+            newsContainer.innerHTML += `<p class='no-news' style='color: #e74c3c;'>Fehler vom Server: ${allNews.msg}</p>`;
+            return;
+        }
 
         // 4. Filtern: Nur News, die für mich bestimmt sind oder von mir kommen
         const meineNews = allNews.filter(news => {
@@ -1675,6 +1685,7 @@ async function showNews() {
         newsContainer.appendChild(errorInfo);
     }
 }
+    
 
 /**
  * Schliesst die News-Sidebar mit der flüssigen CSS-Animation
