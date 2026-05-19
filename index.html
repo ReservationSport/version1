@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1142,152 +1142,151 @@ function getDataBySlotIndex(index) {
    ============================================================ */
 
 window.loadPlan = async function() {
-    const dp = document.getElementById('datePicker');
-    const container = document.getElementById('plan-container'); 
-    const loader = document.getElementById('global-loader'); 
+    const dp = document.getElementById('datePicker');
+    const container = document.getElementById('plan-container'); 
+    const loader = document.getElementById('global-loader'); 
 
-    const dateVal = dp.value;
-    if (!userPw || !dateVal) return;
+    const dateVal = dp.value;
+    if (!userPw || !dateVal) return;
 
-    // UI Reset
-    container.innerHTML = ""; 
-    if (loader) loader.style.display = 'block'; 
-    if (typeof updateNavButtons === 'function') updateNavButtons();
+    // UI Reset
+    container.innerHTML = ""; 
+    if (loader) loader.style.display = 'block'; 
+    if (typeof updateNavButtons === 'function') updateNavButtons();
 
-    const dateObj = new Date(dateVal.replace(/-/g, "/")); 
-    
-    // Wochenende
-    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
-        container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">
-            <i class="fas fa-umbrella-beach" style="margin-bottom:10px; font-size: 2rem;"></i><br>
-            Mach mal Pause! Es ist Wochenende... 
-        </div>`; 
-        if (loader) loader.style.display = 'none'; 
-        return; 
-    }
+    const dateObj = new Date(dateVal.replace(/-/g, "/")); 
+    
+    // Wochenende
+    if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
+        container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">
+            <i class="fas fa-umbrella-beach" style="margin-bottom:10px; font-size: 2rem;"></i><br>
+            Mach mal Pause! Es ist Wochenende... 
+        </div>`; 
+        if (loader) loader.style.display = 'none'; 
+        return; 
+    }
 
-    try {
-        const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
-        const json = await res.json();
-        
-        if (json.status === "error" && json.error !== "SPERRE") {
-            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; color: red;">${json.msg}</div>`;
-            return;
-        }
+    try {
+        const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
+        const json = await res.json();
+        
+        if (json.status === "error" && json.error !== "SPERRE") {
+            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; color: red;">${json.msg}</div>`;
+            return;
+        }
 
-        // Sperrzeit / Feiertag
-        if (json.sperrMsg) {
-            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem; border: 1px solid #e67e22;">
-                <i class="fas fa-calendar-check" style="margin-bottom:10px; font-size: 2rem;"></i><br>
-                <strong>${json.sperrMsg}</strong><br>
-                <span style="font-size: 0.9rem; color: #aaa; margin-top: 10px; display: block;">Heute findet kein regulärer Sportunterricht statt.</span>
-            </div>`;
-            if (loader) loader.style.display = 'none';
-            return; 
-        }
+        // Sperrzeit / Feiertag
+        if (json.sperrMsg) {
+            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem; border: 1px solid #e67e22;">
+                <i class="fas fa-calendar-check" style="margin-bottom:10px; font-size: 2rem;"></i><br>
+                <strong>${json.sperrMsg}</strong><br>
+                <span style="font-size: 0.9rem; color: #aaa; margin-top: 10px; display: block;">Heute findet kein regulärer Sportunterricht statt.</span>
+            </div>`;
+            if (loader) loader.style.display = 'none';
+            return; 
+        }
 
-        const plan = json.plan; 
-        window.lastPlanData = json.plan; 
-        myClasses = json.userClasses || [];
-        allClassTeachers = json.allClassTeachers || {};
-        window.materialOptionen = json.materialsList || []; 
-        
-        configFarben = {}; 
-        if (json.options) {
-            json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
-        }
-        
-        const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-        const [y, m, d] = dateVal.split('-').map(Number);
-        
-        const zeiten = [
-            "07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", 
-            "10:00 - 10:45", "10:50 - 11:35", "11:40 - 12:25", 
-            "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", 
-            "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
-        ];
+        const plan = json.plan; 
+        window.lastPlanData = json.plan; // Speichert den aktuellen Plan global für das Menü
+        myClasses = json.userClasses || [];
+        allClassTeachers = json.allClassTeachers || {};
+        window.materialOptionen = json.materialsList || []; 
+        
+        // Farben aus Config laden
+        configFarben = {}; 
+        if (json.options) {
+            json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
+        }
+        
+        const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+        const [y, m, d] = dateVal.split('-').map(Number);
+        
+        const zeiten = [
+            "07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", 
+            "10:00 - 10:45", "10:50 - 11:35", "11:40 - 12:25", 
+            "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", 
+            "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
+        ];
 
-        let html = ""; 
-        html += `<div class="box header-row" style="grid-column: span 6;">
-                    <span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span>
-                 </div>`;
+        let html = ""; 
+        html += `<div class="box header-row" style="grid-column: span 6;">
+                    <span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span>
+                 </div>`;
 
-        zeiten.forEach((zeitStr, rowIndex) => {
-            const lektionNum = rowIndex + 1;
+        zeiten.forEach((zeitStr, rowIndex) => {
+            const lektionNum = rowIndex + 1;
 
-            if (lektionNum === 4 || lektionNum === 10) html += `<div class="divider-thin"></div>`;
-            if (lektionNum === 7) html += `<div class="divider-thick"></div>`;
+            if (lektionNum === 4 || lektionNum === 10) html += `<div class="divider-thin"></div>`;
+            if (lektionNum === 7) html += `<div class="divider-thick"></div>`;
 
-            html += `<div class="box zeit-box">${zeitStr}</div>`;
-            
-            for(let i = 1; i <= 5; i++) {
-                const absoluteSlot = (rowIndex * 5) + i; 
-                const slotData = plan[absoluteSlot] || {};
+            html += `<div class="box zeit-box">${zeitStr}</div>`;
+            
+            for(let i = 1; i <= 5; i++) {
+                const absoluteSlot = (rowIndex * 5) + i; 
+                const slotData = plan[absoluteSlot] || {};
 
-                const klasse = slotData.klasse || "";
-                const halle = slotData.halle || "";
-                const material = slotData.material || "";
-                const matKommentar = slotData.kommentar || "";
-                const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
-                
-                const isAusfall = (halle === "Ausfall");
-                const canEdit = myClasses.some(c => 
-                    klasse.trim().toLowerCase() === c.trim().toLowerCase() && 
-                    klasse.trim() !== ""
-                );
-                
-                let materialHtml = "";
-                if (material) {
-                    const b64Material = btoa(unescape(encodeURIComponent(material)));
-                    const b64Kommentar = btoa(unescape(encodeURIComponent(matKommentar || "")));
-                    const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
+                const klasse = slotData.klasse || "";
+                const halle = slotData.halle || "";
+                const material = slotData.material || "";
+                const matKommentar = slotData.kommentar || "";
+                const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
+                
+                const isAusfall = (halle === "Ausfall");
+                const canEdit = myClasses.some(c => 
+                    klasse.trim().toLowerCase() === c.trim().toLowerCase() && 
+                    klasse.trim() !== ""
+                );
+                
+                // --- INTEGRATION DEINES CUSTOM POPUPS MIT BASE64-SCHUTZ ---
+                let materialHtml = "";
+                if (material) {
+                    // Verwandelt Texte in sichere Zeichenketten, damit Zeilenumbrüche/Anführungszeichen das HTML nicht brechen
+                    const b64Material = btoa(unescape(encodeURIComponent(material)));
+                    const b64Kommentar = btoa(unescape(encodeURIComponent(matKommentar || "")));
+                    const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
 
-                    materialHtml = `
-                        <span class="material-icon" 
-                              data-tooltip="${tooltipText.replace(/"/g, '&quot;')}" 
-                              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;"
-                              onclick="event.stopPropagation(); event.preventDefault(); if(typeof showMaterialDetailPopup === 'function') { 
-                                  const mat = decodeURIComponent(escape(atob('${b64Material}')));
-                                  const kom = decodeURIComponent(escape(atob('${b64Kommentar}')));
-                                  showMaterialDetailPopup(mat, kom); 
-                              }">
-                            <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
-                        </span>`;
-                }
+                    materialHtml = `
+                        <span class="material-icon" 
+                              data-tooltip="${tooltipText.replace(/"/g, '&quot;')}" 
+                              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;"
+                              onclick="event.stopPropagation(); event.preventDefault(); if(typeof showMaterialDetailPopup === 'function') { 
+                                  const mat = decodeURIComponent(escape(atob('${b64Material}')));
+                                  const kom = decodeURIComponent(escape(atob('${b64Kommentar}')));
+                                  showMaterialDetailPopup(mat, kom); 
+                              }">
+                            <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
+                        </span>`;
+                }
+                // --- ENDE POPUP INTEGRATION ---
 
-                const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
+                // Click-Action öffnet nur den Editor beim Klick auf die restliche Box
+                const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
 
-                html += `
-                <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}"
-                        data-time="${zeitStr}" 
-                        ${clickAction}
-                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
-                        
-                        ${materialHtml}
-                        <div class="klasse-label">${klasse}</div>
-                        <div class="lehrer-info">${lehrer}</div>
-                        <div class="halle-label">${halle}</div>
-                </div>`;
-            }
-        });
+                html += `
+                <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
+                        data-slot="${absoluteSlot}"
+                        data-time="${zeitStr}" 
+                        ${clickAction}
+                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
+                        
+                        ${materialHtml}
+                        <div class="klasse-label">${klasse}</div>
+                        <div class="lehrer-info">${lehrer}</div>
+                        <div class="halle-label">${halle}</div>
+                </div>`;
+            }
+        });
 
-        container.innerHTML = html;
+        container.innerHTML = html;
 
-        // --- HIER: News automatisch nachladen, wenn Plan fertig geladen ---
-        if (typeof initNewsSystem === 'function') {
-            await initNewsSystem();
-        }
-
-    } catch(e) { 
-        console.error("Fehler in loadPlan:", e); 
-        container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Server-Verbindung unterbrochen!</div>`;
-    } finally {
-        if (loader) loader.style.display = 'none';
-        updateNavButtons();
-    }
+    } catch(e) { 
+        console.error("Fehler in loadPlan:", e); 
+        container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Server-Verbindung unterbrochen!</div>`;
+    } finally {
+        if (loader) loader.style.display = 'none';
+        updateNavButtons();
+    }
 };
-
 
     
 
