@@ -2764,45 +2764,81 @@ function showMaterialDetailPopup(material, kommentar) {
 
 
 
-    /**
+/**
  * Der "Postbote": Sendet Daten an das Google Apps Script
  */
 window.saveImmediately = async function(payload) {
     // Falls die URL nicht global definiert ist, hier prüfen
     if (typeof url === 'undefined') {
-        console.error("Die Variable 'url' (Web-App URL) ist nicht definiert!");
-        return;
+        console.error("❌ saveImmediately abgebrochen: Die Variable 'url' (Web-App URL) ist nicht definiert!");
+        return { status: "error", msg: "Skript-URL fehlt" };
+    }
+
+    if (!payload) {
+        console.error("❌ saveImmediately abgebrochen: Kein Payload übergeben!");
+        return { status: "error", msg: "Keine Daten übergeben" };
     }
 
     try {
+        console.log("⏳ Postbote: Sende Speicherbefehl...", payload);
+
+        // KORREKTUR: Wir nutzen das normale Fetch ohne 'no-cors', 
+        // damit wir die Antwort (Erfolg/Fehler) vom Google Sheet verarbeiten können!
         const response = await fetch(url, {
             method: "POST",
-            mode: "no-cors", // Wichtig für Google Apps Script
-            cache: "no-cache",
-            headers: {
-                "Content-Type": "application/json",
-            },
             body: JSON.stringify(payload)
         });
 
-        // Hinweis: Bei mode: 'no-cors' kann die Antwort nicht gelesen werden, 
-        // aber die Daten kommen trotzdem an. 
-        // Wenn du eine Bestätigung brauchst, nutze das normale fetch:
-        
-        /* const res = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        const result = await res.json();
-        return result; 
-        */
+        if (!response.ok) {
+            throw new Error(`HTTP-Fehler! Status: ${response.status}`);
+        }
 
-        console.log("Speicherbefehl gesendet:", payload);
-        return { status: "success" }; 
+        const result = await response.json();
+        console.log("📥 Postbote: Antwort vom Server erhalten:", result);
+
+        // Wenn das Google Sheet die Buchung erfolgreich eingetragen hat
+        if (result.status === "success") {
+            console.log("🎯 Speicherbefehl erfolgreich ausgeführt:", payload);
+
+            // ============================================================
+            // INTERNE NEWS-ZÜNDUNG
+            // ============================================================
+            // Wir prüfen, ob die Aktion ein normales Speichern war ('saveBooking')
+            const action = payload.action || payload.mode;
+            
+            if (action === "saveBooking" && typeof triggerNews === "function") {
+                const slotIndex = parseInt(payload.slot);
+                const klasseName = payload.klasse || "";
+                
+                // Wir schauen in das Feld 'halle', wo "Ausfall" oder "Outdoor" drinsteht
+                const halleWert = payload.halle ? payload.halle.toString().trim() : "";
+
+                if (halleWert === "Ausfall") {
+                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Ausfall für Slot ${slotIndex} erkannt.`);
+                    // Wichtig: Ohne 'await', damit das Schließen des Menüs nicht verzögert wird
+                    triggerNews("ausfall", slotIndex, klasseName);
+                } 
+                else if (halleWert.includes("Outdoor")) {
+                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Outdoor für Slot ${slotIndex} erkannt.`);
+                    triggerNews("outdoor", slotIndex, klasseName);
+                }
+                else if (halleWert === "Beendet" || halleWert === "beendet") {
+                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Beendet für Slot ${slotIndex} erkannt.`);
+                    triggerNews("beendet", slotIndex, klasseName);
+                }
+            }
+            // ============================================================
+
+            return result; // Gibt { status: "success" } zurück
+        } else {
+            console.error("❌ Server meldete einen Fehler beim Speichern:", result.msg);
+            return result;
+        }
 
     } catch (e) {
-        console.error("Kritischer Fehler beim Speichern:", e);
-        alert("Verbindung zum Server fehlgeschlagen!");
+        console.error("❌ Kritischer Fehler beim Speichern im Fetch-Verlauf:", e);
+        alert("Verbindung zum Server fehlgeschlagen! Die Änderung wurde eventuell nicht gespeichert.");
+        return { status: "error", msg: e.toString() };
     }
 };
     
