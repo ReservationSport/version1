@@ -1187,12 +1187,11 @@ window.loadPlan = async function() {
         }
 
         const plan = json.plan; 
-        window.lastPlanData = json.plan; // Speichert den aktuellen Plan global für das Menü
+        window.lastPlanData = json.plan; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
         window.materialOptionen = json.materialsList || []; 
         
-        // Farben aus Config laden
         configFarben = {}; 
         if (json.options) {
             json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
@@ -1237,10 +1236,8 @@ window.loadPlan = async function() {
                     klasse.trim() !== ""
                 );
                 
-                // --- INTEGRATION DEINES CUSTOM POPUPS MIT BASE64-SCHUTZ ---
                 let materialHtml = "";
                 if (material) {
-                    // Verwandelt Texte in sichere Zeichenketten, damit Zeilenumbrüche/Anführungszeichen das HTML nicht brechen
                     const b64Material = btoa(unescape(encodeURIComponent(material)));
                     const b64Kommentar = btoa(unescape(encodeURIComponent(matKommentar || "")));
                     const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
@@ -1257,9 +1254,7 @@ window.loadPlan = async function() {
                             <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
                         </span>`;
                 }
-                // --- ENDE POPUP INTEGRATION ---
 
-                // Click-Action öffnet nur den Editor beim Klick auf die restliche Box
                 const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
 
                 html += `
@@ -1279,6 +1274,11 @@ window.loadPlan = async function() {
 
         container.innerHTML = html;
 
+        // --- HIER: News automatisch nachladen, wenn Plan fertig geladen ---
+        if (typeof initNewsSystem === 'function') {
+            await initNewsSystem();
+        }
+
     } catch(e) { 
         console.error("Fehler in loadPlan:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Server-Verbindung unterbrochen!</div>`;
@@ -1287,6 +1287,9 @@ window.loadPlan = async function() {
         updateNavButtons();
     }
 };
+
+
+    
 
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
