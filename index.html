@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1434,23 +1434,7 @@ async function startYearReset(klasse, validiertesPw) {
    ============================================================ */
 
 /**
- * Öffnet die News-Sidebar und setzt den Benachrichtigungs-Punkt zurück
- */
-window.showNews = () => {
-    const sidebar = document.getElementById('newsSidebar');
-    const dot = document.getElementById('news-dot');
-    
-    if (!sidebar) return;
-
-    sidebar.style.display = 'block';
-    // Minimaler Timeout, damit der Browser den Display-Wechsel registriert und die CSS-Transition abfeuert
-    setTimeout(() => sidebar.classList.add('active'), 10); 
-    
-    if (dot) dot.style.display = 'none'; 
-};
-
-/**
- * Schließt die News-Sidebar
+ * Schließt die News-Sidebar mit der flüssigen CSS-Animation
  */
 window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
@@ -1460,8 +1444,6 @@ window.closeNews = () => {
     // Wartet exakt die 300ms der CSS-Transition ab, bevor display auf 'none' gesetzt wird
     setTimeout(() => sidebar.style.display = 'none', 300);
 };
-
-
 
 /**
  * Erzeugt eine News-Meldung und sendet sie an das Google Sheet (News_DB)
@@ -1552,13 +1534,15 @@ async function triggerNews(type, slotIndex, klasse) {
     }
 }
 
-
 /**
  * Hauptfunktion für die News-Sidebar.
- * Passt exakt auf dein <div id="newsContent">!
+ * Global als window.showNews registriert: Steuert die Animation,
+ * blendet den roten Punkt aus und lädt die gefilterten Daten live.
  */
-async function showNews() {
+window.showNews = async function() {
     const sidebar = document.getElementById('newsSidebar');
+    const dot = document.getElementById('news-dot');
+    
     if (!sidebar) {
         console.error("❌ showNews: #newsSidebar im HTML nicht gefunden!");
         return;
@@ -1567,6 +1551,9 @@ async function showNews() {
     // 1. Sidebar einblenden und einfahren lassen (deine CSS-Animation steuern)
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
+
+    // Benachrichtigungs-Punkt zurücksetzen, falls vorhanden
+    if (dot) dot.style.display = 'none'; 
 
     // 2. Den richtigen Inhalts-Container ansteuern (dein gefundenes newsContent)
     const newsContainer = document.getElementById('newsContent') || sidebar;
@@ -1675,21 +1662,7 @@ async function showNews() {
         errorInfo.innerText = 'Fehler beim Laden der Meldungen.';
         newsContainer.appendChild(errorInfo);
     }
-}
-
-
-    
-
-/**
- * Schliesst die News-Sidebar mit der flüssigen CSS-Animation
- */
-function closeNews() {
-    const sidebar = document.getElementById('newsSidebar');
-    if (!sidebar) return;
-    sidebar.classList.remove('active');
-    setTimeout(() => sidebar.style.display = 'none', 300);
-}
-
+};
     
 
 /* ============================================================
