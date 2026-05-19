@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1393,103 +1393,12 @@ window.closeNews = () => {
 
 
 
-    /**
- * Sucht alle Kollegen (Kürzel), die in der exakt GLEICHEN Zeile (Lektion)
- * in den anderen Hallen unterrichten.
- * @param {string|number} currentSlot - Die ID oder Nummer des geänderten Slots (z.B. "DI21" oder 21)
- */
-function getAffectedColleagues(currentSlot) {
-    const colleagues = [];
-    if (!currentPlanData) {
-        console.warn("⚠️ getAffectedColleagues: Keine Stundenplandaten (currentPlanData) vorhanden!");
-        return "";
-    }
-
-    // Falls "DI21" übergeben wird, filtern wir die reinen Zahlen heraus (z.B. 21)
-    const slotNumber = parseInt(currentSlot.toString().replace(/\D/g, ''));
-    if (isNaN(slotNumber)) {
-        console.error("❌ getAffectedColleagues: Ungültige Slot-Nummer extrahiert aus:", currentSlot);
-        return "";
-    }
-
-    // 1. Berechnen, in welcher Zeile (0-basiert) wir uns im 5er-Raster befinden
-    const rowIndex = Math.floor((slotNumber - 1) / 5);
-    // Den allerersten Slot dieser spezifischen Zeile ermitteln
-    const rowStartSlot = (rowIndex * 5) + 1;
-
-    console.group(`🔍 NEWS-LOGIK: Suche Kollegen für Slot ${slotNumber} (Zeile: ${rowIndex + 1})`);
-    console.log(`Parallele Slots in dieser Lektion: ${rowStartSlot} bis ${rowStartSlot + 4}`);
-    console.log("Rohdaten der App (currentPlanData):", currentPlanData);
-
-    // 2. Dynamisch die richtige Zeile ermitteln (Index-Schutz)
-    // Wir prüfen, ob die Daten direkt bei rowIndex liegen, oder um 1 verschoben sind
-    let row = currentPlanData[rowIndex];
-    
-    // Falls das Array dort leer ist ODER die erste Spalte den Header-Text enthält,
-    // weichen wir auf rowIndex + 1 aus.
-    if (!row || (currentPlanData[rowIndex + 1] && typeof currentPlanData[0][0] === 'string' && currentPlanData[0][0].toLowerCase().includes("zeit"))) {
-        row = currentPlanData[rowIndex + 1];
-    }
-
-    // 3. Wir gehen genau die 5 Slots dieser Zeile durch
-    for (let s = rowStartSlot; s < rowStartSlot + 5; s++) {
-        
-        // Den eigenen, gerade geänderten Slot ignorieren wir
-        if (s === slotNumber) continue;
-
-        const columnDataIndex = s - rowStartSlot + 1; // Spalte 1, 2, 3, 4 oder 5
-        
-        if (!row) {
-            console.log(`Slot ${s}: Keine Zeilendaten über Matrix-Index gefunden. Prüfe flaches System...`);
-            
-            // FALLBACK für flache Arrays/Objekte (Falls dein currentPlanData ein flaches Objekt nach Slot-Nummern ist)
-            let cellContent = currentPlanData[s] ? currentPlanData[s].toString().trim() : "";
-            if (cellContent) {
-                processCell(cellContent, s);
-            }
-            continue;
-        }
-
-        // Wenn wir eine Zeilen-Struktur haben, lesen wir die passende Spalte aus
-        let cellContent = row[columnDataIndex] ? row[columnDataIndex].toString().trim() : "";
-        processCell(cellContent, s);
-    }
-
-    // Interne Hilfsfunktion zur Verarbeitung des Zelleninhalts, um Code-Duplikate zu vermeiden
-    function processCell(cellContent, currentCheckSlot) {
-        if (cellContent !== "" && !cellContent.includes("U21")) {
-            // Extrahiert den Klassennamen (z.B. vorderer Teil vor Leerzeichen oder Pipe)
-            let klasse = cellContent.split(/[ |]/)[0].trim();
-            let lehrerKuerzel = typeof allClassTeachers !== 'undefined' ? allClassTeachers[klasse] : null;
-            
-            if (lehrerKuerzel) {
-                if (!colleagues.includes(lehrerKuerzel)) {
-                    colleagues.push(lehrerKuerzel);
-                    console.log(`✅ Kollege gefunden: Slot ${currentCheckSlot} -> Klasse ${klasse} -> Lehrer: ${lehrerKuerzel}`);
-                } else {
-                    console.log(`ℹ️ Kollege ${lehrerKuerzel} (Slot ${currentCheckSlot}) bereits auf der Liste (Dublette ignoriert)`);
-                }
-            } else {
-                console.log(`❓ Slot ${currentCheckSlot} hat Klasse ${klasse}, aber kein Lehrer-Kürzel in allClassTeachers gefunden.`);
-            }
-        } else {
-            console.log(`Slot ${currentCheckSlot} ist leer oder enthält U21 (${cellContent || 'leer'})`);
-        }
-    }
-
-    console.log(`📢 Finale Empfänger-Liste für das Google Sheet: [${colleagues.join(", ")}]`);
-    console.groupEnd();
-
-    return colleagues.join(",");
-}
-    
-
-    
 /**
  * Erzeugt eine News-Meldung und sendet sie an das Google Sheet (News_DB)
+ * Übergibt zusätzlich den Wochentag für den serverseitigen Master_DB-Abgleich.
  */
 async function triggerNews(type, slotIndex, klasse) {
-    console.log(`🎬 triggerNews gestartet mit Typ: "${type}", Slot: ${slotIndex}, Klasse: "${klasse}"`);
+    console.log(`🎬 triggerNews gestartet (Serverseitiger Master-Abgleich) | Typ: "${type}", Slot: ${slotIndex}, Klasse: "${klasse}"`);
     
     const datePicker = document.getElementById('datePicker');
     if (!datePicker) {
@@ -1508,36 +1417,36 @@ async function triggerNews(type, slotIndex, klasse) {
         return;
     }
 
-    // Sicherheitscheck für globale Variablen – Falls sie bei dir anders heißen, passen wir das hier an!
     const aktuellerVerfasser = typeof userKuerzel !== 'undefined' ? userKuerzel : "UNBEKANNT";
     const aktuellesPasswort = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
     const zielUrl = typeof url !== 'undefined' ? url : "";
 
     if (!zielUrl) {
-        console.error("❌ triggerNews FEHLER: Die Google Script URL (Variable 'url') ist nicht definiert!");
-        alert("Systemfehler: Skript-URL fehlt. News konnten nicht gesendet werden.");
+        console.error("❌ triggerNews FEHLER: Die Variable 'url' ist nicht definiert!");
+        alert("Systemfehler: Skript-URL fehlt.");
         return;
     }
 
-    // Betroffene Kollegen über das mathematische Raster ermitteln
-    const empfaengerListe = getAffectedColleagues(slotIndex);
+    // Wochentagsnamen berechnen, damit code.gs weiss, nach welchem Tag sie in der Master_DB filtern muss
+    const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+    const wochentagName = wochentage[new Date(dateVal).getDay()];
 
-    // Wir packen BEIDE Varianten (action und mode) in den Payload, damit code.gs zu 100% glücklich ist!
     const payload = {
         action: "saveNews", 
         mode: "saveNews",
         id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000), 
         datum: dateVal,
+        wochentag: wochentagName, // Wichtig für den Server-Filter!
         slot: slotIndex,
         tagIndex: new Date(dateVal).getDay(),
         klasse: klasse,
         verfasser: aktuellerVerfasser,
-        empfaenger: empfaengerListe, 
+        empfaenger: "", // Bleibt im Frontend leer. Wird von code.gs befüllt.
         text: newsText,
         pw: aktuellesPasswort
     };
 
-    console.group(`🚀 NEWS-PROX-CHECK: Sende Daten an Google Sheet`);
+    console.group(`🚀 NEWS-PROX-CHECK: Sende Daten an Google Sheet (Server-Matching aktiv)`);
     console.log("URL:", zielUrl);
     console.log("Payload:", payload);
     console.groupEnd();
@@ -1560,18 +1469,21 @@ async function triggerNews(type, slotIndex, klasse) {
         
         if (result.status === "success") {
             console.log("🎯 %cDATABASE SUCCESS: News erfolgreich eingetragen!", "color: #2ecc71; font-weight: bold;");
+            console.log(`👥 Automatisch ermittelte Empfänger aus der Master_DB: [${result.empfaengerGefunden || "Keine parallelen Kollegen gefunden"}]`);
         } else {
-            console.error("❌ DATABASE ERROR vom Script gemeldet:", result.msg || result.message || "Keine Fehlermeldung erhalten");
+            console.error("❌ DATABASE ERROR vom Script gemeldet:", result.msg || "Keine Fehlermeldung erhalten");
             alert("Fehler aus der Datenbank: " + (result.msg || "Speichern fehlgeschlagen."));
         }
     } catch (error) {
         console.error("💥 NETZWERK- ODER SKRIPTFEHLER beim Senden der News:", error);
-        alert("News-Übertragung fehlgeschlagen. Siehe Browser-Konsole für Details.");
+        alert("News-Übertragung fehlgeschlagen.");
     } finally {
         if (typeof toggleLoader === 'function') toggleLoader(false);
     }
 }
 
+
+    
 
 /* ============================================================
    12. ÖFFNEN DES TASKMANAGERS
