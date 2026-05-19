@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1464,11 +1464,16 @@ function getAffectedColleagues(currentSlot) {
 
     
 /**
- * Erzeugt eine News-Meldung und sendet sie SOFORT an das Google Sheet (News_DB)
+ * Erzeugt eine News-Meldung und sendet sie an das Google Sheet (News_DB)
  */
 async function triggerNews(type, slotIndex, klasse) {
+    console.log(`🎬 triggerNews gestartet mit Typ: "${type}", Slot: ${slotIndex}, Klasse: "${klasse}"`);
+    
     const datePicker = document.getElementById('datePicker');
-    if (!datePicker) return;
+    if (!datePicker) {
+        console.error("❌ triggerNews abgebrochen: Element #datePicker nicht gefunden!");
+        return;
+    }
     const dateVal = datePicker.value;
     
     let newsText = "";
@@ -1476,52 +1481,70 @@ async function triggerNews(type, slotIndex, klasse) {
     if (type === "outdoor") newsText = `Halle frei: ${klasse} ist Outdoor.`;
     if (type === "beendet") newsText = `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`;
 
-    if (!newsText) return;
+    if (!newsText) {
+        console.warn(`⚠️ triggerNews abgebrochen: Unbekannter Typ "${type}" oder kein Text generiert.`);
+        return;
+    }
 
-    // Betroffene Kollegen ermitteln
+    // Sicherheitscheck für globale Variablen – Falls sie bei dir anders heißen, passen wir das hier an!
+    const aktuellerVerfasser = typeof userKuerzel !== 'undefined' ? userKuerzel : "UNBEKANNT";
+    const aktuellesPasswort = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
+    const zielUrl = typeof url !== 'undefined' ? url : "";
+
+    if (!zielUrl) {
+        console.error("❌ triggerNews FEHLER: Die Google Script URL (Variable 'url') ist nicht definiert!");
+        alert("Systemfehler: Skript-URL fehlt. News konnten nicht gesendet werden.");
+        return;
+    }
+
+    // Betroffene Kollegen über das mathematische Raster ermitteln
     const empfaengerListe = getAffectedColleagues(slotIndex);
 
-    // Payload für die news_db
+    // Wir packen BEIDE Varianten (action und mode) in den Payload, damit code.gs zu 100% glücklich ist!
     const payload = {
-        action: "saveNews", // Entspricht deiner 'action'-Abfrage in der code.gs
+        action: "saveNews", 
+        mode: "saveNews",
         id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000), 
         datum: dateVal,
         slot: slotIndex,
         tagIndex: new Date(dateVal).getDay(),
         klasse: klasse,
-        verfasser: userKuerzel,
+        verfasser: aktuellerVerfasser,
         empfaenger: empfaengerListe, 
         text: newsText,
-        pw: userPw
+        pw: aktuellesPasswort
     };
 
-    console.group(`🚀 SENDEDATEN AN GOOGLE SHEET (News_DB)`);
-    console.log("Aktion:", payload.action);
-    console.log("Text der Meldung:", payload.text);
-    console.log("Ermittelte Empfänger:", payload.empfaenger || "(Keine Kollegen betroffen)");
-    console.log("Komplette Payload:", payload);
+    console.group(`🚀 NEWS-PROX-CHECK: Sende Daten an Google Sheet`);
+    console.log("URL:", zielUrl);
+    console.log("Payload:", payload);
     console.groupEnd();
 
-    // Globaler Loader an (Auto-Save Feedback)
     if (typeof toggleLoader === 'function') toggleLoader(true);
 
     try {
-        console.log("⏳ Sende Request an Google Apps Script...");
-        const response = await fetch(url, {
+        console.log("⏳ Sende POST-Anfrage...");
+        const response = await fetch(zielUrl, {
             method: "POST",
             body: JSON.stringify(payload)
         });
 
+        if (!response.ok) {
+            throw new Error(`HTTP-Status-Fehler: ${response.status}`);
+        }
+
         const result = await response.json();
+        console.log("📥 Antwort vom Google Script erhalten:", result);
         
         if (result.status === "success") {
-            console.log("🎯 %cDATABASE SUCCESS: News erfolgreich in News_DB eingetragen!", "color: #2ecc71; font-weight: bold;");
+            console.log("🎯 %cDATABASE SUCCESS: News erfolgreich eingetragen!", "color: #2ecc71; font-weight: bold;");
         } else {
-            console.error("❌ DATABASE ERROR vom Google Sheet:", result.msg || result.message);
+            console.error("❌ DATABASE ERROR vom Script gemeldet:", result.msg || result.message || "Keine Fehlermeldung erhalten");
+            alert("Fehler aus der Datenbank: " + (result.msg || "Speichern fehlgeschlagen."));
         }
     } catch (error) {
-        console.error("💥 NETZWERK-FEHLER: Verbindung zum Google Sheet fehlgeschlagen!", error);
-        alert("Kollegen konnten nicht automatisch informiert werden (Verbindung?).");
+        console.error("💥 NETZWERK- ODER SKRIPTFEHLER beim Senden der News:", error);
+        alert("News-Übertragung fehlgeschlagen. Siehe Browser-Konsole für Details.");
     } finally {
         if (typeof toggleLoader === 'function') toggleLoader(false);
     }
@@ -2294,16 +2317,24 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         };
     }
 }
+
+
+    
 /* ============================================================
    15. DATEN-SYNCHRONISATION (addChange)
    ============================================================ */
 
 window.addChange = async (el, time, slot, klasse) => { 
     let res = el.value; 
+    console.log(`\n=== 🔄 addChange ausgelöst für Slot ${slot} ===`);
+    console.log(`Eingegebener Wert (res): "${res}"`, klasse ? `| Übergebene Klasse: ${klasse}` : "");
     
     // Parent Box finden
     const parent = el.closest('.box') || window.currentEditBox; 
-    if (!parent) return;
+    if (!parent) {
+        console.error("❌ addChange abgebrochen: Keine Parent-Box (.box) gefunden!");
+        return;
+    }
 
     const r = parent.getAttribute('data-row');
     const c = slot; // Wir nutzen den übergebenen slot-Index
@@ -2328,16 +2359,48 @@ window.addChange = async (el, time, slot, klasse) => {
     // Formatiert den Wert zu "Klasse | Halle | Kommentar"
     let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
 
-    // 3. NEWS-LOGIK (Outdoor / Freigabe)
+    // Errechnen/Bestimmen der Klasse für die Newsmeldung (Fehlerschutz!)
+    let newsKlasse = klasse;
+    if (!newsKlasse) {
+        // Fallback 1: Versuchen aus dem Box-Titel (.title) zu lesen
+        const titleEl = parent.querySelector('.title');
+        if (titleEl && titleEl.innerText.trim() !== "") {
+            newsKlasse = titleEl.innerText.split(/[ |]/)[0].trim();
+        } 
+        // Fallback 2: Versuchen aus dem bestehenden lokalen Daten-String zu parsen
+        else if (currentPlanData && currentPlanData[r] && currentPlanData[r][c]) {
+            newsKlasse = currentPlanData[r][c].toString().split(/[ |]/)[0].trim();
+        } else {
+            newsKlasse = "Unbekannt";
+        }
+    }
+
+    // 3. NEWS-LOGIK (Erweitert & Abgesichert)
     if (typeof pendingNews !== "undefined") {
         pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
     }
 
-    if (res && res.toString().includes("Outdoor")) {
-        if (typeof triggerNews === "function") {
-            const newsKlasse = klasse || res.split('|')[0].trim();
-            triggerNews("outdoor", parseInt(slot), newsKlasse);
+    if (typeof triggerNews === "function") {
+        try {
+            if (res === "Ausfall") {
+                console.log(`📢 [MELDUNG] Typ: Ausfall für Klasse: ${newsKlasse}`);
+                await triggerNews("ausfall", parseInt(slot), newsKlasse);
+            } 
+            else if (res && res.toString().includes("Outdoor")) {
+                console.log(`📢 [MELDUNG] Typ: Outdoor für Klasse: ${newsKlasse}`);
+                await triggerNews("outdoor", parseInt(slot), newsKlasse);
+            }
+            else if (res === "Beendet" || res === "beendet" || (res && res.toString().includes("beendet"))) {
+                console.log(`📢 [MELDUNG] Typ: Beendet für Klasse: ${newsKlasse}`);
+                await triggerNews("beendet", parseInt(slot), newsKlasse);
+            } else {
+                console.log(`ℹ️ Keine News-Bedingung erfüllt für Wert: "${res}".`);
+            }
+        } catch (newsError) {
+            console.error("⚠️ Fehler im triggerNews-Ablauf (wird übersprungen, damit Auto-Save läuft):", newsError);
         }
+    } else {
+        console.warn("⚠️ Funktion 'triggerNews' existiert im globalen Scope nicht!");
     }
 
     // 4. LOKALEN DATENSTAND AKTUALISIEREN
@@ -2345,7 +2408,6 @@ window.addChange = async (el, time, slot, klasse) => {
     currentPlanData[r][c] = finalVal;
     
     // 5. IN DIE SPEICHERLISTE (Warteschlange)
-    // Wir entfernen alte Änderungen für diesen Slot in der Warteschlange
     pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
     pendingChanges.push({ 
         row: parseInt(r), 
@@ -2356,11 +2418,12 @@ window.addChange = async (el, time, slot, klasse) => {
     }); 
 
     // 6. SOFORTIGER VERSAND (WICHTIG: await!)
-    // Hier wartet das Skript, bis die Antwort vom Google Script kommt
     try {
+        console.log("⏳ Starte saveImmediately()...");
         await saveImmediately();
+        console.log("=== 🏁 addChange erfolgreich beendet ===");
     } catch (error) {
-        console.error("Fehler beim Auto-Save in addChange:", error);
+        console.error("❌ Fehler beim Auto-Save in addChange:", error);
         throw error; // Re-throw damit updateSelection den Fehler merkt
     }
 };
