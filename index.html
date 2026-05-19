@@ -1395,30 +1395,37 @@ async function startYearReset(klasse, validiertesPw) {
  */
 let meineRelevanteNews = []; 
 
-// Diese Funktion muss beim Laden des Plans aufgerufen werden (z.B. in window.onload)
 async function initNewsSystem() {
-    console.log("🚀 News werden im Hintergrund geladen...");
+    console.log("🚀 News-System wird initialisiert...");
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
-    if (!aktuellerUser) return;
+    if (!aktuellerUser) {
+        console.warn("⚠️ Kein User-Kürzel gefunden, News-System pausiert.");
+        return;
+    }
 
     try {
         const zielUrl = typeof url !== 'undefined' ? url : "";
         const pw = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
         
         const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(pw)}`);
-        const allNews = await response.json();
+        const data = await response.json();
 
-        // Filtern: Zeige mir alle News, in deren Empfängerliste mein Kürzel steht
-meineRelevanteNews = allNews.filter(n => {
-    // 1. Sicherheitscheck: Falls empfaenger leer ist, nicht abstürzen
-    const empfaengerListe = (n.empfaenger || "").toUpperCase().split(',').map(e => e.trim());
-    
-    // 2. Filter: Nur mein Kürzel muss in der Liste sein
-    return empfaengerListe.includes(aktuellerUser);
-});
+        // Debug: Zeige uns, was genau vom Server kommt (Array oder Objekt?)
+        console.log("DEBUG: Rohdaten vom Server:", data);
+        
+        // Flexibles Mapping: Egal ob Array oder Objekt mit {news: []}
+        const allNews = data.news || (Array.isArray(data) ? data : []);
 
-        // Badge aufleuchten lassen, wenn ungelesene News vorhanden (Spalte J: gelesen)
-        const ungelesen = meineRelevanteNews.filter(n => !(n.gelesen || "").includes(aktuellerUser));
+        // Radikaler Filter: Nur News anzeigen, wo mein Kürzel in Spalte G steht
+        meineRelevanteNews = allNews.filter(n => {
+            const empfaenger = (n.empfaenger || "").toUpperCase();
+            return empfaenger.split(',').map(e => e.trim()).includes(aktuellerUser);
+        });
+
+        console.log("✅ Gefilterte News für die Sidebar:", meineRelevanteNews);
+
+        // Badge aktualisieren
+        const ungelesen = meineRelevanteNews.filter(n => !(n.gelesen || "").toUpperCase().includes(aktuellerUser));
         const dot = document.getElementById('news-dot');
         if (dot) dot.style.display = ungelesen.length > 0 ? 'block' : 'none';
         
@@ -1426,12 +1433,15 @@ meineRelevanteNews = allNews.filter(n => {
 }
 
 /**
- * Zeigt die bereits geladenen News sofort an.
+ * Zeigt die geladenen News in der Sidebar an.
  */
 window.showNews = function() {
     const sidebar = document.getElementById('newsSidebar');
     const newsContainer = document.getElementById('newsContent');
-    if (!sidebar || !newsContainer) return;
+    if (!sidebar || !newsContainer) {
+        console.error("Sidebar oder Container nicht gefunden!");
+        return;
+    }
 
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
@@ -1439,16 +1449,21 @@ window.showNews = function() {
 
     newsContainer.innerHTML = "";
     
+    if (meineRelevanteNews.length === 0) {
+        newsContainer.innerHTML = "<p style='padding:20px;'>Keine neuen Nachrichten.</p>";
+        return;
+    }
+    
     meineRelevanteNews.forEach(news => {
-        const istGelesen = (news.gelesen || "").includes(userKuerzel.toUpperCase().trim());
+        const istGelesen = (news.gelesen || "").toUpperCase().includes(userKuerzel.toUpperCase().trim());
         const card = document.createElement('div');
         card.className = `news-item ${istGelesen ? 'news-gelesen' : 'news-unread'}`;
         card.innerHTML = `
             <div class="news-header">
                 <span>${istGelesen ? '⚪ Gelesen' : '📥 Neu'}</span>
-                <span>${news.datum} - Slot ${news.slot}</span>
+                <span>${news.datum || ''} - Slot ${news.slot || ''}</span>
             </div>
-            <div class="news-text">${news.text}</div>
+            <div class="news-text">${news.text || ''}</div>
         `;
         card.onclick = () => markAsReadAndJump(news);
         newsContainer.appendChild(card);
@@ -1456,26 +1471,24 @@ window.showNews = function() {
 };
 
 /**
- * Markiert News als gelesen, springt zum Slot und lässt diesen blinken
+ * Markiert News als gelesen, springt zum Slot.
  */
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // 1. Visuell sofort reagieren
-    const card = event.currentTarget;
-    card.classList.add('news-gelesen');
-    card.classList.remove('news-unread');
-
-    // 2. Server informieren (Spalte J im Sheet aktualisieren)
+    // Server informieren
     fetch(url, {
         method: "POST",
         body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
     });
 
-    // 3. Zum Slot springen und blinken lassen
+    // Visuell reagieren
+    event.currentTarget.classList.add('news-gelesen');
+    event.currentTarget.classList.remove('news-unread');
+
     if (typeof jumpToSlot === 'function') jumpToSlot(news.slot);
     
-    const box = document.getElementById(`slot-${news.slot}`); // Stelle sicher, dass deine Boxen IDs wie "slot-12" haben
+    const box = document.getElementById(`slot-${news.slot}`);
     if (box) {
         box.classList.add('blink-animation');
         setTimeout(() => box.classList.remove('blink-animation'), 4000);
