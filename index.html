@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -940,7 +940,6 @@ async function handleLogin() {
     const ball = document.getElementById('loginBall');
     const errorDiv = document.getElementById('loginError');
     
-    // IDs aus deinem verschmolzenen HTML
     const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
     const pwVal = document.getElementById('pw').value;
 
@@ -949,19 +948,17 @@ async function handleLogin() {
         return; 
     }
 
-    // Visuelles Feedback: Button verstecken, Basketball hüpft
+    // Visuelles Feedback
     btn.style.visibility = 'hidden'; 
     ball.classList.add('active'); 
     errorDiv.innerText = "";
 
     try {
-        // Mode "login" prüft Passwort und Kürzel in der code.gs
         const response = await fetch(`${url}?mode=login&pw=${encodeURIComponent(pwVal)}&kuerzel=${encodeURIComponent(kuerzelVal)}`);
         const json = await response.json();
 
         if (json.error) {
             errorDiv.innerText = json.error === "Falsches Passwort" ? "Passwort inkorrekt!" : "Fehler: " + json.error;
-            // Zurücksetzen bei Fehler
             btn.style.visibility = 'visible';
             ball.classList.remove('active');
         } else {
@@ -969,17 +966,20 @@ async function handleLogin() {
             userPw = pwVal;
             userKuerzel = kuerzelVal;
             
-            // Login-Maske ausblenden (Fade-out Effekt)
+            // Login-Maske ausblenden
             document.getElementById('loginOverlay').classList.add('fade-out');
             
-            setTimeout(() => {
+            setTimeout(async () => {
                 document.getElementById('loginOverlay').style.display = 'none';
                 
                 // News-Button & Interface einblenden
                 const newsContainer = document.getElementById('news-btn-container');
                 if(newsContainer) newsContainer.style.display = 'block';
                 
-                // Plan laden
+                // --- WICHTIG: News sofort laden! ---
+                await initNewsSystem();
+                
+                // Danach Plan laden
                 loadPlan();
             }, 500);
         }
