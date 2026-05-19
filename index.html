@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1553,10 +1553,9 @@ async function triggerNews(type, slotIndex, klasse) {
 }
 
 
-
 /**
  * Hauptfunktion für die News-Sidebar.
- * Wird aufgerufen, wenn der User auf den "NEWS"-Button klickt.
+ * Passt exakt auf dein <div id="newsContent">!
  */
 async function showNews() {
     const sidebar = document.getElementById('newsSidebar');
@@ -1569,17 +1568,11 @@ async function showNews() {
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
 
-    // 2. Den Container in der Sidebar suchen und vorbereiten
-    // Falls du ein extra Element wie #newsZentraleContainer nutzt, nehmen wir das, sonst die Sidebar selbst
-    const newsContainer = document.getElementById('newsZentraleContainer') || sidebar;
+    // 2. Den richtigen Inhalts-Container ansteuern (dein gefundenes newsContent)
+    const newsContainer = document.getElementById('newsContent') || sidebar;
     
-    // Standard-Header für die Sidebar setzen
-    newsContainer.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px;">
-            <h3 style="color: #fff; margin: 0; font-size: 1.3em;">Hallen-News</h3>
-            <span onclick="closeNews()" style="color: #666; cursor: pointer; font-size: 1.1em; font-weight: bold;">&times; Schliessen</span>
-        </div>
-    `;
+    // Nur den INHALT leeren – der bestehende HTML-Header ("NEUIGKEITEN") bleibt erhalten!
+    newsContainer.innerHTML = "";
 
     // Lade-Hinweis erzeugen
     const loaderInfo = document.createElement('p');
@@ -1589,9 +1582,11 @@ async function showNews() {
     newsContainer.appendChild(loaderInfo);
 
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
+    console.log("🔍 Eingeloggter User für News-Abfrage:", aktuellerUser);
+
     if (!aktuellerUser || aktuellerUser === "UNBEKANNT") {
         loaderInfo.remove();
-        newsContainer.innerHTML += "<p class='no-news'>Bitte logge dich ein, um deine News zu sehen.</p>";
+        newsContainer.innerHTML = "<p class='no-news'>Bitte logge dich ein, um deine News zu sehen.</p>";
         return;
     }
 
@@ -1615,9 +1610,11 @@ async function showNews() {
 
         // Falls das Apps Script einen Fehler zurückwirft (z.B. falsches Passwort)
         if (allNews.status === "error") {
-            newsContainer.innerHTML += `<p class='no-news' style='color: #e74c3c;'>Fehler vom Server: ${allNews.msg}</p>`;
+            newsContainer.innerHTML = `<p class='no-news' style='color: #e74c3c;'>Fehler vom Server: ${allNews.msg}</p>`;
             return;
         }
+
+        console.log("📊 Insgesamt vom Server gelieferte News-Einträge:", allNews.length);
 
         // 4. Filtern: Nur News, die für mich bestimmt sind oder von mir kommen
         const meineNews = allNews.filter(news => {
@@ -1629,8 +1626,7 @@ async function showNews() {
             return verfasser === aktuellerUser || empfaengerListe.includes(aktuellerUser);
         });
 
-        // 5. Sortieren nach Datum (Neueste zuerst)
-        meineNews.sort((a, b) => new Date(b.datum) - new Date(a.datum));
+        console.log("🎯 Für diesen User gefilterte News:", meineNews.length);
 
         if (meineNews.length === 0) {
             const noNews = document.createElement('p');
@@ -1640,6 +1636,9 @@ async function showNews() {
             return;
         }
 
+        // 5. Sortieren nach ID (neueste zuerst) als stabiler Fallback für Text-Daten
+        meineNews.sort((a, b) => b.id - a.id);
+
         // 6. HTML für die Newszentrale generieren und einfügen (Nutzt dein neues CSS!)
         meineNews.forEach(news => {
             const newsCard = document.createElement('div');
@@ -1648,18 +1647,10 @@ async function showNews() {
             // Nutzt deine CSS Klassen: news-item sowie news-sent oder news-received
             newsCard.className = `news-item ${binVerfasser ? 'news-sent' : 'news-received'}`;
 
-            // Datum schön formatieren (DD.MM.YYYY)
-            let formatiertesDatum = "";
-            try {
-                formatiertesDatum = new Date(news.datum).toLocaleDateString('de-CH');
-            } catch(e) { 
-                formatiertesDatum = news.datum; 
-            }
-
             newsCard.innerHTML = `
                 <div class="news-header">
                     <span class="news-badge">${binVerfasser ? '📤 Gesendet' : '📥 Betrifft dich'}</span>
-                    <span class="news-date">${formatiertesDatum} - Slot ${news.slot}</span>
+                    <span class="news-date">${news.datum} - Slot ${news.slot}</span>
                 </div>
                 <div class="news-text">${news.text}</div>
                 <div class="news-footer">
@@ -1685,6 +1676,8 @@ async function showNews() {
         newsContainer.appendChild(errorInfo);
     }
 }
+
+
     
 
 /**
