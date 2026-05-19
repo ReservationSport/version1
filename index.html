@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -319,39 +319,36 @@ body {
     font-weight: 600;
 }
 
+
+
 /* ============================================================
-   6. SIDEBAR
+   6. SIDEBAR & 8. NEWS-SIDEBAR (Von Links)
    ============================================================ */
 
-
-#newsSidebar {
-    position: fixed; top: 0; left: 0; height: 100%; width: 300px;
-    background: #1a1a1a; z-index: 12000; border-right: 1px solid #333;
-    transform: translateX(-100%); transition: transform 0.3s ease-out;
-}
-.sidebar-open #newsSidebar { transform: translateX(0); }
-
-/* Animationen */
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes spin-once { to { transform: rotate(360deg); } }
-
-/* 8. NEWS-SIDEBAR (Von Links) */
 #newsSidebar {
     position: fixed;
     top: 0;
-    left: -350px; /* Startet außerhalb */
+    left: -350px; /* Startet komplett außerhalb des linken Bildschirms */
     width: 320px;
     height: 100%;
-    background: #111;
+    background: #111; /* Edles, dunkles Anthrazit */
     border-right: 1px solid #333;
-    z-index: 12000;
-    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    padding: 20px;
+    z-index: 12000;   /* Liegt sicher über dem Stundenplan */
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    padding: 20px;
+    box-sizing: border-box; /* Verhindert, dass das Padding die Breite sprengt */
+    display: none;    /* Wird vom JS gesteuert (showNews/closeNews) */
+    
+    /* Moderne, flüssige Animation für die Eigenschaft 'left' */
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-#newsSidebar.active { left: 0; }
+/* Wenn das JS '.active' anhängt, flutscht die Sidebar herein */
+#newsSidebar.active { 
+    left: 0; 
+}
 
+/* Die einzelnen News-Karten im Menü */
 .news-item {
     background: #1a1a1a;
     border: 1px solid #333;
@@ -359,9 +356,20 @@ body {
     border-radius: 6px;
     margin-bottom: 10px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s ease;
 }
-.news-item:hover { border-color: #e67e22; background: #222; }
+
+.news-item:hover { 
+    border-color: #e67e22; /* Dein oranges Highlight-Thema */
+    background: #222; 
+}
+
+/* ============================================================
+   ANIMATIONEN & EFFEKTE
+   ============================================================ */
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin-once { to { transform: rotate(360deg); } }
 
 /* Blinken bei News-Sprung */
 @keyframes highlightBlink {
@@ -369,9 +377,13 @@ body {
     50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; }
     100% { box-shadow: 0 0 0px #e67e22; border-color: #333; }
 }
-.blink-active { animation: highlightBlink 0.6s ease-in-out 3; }
+
+.blink-active { 
+    animation: highlightBlink 0.6s ease-in-out 3; 
+}
 
 
+    
 
 
 /* ============================================================
@@ -1358,8 +1370,11 @@ window.showNews = () => {
     const sidebar = document.getElementById('newsSidebar');
     const dot = document.getElementById('news-dot');
     
+    if (!sidebar) return;
+
     sidebar.style.display = 'block';
-    setTimeout(() => sidebar.classList.add('active'), 10); // Für CSS-Animation
+    // Minimaler Timeout, damit der Browser den Display-Wechsel registriert und die CSS-Transition abfeuert
+    setTimeout(() => sidebar.classList.add('active'), 10); 
     
     if (dot) dot.style.display = 'none'; 
 };
@@ -1369,7 +1384,10 @@ window.showNews = () => {
  */
 window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
+    if (!sidebar) return;
+
     sidebar.classList.remove('active');
+    // Wartet exakt die 300ms der CSS-Transition ab, bevor display auf 'none' gesetzt wird
     setTimeout(() => sidebar.style.display = 'none', 300);
 };
 
@@ -1448,7 +1466,7 @@ async function triggerNews(type, slotIndex, klasse) {
         
         if (result.status === "success") {
             console.log("News-Flash gesendet:", newsText);
-            // Optional: Kleiner Toast oder Hinweis, dass Kollegen informiert wurden
+            // Optional: Hier könnte später ein kleiner Toast-Hinweis getriggert werden
         }
     } catch (error) {
         console.error("News-Fehler:", error);
@@ -1459,6 +1477,10 @@ async function triggerNews(type, slotIndex, klasse) {
 }
 
 
+/* ============================================================
+   12. ÖFFNEN DES TASKMANAGERS
+   ============================================================ */
+    
 
 /**
  * Öffnet das Aktions-Menü für einen spezifischen Slot
