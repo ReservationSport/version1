@@ -1408,11 +1408,14 @@ async function initNewsSystem() {
         const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(pw)}`);
         const allNews = await response.json();
 
-        // Filtern: Nur Infos von ANDEREN, die MICH betreffen (Spalte G)
-        meineRelevanteNews = allNews.filter(n => 
-            n.verfasser.toUpperCase().trim() !== aktuellerUser && 
-            n.empfaenger.toUpperCase().split(',').map(e => e.trim()).includes(aktuellerUser)
-        );
+        // Filtern: Zeige mir alle News, in deren Empfängerliste mein Kürzel steht
+meineRelevanteNews = allNews.filter(n => {
+    // 1. Sicherheitscheck: Falls empfaenger leer ist, nicht abstürzen
+    const empfaengerListe = (n.empfaenger || "").toUpperCase().split(',').map(e => e.trim());
+    
+    // 2. Filter: Nur mein Kürzel muss in der Liste sein
+    return empfaengerListe.includes(aktuellerUser);
+});
 
         // Badge aufleuchten lassen, wenn ungelesene News vorhanden (Spalte J: gelesen)
         const ungelesen = meineRelevanteNews.filter(n => !(n.gelesen || "").includes(aktuellerUser));
