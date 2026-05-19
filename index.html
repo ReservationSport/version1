@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -328,130 +328,86 @@ body {
 #newsSidebar {
     position: fixed;
     top: 0;
-    left: -350px; /* Startet komplett außerhalb des linken Bildschirms */
+    left: -350px;
     width: 320px;
     height: 100%;
-    background: #111; /* Edles, dunkles Anthrazit */
+    background: #111;
     border-right: 1px solid #333;
-    z-index: 12000;   /* Liegt sicher über dem Stundenplan */
+    z-index: 12000;
     box-shadow: 10px 0 30px rgba(0,0,0,0.5);
     padding: 20px;
-    box-sizing: border-box; /* Verhindert, dass das Padding die Breite sprengt */
-    display: none;    /* Wird vom JS gesteuert (showNews/closeNews) */
-    
-    /* Moderne, flüssige Animation für die Eigenschaft 'left' */
+    box-sizing: border-box;
+    display: none;
     transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    
-    /* Erlaubt Scrollen innerhalb der Sidebar, falls es viele News gibt */
     overflow-y: auto; 
 }
 
-/* Wenn das JS '.active' anhängt, flutscht die Sidebar herein */
-#newsSidebar.active { 
-    left: 0; 
-}
+#newsSidebar.active { left: 0; }
 
-/* Die einzelnen News-Karten im Menü */
+/* Basis-Stile für die Karten */
 .news-item {
     background: #1a1a1a;
     border: 1px solid #333;
-    /* Zusätzlicher linker Rand für die visuelle Filter-Kennzeichnung */
-    border-left: 4px solid #555; 
     padding: 12px;
     border-radius: 6px;
     margin-bottom: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
-/* 📥 NEU: Wenn die News den eingeloggten User BETRIFFT (Dezent Orange) */
+/* 📥 NEU: Ungelesene Nachrichten */
 .news-item.news-received {
-    border-left-color: #e67e22; /* Dein oranges Highlight-Thema */
-    background: #221a12;        /* Ganz sanfter oranger Schimmer im Hintergrund */
+    border-left: 4px solid #e67e22;
+    background: #221a12;
 }
-.news-item.news-received .news-badge {
-    color: #e67e22;
-}
+.news-item.news-received .news-badge { color: #e67e22; }
 
-/* 📤 NEU: Wenn der User die News SELBST GESENDET hat (Dezent Silber/Blau) */
-.news-item.news-sent {
-    border-left-color: #3498db; /* Blau oder edles Grau (#95a5a6) */
-    background: #12181f;        /* Ganz sanfter bläulicher Schimmer */
-    opacity: 0.9;
+/* ⚪ Gelesen: Die neue graue Optik */
+.news-item.news-gelesen-grau {
+    background: #151515 !important;
+    border-left: 4px solid #444 !important;
+    opacity: 0.7;
 }
-.news-item.news-sent .news-badge {
-    color: #3498db;
-}
+.news-item.news-gelesen-grau .news-badge { color: #888; }
 
-/* Hover-Effekt für die Karten */
+/* Hover-Effekt */
 .news-item:hover { 
-    border-color: #e67e22;
+    border-color: #555;
     background: #222; 
-    opacity: 1;
 }
 
-/* NEU: Strukturierung der Inhalte innerhalb einer News-Karte */
-.news-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 6px;
-    font-size: 0.8em;
-}
+.news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8em; }
+.news-badge { font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
+.news-date { color: #777; }
+.news-text { margin: 6px 0; font-size: 0.95em; color: #eee; line-height: 1.4; }
+.news-footer { margin-top: 8px; border-top: 1px dashed #2a2a2a; padding-top: 4px; font-size: 0.75em; color: #666; }
 
-.news-badge {
-    font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.news-date {
-    color: #777;
-}
-
-.news-text {
-    margin: 6px 0;
-    font-size: 0.95em;
-    color: #eee;
-    line-height: 1.4;
-}
-
-.news-footer {
-    margin-top: 8px;
-    border-top: 1px dashed #2a2a2a;
-    padding-top: 4px;
-    font-size: 0.75em;
-    color: #666;
-}
-
-/* Info, falls keine News vorhanden sind */
-.no-news {
-    text-align: center;
-    color: #666;
-    font-style: italic;
-    padding: 20px;
-    font-size: 0.9em;
-}
-
+.no-news { text-align: center; color: #666; font-style: italic; padding: 20px; font-size: 0.9em; }
 
 /* ============================================================
    ANIMATIONEN & EFFEKTE
    ============================================================ */
 
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes spin-once { to { transform: rotate(360deg); } }
+/* Pulsieren des Benachrichtigungs-Punkts */
+@keyframes pulseDot {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.pulse-animation {
+    animation: pulseDot 1.5s infinite ease-in-out;
+}
 
-/* Blinken bei News-Sprung */
+/* Blinken bei News-Sprung im Stundenplan */
 @keyframes highlightBlink {
-    0% { box-shadow: 0 0 0px #e67e22; border-color: #333; }
-    50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; }
-    100% { box-shadow: 0 0 0px #e67e22; border-color: #333; }
+    0% { box-shadow: 0 0 0px #e67e22; border-color: transparent; }
+    50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; background-color: rgba(230, 126, 34, 0.2); }
+    100% { box-shadow: 0 0 0px #e67e22; border-color: transparent; }
 }
 
-.blink-active { 
-    animation: highlightBlink 0.6s ease-in-out 3; 
+.blink-animation { 
+    animation: highlightBlink 0.8s ease-in-out 4; 
 }
-
 
     
 
@@ -1434,235 +1390,94 @@ async function startYearReset(klasse, validiertesPw) {
    ============================================================ */
 
 /**
- * Schließt die News-Sidebar mit der flüssigen CSS-Animation
+ * GLOBALER SPEICHER & INIT
+ * Lädt die News sofort beim Start im Hintergrund.
  */
-window.closeNews = () => {
-    const sidebar = document.getElementById('newsSidebar');
-    if (!sidebar) return;
+let meineRelevanteNews = []; 
 
-    sidebar.classList.remove('active');
-    // Wartet exakt die 300ms der CSS-Transition ab, bevor display auf 'none' gesetzt wird
-    setTimeout(() => sidebar.style.display = 'none', 300);
-};
-
-/**
- * Erzeugt eine News-Meldung und sendet sie an das Google Sheet (News_DB)
- * Übergibt zusätzlich den Wochentag für den serverseitigen Master_DB-Abgleich.
- */
-async function triggerNews(type, slotIndex, klasse) {
-    console.log(`🎬 triggerNews gestartet (Serverseitiger Master-Abgleich) | Typ: "${type}", Slot: ${slotIndex}, Klasse: "${klasse}"`);
-    
-    const datePicker = document.getElementById('datePicker');
-    if (!datePicker) {
-        console.error("❌ triggerNews abgebrochen: Element #datePicker nicht gefunden!");
-        return;
-    }
-    const dateVal = datePicker.value;
-    
-    let newsText = "";
-    if (type === "ausfall") newsText = `Halle frei: ${klasse} fällt aus.`;
-    if (type === "outdoor") newsText = `Halle frei: ${klasse} ist Outdoor.`;
-    if (type === "beendet") newsText = `Halle dauerhaft frei: ${klasse} hat Schuljahr beendet.`;
-
-    if (!newsText) {
-        console.warn(`⚠️ triggerNews abgebrochen: Unbekannter Typ "${type}" oder kein Text generiert.`);
-        return;
-    }
-
-    const aktuellerVerfasser = typeof userKuerzel !== 'undefined' ? userKuerzel : "UNBEKANNT";
-    const aktuellesPasswort = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
-    const zielUrl = typeof url !== 'undefined' ? url : "";
-
-    if (!zielUrl) {
-        console.error("❌ triggerNews FEHLER: Die Variable 'url' ist nicht definiert!");
-        alert("Systemfehler: Skript-URL fehlt.");
-        return;
-    }
-
-    // Wochentagsnamen berechnen, damit code.gs weiss, nach welchem Tag sie in der Master_DB filtern muss
-    const wochentage = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
-    const wochentagName = wochentage[new Date(dateVal).getDay()];
-
-    const payload = {
-        action: "saveNews", 
-        mode: "saveNews",
-        id: "ID_" + Date.now() + "_" + Math.floor(Math.random() * 1000), 
-        datum: dateVal,
-        wochentag: wochentagName, // Wichtig für den Server-Filter!
-        slot: slotIndex,
-        tagIndex: new Date(dateVal).getDay(),
-        klasse: klasse,
-        verfasser: aktuellerVerfasser,
-        empfaenger: "", // Bleibt im Frontend leer. Wird von code.gs befüllt.
-        text: newsText,
-        pw: aktuellesPasswort
-    };
-
-    console.group(`🚀 NEWS-PROX-CHECK: Sende Daten an Google Sheet (Server-Matching aktiv)`);
-    console.log("URL:", zielUrl);
-    console.log("Payload:", payload);
-    console.groupEnd();
-
-    if (typeof toggleLoader === 'function') toggleLoader(true);
+// Diese Funktion muss beim Laden des Plans aufgerufen werden (z.B. in window.onload)
+async function initNewsSystem() {
+    console.log("🚀 News werden im Hintergrund geladen...");
+    const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
+    if (!aktuellerUser) return;
 
     try {
-        console.log("⏳ Sende POST-Anfrage...");
-        const response = await fetch(zielUrl, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP-Status-Fehler: ${response.status}`);
-        }
-
-        const result = await response.json();
-        console.log("📥 Antwort vom Google Script erhalten:", result);
+        const zielUrl = typeof url !== 'undefined' ? url : "";
+        const pw = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
         
-        if (result.status === "success") {
-            console.log("🎯 %cDATABASE SUCCESS: News erfolgreich eingetragen!", "color: #2ecc71; font-weight: bold;");
-            console.log(`👥 Automatisch ermittelte Empfänger aus der Master_DB: [${result.empfaengerGefunden || "Keine parallelen Kollegen gefunden"}]`);
-        } else {
-            console.error("❌ DATABASE ERROR vom Script gemeldet:", result.msg || "Keine Fehlermeldung erhalten");
-            alert("Fehler aus der Datenbank: " + (result.msg || "Speichern fehlgeschlagen."));
-        }
-    } catch (error) {
-        console.error("💥 NETZWERK- ODER SKRIPTFEHLER beim Senden der News:", error);
-        alert("News-Übertragung fehlgeschlagen.");
-    } finally {
-        if (typeof toggleLoader === 'function') toggleLoader(false);
-    }
+        const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(pw)}`);
+        const allNews = await response.json();
+
+        // Filtern: Nur Infos von ANDEREN, die MICH betreffen (Spalte G)
+        meineRelevanteNews = allNews.filter(n => 
+            n.verfasser.toUpperCase().trim() !== aktuellerUser && 
+            n.empfaenger.toUpperCase().split(',').map(e => e.trim()).includes(aktuellerUser)
+        );
+
+        // Badge aufleuchten lassen, wenn ungelesene News vorhanden (Spalte J: gelesen)
+        const ungelesen = meineRelevanteNews.filter(n => !(n.gelesen || "").includes(aktuellerUser));
+        const dot = document.getElementById('news-dot');
+        if (dot) dot.style.display = ungelesen.length > 0 ? 'block' : 'none';
+        
+    } catch (e) { console.error("Fehler beim Init:", e); }
 }
 
 /**
- * Hauptfunktion für die News-Sidebar.
- * Global als window.showNews registriert: Steuert die Animation,
- * blendet den roten Punkt aus und lädt die gefilterten Daten live.
+ * Zeigt die bereits geladenen News sofort an.
  */
-window.showNews = async function() {
+window.showNews = function() {
     const sidebar = document.getElementById('newsSidebar');
-    const dot = document.getElementById('news-dot');
-    
-    if (!sidebar) {
-        console.error("❌ showNews: #newsSidebar im HTML nicht gefunden!");
-        return;
-    }
+    const newsContainer = document.getElementById('newsContent');
+    if (!sidebar || !newsContainer) return;
 
-    // 1. Sidebar einblenden und einfahren lassen (deine CSS-Animation steuern)
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
+    if (document.getElementById('news-dot')) document.getElementById('news-dot').style.display = 'none';
 
-    // Benachrichtigungs-Punkt zurücksetzen, falls vorhanden
-    if (dot) dot.style.display = 'none'; 
-
-    // 2. Den richtigen Inhalts-Container ansteuern (dein gefundenes newsContent)
-    const newsContainer = document.getElementById('newsContent') || sidebar;
-    
-    // Nur den INHALT leeren – der bestehende HTML-Header ("NEUIGKEITEN") bleibt erhalten!
     newsContainer.innerHTML = "";
-
-    // Lade-Hinweis erzeugen
-    const loaderInfo = document.createElement('p');
-    loaderInfo.style.color = '#666';
-    loaderInfo.style.fontStyle = 'italic';
-    loaderInfo.innerText = 'Lade aktuelle Meldungen...';
-    newsContainer.appendChild(loaderInfo);
-
-    const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
-    console.log("🔍 Eingeloggter User für News-Abfrage:", aktuellerUser);
-
-    if (!aktuellerUser || aktuellerUser === "UNBEKANNT") {
-        loaderInfo.remove();
-        newsContainer.innerHTML = "<p class='no-news'>Bitte logge dich ein, um deine News zu sehen.</p>";
-        return;
-    }
-
-    try {
-        // 3. Alle News vom Server/Google Script holen
-        const zielUrl = typeof url !== 'undefined' ? url : "";
-        if (!zielUrl) {
-            loaderInfo.innerText = "Fehler: Variable 'url' fehlt.";
-            return;
-        }
-
-        // Passwort auslesen, um den API-Schutz zu bedienen
-        const aktuellesPasswort = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
-
-        // GET-Request inklusive PW-Schnittstelle absetzen
-        const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(aktuellesPasswort)}`);
-        const allNews = await response.json();
-
-        // Lade-Hinweis entfernen
-        loaderInfo.remove();
-
-        // Falls das Apps Script einen Fehler zurückwirft (z.B. falsches Passwort)
-        if (allNews.status === "error") {
-            newsContainer.innerHTML = `<p class='no-news' style='color: #e74c3c;'>Fehler vom Server: ${allNews.msg}</p>`;
-            return;
-        }
-
-        console.log("📊 Insgesamt vom Server gelieferte News-Einträge:", allNews.length);
-
-        // 4. Filtern: Nur News, die für mich bestimmt sind oder von mir kommen
-        const meineNews = allNews.filter(news => {
-            const verfasser = news.verfasser ? news.verfasser.toUpperCase().trim() : "";
-            const empfaengerListe = news.empfaenger 
-                ? news.empfaenger.toUpperCase().split(',').map(e => e.trim()) 
-                : [];
-
-            return verfasser === aktuellerUser || empfaengerListe.includes(aktuellerUser);
-        });
-
-        console.log("🎯 Für diesen User gefilterte News:", meineNews.length);
-
-        if (meineNews.length === 0) {
-            const noNews = document.createElement('p');
-            noNews.className = 'no-news';
-            noNews.innerText = '🎉 Keine aktuellen Meldungen für dich.';
-            newsContainer.appendChild(noNews);
-            return;
-        }
-
-        // 5. Sortieren nach ID (neueste zuerst) als stabiler Fallback für Text-Daten
-        meineNews.sort((a, b) => b.id - a.id);
-
-        // 6. HTML für die Newszentrale generieren und einfügen (Nutzt dein neues CSS!)
-        meineNews.forEach(news => {
-            const newsCard = document.createElement('div');
-            
-            const binVerfasser = news.verfasser.toUpperCase().trim() === aktuellerUser;
-            // Nutzt deine CSS Klassen: news-item sowie news-sent oder news-received
-            newsCard.className = `news-item ${binVerfasser ? 'news-sent' : 'news-received'}`;
-
-            newsCard.innerHTML = `
-                <div class="news-header">
-                    <span class="news-badge">${binVerfasser ? '📤 Gesendet' : '📥 Betrifft dich'}</span>
-                    <span class="news-date">${news.datum} - Slot ${news.slot}</span>
-                </div>
-                <div class="news-text">${news.text}</div>
-                <div class="news-footer">
-                    Von: <strong>${news.verfasser}</strong> ${news.empfaenger ? '| An: ' + news.empfaenger : ''}
-                </div>
-            `;
-            
-            // Sprung-Schnittstelle beim Klick auf die Karte
-            if (typeof jumpToSlot === 'function') {
-                newsCard.onclick = () => jumpToSlot(news.slot);
-            }
-
-            newsContainer.appendChild(newsCard);
-        });
-
-    } catch (error) {
-        console.error("Fehler beim Laden der Newszentrale:", error);
-        if (loaderInfo) loaderInfo.remove();
-        const errorInfo = document.createElement('p');
-        errorInfo.className = 'no-news';
-        errorInfo.style.color = '#e74c3c';
-        errorInfo.innerText = 'Fehler beim Laden der Meldungen.';
-        newsContainer.appendChild(errorInfo);
-    }
+    
+    meineRelevanteNews.forEach(news => {
+        const istGelesen = (news.gelesen || "").includes(userKuerzel.toUpperCase().trim());
+        const card = document.createElement('div');
+        card.className = `news-item ${istGelesen ? 'news-gelesen' : 'news-unread'}`;
+        card.innerHTML = `
+            <div class="news-header">
+                <span>${istGelesen ? '⚪ Gelesen' : '📥 Neu'}</span>
+                <span>${news.datum} - Slot ${news.slot}</span>
+            </div>
+            <div class="news-text">${news.text}</div>
+        `;
+        card.onclick = () => markAsReadAndJump(news);
+        newsContainer.appendChild(card);
+    });
 };
+
+/**
+ * Markiert News als gelesen, springt zum Slot und lässt diesen blinken
+ */
+async function markAsReadAndJump(news) {
+    const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
+    
+    // 1. Visuell sofort reagieren
+    const card = event.currentTarget;
+    card.classList.add('news-gelesen');
+    card.classList.remove('news-unread');
+
+    // 2. Server informieren (Spalte J im Sheet aktualisieren)
+    fetch(url, {
+        method: "POST",
+        body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
+    });
+
+    // 3. Zum Slot springen und blinken lassen
+    if (typeof jumpToSlot === 'function') jumpToSlot(news.slot);
+    
+    const box = document.getElementById(`slot-${news.slot}`); // Stelle sicher, dass deine Boxen IDs wie "slot-12" haben
+    if (box) {
+        box.classList.add('blink-animation');
+        setTimeout(() => box.classList.remove('blink-animation'), 4000);
+    }
+}
     
 
 /* ============================================================
