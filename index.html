@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1438,6 +1438,8 @@ async function initNewsSystem() {
 window.showNews = function() {
     const sidebar = document.getElementById('newsSidebar');
     const newsContainer = document.getElementById('newsContent');
+    const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
+
     if (!sidebar || !newsContainer) {
         console.error("Sidebar oder Container nicht gefunden!");
         return;
@@ -1445,6 +1447,7 @@ window.showNews = function() {
 
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
+    // Badge ausblenden, sobald die Zentrale geöffnet wird
     if (document.getElementById('news-dot')) document.getElementById('news-dot').style.display = 'none';
 
     newsContainer.innerHTML = "";
@@ -1455,20 +1458,27 @@ window.showNews = function() {
     }
     
     meineRelevanteNews.forEach(news => {
-        const istGelesen = (news.gelesen || "").toUpperCase().includes(userKuerzel.toUpperCase().trim());
+        // Robuste Prüfung: Splitten der Liste und Vergleich jedes Eintrags
+        const gelesenListe = (news.gelesen || "").toUpperCase().split(',').map(s => s.trim());
+        const istGelesen = gelesenListe.includes(aktuellerUser);
+        
         const card = document.createElement('div');
         card.className = `news-item ${istGelesen ? 'news-gelesen' : 'news-unread'}`;
         card.innerHTML = `
             <div class="news-header">
-                <span>${istGelesen ? '⚪ Gelesen' : '📥 Neu'}</span>
+                <span class="status-icon">${istGelesen ? '⚪ Gelesen' : '📥 Neu'}</span>
                 <span>${news.datum || ''} - Slot ${news.slot || ''}</span>
             </div>
             <div class="news-text">${news.text || ''}</div>
         `;
+        
         card.onclick = () => markAsReadAndJump(news);
         newsContainer.appendChild(card);
     });
 };
+
+
+    
 
 /**
  * Markiert News als gelesen, springt zum Datum und zum Slot.
@@ -1476,40 +1486,43 @@ window.showNews = function() {
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // 1. Server informieren (dass gelesen)
+    // 1. Datum setzen & Plan laden
+    if (news.datum) document.getElementById('datePicker').value = news.datum;
+    await loadPlan();
+
+    // 2. Visuelle sofort-Reaktion: Ausgrauen & Klasse ändern
+    const clickedCard = event.currentTarget;
+    clickedCard.classList.remove('news-unread');
+    clickedCard.classList.add('news-gelesen');
+    // Text oben anpassen
+    const headerSpan = clickedCard.querySelector('.news-header span');
+    if (headerSpan) headerSpan.innerText = '⚪ Gelesen';
+
+    // 3. Server informieren (nur wenn er noch nicht drin steht)
+    // Wir prüfen hier serverseitig, ob das Kürzel schon existiert (hast du ja in doPost schon)
     fetch(url, {
         method: "POST",
         body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
     });
 
-    // 2. Visuell reagieren
-    event.currentTarget.classList.add('news-gelesen');
-    event.currentTarget.classList.remove('news-unread');
-
-    // 3. NEU: Datum setzen und Plan neu laden
-    if (news.datum) {
-        // Angenommen news.datum kommt im Format "YYYY-MM-DD"
-        document.getElementById('datePicker').value = news.datum;
-        
-        // Plan für das neue Datum laden
-        await loadPlan();
-    }
-
-    // 4. Sprung zum Slot & Animation
+    // 4. Restliche Funktionen
     if (typeof jumpToSlot === 'function') jumpToSlot(news.slot);
     
-    const box = document.querySelector(`[data-slot="${news.slot}"]`); // Selektor angepasst an dein loadPlan-HTML
+    const box = document.querySelector(`[data-slot="${news.slot}"]`); 
     if (box) {
         box.classList.add('blink-animation');
         setTimeout(() => box.classList.remove('blink-animation'), 4000);
     }
-    };
-
-window.closeNews = () => {
+    
+    window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
     sidebar.classList.remove('active');
     setTimeout(() => sidebar.style.display = 'none', 300);
+}
 };
+        
+
+
     
 
 /* ============================================================
