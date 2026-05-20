@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -320,7 +320,6 @@ body {
 }
 
 
-
 /* ============================================================
    6. SIDEBAR & 8. NEWS-SIDEBAR (Von Links)
    ============================================================ */
@@ -355,20 +354,20 @@ body {
     transition: all 0.3s ease;
 }
 
-/* 📥 NEU: Ungelesene Nachrichten */
-.news-item.news-received {
+/* 📥 UNGELESEN (news-unread) */
+.news-item.news-unread {
     border-left: 4px solid #e67e22;
     background: #221a12;
 }
-.news-item.news-received .news-badge { color: #e67e22; }
+.news-item.news-unread .status-icon { color: #e67e22; font-weight: bold; }
 
-/* ⚪ Gelesen: Die neue graue Optik */
-.news-item.news-gelesen-grau {
+/* ⚪ GELESEN (news-gelesen) - Die graue Optik */
+.news-item.news-gelesen {
     background: #151515 !important;
     border-left: 4px solid #444 !important;
     opacity: 0.7;
 }
-.news-item.news-gelesen-grau .news-badge { color: #888; }
+.news-item.news-gelesen .status-icon { color: #888; font-weight: normal; }
 
 /* Hover-Effekt */
 .news-item:hover { 
@@ -377,12 +376,11 @@ body {
 }
 
 .news-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.8em; }
-.news-badge { font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; }
-.news-date { color: #777; }
+.status-icon { font-size: 0.9em; text-transform: uppercase; letter-spacing: 0.5px; }
 .news-text { margin: 6px 0; font-size: 0.95em; color: #eee; line-height: 1.4; }
-.news-footer { margin-top: 8px; border-top: 1px dashed #2a2a2a; padding-top: 4px; font-size: 0.75em; color: #666; }
+    
 
-.no-news { text-align: center; color: #666; font-style: italic; padding: 20px; font-size: 0.9em; }
+
 
 /* ============================================================
    ANIMATIONEN & EFFEKTE
@@ -398,7 +396,8 @@ body {
     animation: pulseDot 1.5s infinite ease-in-out;
 }
 
-/* Blinken bei News-Sprung im Stundenplan */
+
+    /* Blinken bei News-Sprung im Stundenplan */
 @keyframes highlightBlink {
     0% { box-shadow: 0 0 0px #e67e22; border-color: transparent; }
     50% { box-shadow: 0 0 20px #e67e22; border-color: #e67e22; background-color: rgba(230, 126, 34, 0.2); }
@@ -1486,37 +1485,41 @@ window.showNews = function() {
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // 1. Datum setzen & Plan laden
-    if (news.datum) document.getElementById('datePicker').value = news.datum;
-    await loadPlan();
+    // 1. Zentrale sofort schließen
+    window.closeNews();
 
-    // 2. Visuelle sofort-Reaktion: Ausgrauen & Klasse ändern
-    const clickedCard = event.currentTarget;
-    clickedCard.classList.remove('news-unread');
-    clickedCard.classList.add('news-gelesen');
-    // Text oben anpassen
-    const headerSpan = clickedCard.querySelector('.news-header span');
-    if (headerSpan) headerSpan.innerText = '⚪ Gelesen';
+    // 2. Datum setzen & Plan laden
+    if (news.datum) {
+        document.getElementById('datePicker').value = news.datum;
+        await loadPlan(); // Warten, bis der neue Plan geladen ist
+    }
 
-    // 3. Server informieren (nur wenn er noch nicht drin steht)
-    // Wir prüfen hier serverseitig, ob das Kürzel schon existiert (hast du ja in doPost schon)
+    // 3. Server-Update (als 'gelesen' markieren)
     fetch(url, {
         method: "POST",
         body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
     });
 
-    // 4. Restliche Funktionen
-    if (typeof jumpToSlot === 'function') jumpToSlot(news.slot);
-    
-    const box = document.querySelector(`[data-slot="${news.slot}"]`); 
-    if (box) {
-        box.classList.add('blink-animation');
-        setTimeout(() => box.classList.remove('blink-animation'), 4000);
+    // 4. Visuelle Markierung in der News-Liste (sofort)
+    if (event && event.currentTarget) {
+        event.currentTarget.classList.add('news-gelesen');
+        event.currentTarget.classList.remove('news-unread');
     }
-    
-   window.closeNews();
+
+    // 5. Zur Box springen und leuchten lassen
+    setTimeout(() => {
+        const box = document.querySelector(`[data-slot="${news.slot}"]`); 
+        if (box) {
+            box.scrollIntoView({ behavior: 'smooth', block: 'center' }); // Bonus: Sanft hinscrollen
+            box.classList.add('blink-animation');
+            // Die Klasse wird nach ca. 4 Sekunden entfernt, um sie sauber für einen erneuten Sprung zu machen
+            setTimeout(() => box.classList.remove('blink-animation'), 4000);
+        }
+    }, 200);
 };
-        
+
+
+    
  window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
     sidebar.classList.remove('active');
