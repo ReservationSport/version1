@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1485,11 +1485,11 @@ async function refreshAndShowNews() {
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // 1. Visuell sofort reagieren (Bevor loadPlan alles überschreibt)
+    // 1. Visuelle sofort-Reaktion (UI bleibt direkt im Sidebar-Element)
     const clickedCard = event.currentTarget;
-    clickedCard.style.opacity = "0.4"; // Direkte Manipulation
+    clickedCard.style.opacity = "0.4";
     clickedCard.style.filter = "grayscale(1)";
-    clickedCard.style.pointerEvents = "none"; // Klicks verhindern
+    clickedCard.style.pointerEvents = "none";
     clickedCard.querySelector('.news-header span').innerText = '⚪ Gelesen';
 
     // 2. Server informieren
@@ -1501,22 +1501,28 @@ async function markAsReadAndJump(news) {
     // 3. Zentrale schließen
     window.closeNews();
 
-    // 4. Navigation & Plan laden
+    // 4. Navigation & Warten auf DOM-Update
     if (news.datum) {
         document.getElementById('datePicker').value = news.datum;
-        await loadPlan(); 
+        await loadPlan(); // Hier wird der Plan komplett neu aufgebaut
     }
 
-    // 5. Springen & Leuchten
-    if (typeof jumpToSlot === 'function') jumpToSlot(news.slot);
-    
+    // 5. Scrollen & Blinken mit absolutem Timing
+    // Wir warten kurz, bis das neue DOM "gerendert" wurde
     setTimeout(() => {
         const box = document.querySelector(`[data-slot="${news.slot}"]`); 
         if (box) {
-            box.classList.add('blink-animation');
-            setTimeout(() => box.classList.remove('blink-animation'), 4000);
+            // Erst scrollen, dann blinken
+            box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            setTimeout(() => {
+                box.classList.add('blink-animation');
+            }, 300); // Kleine Verzögerung, damit das Scrollen nicht das Blinken unterbricht
+            
+            // Blink-Animation entfernen nach 4 Sekunden
+            setTimeout(() => box.classList.remove('blink-animation'), 4300);
         }
-    }, 200);
+    }, 300); // 300ms warten, damit loadPlan garantiert fertig ist
 }
 
 
