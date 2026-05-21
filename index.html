@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1160,7 +1160,7 @@ window.loadPlan = async function(silent = false) {
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
-    // Nur resetten, wenn es kein Hintergrund-Update ist
+    // Nur resetten, wenn es KEIN Hintergrund-Update ist
     if (!silent) {
         container.innerHTML = ""; 
         if (loader) loader.style.display = 'block'; 
@@ -1261,7 +1261,7 @@ window.loadPlan = async function(silent = false) {
             }
         });
 
-        // SANFTES UPDATE (DOM-Patching ohne Neuladen des Containers)
+        // SANFTES UPDATE: Patching statt Überschreiben
         if (silent) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
@@ -1271,14 +1271,17 @@ window.loadPlan = async function(silent = false) {
                 const slot = newBox.getAttribute('data-slot');
                 const oldBox = container.querySelector(`.box[data-slot="${slot}"]`);
                 if (oldBox) {
-                    if (oldBox.className !== newBox.className) oldBox.className = newBox.className;
-                    if (oldBox.innerHTML !== newBox.innerHTML) oldBox.innerHTML = newBox.innerHTML;
-                    if (oldBox.style.backgroundColor !== newBox.style.backgroundColor) oldBox.style.backgroundColor = newBox.style.backgroundColor;
+                    oldBox.className = newBox.className;
+                    oldBox.style.cssText = newBox.style.cssText;
+                    oldBox.innerHTML = newBox.innerHTML;
                 }
             });
-        } else {
-            container.innerHTML = html;
+            // HIER ENDET DAS SILENT UPDATE: Der Container wurde nie geleert!
+            return; 
         }
+
+        // HARTER LOAD: Wird nur bei manuellem Neuladen oder Datumssprung ausgeführt
+        container.innerHTML = html;
 
         if (typeof initNewsSystem === 'function') {
             initNewsSystem().catch(err => console.error("News-Refresh fehlgeschlagen", err));
@@ -1294,8 +1297,6 @@ window.loadPlan = async function(silent = false) {
         updateNavButtons();
     }
 };
-
-
 
     
 
