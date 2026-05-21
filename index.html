@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2185,9 +2185,16 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     // 1. Sofortiges lokales Update des Stundenplans (Optimistic UI)
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
     if (targetBox) {
-        // Füge die CSS-Klasse hinzu, die deine Halle als "reserviert" kennzeichnet
+        // Text direkt im Label ändern
+        const label = targetBox.querySelector('.halle-label');
+        if (label) label.innerText = neueHalle;
+        
+        // Hintergrundfarbe direkt ändern (nutzt dein globales configFarben Objekt)
+        if (configFarben && configFarben[neueHalle]) {
+            targetBox.style.backgroundColor = configFarben[neueHalle];
+        }
+        
         targetBox.classList.add('reserviert-local'); 
-        // Optional: Hier könntest du auch direkt den Hallennamen in das Feld schreiben, falls nötig
     }
 
     // 2. Sofortiges visuelles Feedback: Button kurz grün färben
@@ -2216,15 +2223,19 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         .catch(e => {
             console.error(e);
             // Rückgängig machen, falls der Server-Call fehlschlägt
-            if (targetBox) targetBox.classList.remove('reserviert-local');
+            if (targetBox) {
+                targetBox.classList.remove('reserviert-local');
+                targetBox.style.backgroundColor = ""; // Farbe zurücksetzen
+                const label = targetBox.querySelector('.halle-label');
+                if (label) label.innerText = ""; // Label leeren
+            }
             btn.style.background = "rgba(192, 57, 43, 0.5)"; 
             alert("Reservierung konnte nicht gespeichert werden.");
         });
 
-    // 5. Editor sofort schließen – der Nutzer muss nicht warten!
+    // 5. Editor sofort schließen
     closeEditor();
 };
-
 
     
 
