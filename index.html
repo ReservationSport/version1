@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -930,7 +930,9 @@ body {
         document.getElementById('datePicker').value = today;
     });
 
-  /* ============================================================
+
+
+    /* ============================================================
    3. LOGIN-LOGIK (Optimiert für Slot-Index)
    ============================================================ */
 
@@ -980,6 +982,14 @@ async function handleLogin() {
                 
                 // Danach Plan laden
                 loadPlan();
+
+                // --- SCHRITT 1: Hintergrund-Aktualisierung starten ---
+                setInterval(async () => {
+                    if (document.visibilityState === 'visible') {
+                        await loadPlan(); 
+                    }
+                }, 30000); // 30 Sekunden Intervall
+                
             }, 500);
         }
     } catch (e) {
@@ -989,6 +999,8 @@ async function handleLogin() {
         console.error("Login Error:", e);
     }
 }
+
+    
 
 
 /* ============================================================
@@ -2161,27 +2173,23 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 }
     
 
-window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) {
+window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
-    // 1. Klick-Blocker aktivieren
-    // Wir verhindern Klicks auf das gesamte Menü UND das Backdrop (Schließen durch Klick daneben)
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) {
-        modal.style.pointerEvents = "none"; 
+    // 1. Sofortiges lokales Update des Stundenplans (Optimistic UI)
+    const targetBox = document.querySelector(`[data-slot="${slot}"]`);
+    if (targetBox) {
+        // Füge die CSS-Klasse hinzu, die deine Halle als "reserviert" kennzeichnet
+        targetBox.classList.add('reserviert-local'); 
+        // Optional: Hier könntest du auch direkt den Hallennamen in das Feld schreiben, falls nötig
     }
 
-    // 2. Button-Styling vorbereiten
-    // Wir behalten den Text und fügen rechts den Loader hinzu
-    const originalText = btn.querySelector('.btn-text').innerText;
-    btn.style.position = "relative";
-    btn.innerHTML = `
-        <span class="btn-text">${originalText}</span>
-        <div class="inline-loader-container">
-            <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
-        </div>
-    `;
+    // 2. Sofortiges visuelles Feedback: Button kurz grün färben
+    btn.style.transition = "background 0.3s ease";
+    btn.style.background = "rgba(39, 174, 96, 0.4)"; 
+    btn.innerText = "Reserviert ✓"; 
 
+    // 3. Payload vorbereiten
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2192,47 +2200,23 @@ window.applyHalleSelection = async function(neueHalle, time, slot, klasse, btn) 
         halle: neueHalle
     };
 
-    // Sicherheits-Timeout (8 Sek)
-    const safetyTimeout = setTimeout(() => {
-        alert("Verbindung zu langsam. Bitte Seite neu laden.");
-        if (modal) modal.style.pointerEvents = "auto";
-        handleReservationUI(time, slot, klasse); // Menü zurücksetzen
-    }, 8000);
-
-    try {
-        const result = await saveImmediately(payload);
-        
-        if (result && result.status === "success") {
-            // 3. Erfolg: Loader durch grünen Haken ersetzen
-            const loaderContainer = btn.querySelector('.inline-loader-container');
-            if (loaderContainer) {
-                loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+    // 4. Im Hintergrund speichern (Fire and Forget)
+    saveImmediately(payload)
+        .then(result => {
+            if (!(result && result.status === "success")) {
+                throw new Error("Speicherfehler");
             }
-            
-            // Ganzer Button leuchtet kurz grün auf
-            btn.style.transition = "background 0.3s ease";
-            btn.style.background = "rgba(39, 174, 96, 0.4)"; 
+        })
+        .catch(e => {
+            console.error(e);
+            // Rückgängig machen, falls der Server-Call fehlschlägt
+            if (targetBox) targetBox.classList.remove('reserviert-local');
+            btn.style.background = "rgba(192, 57, 43, 0.5)"; 
+            alert("Reservierung konnte nicht gespeichert werden.");
+        });
 
-            clearTimeout(safetyTimeout);
-
-            // Warten bis der Plan im Hintergrund geladen ist
-            await loadPlan(); 
-            
-            // Sanft ausblenden
-            setTimeout(closeEditor, 400);
-        } else {
-            throw new Error("Fehler beim Speichern");
-        }
-    } catch (e) {
-        clearTimeout(safetyTimeout);
-        btn.style.background = "rgba(192, 57, 43, 0.5)";
-        btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="margin-left:10px;">❌</span>`;
-        
-        setTimeout(() => {
-            if (modal) modal.style.pointerEvents = "auto";
-            handleReservationUI(time, slot, klasse); // Zurück zur Auswahl
-        }, 1500);
-    }
+    // 5. Editor sofort schließen – der Nutzer muss nicht warten!
+    closeEditor();
 };
 
 
