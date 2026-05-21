@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOqwqwqwdq</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1160,7 +1160,7 @@ window.loadPlan = async function(silent = false) {
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
-    // Nur resetten, wenn es KEIN Hintergrund-Update ist
+    // --- 1. HARTER RESET (nur bei manuellem Laden) ---
     if (!silent) {
         container.innerHTML = ""; 
         if (loader) loader.style.display = 'block'; 
@@ -1184,49 +1184,55 @@ window.loadPlan = async function(silent = false) {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        if (json.status === "error" && json.error !== "SPERRE") {
-            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; color: red;">${json.msg}</div>`;
-            return;
+        // --- 2. SILENT UPDATE (Hier wird NICHTS gelöscht, nur Werte überschrieben) ---
+        if (silent && json.plan) {
+            const plan = json.plan;
+            window.lastPlanData = plan;
+            
+            Object.keys(plan).forEach(slot => {
+                const box = container.querySelector(`[data-slot="${slot}"]`);
+                if (box) {
+                    const data = plan[slot];
+                    const klasse = data.klasse || "";
+                    const halle = data.halle || "";
+                    const isAusfall = (halle === "Ausfall");
+                    const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
+
+                    // Nur ändern, wenn Inhalt abweicht (verhindert Flackern)
+                    const label = box.querySelector('.halle-label');
+                    if (label && label.innerText !== halle) label.innerText = halle;
+
+                    const kLabel = box.querySelector('.klasse-label');
+                    if (kLabel && kLabel.innerText !== klasse) kLabel.innerText = klasse;
+
+                    box.style.backgroundColor = isAusfall ? '' : (configFarben[halle] || '');
+                }
+            });
+            return; // EXIT: Der Container wurde nie geleert!
         }
 
-        // Sperrzeit / Feiertag
-        if (json.sperrMsg) {
-            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem; border: 1px solid #e67e22;">
-                <i class="fas fa-calendar-check" style="margin-bottom:10px; font-size: 2rem;"></i><br>
-                <strong>${json.sperrMsg}</strong><br>
-                <span style="font-size: 0.9rem; color: #aaa; margin-top: 10px; display: block;">Heute findet kein regulärer Sportunterricht statt.</span>
-            </div>`;
-            if (!silent && loader) loader.style.display = 'none';
-            return; 
-        }
-
+        // --- 3. HARTER FULL-LOAD (für den ersten Aufbau) ---
         const plan = json.plan; 
-        window.lastPlanData = json.plan; 
+        window.lastPlanData = plan; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
-        window.materialOptionen = json.materialsList || []; 
         
         configFarben = {}; 
-        if (json.options) {
-            json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
-        }
+        if (json.options) json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
         
         const zeiten = [
-            "07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", 
-            "10:00 - 10:45", "10:50 - 11:35", "11:40 - 12:25", 
-            "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", 
-            "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
+            "07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", "10:00 - 10:45", "10:50 - 11:35", 
+            "11:40 - 12:25", "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
         ];
 
         let html = `<div class="box header-row" style="grid-column: span 6;"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
 
         zeiten.forEach((zeitStr, rowIndex) => {
-            const lektionNum = rowIndex + 1;
-            if (lektionNum === 4 || lektionNum === 10) html += `<div class="divider-thin"></div>`;
-            if (lektionNum === 7) html += `<div class="divider-thick"></div>`;
+            if (rowIndex + 1 === 4 || rowIndex + 1 === 10) html += `<div class="divider-thin"></div>`;
+            if (rowIndex + 1 === 7) html += `<div class="divider-thick"></div>`;
             html += `<div class="box zeit-box">${zeitStr}</div>`;
             
             for(let i = 1; i <= 5; i++) {
@@ -1234,26 +1240,13 @@ window.loadPlan = async function(silent = false) {
                 const slotData = plan[absoluteSlot] || {};
                 const klasse = slotData.klasse || "";
                 const halle = slotData.halle || "";
-                const material = slotData.material || "";
-                const matKommentar = slotData.kommentar || "";
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
                 const isAusfall = (halle === "Ausfall");
                 const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
                 
-                let materialHtml = "";
-                if (material) {
-                    const b64Material = btoa(unescape(encodeURIComponent(material)));
-                    const b64Kommentar = btoa(unescape(encodeURIComponent(matKommentar || "")));
-                    const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
-                    materialHtml = `<span class="material-icon" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}" style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;" onclick="event.stopPropagation(); event.preventDefault(); if(typeof showMaterialDetailPopup === 'function') { showMaterialDetailPopup(decodeURIComponent(escape(atob('${b64Material}'))), decodeURIComponent(escape(atob('${b64Kommentar}')))); }"><i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i></span>`;
-                }
-
-                const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}" data-time="${zeitStr}" ${clickAction}
-                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
-                        ${materialHtml}
+                        data-slot="${absoluteSlot}" style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
@@ -1261,40 +1254,14 @@ window.loadPlan = async function(silent = false) {
             }
         });
 
-        // SANFTES UPDATE: Patching statt Überschreiben
-        if (silent) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = html;
-            const newBoxes = tempDiv.querySelectorAll('.box[data-slot]');
-            
-            newBoxes.forEach(newBox => {
-                const slot = newBox.getAttribute('data-slot');
-                const oldBox = container.querySelector(`.box[data-slot="${slot}"]`);
-                if (oldBox) {
-                    oldBox.className = newBox.className;
-                    oldBox.style.cssText = newBox.style.cssText;
-                    oldBox.innerHTML = newBox.innerHTML;
-                }
-            });
-            // HIER ENDET DAS SILENT UPDATE: Der Container wurde nie geleert!
-            return; 
-        }
-
-        // HARTER LOAD: Wird nur bei manuellem Neuladen oder Datumssprung ausgeführt
         container.innerHTML = html;
 
-        if (typeof initNewsSystem === 'function') {
-            initNewsSystem().catch(err => console.error("News-Refresh fehlgeschlagen", err));
-        }
-
     } catch(e) { 
-        console.error("Fehler in loadPlan:", e); 
-        if (!silent) {
-            container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Server-Verbindung unterbrochen!</div>`;
-        }
+        console.error("Fehler:", e); 
+        if (!silent) container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Verbindungsfehler.</div>`;
     } finally {
         if (!silent && loader) loader.style.display = 'none';
-        updateNavButtons();
+        if (typeof updateNavButtons === 'function') updateNavButtons();
     }
 };
 
