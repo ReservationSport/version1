@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -934,9 +934,8 @@ body {
     });
 
 
-
-    /* ============================================================
-   3. LOGIN-LOGIK (Optimiert für Slot-Index)
+/* ============================================================
+   3. LOGIN-LOGIK (Optimiert für getrennten Sync)
    ============================================================ */
 
 async function handleLogin() {
@@ -980,16 +979,17 @@ async function handleLogin() {
                 const newsContainer = document.getElementById('news-btn-container');
                 if(newsContainer) newsContainer.style.display = 'block';
                 
-                // --- WICHTIG: News sofort laden! ---
+                // News sofort laden
                 await initNewsSystem();
                 
-                // Danach Plan laden
-                loadPlan();
+                // Erster Aufbau des Plans
+                await loadPlan();
 
-                // --- SCHRITT 1: Hintergrund-Aktualisierung starten ---
+                // --- SCHRITT 1: Hintergrund-Sync starten (NUR syncPlan) ---
                 setInterval(async () => {
                     if (document.visibilityState === 'visible') {
-                        await loadPlan(); 
+                        // Ruft jetzt die sichere "Pfleger-Funktion" auf
+                        await syncPlan(); 
                     }
                 }, 30000); // 30 Sekunden Intervall
                 
@@ -1002,6 +1002,9 @@ async function handleLogin() {
         console.error("Login Error:", e);
     }
 }
+
+    
+   
 
  document.getElementById('plan-container').addEventListener('click', function(e) {
     // Suche das nächste Element mit der Klasse .box
@@ -1169,7 +1172,7 @@ function getDataBySlotIndex(index) {
    7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
    ============================================================ */
 
-window.loadPlan = async function(silent = false) {
+window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
     const loader = document.getElementById('global-loader'); 
@@ -1177,23 +1180,16 @@ window.loadPlan = async function(silent = false) {
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
-    // --- 1. HARTER RESET (nur bei manuellem Laden) ---
-    if (!silent) {
-        container.innerHTML = ""; 
-        if (loader) loader.style.display = 'block'; 
-    }
+    container.innerHTML = ""; 
+    if (loader) loader.style.display = 'block'; 
     
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
-    // Wochenende prüfen
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
-        container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">
-            <i class="fas fa-umbrella-beach" style="margin-bottom:10px; font-size: 2rem;"></i><br>
-            Mach mal Pause! Es ist Wochenende... 
-        </div>`; 
-        if (!silent && loader) loader.style.display = 'none'; 
+        container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
+        if (loader) loader.style.display = 'none'; 
         return; 
     }
 
@@ -1201,56 +1197,22 @@ window.loadPlan = async function(silent = false) {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // --- 2. SILENT UPDATE (Extrem vorsichtig) ---
-        if (silent && json.plan) {
-            const plan = json.plan;
-            window.lastPlanData = plan;
-            
-            Object.keys(plan).forEach(slot => {
-                const box = container.querySelector(`[data-slot="${slot}"]`);
-                if (box) {
-                    const data = plan[slot];
-                    const klasse = data.klasse || "";
-                    const halle = data.halle || "";
-                    
-                    // NUR TEXT ÄNDERN: Kein className, kein style!
-                    const hLabel = box.querySelector('.halle-label');
-                    if (hLabel) hLabel.innerText = halle;
-                    
-                    const kLabel = box.querySelector('.klasse-label');
-                    if (kLabel) kLabel.innerText = klasse;
-                    
-                    // Lehrer nur wenn vorhanden
-                    const lLabel = box.querySelector('.lehrer-info');
-                    if (lLabel) lLabel.innerText = data.lehrer || allClassTeachers[klasse] || "";
-                }
-            });
-            return; // EXIT: Alles andere wird nicht angerührt
-        }
-
-        
-        // --- 3. HARTER FULL-LOAD (für den ersten Aufbau) ---
         const plan = json.plan; 
         window.lastPlanData = plan; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
-        
         configFarben = {}; 
         if (json.options) json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
-        
-        const zeiten = [
-            "07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", "10:00 - 10:45", "10:50 - 11:35", 
-            "11:40 - 12:25", "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
-        ];
+        const zeiten = ["07:15 - 08:00", "08:05 - 08:50", "08:55 - 09:40", "10:00 - 10:45", "10:50 - 11:35", "11:40 - 12:25", "12:50 - 13:35", "13:40 - 14:25", "14:30 - 15:15", "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00"];
 
         let html = `<div class="box header-row" style="grid-column: span 6;"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
 
         zeiten.forEach((zeitStr, rowIndex) => {
-            if (rowIndex + 1 === 4 || rowIndex + 1 === 10) html += `<div class="divider-thin"></div>`;
-            if (rowIndex + 1 === 7) html += `<div class="divider-thick"></div>`;
+            if (rowIndex + 1 === 4 || rowIndex + 1 === 10) html += `<div class="divider-thin" style="grid-column: span 6;"></div>`;
+            if (rowIndex + 1 === 7) html += `<div class="divider-thick" style="grid-column: span 6;"></div>`;
             html += `<div class="box zeit-box">${zeitStr}</div>`;
             
             for(let i = 1; i <= 5; i++) {
@@ -1264,7 +1226,8 @@ window.loadPlan = async function(silent = false) {
                 
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}" style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
+                        data-slot="${absoluteSlot}" data-time="${zeitStr}" 
+                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
@@ -1273,13 +1236,49 @@ window.loadPlan = async function(silent = false) {
         });
 
         container.innerHTML = html;
-
     } catch(e) { 
         console.error("Fehler:", e); 
-        if (!silent) container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Verbindungsfehler.</div>`;
+        container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Verbindungsfehler.</div>`;
     } finally {
-        if (!silent && loader) loader.style.display = 'none';
-        if (typeof updateNavButtons === 'function') updateNavButtons();
+        if (loader) loader.style.display = 'none';
+    }
+};
+
+
+
+    window.syncPlan = async function() {
+    const dp = document.getElementById('datePicker');
+    const container = document.getElementById('plan-container'); 
+    
+    try {
+        const res = await fetch(`${url}?date=${dp.value}&pw=${userPw}&kuerzel=${userKuerzel}`);
+        const json = await res.json();
+        if (!json.plan) return;
+        
+        window.lastPlanData = json.plan; 
+        
+        Object.keys(json.plan).forEach(slot => {
+            const box = container.querySelector(`[data-slot="${slot}"]`);
+            if (box) {
+                const data = json.plan[slot];
+                const klasse = data.klasse || "";
+                const halle = data.halle || "";
+                const lehrer = data.lehrer || allClassTeachers[klasse] || "";
+                
+                const hLabel = box.querySelector('.halle-label');
+                if (hLabel) hLabel.innerText = halle;
+                
+                const kLabel = box.querySelector('.klasse-label');
+                if (kLabel) kLabel.innerText = klasse;
+                
+                const lLabel = box.querySelector('.lehrer-info');
+                if (lLabel) lLabel.innerText = lehrer;
+                
+                box.style.backgroundColor = (halle === "Ausfall") ? "" : (configFarben[halle] || "");
+            }
+        });
+    } catch(e) {
+        console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
 
@@ -2167,21 +2166,18 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
 
-    // 1. Sofortiges lokales Update des Stundenplans (Optimistic UI)
+    // 1. Sofortiges lokales Update (Optimistic UI)
     if (targetBox) {
-        // Text direkt im Label ändern
         const label = targetBox.querySelector('.halle-label');
         if (label) label.innerText = neueHalle;
         
-        // Hintergrundfarbe direkt ändern
         if (configFarben && configFarben[neueHalle]) {
             targetBox.style.backgroundColor = configFarben[neueHalle];
         }
-        
         targetBox.classList.add('reserviert-local'); 
     }
 
-    // 2. Sofortiges visuelles Feedback: Button kurz grün färben
+    // 2. Sofortiges visuelles Feedback
     btn.style.transition = "background 0.3s ease";
     btn.style.background = "rgba(39, 174, 96, 0.4)"; 
     btn.innerText = "Reserviert ✓"; 
@@ -2200,10 +2196,12 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     // 4. Speichern und auf Server-Bestätigung warten
     saveImmediately(payload)
         .then(result => {
-            // Prüfung: Hat der Server die Reservierung akzeptiert?
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
+            // ERFOLG: Ein stiller Sync sorgt dafür, dass der ganze Plan aktuell bleibt
+            // ohne das DOM komplett neu aufzubauen.
+            syncPlan();
         })
         .catch(e => {
             console.error("Reservierungsfehler:", e);
@@ -2219,9 +2217,9 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
             btn.style.background = "rgba(192, 57, 43, 0.5)"; 
             alert("Fehler: " + e.message);
 
-            // Synchronisation: Aktuellen Stand vom Server neu laden, 
-            // damit der User sieht, wer schneller war
-            loadPlan(true); 
+            // NEU: Statt loadPlan(true) nutzen wir syncPlan()
+            // Das synchronisiert die Daten, ohne das Grid neu zu zeichnen.
+            syncPlan();
         });
 
     // 5. Editor sofort schließen
