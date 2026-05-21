@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1000,7 +1000,21 @@ async function handleLogin() {
     }
 }
 
+ document.getElementById('plan-container').addEventListener('click', function(e) {
+    // Suche das nächste Element mit der Klasse .box
+    const box = e.target.closest('.box');
+    if (!box) return;
+
+    // Hole Daten aus den Attributen
+    const slot = box.getAttribute('data-slot');
+    const klasse = box.querySelector('.klasse-label')?.innerText || "";
+    const zeitStr = box.getAttribute('data-time') || "";
     
+    // Prüfen, ob die Box editierbar ist (durch die Klasse .is-mine)
+    if (box.classList.contains('is-mine')) {
+        openEditor(box, zeitStr, slot, klasse);
+    }
+});   
 
 
 /* ============================================================
@@ -1184,46 +1198,31 @@ window.loadPlan = async function(silent = false) {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // --- 2. SILENT UPDATE (Jetzt mit onclick-Handler Refresh) ---
-        if (silent && json.plan) {
-            const plan = json.plan;
-            window.lastPlanData = plan;
+        // --- 2. SILENT UPDATE (Jetzt ohne onclick-Logik) ---
+if (silent && json.plan) {
+    const plan = json.plan;
+    window.lastPlanData = plan;
+    
+    Object.keys(plan).forEach(slot => {
+        const box = container.querySelector(`[data-slot="${slot}"]`);
+        if (box) {
+            const data = plan[slot];
+            const klasse = data.klasse || "";
+            const halle = data.halle || "";
+            const isAusfall = (halle === "Ausfall");
+            const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
             
-            Object.keys(plan).forEach(slot => {
-                const box = container.querySelector(`[data-slot="${slot}"]`);
-                if (box) {
-                    const data = plan[slot];
-                    const klasse = data.klasse || "";
-                    const halle = data.halle || "";
-                    const isAusfall = (halle === "Ausfall");
-                    
-                    // Prüfen, ob User editieren darf (für den onclick)
-                    const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
-                    
-                    // Update Text
-                    const label = box.querySelector('.halle-label');
-                    if (label) label.innerText = halle;
-                    
-                    const kLabel = box.querySelector('.klasse-label');
-                    if (kLabel) kLabel.innerText = klasse;
-
-                    // Update Style & Klasse
-                    box.style.backgroundColor = isAusfall ? '' : (configFarben[halle] || '');
-                    box.className = `box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}`;
-                    
-                    // WICHTIG: onclick-Handler wiederherstellen!
-                    if (canEdit) {
-                        const zeitStr = box.getAttribute('data-time') || "";
-                        box.onclick = function() { openEditor(this, zeitStr, slot, klasse); };
-                        box.style.cursor = 'pointer';
-                    } else {
-                        box.onclick = null;
-                        box.style.cursor = 'default';
-                    }
-                }
-            });
-            return; 
+            // Text-Updates
+            box.querySelector('.halle-label').innerText = halle;
+            box.querySelector('.klasse-label').innerText = klasse;
+            
+            // Style & Klasssen-Updates (die steuern, ob canEdit aktiv ist)
+            box.style.backgroundColor = isAusfall ? '' : (configFarben[halle] || '');
+            box.className = `box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}`;
         }
+    });
+    return; 
+}
 
         // --- 3. HARTER FULL-LOAD (für den ersten Aufbau) ---
         const plan = json.plan; 
