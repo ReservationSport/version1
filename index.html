@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOqwqwqwdq</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1184,7 +1184,7 @@ window.loadPlan = async function(silent = false) {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // --- 2. SILENT UPDATE (Hier wird NICHTS gelöscht, nur Werte überschrieben) ---
+        // --- 2. SILENT UPDATE (Jetzt mit onclick-Handler Refresh) ---
         if (silent && json.plan) {
             const plan = json.plan;
             window.lastPlanData = plan;
@@ -1196,19 +1196,33 @@ window.loadPlan = async function(silent = false) {
                     const klasse = data.klasse || "";
                     const halle = data.halle || "";
                     const isAusfall = (halle === "Ausfall");
+                    
+                    // Prüfen, ob User editieren darf (für den onclick)
                     const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
-
-                    // Nur ändern, wenn Inhalt abweicht (verhindert Flackern)
+                    
+                    // Update Text
                     const label = box.querySelector('.halle-label');
-                    if (label && label.innerText !== halle) label.innerText = halle;
-
+                    if (label) label.innerText = halle;
+                    
                     const kLabel = box.querySelector('.klasse-label');
-                    if (kLabel && kLabel.innerText !== klasse) kLabel.innerText = klasse;
+                    if (kLabel) kLabel.innerText = klasse;
 
+                    // Update Style & Klasse
                     box.style.backgroundColor = isAusfall ? '' : (configFarben[halle] || '');
+                    box.className = `box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}`;
+                    
+                    // WICHTIG: onclick-Handler wiederherstellen!
+                    if (canEdit) {
+                        const zeitStr = box.getAttribute('data-time') || "";
+                        box.onclick = function() { openEditor(this, zeitStr, slot, klasse); };
+                        box.style.cursor = 'pointer';
+                    } else {
+                        box.onclick = null;
+                        box.style.cursor = 'default';
+                    }
                 }
             });
-            return; // EXIT: Der Container wurde nie geleert!
+            return; 
         }
 
         // --- 3. HARTER FULL-LOAD (für den ersten Aufbau) ---
