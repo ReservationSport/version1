@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1148,7 +1148,7 @@ function getDataBySlotIndex(index) {
 
 
 
-    /* ============================================================
+   /* ============================================================
    7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
    ============================================================ */
 
@@ -1221,63 +1221,39 @@ window.loadPlan = async function(silent = false) {
             "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
         ];
 
-        let html = ""; 
-        html += `<div class="box header-row" style="grid-column: span 6;">
-                    <span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span>
-                 </div>`;
+        // Wir bauen das HTML in einem temporären String
+        let html = `<div class="box header-row" style="grid-column: span 6;"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
 
         zeiten.forEach((zeitStr, rowIndex) => {
             const lektionNum = rowIndex + 1;
-
             if (lektionNum === 4 || lektionNum === 10) html += `<div class="divider-thin"></div>`;
             if (lektionNum === 7) html += `<div class="divider-thick"></div>`;
-
             html += `<div class="box zeit-box">${zeitStr}</div>`;
             
             for(let i = 1; i <= 5; i++) {
                 const absoluteSlot = (rowIndex * 5) + i; 
                 const slotData = plan[absoluteSlot] || {};
-
                 const klasse = slotData.klasse || "";
                 const halle = slotData.halle || "";
                 const material = slotData.material || "";
                 const matKommentar = slotData.kommentar || "";
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
-                
                 const isAusfall = (halle === "Ausfall");
-                const canEdit = myClasses.some(c => 
-                    klasse.trim().toLowerCase() === c.trim().toLowerCase() && 
-                    klasse.trim() !== ""
-                );
+                const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
                 
                 let materialHtml = "";
                 if (material) {
                     const b64Material = btoa(unescape(encodeURIComponent(material)));
                     const b64Kommentar = btoa(unescape(encodeURIComponent(matKommentar || "")));
                     const tooltipText = matKommentar ? `${material}: ${matKommentar}` : material;
-
-                    materialHtml = `
-                        <span class="material-icon" 
-                              data-tooltip="${tooltipText.replace(/"/g, '&quot;')}" 
-                              style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;"
-                              onclick="event.stopPropagation(); event.preventDefault(); if(typeof showMaterialDetailPopup === 'function') { 
-                                  const mat = decodeURIComponent(escape(atob('${b64Material}')));
-                                  const kom = decodeURIComponent(escape(atob('${b64Kommentar}')));
-                                  showMaterialDetailPopup(mat, kom); 
-                              }">
-                            <i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i>
-                        </span>`;
+                    materialHtml = `<span class="material-icon" data-tooltip="${tooltipText.replace(/"/g, '&quot;')}" style="position: absolute; top: 5px; right: 5px; z-index: 9999; pointer-events: auto !important; cursor: pointer !important; display: inline-block; padding: 4px;" onclick="event.stopPropagation(); event.preventDefault(); if(typeof showMaterialDetailPopup === 'function') { showMaterialDetailPopup(decodeURIComponent(escape(atob('${b64Material}'))), decodeURIComponent(escape(atob('${b64Kommentar}')))); }"><i class="fas fa-box-open" style="color: #e67e22; font-size: 14px; pointer-events: none;"></i></span>`;
                 }
 
                 const clickAction = canEdit ? `onclick="openEditor(this, '${zeitStr}', ${absoluteSlot}, '${klasse}')"` : "";
-
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}"
-                        data-time="${zeitStr}" 
-                        ${clickAction}
+                        data-slot="${absoluteSlot}" data-time="${zeitStr}" ${clickAction}
                         style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
-                        
                         ${materialHtml}
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
@@ -1286,7 +1262,21 @@ window.loadPlan = async function(silent = false) {
             }
         });
 
-        container.innerHTML = html;
+        // SANFTES UPDATE:
+        if (silent) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            const newBoxes = tempDiv.querySelectorAll('.box[data-slot]');
+            newBoxes.forEach(newBox => {
+                const slot = newBox.getAttribute('data-slot');
+                const oldBox = container.querySelector(`.box[data-slot="${slot}"]`);
+                if (oldBox && oldBox.outerHTML !== newBox.outerHTML) {
+                    oldBox.outerHTML = newBox.outerHTML; // Nur veränderte Boxen austauschen
+                }
+            });
+        } else {
+            container.innerHTML = html;
+        }
 
         if (typeof initNewsSystem === 'function') {
             initNewsSystem().catch(err => console.error("News-Refresh fehlgeschlagen", err));
@@ -2182,14 +2172,18 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
-    // 1. Sofortiges lokales Update des Stundenplans (Optimistic UI)
+    // --- Sicherung: Bestehende Werte für einen evtl. Revert speichern ---
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
+    const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
+    const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
+
+    // 1. Sofortiges lokales Update des Stundenplans (Optimistic UI)
     if (targetBox) {
         // Text direkt im Label ändern
         const label = targetBox.querySelector('.halle-label');
         if (label) label.innerText = neueHalle;
         
-        // Hintergrundfarbe direkt ändern (nutzt dein globales configFarben Objekt)
+        // Hintergrundfarbe direkt ändern
         if (configFarben && configFarben[neueHalle]) {
             targetBox.style.backgroundColor = configFarben[neueHalle];
         }
@@ -2213,24 +2207,31 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         halle: neueHalle
     };
 
-    // 4. Im Hintergrund speichern (Fire and Forget)
+    // 4. Speichern und auf Server-Bestätigung warten
     saveImmediately(payload)
         .then(result => {
+            // Prüfung: Hat der Server die Reservierung akzeptiert?
             if (!(result && result.status === "success")) {
-                throw new Error("Speicherfehler");
+                throw new Error(result.msg || "Halle bereits vergeben!");
             }
         })
         .catch(e => {
-            console.error(e);
-            // Rückgängig machen, falls der Server-Call fehlschlägt
+            console.error("Reservierungsfehler:", e);
+            
+            // --- FEHLERBEHANDLUNG (Revert) ---
             if (targetBox) {
                 targetBox.classList.remove('reserviert-local');
-                targetBox.style.backgroundColor = ""; // Farbe zurücksetzen
+                targetBox.style.backgroundColor = originalStyle;
                 const label = targetBox.querySelector('.halle-label');
-                if (label) label.innerText = ""; // Label leeren
+                if (label) label.innerText = originalLabel;
             }
+            
             btn.style.background = "rgba(192, 57, 43, 0.5)"; 
-            alert("Reservierung konnte nicht gespeichert werden.");
+            alert("Fehler: " + e.message);
+
+            // Synchronisation: Aktuellen Stand vom Server neu laden, 
+            // damit der User sieht, wer schneller war
+            loadPlan(true); 
         });
 
     // 5. Editor sofort schließen
