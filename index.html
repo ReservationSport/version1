@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1266,33 +1266,33 @@ window.loadPlan = async function(silent = false) {
         if (silent) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
+            
+            // Wir suchen NUR die Boxen, die einen Slot haben
             const newBoxes = tempDiv.querySelectorAll('.box[data-slot]');
+            
             newBoxes.forEach(newBox => {
                 const slot = newBox.getAttribute('data-slot');
                 const oldBox = container.querySelector(`.box[data-slot="${slot}"]`);
-                if (oldBox && oldBox.outerHTML !== newBox.outerHTML) {
-                    oldBox.outerHTML = newBox.outerHTML; // Nur veränderte Boxen austauschen
+                
+                if (oldBox) {
+                    // Update der Klasse, falls sich der Status geändert hat (z.B. ausfall-mode)
+                    if (oldBox.className !== newBox.className) {
+                        oldBox.className = newBox.className;
+                    }
+                    // Update des Inhalts (Text & Icon)
+                    if (oldBox.innerHTML !== newBox.innerHTML) {
+                        oldBox.innerHTML = newBox.innerHTML;
+                    }
+                    // Update der Farbe
+                    if (oldBox.style.backgroundColor !== newBox.style.backgroundColor) {
+                        oldBox.style.backgroundColor = newBox.style.backgroundColor;
+                    }
                 }
             });
         } else {
             container.innerHTML = html;
         }
-
-        if (typeof initNewsSystem === 'function') {
-            initNewsSystem().catch(err => console.error("News-Refresh fehlgeschlagen", err));
-        }
-
-    } catch(e) { 
-        console.error("Fehler in loadPlan:", e); 
-        if (!silent) {
-            container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Server-Verbindung unterbrochen!</div>`;
-        }
-    } finally {
-        if (!silent && loader) loader.style.display = 'none';
-        updateNavButtons();
-    }
 };
-
 
 
 /* ============================================================
