@@ -1148,7 +1148,7 @@ function getDataBySlotIndex(index) {
 
 
 
-   /* ============================================================
+/* ============================================================
    7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
    ============================================================ */
 
@@ -1170,7 +1170,7 @@ window.loadPlan = async function(silent = false) {
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
-    // Wochenende
+    // Wochenende prüfen
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">
             <i class="fas fa-umbrella-beach" style="margin-bottom:10px; font-size: 2rem;"></i><br>
@@ -1221,7 +1221,6 @@ window.loadPlan = async function(silent = false) {
             "15:35 - 16:20", "16:25 - 17:10", "17:15 - 18:00" 
         ];
 
-        // Wir bauen das HTML in einem temporären String
         let html = `<div class="box header-row" style="grid-column: span 6;"><span>${wtArr[dateObj.getDay()]}, ${d}.${m}.${y}</span></div>`;
 
         zeiten.forEach((zeitStr, rowIndex) => {
@@ -1262,38 +1261,43 @@ window.loadPlan = async function(silent = false) {
             }
         });
 
-        // SANFTES UPDATE:
+        // SANFTES UPDATE (DOM-Patching ohne Neuladen des Containers)
         if (silent) {
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = html;
-            
-            // Wir suchen NUR die Boxen, die einen Slot haben
             const newBoxes = tempDiv.querySelectorAll('.box[data-slot]');
             
             newBoxes.forEach(newBox => {
                 const slot = newBox.getAttribute('data-slot');
                 const oldBox = container.querySelector(`.box[data-slot="${slot}"]`);
-                
                 if (oldBox) {
-                    // Update der Klasse, falls sich der Status geändert hat (z.B. ausfall-mode)
-                    if (oldBox.className !== newBox.className) {
-                        oldBox.className = newBox.className;
-                    }
-                    // Update des Inhalts (Text & Icon)
-                    if (oldBox.innerHTML !== newBox.innerHTML) {
-                        oldBox.innerHTML = newBox.innerHTML;
-                    }
-                    // Update der Farbe
-                    if (oldBox.style.backgroundColor !== newBox.style.backgroundColor) {
-                        oldBox.style.backgroundColor = newBox.style.backgroundColor;
-                    }
+                    if (oldBox.className !== newBox.className) oldBox.className = newBox.className;
+                    if (oldBox.innerHTML !== newBox.innerHTML) oldBox.innerHTML = newBox.innerHTML;
+                    if (oldBox.style.backgroundColor !== newBox.style.backgroundColor) oldBox.style.backgroundColor = newBox.style.backgroundColor;
                 }
             });
         } else {
             container.innerHTML = html;
         }
+
+        if (typeof initNewsSystem === 'function') {
+            initNewsSystem().catch(err => console.error("News-Refresh fehlgeschlagen", err));
+        }
+
+    } catch(e) { 
+        console.error("Fehler in loadPlan:", e); 
+        if (!silent) {
+            container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Server-Verbindung unterbrochen!</div>`;
+        }
+    } finally {
+        if (!silent && loader) loader.style.display = 'none';
+        updateNavButtons();
+    }
 };
 
+
+
+    
 
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
