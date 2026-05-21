@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1471,11 +1471,33 @@ console.log("DEBUG News-ID:", news.id, "| Meine Liste:", gelesenListe, "| Ist ge
 
 
 
-// Diese Funktion sorgt dafür, dass wir immer den aktuellen Stand von der DB ziehen
-async function refreshAndShowNews() {
-    await initNewsSystem(); // Lädt die Daten frisch von der DB
-    showNews();             // Rendert die Liste mit den aktuellen Daten
-}
+window.refreshAndShowNews = function() {
+    // 1. Sidebar sofort öffnen (mit existierenden Daten aus der Variable)
+    showNews(); 
+    
+    // 2. Im Hintergrund den Server fragen, ob es NEUE Nachrichten gibt
+    // Wir nutzen hier 'await' NICHT, damit der Rest des Browsers nicht blockiert wird
+    fetch(`${url}?action=getNews&pw=${encodeURIComponent(userPw)}&t=${Date.now()}`)
+        .then(response => response.json())
+        .then(data => {
+            // Falls data ein Objekt mit .news ist, sonst direkt das Array
+            const allNews = data.news || (Array.isArray(data) ? data : []);
+            
+            // Filter anwenden
+            const aktuellerUser = userKuerzel.toUpperCase().trim();
+            meineRelevanteNews = allNews.filter(n => {
+                const empfaenger = (n.empfaenger || "").toUpperCase();
+                return empfaenger.split(',').map(e => e.trim()).includes(aktuellerUser);
+            });
+            
+            // 3. Wenn neue Daten geladen wurden, Liste kurz aktualisieren
+            // Wir prüfen, ob die Sidebar noch offen ist, bevor wir neu zeichnen
+            if(document.getElementById('newsSidebar').classList.contains('active')) {
+                showNews();
+            }
+        })
+        .catch(e => console.error("Hintergrund-Update fehlgeschlagen:", e));
+};
     
     
 
