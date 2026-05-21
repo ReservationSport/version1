@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1198,32 +1198,34 @@ window.loadPlan = async function(silent = false) {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // --- 2. SILENT UPDATE (Jetzt ohne onclick-Logik) ---
-if (silent && json.plan) {
-    const plan = json.plan;
-    window.lastPlanData = plan;
-    
-    Object.keys(plan).forEach(slot => {
-        const box = container.querySelector(`[data-slot="${slot}"]`);
-        if (box) {
-            const data = plan[slot];
-            const klasse = data.klasse || "";
-            const halle = data.halle || "";
-            const isAusfall = (halle === "Ausfall");
-            const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
+        // --- 2. SILENT UPDATE (Extrem vorsichtig) ---
+        if (silent && json.plan) {
+            const plan = json.plan;
+            window.lastPlanData = plan;
             
-            // Text-Updates
-            box.querySelector('.halle-label').innerText = halle;
-            box.querySelector('.klasse-label').innerText = klasse;
-            
-            // Style & Klasssen-Updates (die steuern, ob canEdit aktiv ist)
-            box.style.backgroundColor = isAusfall ? '' : (configFarben[halle] || '');
-            box.className = `box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}`;
+            Object.keys(plan).forEach(slot => {
+                const box = container.querySelector(`[data-slot="${slot}"]`);
+                if (box) {
+                    const data = plan[slot];
+                    const klasse = data.klasse || "";
+                    const halle = data.halle || "";
+                    
+                    // NUR TEXT ÄNDERN: Kein className, kein style!
+                    const hLabel = box.querySelector('.halle-label');
+                    if (hLabel) hLabel.innerText = halle;
+                    
+                    const kLabel = box.querySelector('.klasse-label');
+                    if (kLabel) kLabel.innerText = klasse;
+                    
+                    // Lehrer nur wenn vorhanden
+                    const lLabel = box.querySelector('.lehrer-info');
+                    if (lLabel) lLabel.innerText = data.lehrer || allClassTeachers[klasse] || "";
+                }
+            });
+            return; // EXIT: Alles andere wird nicht angerührt
         }
-    });
-    return; 
-}
 
+        
         // --- 3. HARTER FULL-LOAD (für den ersten Aufbau) ---
         const plan = json.plan; 
         window.lastPlanData = plan; 
