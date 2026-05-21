@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -833,7 +833,7 @@ body {
    <div class="date-control">
     <div class="nav-section nav-left">
         <div id="news-btn-container" style="display: none;">
-            <div class="news-btn-premium" onclick="showNews()">
+            <div class="news-btn-premium" onclick="refreshAndShowNews()">
                 <span class="btn-text">NEWS</span>
                 <i class="fas fa-bell bell-icon"></i>
                 <div id="news-dot" class="badge" style="display: none;"></div>
@@ -1431,38 +1431,27 @@ async function initNewsSystem() {
     } catch (e) { console.error("Fehler beim Init:", e); }
 }
 
-/**
- * Zeigt die geladenen News in der Sidebar an.
- */
 window.showNews = function() {
     const sidebar = document.getElementById('newsSidebar');
     const newsContainer = document.getElementById('newsContent');
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
 
-    if (!sidebar || !newsContainer) {
-        console.error("Sidebar oder Container nicht gefunden!");
-        return;
-    }
-
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
-    // Badge ausblenden, sobald die Zentrale geöffnet wird
     if (document.getElementById('news-dot')) document.getElementById('news-dot').style.display = 'none';
 
     newsContainer.innerHTML = "";
     
-    if (meineRelevanteNews.length === 0) {
-        newsContainer.innerHTML = "<p style='padding:20px;'>Keine neuen Nachrichten.</p>";
-        return;
-    }
-    
     meineRelevanteNews.forEach(news => {
-        // Robuste Prüfung: Splitten der Liste und Vergleich jedes Eintrags
+        // HIER findet die Prüfung statt:
+        // Steht mein Kürzel in Spalte J?
         const gelesenListe = (news.gelesen || "").toUpperCase().split(',').map(s => s.trim());
         const istGelesen = gelesenListe.includes(aktuellerUser);
         
         const card = document.createElement('div');
+        // Setzt die Klasse basierend auf der DB-Prüfung
         card.className = `news-item ${istGelesen ? 'news-gelesen' : 'news-unread'}`;
+        
         card.innerHTML = `
             <div class="news-header">
                 <span class="status-icon">${istGelesen ? '⚪ Gelesen' : '📥 Neu'}</span>
@@ -1471,12 +1460,20 @@ window.showNews = function() {
             <div class="news-text">${news.text || ''}</div>
         `;
         
+        // Klick-Event binden
         card.onclick = () => markAsReadAndJump(news);
         newsContainer.appendChild(card);
     });
 };
 
 
+
+// Diese Funktion sorgt dafür, dass wir immer den aktuellen Stand von der DB ziehen
+async function refreshAndShowNews() {
+    await initNewsSystem(); // Lädt die Daten frisch von der DB
+    showNews();             // Rendert die Liste mit den aktuellen Daten
+}
+    
     
 
 /**
