@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2174,10 +2174,19 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
+    // --- NEU: KLICK-SCHUTZ (Verhindert Race Conditions bei schnellen Doppel-Klicks) ---
+    if (isSaving) {
+        console.warn("Speichervorgang läuft noch... Klick blockiert.");
+        return; 
+    }
+
     // --- Sicherung: Bestehende Werte für einen evtl. Revert speichern ---
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
+
+    // System auf "Speichern" setzen, um weitere Klicks zu blockieren
+    isSaving = true;
 
     // 1. Sofortiges lokales Update (Optimistic UI)
     if (targetBox) {
@@ -2213,18 +2222,20 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
             
-            // Lokales Datengedächtnis sofort aktualisieren, damit kein alter Zustand geladen wird
+            // Lokales Datengedächtnis sofort aktualisieren
             if (window.lastPlanData && window.lastPlanData[slot]) {
                 window.lastPlanData[slot].halle = neueHalle;
             }
 
-            // NEU: Dem Server 500ms Zeit geben, um die DB zu flashen, bevor synchronisiert wird
+            // Dem Server Zeit geben, um die DB zu flashen, bevor synchronisiert wird
             setTimeout(() => {
+                isSaving = false; // Schutz aufheben erst NACH dem Sync-Anstoß
                 syncPlan();
             }, 500);
         })
         .catch(e => {
             console.error("Reservierungsfehler:", e);
+            isSaving = false; // Schutz bei Fehler aufheben
             
             // --- FEHLERBEHANDLUNG (Revert) ---
             if (targetBox) {
