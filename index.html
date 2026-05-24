@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2226,6 +2226,10 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
 
     
 
+/**
+ * Zeigt die Materialauswahl direkt im Modal an.
+ * Holt die Daten live aus window.materialOptionen (Spalte D aus 'konfiguration').
+ */
 function handleMaterialUI(time, slot, klasse, modalElement) {
     console.log("handleMaterialUI aktiv!");
 
@@ -2235,6 +2239,9 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         console.error("Modal nicht gefunden!");
         return;
     }
+
+    // Sicherstellen, dass Klicks im Modal nach vorherigen Aktionen wieder erlaubt sind
+    root.style.pointerEvents = "auto";
 
     const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
     const title = root.querySelector('.eigenesmenu-title');
@@ -2253,41 +2260,59 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const aktuelleBox = window.currentEditBox || document.querySelector(`[data-slot="${slot}"]`);
     const hatBereitsMaterial = aktuelleBox?.querySelector('.material-icon') !== null;
 
-    // 3. DYNAMISCHE MATERIALIEN AUS CONFIG-SHEET HOLEN
-    const optionen = window.materialOptionen || [];
+    // 3. ECHTE MATERIALIEN AUS DEINEM STORAGE HOLEN (Spalte D aus Google Sheet)
+    const optionen = window.materialOptionen;
     window.selectedMaterials = []; 
 
-    let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
-    
-    // --- LÖSCH-BUTTON AN ERSTER STELLE (wird angezeigt, wenn bereits Material gebucht ist) ---
-    if (hatBereitsMaterial) {
-        html += `
-            <button class="eigenesmenu-item" 
-                    style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" 
-                    onclick="applyMaterialDelete('${time}', '${slot}', '${klasse}', this)">
-                <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIAL LÖSCHEN</span>
-            </button>`;
-    }
+    let html = "";
 
-    // Falls die Liste leer ist oder noch lädt
-    if (optionen.length === 0) {
+    // FALLS DIE DATEN VOM SERVER NOCH LADEN: Elegant abfangen, statt einen Fehler zu werfen
+    if (!optionen || optionen.length === 0) {
         html += `
-            <div style="color: #666; text-align: center; padding: 20px; font-size: 0.9em;">
-                Keine Materialien im Sheet 'konfiguration' gefunden oder Daten laden noch...
+            <div class="material-loading-state" style="text-align: center; padding: 30px 10px; color: #ccc;">
+                <div class="eigenesmenu-loader" style="width:24px; height:24px; border-width:3px; margin: 0 auto 15px auto;"></div>
+                <p style="font-size: 0.95rem; margin: 0;">Lade Materialien aus Spalte D ('konfiguration')...</p>
+                <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Bitte einen kurzen Moment Geduld.</p>
             </div>`;
+            
+        // Kleiner Trigger: Versuche das Menü in 300ms automatisch neu zu zeichnen, falls die Daten dann da sind
+        setTimeout(() => {
+            if (window.materialOptionen && window.materialOptionen.length > 0) {
+                handleMaterialUI(time, slot, klasse, root);
+            }
+        }, 300);
     } else {
-        // Die echten Auswahl-Buttons generieren
-        optionen.forEach(mat => {
+        // DATEN SIND DA: Echte Buttons zeichnen
+        html += `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
+        
+        // --- LÖSCH-BUTTON AN ERSTER STELLE (falls bereits Material gebucht ist) ---
+        if (hatBereitsMaterial) {
             html += `
-                <button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${mat}', this)">
+                <button class="eigenesmenu-item" 
+                        style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" 
+                        onclick="applyMaterialDelete('${time}', '${slot}', '${klasse}', this)">
+                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIAL LÖSCHEN</span>
+                </button>`;
+        }
+
+        // Die echten Auswahl-Buttons aus deinem Sheet generieren
+        optionen.forEach(mat => {
+            const matClean = mat ? mat.toString().trim() : "";
+            if (matClean === "") return; // Leere Zeilen aus Spalte D ignorieren
+
+            html += `
+                <button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${matClean}', this)">
                     <span class="eigenesmenu-icon">📦</span> 
-                    <span class="btn-text">${mat}</span>
+                    <span class="btn-text">${matClean}</span>
                     <span class="check-indicator" style="margin-left: auto; color: #666; font-weight: bold;">○</span>
                 </button>`;
         });
+
+        html += `</div>`;
     }
 
-    html += `</div>
+    // Der versteckte Container für den nächsten Schritt (Details eingeben)
+    html += `
         <div id="materialNextStep" style="display: none; margin-top: 15px;">
             <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
                     onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${slot}', '${klasse}')">
