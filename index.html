@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -810,6 +810,28 @@ body {
 
 <body>
 
+
+    <div id="loading-overlay" style="
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh; 
+    background: rgba(0,0,0,0.3); 
+    z-index: 99999; 
+    justify-content: center; 
+    align-items: center; 
+    color: #ff9800; 
+    font-family: sans-serif; 
+    font-size: 1.2rem; 
+    font-weight: bold;
+    backdrop-filter: blur(2px);
+">
+    <div style="background: #222; padding: 20px 40px; border-radius: 8px; border: 1px solid #ff9800; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
+        ⏳ Speichern im Gange... einen Moment...
+    </div>
+</div>
+
+    
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
 <div id="loginOverlay">
@@ -2185,14 +2207,12 @@ window.currentSaveController = null;
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.style.display = 'flex'; // <-- BLOCKIERT SOFORT JEGLICHE INTERAKTION
+
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
-
-    // --- NEU: ABSOLUTE SPERRE FÜR DEN SYNC SETZEN ---
-    if (targetBox) {
-        targetBox.setAttribute('data-locked', 'true');
-    }
 
     // 1. Sofortiges lokales Update (Optimistic UI)
     if (targetBox) {
@@ -2202,14 +2222,9 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         if (configFarben && configFarben[neueHalle]) {
             targetBox.style.backgroundColor = configFarben[neueHalle];
         } else if (neueHalle === "") {
-            targetBox.style.backgroundColor = ""; // Falls gelöscht
+            targetBox.style.backgroundColor = "";
         }
-        targetBox.classList.add('reserviert-local'); 
     }
-
-    btn.style.transition = "background 0.3s ease";
-    btn.style.background = "rgba(39, 174, 96, 0.4)"; 
-    btn.innerText = "Reserviert ✓"; 
 
     const payload = {
         action: "saveBooking",
@@ -2222,7 +2237,7 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     };
 
     saveImmediately(payload)
-        .then(result => {
+        .then(async (result) => {
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
@@ -2231,25 +2246,25 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
                 window.lastPlanData[slot].halle = neueHalle;
             }
 
-            // Nach erfolgreichem Speichern rufen wir syncPlan auf
-            syncPlan();
+            // Wir warten aktiv darauf, dass syncPlan die frischen Daten geholt hat
+            if (typeof syncPlan === "function") {
+                await syncPlan();
+            }
 
-            // --- NEU: Erst nach 2 Sekunden darf der Hintergrund-Sync diese Zelle wieder anfassen ---
+            // Erst wenn alles erledigt ist, geben wir den Bildschirm wieder frei
             setTimeout(() => {
-                if (targetBox) targetBox.removeAttribute('data-locked');
-            }, 2000);
+                if (overlay) overlay.style.display = 'none';
+            }, 300);
         })
         .catch(e => {
             console.error("Reservierungsfehler:", e);
             if (targetBox) {
-                targetBox.removeAttribute('data-locked');
-                targetBox.classList.remove('reserviert-local');
                 targetBox.style.backgroundColor = originalStyle;
                 const label = targetBox.querySelector('.halle-label');
                 if (label) label.innerText = originalLabel;
             }
             alert("Fehler: " + e.message);
-            syncPlan();
+            if (overlay) overlay.style.display = 'none';
         });
 
     closeEditor();
