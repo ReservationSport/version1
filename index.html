@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -810,27 +810,6 @@ body {
 
 <body>
 
-
-    <div id="loading-overlay" style="
-    display: none; 
-    position: fixed; 
-    top: 0; left: 0; 
-    width: 100vw; height: 100vh; 
-    background: rgba(0,0,0,0.3); 
-    z-index: 99999; 
-    justify-content: center; 
-    align-items: center; 
-    color: #ff9800; 
-    font-family: sans-serif; 
-    font-size: 1.2rem; 
-    font-weight: bold;
-    backdrop-filter: blur(2px);
-">
-    <div style="background: #222; padding: 20px 40px; border-radius: 8px; border: 1px solid #ff9800; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-        ⏳ Speichern im Gange... einen Moment...
-    </div>
-</div>
-
     
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
@@ -1295,10 +1274,19 @@ window.loadPlan = async function() {
         Object.keys(json.plan).forEach(slot => {
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (box) {
-                // --- NEU: Wenn der User hier gerade händisch editiert hat, ÜBERSPRINGEN ---
-                if (box.getAttribute('data-locked') === 'true') {
-                    console.log(`Sync überspringt Slot ${slot}, da er temporär gesperrt ist.`);
-                    return; 
+                
+                // --- NEU: Prüfen, ob hier vor kurzem geklickt wurde ---
+                const lastEdit = box.getAttribute('data-last-edit');
+                if (lastEdit) {
+                    const alterInMs = Date.now() - parseInt(lastEdit);
+                    if (alterInMs < 3000) { 
+                        // Klick ist jünger als 3 Sekunden -> Serverdaten ignorieren!
+                        console.log(`Sync ignoriert Slot ${slot}, da die lokale Änderung aktueller ist.`);
+                        return; 
+                    } else {
+                        // Nach 3 Sekunden ist der Server sicher nachgezogen, Schutz aufheben
+                        box.removeAttribute('data-last-edit');
+                    }
                 }
 
                 const data = json.plan[slot];
@@ -2207,14 +2195,16 @@ window.currentSaveController = null;
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
-    const overlay = document.getElementById('loading-overlay');
-    if (overlay) overlay.style.display = 'flex'; // <-- BLOCKIERT SOFORT JEGLICHE INTERAKTION
-
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
 
-    // 1. Sofortiges lokales Update (Optimistic UI)
+    // --- NEU: Zeitstempel des Klicks lokal auf der Box speichern ---
+    if (targetBox) {
+        targetBox.setAttribute('data-last-edit', Date.now().toString());
+    }
+
+    // 1. Sofortiges lokales Update (Optimistic UI) – Blitzschnell für den User!
     if (targetBox) {
         const label = targetBox.querySelector('.halle-label');
         if (label) label.innerText = neueHalle;
@@ -2237,7 +2227,7 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     };
 
     saveImmediately(payload)
-        .then(async (result) => {
+        .then(result => {
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
@@ -2245,26 +2235,21 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
             if (window.lastPlanData && window.lastPlanData[slot]) {
                 window.lastPlanData[slot].halle = neueHalle;
             }
-
-            // Wir warten aktiv darauf, dass syncPlan die frischen Daten geholt hat
-            if (typeof syncPlan === "function") {
-                await syncPlan();
-            }
-
-            // Erst wenn alles erledigt ist, geben wir den Bildschirm wieder frei
-            setTimeout(() => {
-                if (overlay) overlay.style.display = 'none';
-            }, 300);
+            
+            // Sync anstoßen. Wenn der Server noch alt ist, fängt der Zeitstempel das ab.
+            syncPlan();
         })
         .catch(e => {
             console.error("Reservierungsfehler:", e);
+            // Bei echtem Fehler zurückrollen und Zeitstempel löschen
             if (targetBox) {
+                targetBox.removeAttribute('data-last-edit');
                 targetBox.style.backgroundColor = originalStyle;
                 const label = targetBox.querySelector('.halle-label');
                 if (label) label.innerText = originalLabel;
             }
             alert("Fehler: " + e.message);
-            if (overlay) overlay.style.display = 'none';
+            syncPlan();
         });
 
     closeEditor();
