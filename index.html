@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO12423</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2212,9 +2212,16 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
-            // ERFOLG: Ein stiller Sync sorgt dafür, dass der ganze Plan aktuell bleibt
-            // ohne das DOM komplett neu aufzubauen.
-            syncPlan();
+            
+            // Lokales Datengedächtnis sofort aktualisieren, damit kein alter Zustand geladen wird
+            if (window.lastPlanData && window.lastPlanData[slot]) {
+                window.lastPlanData[slot].halle = neueHalle;
+            }
+
+            // NEU: Dem Server 500ms Zeit geben, um die DB zu flashen, bevor synchronisiert wird
+            setTimeout(() => {
+                syncPlan();
+            }, 500);
         })
         .catch(e => {
             console.error("Reservierungsfehler:", e);
@@ -2229,9 +2236,6 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
             
             btn.style.background = "rgba(192, 57, 43, 0.5)"; 
             alert("Fehler: " + e.message);
-
-            // NEU: Statt loadPlan(true) nutzen wir syncPlan()
-            // Das synchronisiert die Daten, ohne das Grid neu zu zeichnen.
             syncPlan();
         });
 
