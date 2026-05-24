@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2196,43 +2196,7 @@ window.syncBlockierteSlots = window.syncBlockierteSlots || {};
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
-    const targetBox = document.querySelector(`[data-slot="${slot}"]`);
-    const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
-    const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
-
-    // 1. --- SOFORTIGEN REFRESH-STOPP FÜR DIESEN SLOT LEGEN ---
-    window.syncBlockierteSlots[slot] = true;
-
-   // 2. Sofortiges lokales Update (Optimistic UI) – Direkt im Speicher verankern!
-    if (window.lastPlanData && window.lastPlanData[slot]) {
-        window.lastPlanData[slot].halle = neueHalle;
-    }
-
-    if (targetBox) {
-        const label = targetBox.querySelector('.halle-label');
-        if (label) label.innerText = neueHalle;
-        
-        // --- JETZT KORREKT: Ausfall-Klasse entfernen ---
-        targetBox.classList.remove('ausfall-mode');
-        
-        // Jetzt die neue Farbe setzen
-        if (configFarben && configFarben[neueHalle]) {
-            targetBox.style.backgroundColor = configFarben[neueHalle];
-        } else {
-            targetBox.style.backgroundColor = ""; 
-        }
-
-        // Falls der Nutzer händisch wieder "Ausfall" gewählt hat (Sicherheitsnetz)
-        if (neueHalle === "Ausfall") {
-            targetBox.classList.add('ausfall-mode');
-        }
-    }
-
-    // Visuelles Feedback am Button
-    btn.style.transition = "background 0.3s ease";
-    btn.style.background = "rgba(39, 174, 96, 0.4)"; 
-    btn.innerText = "Reserviert ✓"; 
-
+    // Basis-Payload zusammenbauen
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2243,36 +2207,34 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         halle: neueHalle
     };
 
-    // 3. Senden an den Server
-    saveImmediately(payload)
-        .then(result => {
-            if (!(result && result.status === "success")) {
-                throw new Error(result.msg || "Halle bereits vergeben!");
-            }
-            
-            // Erst nach 2.5 Sekunden geben wir den Slot wieder für automatische Syncs frei
-            setTimeout(() => {
-                delete window.syncBlockierteSlots[slot];
-            }, 2500);
-        })
-        .catch(e => {
-            console.error("Reservierungsfehler:", e);
-            // Fehlerfall: Sperre sofort aufheben und zurückrollen
-            delete window.syncBlockierteSlots[slot];
-            
-            if (targetBox) {
-                targetBox.style.backgroundColor = originalStyle;
-                const label = targetBox.querySelector('.halle-label');
-                if (label) label.innerText = originalLabel;
-            }
-            if (window.lastPlanData && window.lastPlanData[slot]) {
-                window.lastPlanData[slot].halle = originalLabel;
-            }
-            alert("Fehler: " + e.message);
-            syncPlan();
-        });
+    // Diese Funktion beschreibt, WIE eine Box optisch geupdated wird (wird von der Weiche genutzt)
+    const visuelleAktualisierung = function(halleZuSetzen, slotZuSetzen) {
+        const targetBox = document.querySelector(`[data-slot="${slotZuSetzen}"]`);
+        
+        if (window.lastPlanData && window.lastPlanData[slotZuSetzen]) {
+            window.lastPlanData[slotZuSetzen].halle = halleZuSetzen;
+        }
 
-    closeEditor();
+        if (targetBox) {
+            const label = targetBox.querySelector('.halle-label');
+            if (label) label.innerText = halleZuSetzen;
+            
+            targetBox.classList.remove('ausfall-mode');
+            
+            if (configFarben && configFarben[halleZuSetzen]) {
+                targetBox.style.backgroundColor = configFarben[halleZuSetzen];
+            } else {
+                targetBox.style.backgroundColor = ""; 
+            }
+
+            if (halleZuSetzen === "Ausfall") {
+                targetBox.classList.add('ausfall-mode');
+            }
+        }
+    };
+
+    // JETZT AN DIE WEICHE ÜBERGEBEN
+    window.prozessiereAktion(payload, visuelleAktualisierung);
 };
 
     
@@ -2894,6 +2856,107 @@ window.saveImmediately = async function(payload, options = {}) {
 };
     
 
+// Hilfsfunktion: Erkennt, ob der Partner-Slot dieselbe Klasse hat
+function getDoppellektionPartnerSlot(currentSlot) {
+    const slot = parseInt(currentSlot);
+    if (!window.lastPlanData || !window.lastPlanData[slot]) return null;
+    
+    const aktuelleKlasse = window.lastPlanData[slot].klasse;
+    if (!aktuelleKlasse || aktuelleKlasse === "---" || aktuelleKlasse === "") return null;
+
+    if (window.lastPlanData[slot + 5] && window.lastPlanData[slot + 5].klasse === aktuelleKlasse) {
+        return slot + 5;
+    }
+    if (window.lastPlanData[slot - 5] && window.lastPlanData[slot - 5].klasse === aktuelleKlasse) {
+        return slot - 5;
+    }
+    return null;
+}
+
+// DIE UNIVERSELLE WEICHE
+window.prozessiereAktion = function(payload, onCompleteVisuals) {
+    const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
+    const container = document.getElementById('menu-options-list');
+
+    // Falls keine Doppellektion vorliegt oder das Modal-Inhaltfeld fehlt -> Sofort normal ausführen
+    if (!partnerSlot || !container) {
+        executePayloads([payload], onCompleteVisuals);
+        if (typeof closeEditor === "function") closeEditor();
+        return;
+    }
+
+    // --- VARIANTE B: FLÜSSIGER WECHSEL IM MODAL ---
+    // Wir merken uns den alten Inhalt, falls der User abbricht (optional, hier nicht zwingend)
+    container.innerHTML = `
+        <div class="doppel-abfrage-container" style="animation: fadeIn 0.2s ease; text-align: center; padding: 10px 0;">
+            <p style="color: #ff9800; font-weight: bold; margin-bottom: 20px; font-size: 1.1rem;">
+                🔗 Doppellektion erkannt!
+            </p>
+            <p style="color: #ccc; margin-bottom: 25px; font-size: 0.95rem;">
+                Möchtest du diese Änderung für die gesamte Doppellektion übernehmen oder nur für diese Stunde?
+            </p>
+            
+            <button id="btn-doppel-beide" class="eigenesmenu-item" style="justify-content: center; background: #ff9800; color: #111; font-weight: bold; margin-bottom: 12px; border: none;">
+                👥 Für beide Stunden übernehmen
+            </button>
+            
+            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="justify-content: center; background: #333; border: 1px solid #555; color: #fff; margin-bottom: 12px;">
+                👤 Nur für diese Stunde
+            </button>
+        </div>
+    `;
+
+    // Klick-Handler für "Für beide Stunden"
+    document.getElementById('btn-doppel-beide').onclick = function() {
+        // Wir kopieren den Payload für den Partner-Slot
+        const partnerPayload = { ...payload, slot: partnerSlot };
+        
+        // Beide Payloads abfeuern
+        executePayloads([payload, partnerPayload], onCompleteVisuals);
+        if (typeof closeEditor === "function") closeEditor();
+    };
+
+    // Klick-Handler für "Nur für diese Stunde"
+    document.getElementById('btn-doppel-einzel').onclick = function() {
+        executePayloads([payload], onCompleteVisuals);
+        if (typeof closeEditor === "function") closeEditor();
+    };
+};
+
+// Interne Hilfsfunktion, die die Payloads nacheinander an saveImmediately übergibt
+function executePayloads(payloadArray, onCompleteVisuals) {
+    payloadArray.forEach(p => {
+        // 1. Lokalen Sync-Schutz aktivieren, damit das UI stabil bleibt
+        if (window.syncBlockierteSlots) {
+            window.syncBlockierteSlots[p.slot] = true;
+        }
+
+        // 2. Visuelles Update im Frontend sofort triggern (Optimistic UI)
+        if (typeof onCompleteVisuals === "function") {
+            onCompleteVisuals(p.halle, p.slot); 
+        }
+
+        // 3. Abschicken
+        saveImmediately(p)
+            .then(result => {
+                if (result && result.status === "success") {
+                    setTimeout(() => {
+                        if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
+                    }, 2500);
+                } else {
+                    if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
+                    if (typeof syncPlan === "function") syncPlan();
+                }
+            })
+            .catch(() => {
+                if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
+                if (typeof syncPlan === "function") syncPlan();
+            });
+    });
+}
+
+
+    
 
 </script>
 
