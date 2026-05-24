@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2858,24 +2858,49 @@ window.saveImmediately = async function(payload, options = {}) {
 
 // Hilfsfunktion: Erkennt, ob der Partner-Slot dieselbe Klasse hat (JETZT ALS ECHTE ZAHLEN)
 function getDoppellektionPartnerSlot(currentSlot) {
-    const slot = parseInt(currentSlot, 10); // Knallhart in eine Ganzzahl konvertieren
-    if (isNaN(slot) || !window.lastPlanData || !window.lastPlanData[slot]) return null;
+    const slot = parseInt(currentSlot, 10);
+    if (isNaN(slot) || !window.lastPlanData) {
+        console.warn("❌ Doppellektion-Abbruch: lastPlanData fehlt oder Slot ist NaN");
+        return null;
+    }
     
-    const aktuelleKlasse = window.lastPlanData[slot].klasse;
-    if (!aktuelleKlasse || aktuelleKlasse === "---" || aktuelleKlasse === "") return null;
+    // Datentyp-Sicherheit: Wir holen uns den aktuellen Slot, egal ob als Zahl oder String im Key
+    const aktuellerDatenSatz = window.lastPlanData[slot] || window.lastPlanData[slot.toString()];
+    if (!aktuellerDatenSatz) {
+        console.warn(`❌ Doppellektion-Abbruch: Keine Daten für Slot ${slot} in lastPlanData gefunden.`);
+        return null;
+    }
+    
+    const aktuelleKlasse = aktuelleDatenSatz.klasse ? aktuelleDatenSatz.klasse.toString().trim() : "";
+    if (aktuelleKlasse === "" || aktuelleKlasse === "---") return null;
 
     const slotDanach = slot + 5;
     const slotDavor = slot - 5;
 
-    // Prüfen, ob die Stunde danach (+5) existiert und dieselbe Klasse hat
-    if (window.lastPlanData[slotDanach] && window.lastPlanData[slotDanach].klasse === aktuelleKlasse) {
+    // Daten der Nachbarslots typensicher herausholen
+    const datenDanach = window.lastPlanData[slotDanach] || window.lastPlanData[slotDanach.toString()];
+    const datenDavor = window.lastPlanData[slotDavor] || window.lastPlanData[slotDavor.toString()];
+
+    const klasseDanach = (datenDanach && datenDanach.klasse) ? datenDanach.klasse.toString().trim() : "";
+    const klasseDavor = (datenDavor && datenDavor.klasse) ? datenDavor.klasse.toString().trim() : "";
+
+    // --- DIAGNOSE-LOGS FÜR DIE ENTWICKLER-KONSOLE (F12) ---
+    console.group(`📊 Doppellektions-Analyse für Slot ${slot} (${aktuelleKlasse})`);
+    console.log(`Prüfe Slot danach (+5 = ${slotDanach}): Gefundene Klasse: "${klasseDanach}"`);
+    console.log(`Prüfe Slot davor (-5 = ${slotDavor}): Gefundene Klasse: "${klasseDavor}"`);
+    console.groupEnd();
+
+    // Der eigentliche, saubere Vergleich
+    if (klasseDanach === aktuelleKlasse) {
+        console.log(`🎯 MATCH! Slot ${slotDanach} ist der Partner (Stunde danach).`);
         return slotDanach;
     }
-    // Prüfen, ob die Stunde davor (-5) existiert und dieselbe Klasse hat
-    if (window.lastPlanData[slotDavor] && window.lastPlanData[slotDavor].klasse === aktuelleKlasse) {
+    if (klasseDavor === aktuelleKlasse) {
+        console.log(`🎯 MATCH! Slot ${slotDavor} ist der Partner (Stunde davor).`);
         return slotDavor;
     }
-    return null;
+
+    return null; // Keine Doppellektion gefunden
 }
 
 // DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
