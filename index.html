@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1272,23 +1272,14 @@ window.loadPlan = async function() {
         window.lastPlanData = json.plan; 
         
         Object.keys(json.plan).forEach(slot => {
+            // --- NEU: Wenn dieser Slot gerade manuell geändert wird, NIEMALS ANFASSEN ---
+            if (window.syncBlockierteSlots && window.syncBlockierteSlots[slot]) {
+                console.log(`Sync blockiert: Slot ${slot} wird vom User editiert.`);
+                return; 
+            }
+
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (box) {
-                
-                // --- NEU: Prüfen, ob hier vor kurzem geklickt wurde ---
-                const lastEdit = box.getAttribute('data-last-edit');
-                if (lastEdit) {
-                    const alterInMs = Date.now() - parseInt(lastEdit);
-                    if (alterInMs < 3000) { 
-                        // Klick ist jünger als 3 Sekunden -> Serverdaten ignorieren!
-                        console.log(`Sync ignoriert Slot ${slot}, da die lokale Änderung aktueller ist.`);
-                        return; 
-                    } else {
-                        // Nach 3 Sekunden ist der Server sicher nachgezogen, Schutz aufheben
-                        box.removeAttribute('data-last-edit');
-                    }
-                }
-
                 const data = json.plan[slot];
                 const klasse = data.klasse || "";
                 const halle = data.halle || "";
@@ -2192,6 +2183,9 @@ window.currentSaveController = null;
 
 
     
+// Globaler Speicher für blockierte Slots
+window.syncBlockierteSlots = window.syncBlockierteSlots || {};
+
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
@@ -2199,12 +2193,14 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
 
-    // --- NEU: Zeitstempel des Klicks lokal auf der Box speichern ---
-    if (targetBox) {
-        targetBox.setAttribute('data-last-edit', Date.now().toString());
+    // 1. --- SOFORTIGEN REFRESH-STOPP FÜR DIESEN SLOT LEGEN ---
+    window.syncBlockierteSlots[slot] = true;
+
+    // 2. Sofortiges lokales Update (Optimistic UI) – Direkt im Speicher verankern!
+    if (window.lastPlanData && window.lastPlanData[slot]) {
+        window.lastPlanData[slot].halle = neueHalle;
     }
 
-    // 1. Sofortiges lokales Update (Optimistic UI) – Blitzschnell für den User!
     if (targetBox) {
         const label = targetBox.querySelector('.halle-label');
         if (label) label.innerText = neueHalle;
@@ -2216,6 +2212,11 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         }
     }
 
+    // Visuelles Feedback am Button
+    btn.style.transition = "background 0.3s ease";
+    btn.style.background = "rgba(39, 174, 96, 0.4)"; 
+    btn.innerText = "Reserviert ✓"; 
+
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2226,33 +2227,36 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         halle: neueHalle
     };
 
+    // 3. Senden an den Server
     saveImmediately(payload)
         .then(result => {
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
             
-            if (window.lastPlanData && window.lastPlanData[slot]) {
-                window.lastPlanData[slot].halle = neueHalle;
-            }
-            
-            // Sync anstoßen. Wenn der Server noch alt ist, fängt der Zeitstempel das ab.
-            syncPlan();
+            // Erst nach 2.5 Sekunden geben wir den Slot wieder für automatische Syncs frei
+            setTimeout(() => {
+                delete window.syncBlockierteSlots[slot];
+            }, 2500);
         })
         .catch(e => {
             console.error("Reservierungsfehler:", e);
-            // Bei echtem Fehler zurückrollen und Zeitstempel löschen
+            // Fehlerfall: Sperre sofort aufheben und zurückrollen
+            delete window.syncBlockierteSlots[slot];
+            
             if (targetBox) {
-                targetBox.removeAttribute('data-last-edit');
                 targetBox.style.backgroundColor = originalStyle;
                 const label = targetBox.querySelector('.halle-label');
                 if (label) label.innerText = originalLabel;
+            }
+            if (window.lastPlanData && window.lastPlanData[slot]) {
+                window.lastPlanData[slot].halle = originalLabel;
             }
             alert("Fehler: " + e.message);
             syncPlan();
         });
 
-    // closeEditor();
+    closeEditor();
 };
 
     
