@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1187,6 +1187,7 @@ window.loadPlan = async function() {
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
+    // --- 1. NORMALE WOCHENEND-PRÜFUNG (LOKAL) ---
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
         if (loader) loader.style.display = 'none'; 
@@ -1196,6 +1197,13 @@ window.loadPlan = async function() {
     try {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
+        
+        // --- 2. NEU: SPERRZEITEN/FEIERTAGS-PRÜFUNG VOM SERVER ---
+        if (json.sperrMsg) {
+            container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">${json.sperrMsg}</div>`;
+            if (loader) loader.style.display = 'none';
+            return; // Beendet die Funktion, damit KEIN leeres Gitter gezeichnet wird!
+        }
         
         const plan = json.plan; 
         window.lastPlanData = plan; 
