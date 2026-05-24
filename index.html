@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2258,10 +2258,10 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
 
 /**
  * Zeigt die Materialauswahl direkt im Modal an.
- * Holt die Daten live aus window.materialOptionen (Spalte D aus 'konfiguration').
+ * Erkennt bestehende Buchungen aus window.lastPlanData für den Löschen-Button.
  */
 function handleMaterialUI(time, slot, klasse, modalElement) {
-    console.log("handleMaterialUI aktiv!");
+    console.log("handleMaterialUI aktiv für Slot:", slot);
 
     // Holt das geöffnete Haupt-Modal
     const root = modalElement || document.getElementById('eigenesmenu-modal');
@@ -2270,7 +2270,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         return;
     }
 
-    // Sicherstellen, dass Klicks im Modal nach vorherigen Aktionen wieder erlaubt sind
+    // Klicks im Modal explizit erlauben
     root.style.pointerEvents = "auto";
 
     const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
@@ -2286,42 +2286,41 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     if (title) title.innerText = "MATERIAL WÄHLEN";
     if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
 
-    // 2. Prüfen, ob in der aktuellen Box bereits ein Material-Icon existiert
-    const aktuelleBox = window.currentEditBox || document.querySelector(`[data-slot="${slot}"]`);
-    const hatBereitsMaterial = aktuelleBox?.querySelector('.material-icon') !== null;
+    // 2. Prüfen über den lokalen Datenspeicher, ob bereits ein Material existiert
+    const currentSlot = slot || window.currentEditSlot;
+    const slotData = (window.lastPlanData && window.lastPlanData[currentSlot]) || {};
+    const hatBereitsMaterial = slotData.material && slotData.material.trim() !== "";
 
-    // 3. DYNAMISCHE MATERIALIEN AUS DEINEM STORAGE HOLEN
-    const optionen = verfügbareMaterialien; // 🔥 Nutzt jetzt deine gefundene Variable
-    window.selectedMaterials = [];
+    // 3. ECHTE MATERIALIEN NUTZEN
+    const optionen = verfügbareMaterialien;
+    window.selectedMaterials = []; 
 
     let html = "";
 
-    // FALLS DIE DATEN VOM SERVER NOCH LADEN: Elegant abfangen, statt einen Fehler zu werfen
+    // FALLS DIE DATEN VOM SERVER NOCH NICHT DA SIND: Loader zeigen
     if (!optionen || optionen.length === 0) {
         html += `
             <div class="material-loading-state" style="text-align: center; padding: 30px 10px; color: #ccc;">
                 <div class="eigenesmenu-loader" style="width:24px; height:24px; border-width:3px; margin: 0 auto 15px auto;"></div>
-                <p style="font-size: 0.95rem; margin: 0;">Lade Materialien aus Spalte D ('konfiguration')...</p>
-                <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">Bitte einen kurzen Moment Geduld.</p>
+                <p style="font-size: 0.95rem; margin: 0;">Lade Materialien aus Spalte D...</p>
             </div>`;
             
-        // Kleiner Trigger: Versuche das Menü in 300ms automatisch neu zu zeichnen, falls die Daten dann da sind
         setTimeout(() => {
-            if (window.materialOptionen && window.materialOptionen.length > 0) {
+            if (verfügbareMaterialien && verfügbareMaterialien.length > 0) {
                 handleMaterialUI(time, slot, klasse, root);
             }
         }, 300);
     } else {
-        // DATEN SIND DA: Echte Buttons zeichnen
+        // DATEN SIND DA: Container öffnen
         html += `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
         
-        // --- LÖSCH-BUTTON AN ERSTER STELLE (falls bereits Material gebucht ist) ---
+        // --- 📦 ZUOBERST: LÖSCH-BUTTON ANZEIGEN (NUR WENN BEREITS GEBUCHT) ---
         if (hatBereitsMaterial) {
             html += `
                 <button class="eigenesmenu-item" 
                         style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" 
-                        onclick="applyMaterialDelete('${time}', '${slot}', '${klasse}', this)">
-                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIAL LÖSCHEN</span>
+                        onclick="window.applyMaterialDelete('${time}', '${currentSlot}', '${klasse}', this)">
+                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIAL RESERVIERUNG LÖSCHEN</span>
                 </button>`;
         }
 
@@ -2345,7 +2344,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     html += `
         <div id="materialNextStep" style="display: none; margin-top: 15px;">
             <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
-                    onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${slot}', '${klasse}')">
+                    onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
                 <span class="btn-text">DETAILS EINGEBEN ❯</span>
             </button>
         </div>`;
@@ -2360,16 +2359,16 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         backBtn.onclick = () => {
             if (root.style.pointerEvents === "none") return;
             
-            // Bringt den User sauber zurück in die Hauptansicht des Task-Managers
+            // Holt die originale Stundenplan-Box für den Rücksprung
+            const aktuelleBox = document.querySelector(`[data-slot="${currentSlot}"]`);
             if (typeof openEditor === 'function' && aktuelleBox) {
-                openEditor(aktuelleBox, time, slot, klasse);
+                openEditor(aktuelleBox, time, currentSlot, klasse);
             } else if (typeof closeEditor === 'function') {
                 closeEditor();
             }
         };
     }
 }
-
 
     
 /* ============================================================
