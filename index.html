@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2864,33 +2864,30 @@ function getDoppellektionPartnerSlot(currentSlot) {
         return null;
     }
     
-    // Datentyp-Sicherheit: Wir holen uns den aktuellen Slot, egal ob als Zahl oder String im Key
+    // Tippfehler korrigiert: Variable heißt jetzt durchgehend "aktuellerDatenSatz"
     const aktuellerDatenSatz = window.lastPlanData[slot] || window.lastPlanData[slot.toString()];
     if (!aktuellerDatenSatz) {
         console.warn(`❌ Doppellektion-Abbruch: Keine Daten für Slot ${slot} in lastPlanData gefunden.`);
         return null;
     }
     
-    const aktuelleKlasse = aktuelleDatenSatz.klasse ? aktuelleDatenSatz.klasse.toString().trim() : "";
+    const aktuelleKlasse = aktuellerDatenSatz.klasse ? aktuellerDatenSatz.klasse.toString().trim() : "";
     if (aktuelleKlasse === "" || aktuelleKlasse === "---") return null;
 
     const slotDanach = slot + 5;
     const slotDavor = slot - 5;
 
-    // Daten der Nachbarslots typensicher herausholen
     const datenDanach = window.lastPlanData[slotDanach] || window.lastPlanData[slotDanach.toString()];
     const datenDavor = window.lastPlanData[slotDavor] || window.lastPlanData[slotDavor.toString()];
 
     const klasseDanach = (datenDanach && datenDanach.klasse) ? datenDanach.klasse.toString().trim() : "";
     const klasseDavor = (datenDavor && datenDavor.klasse) ? datenDavor.klasse.toString().trim() : "";
 
-    // --- DIAGNOSE-LOGS FÜR DIE ENTWICKLER-KONSOLE (F12) ---
     console.group(`📊 Doppellektions-Analyse für Slot ${slot} (${aktuelleKlasse})`);
     console.log(`Prüfe Slot danach (+5 = ${slotDanach}): Gefundene Klasse: "${klasseDanach}"`);
     console.log(`Prüfe Slot davor (-5 = ${slotDavor}): Gefundene Klasse: "${klasseDavor}"`);
     console.groupEnd();
 
-    // Der eigentliche, saubere Vergleich
     if (klasseDanach === aktuelleKlasse) {
         console.log(`🎯 MATCH! Slot ${slotDanach} ist der Partner (Stunde danach).`);
         return slotDanach;
@@ -2900,8 +2897,10 @@ function getDoppellektionPartnerSlot(currentSlot) {
         return slotDavor;
     }
 
-    return null; // Keine Doppellektion gefunden
+    return null;
 }
+
+    
 
 // DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
