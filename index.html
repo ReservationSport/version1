@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1273,6 +1273,12 @@ window.loadPlan = async function() {
         Object.keys(json.plan).forEach(slot => {
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (box) {
+                // --- NEU: Wenn der User hier gerade händisch editiert hat, ÜBERSPRINGEN ---
+                if (box.getAttribute('data-locked') === 'true') {
+                    console.log(`Sync überspringt Slot ${slot}, da er temporär gesperrt ist.`);
+                    return; 
+                }
+
                 const data = json.plan[slot];
                 const klasse = data.klasse || "";
                 const halle = data.halle || "";
@@ -2179,32 +2185,28 @@ window.currentSaveController = null;
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
-    // 1. --- ALTEN SPEICHERVORGANG ABBRECHEN (Falls vorhanden) ---
-    if (window.currentSaveController) {
-        window.currentSaveController.abort();
-        console.log("Vorheriger Speichervorgang wurde abgebrochen.");
-    }
-    // Neuen Controller für diese aktuelle Anfrage erstellen
-    window.currentSaveController = new AbortController();
-    const { signal } = window.currentSaveController;
-
-    // --- Sicherung für Revert ---
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
 
-    // 2. Sofortiges lokales Update (Optimistic UI)
+    // --- NEU: ABSOLUTE SPERRE FÜR DEN SYNC SETZEN ---
+    if (targetBox) {
+        targetBox.setAttribute('data-locked', 'true');
+    }
+
+    // 1. Sofortiges lokales Update (Optimistic UI)
     if (targetBox) {
         const label = targetBox.querySelector('.halle-label');
         if (label) label.innerText = neueHalle;
         
         if (configFarben && configFarben[neueHalle]) {
             targetBox.style.backgroundColor = configFarben[neueHalle];
+        } else if (neueHalle === "") {
+            targetBox.style.backgroundColor = ""; // Falls gelöscht
         }
         targetBox.classList.add('reserviert-local'); 
     }
 
-    // Visuelles Feedback am Button
     btn.style.transition = "background 0.3s ease";
     btn.style.background = "rgba(39, 174, 96, 0.4)"; 
     btn.innerText = "Reserviert ✓"; 
@@ -2219,9 +2221,7 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         halle: neueHalle
     };
 
-    // 3. Speichern mit dem Abbruch-Signal ausführen
-    // HINWEIS: Wir müssen das Signal an saveImmediately übergeben!
-    saveImmediately(payload, { signal })
+    saveImmediately(payload)
         .then(result => {
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
@@ -2231,19 +2231,18 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
                 window.lastPlanData[slot].halle = neueHalle;
             }
 
+            // Nach erfolgreichem Speichern rufen wir syncPlan auf
+            syncPlan();
+
+            // --- NEU: Erst nach 2 Sekunden darf der Hintergrund-Sync diese Zelle wieder anfassen ---
             setTimeout(() => {
-                syncPlan();
-            }, 500);
+                if (targetBox) targetBox.removeAttribute('data-locked');
+            }, 2000);
         })
         .catch(e => {
-            // Wenn der Vorgang absichtlich abgebrochen wurde, tun wir einfach gar nichts!
-            if (e.name === 'AbortError') {
-                console.log("Alte Anfrage erfolgreich ignoriert.");
-                return;
-            }
-
             console.error("Reservierungsfehler:", e);
             if (targetBox) {
+                targetBox.removeAttribute('data-locked');
                 targetBox.classList.remove('reserviert-local');
                 targetBox.style.backgroundColor = originalStyle;
                 const label = targetBox.querySelector('.halle-label');
