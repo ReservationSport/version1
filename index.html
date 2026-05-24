@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2926,6 +2926,11 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         </div>
     `;
 
+// 🔥 DIESE ZEILE JETZT HIER EINFÜGEN:
+    // Falls das Modal durch den Ausfall-Klick gesperrt wurde, geben wir es jetzt für die Buttons frei!
+    const modal = document.getElementById('eigenesmenu-modal');
+    if (modal) modal.style.pointerEvents = "auto";
+    
     // Klick-Handler für "Für beide Stunden"
     document.getElementById('btn-doppel-beide').onclick = function() {
         console.log(`🚀 Sende Doppellektion: Slot ${payload.slot} und Partner ${partnerSlot}`);
