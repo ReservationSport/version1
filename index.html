@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2856,51 +2856,60 @@ window.saveImmediately = async function(payload, options = {}) {
 };
     
 
-// Hilfsfunktion: Erkennt, ob der Partner-Slot dieselbe Klasse hat
+// Hilfsfunktion: Erkennt, ob der Partner-Slot dieselbe Klasse hat (JETZT ALS ECHTE ZAHLEN)
 function getDoppellektionPartnerSlot(currentSlot) {
-    const slot = parseInt(currentSlot);
-    if (!window.lastPlanData || !window.lastPlanData[slot]) return null;
+    const slot = parseInt(currentSlot, 10); // Knallhart in eine Ganzzahl konvertieren
+    if (isNaN(slot) || !window.lastPlanData || !window.lastPlanData[slot]) return null;
     
     const aktuelleKlasse = window.lastPlanData[slot].klasse;
     if (!aktuelleKlasse || aktuelleKlasse === "---" || aktuelleKlasse === "") return null;
 
-    if (window.lastPlanData[slot + 5] && window.lastPlanData[slot + 5].klasse === aktuelleKlasse) {
-        return slot + 5;
+    const slotDanach = slot + 5;
+    const slotDavor = slot - 5;
+
+    // Prüfen, ob die Stunde danach (+5) existiert und dieselbe Klasse hat
+    if (window.lastPlanData[slotDanach] && window.lastPlanData[slotDanach].klasse === aktuelleKlasse) {
+        return slotDanach;
     }
-    if (window.lastPlanData[slot - 5] && window.lastPlanData[slot - 5].klasse === aktuelleKlasse) {
-        return slot - 5;
+    // Prüfen, ob die Stunde davor (-5) existiert und dieselbe Klasse hat
+    if (window.lastPlanData[slotDavor] && window.lastPlanData[slotDavor].klasse === aktuelleKlasse) {
+        return slotDavor;
     }
     return null;
 }
 
-// DIE UNIVERSELLE WEICHE
+// DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
+    // Sicherstellen, dass der Slot im Payload für die Prüfung bereit ist
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
+    
+    // Wir greifen uns das Menü-Listen-Feld aus deinem Modal
     const container = document.getElementById('menu-options-list');
 
-    // Falls keine Doppellektion vorliegt oder das Modal-Inhaltfeld fehlt -> Sofort normal ausführen
+    console.log(`🔍 Doppellektions-Prüfung für Slot ${payload.slot}. Partner gefunden: ${partnerSlot}`);
+
+    // Falls keine Doppellektion vorliegt oder das Menüfeld nicht da ist -> Sofort normal feuern!
     if (!partnerSlot || !container) {
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
         return;
     }
 
-    // --- VARIANTE B: FLÜSSIGER WECHSEL IM MODAL ---
-    // Wir merken uns den alten Inhalt, falls der User abbricht (optional, hier nicht zwingend)
+    // --- VARIANTE B: INHALT IM MODAL ERSETZEN ---
     container.innerHTML = `
-        <div class="doppel-abfrage-container" style="animation: fadeIn 0.2s ease; text-align: center; padding: 10px 0;">
-            <p style="color: #ff9800; font-weight: bold; margin-bottom: 20px; font-size: 1.1rem;">
+        <div class="doppel-abfrage-container" style="text-align: center; padding: 20px 10px;">
+            <p style="color: #ff9800; font-weight: bold; margin-bottom: 15px; font-size: 1.2rem;">
                 🔗 Doppellektion erkannt!
             </p>
-            <p style="color: #ccc; margin-bottom: 25px; font-size: 0.95rem;">
-                Möchtest du diese Änderung für die gesamte Doppellektion übernehmen oder nur für diese Stunde?
+            <p style="color: #ccc; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.4;">
+                Möchtest du diese Änderung für die <span style="color: #ff9800; font-weight: bold;">gesamte Doppellektion</span> übernehmen oder nur für diese Stunde?
             </p>
             
-            <button id="btn-doppel-beide" class="eigenesmenu-item" style="justify-content: center; background: #ff9800; color: #111; font-weight: bold; margin-bottom: 12px; border: none;">
+            <button id="btn-doppel-beide" class="eigenesmenu-item" style="justify-content: center; background: #ff9800; color: #111; font-weight: bold; margin-bottom: 12px; border: none; width: 100%; padding: 12px;">
                 👥 Für beide Stunden übernehmen
             </button>
             
-            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="justify-content: center; background: #333; border: 1px solid #555; color: #fff; margin-bottom: 12px;">
+            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="justify-content: center; background: #333; border: 1px solid #555; color: #fff; margin-bottom: 12px; width: 100%; padding: 12px;">
                 👤 Nur für diese Stunde
             </button>
         </div>
@@ -2908,16 +2917,16 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
 
     // Klick-Handler für "Für beide Stunden"
     document.getElementById('btn-doppel-beide').onclick = function() {
-        // Wir kopieren den Payload für den Partner-Slot
-        const partnerPayload = { ...payload, slot: partnerSlot };
+        console.log(`🚀 Sende Doppellektion: Slot ${payload.slot} und Partner ${partnerSlot}`);
+        const partnerPayload = { ...payload, slot: partnerSlot.toString() }; // Partner als String mitschicken
         
-        // Beide Payloads abfeuern
         executePayloads([payload, partnerPayload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
     };
 
     // Klick-Handler für "Nur für diese Stunde"
     document.getElementById('btn-doppel-einzel').onclick = function() {
+        console.log(`🚀 Sende nur Einzelstunde: Slot ${payload.slot}`);
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
     };
