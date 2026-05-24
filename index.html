@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2523,6 +2523,9 @@ function openMaterialDetail(materialString, time, slot, klasse) {
 }
 
 
+/* ============================================================
+   MATERIAL SPEICHERN (JETZT MIT DOPPELLEKTIONS-WEICHE)
+   ============================================================ */
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     // 1. Klick-Sperre für das gesamte Modal & Backdrop aktivieren
     const modal = document.getElementById('eigenesmenu-modal');
@@ -2536,7 +2539,6 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         const btnTextEl = btn.querySelector('.btn-text');
         if (btnTextEl) originalText = btnTextEl.innerText;
         
-        // Loader wird absolut am rechten Rand des Buttons platziert
         btn.innerHTML = `
             <span class="btn-text">${originalText}</span>
             <div class="inline-loader-container" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
@@ -2561,7 +2563,9 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
 
     const uniqueId = `${dateVal}_${finalSlot}`;
 
+    // Payload für die Weiche vorbereiten (Entspricht exakt deiner Struktur)
     const payload = {
+        action: "saveBooking", // Verwendet den standardmäßigen Speicher-Endpoint
         pw: typeof userPw !== 'undefined' ? userPw : "",
         id: uniqueId,
         date: dateVal,
@@ -2571,70 +2575,36 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         kommentar: detail || ""   
     };
 
-    // 4. Sicherheits-Timeout
-    const safetyTimeout = setTimeout(() => {
-        alert("Zeitüberschreitung beim Speichern. Bitte Seite neu laden.");
-        if (modal) modal.style.pointerEvents = "auto";
-        if (btn) {
-            btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
+    // 4. Visuelle Update-Logik für das Frontend (Optimistic UI Callback)
+    const visuelleAktualisierung = function(aktuellesMaterial, targetSlot) {
+        // Lokalen Cache synchronisieren
+        if (window.lastPlanData && window.lastPlanData[targetSlot]) {
+            window.lastPlanData[targetSlot].material = payload.material;
+            window.lastPlanData[targetSlot].kommentar = payload.kommentar;
         }
-    }, 8000);
 
-    try {
-        // 5. Daten an das Apps Script Web App senden
-        const response = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (result.status === "success") {
-            clearTimeout(safetyTimeout);
-
-            // 6. Erfolg: Loader durch grünen Haken ersetzen
-            if (btn) {
-                const loaderContainer = btn.querySelector('.inline-loader-container');
-                if (loaderContainer) {
-                    loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
-                }
-                btn.style.transition = "background 0.3s ease";
-                btn.style.background = "rgba(39, 174, 96, 0.4)"; 
-            }
-
-            // 7. Plan im Hintergrund neu laden
-            if (typeof loadPlan === 'function') {
-                await loadPlan();
-            }
-            
-            setTimeout(() => {
-                if (typeof closeEditor === 'function') closeEditor();
-            }, 400);
-
-        } else {
-            throw new Error(result.msg || "Server-Fehler");
+        // Icon direkt an die Box heften oder entfernen
+        const targetBox = document.querySelector(`[data-slot="${targetSlot}"]`);
+        if (targetBox) {
+            markBoxWithMaterialIcon(targetBox, payload.material, payload.kommentar);
         }
-    } catch (e) {
-        clearTimeout(safetyTimeout);
-        alert("Fehler beim Speichern: " + e.message);
-        
-        // 8. Fehler-Zustand für das Interface
-        if (modal) modal.style.pointerEvents = "auto";
-        if (btn) {
-            btn.style.background = "rgba(192, 57, 43, 0.5)";
-            btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%);">❌</span>`;
-            
-            setTimeout(() => {
-                btn.style.background = "#b84a00"; // Zurück zum neuen, matten Orange
-                btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
-            }, 2000);
-        }
+    };
+
+    console.log("Material-Speicherprozess an Weiche übergeben:", payload);
+
+    // 5. Übergabe an die universelle Doppellektions-Weiche
+    if (typeof window.prozessiereAktion === 'function') {
+        window.prozessiereAktion(payload, visuelleAktualisierung);
+    } else {
+        // Fallback, falls die Weiche temporär nicht erreichbar sein sollte
+        console.warn("window.prozessiereAktion nicht gefunden! Verwende direkten POST.");
+        executeDirectMaterialPost(payload, visuelleAktualisierung, btn, originalText, modal);
     }
 }
 
 
-    /* ============================================================
-   NEUE HILFSFUNKTION: MATERIAL LÖSCHEN (GLOBAL)
+/* ============================================================
+   MATERIAL LÖSCHEN (JETZT EBENFALLS MIT WEICHEN-UNTERSTÜTZUNG)
    ============================================================ */
 window.applyMaterialDelete = async function(time, slot, klasse, btn) {
     if (!btn) return;
@@ -2648,7 +2618,7 @@ window.applyMaterialDelete = async function(time, slot, klasse, btn) {
     // 2. Button-Größe fixieren und Inline-Loader rechts einbetten
     const originalText = btn.querySelector('.btn-text').innerText;
     btn.style.position = "relative";
-    btn.style.paddingRight = "50px"; // Platz für den Loader rechts schaffen
+    btn.style.paddingRight = "50px"; 
     btn.innerHTML = `
         <span class="btn-text">${originalText}</span>
         <div class="inline-loader-container">
@@ -2656,79 +2626,83 @@ window.applyMaterialDelete = async function(time, slot, klasse, btn) {
         </div>
     `;
 
-    // 3. IDs für dein Google Sheets Backend ermitteln
+    // 3. IDs ermitteln
     const finalSlot = slot || window.currentEditSlot; 
     const dateVal = document.getElementById('datePicker')?.value || "";
     const uniqueId = `${dateVal}_${finalSlot}`;
 
-    // Wir senden leere Strings für Material und Kommentar, um es im Sheet zu löschen
+    // Leere Strings bedeuten Löschung im Backend
     const payload = {
+        action: "saveBooking",
         pw: typeof userPw !== 'undefined' ? userPw : "",
         id: uniqueId,
         date: dateVal,
         slot: finalSlot,
         klasse: klasse || "",
-        material: "",      // Spalte F leeren
-        kommentar: ""      // Spalte G leeren
+        material: "",      
+        kommentar: ""      
     };
 
-    // Sicherheits-Timeout (8 Sekunden)
-    const safetyTimeout = setTimeout(() => {
-        alert("Zeitüberschreitung beim Löschen. Bitte Seite neu laden.");
-        if (modal) modal.style.pointerEvents = "auto";
-        if (typeof handleMaterialUI === 'function') handleMaterialUI(time, slot, klasse, modal); 
-    }, 8000);
+    // 4. Visuelle Update-Logik für das Löschen (Löscht das Icon lokal)
+    const visuelleAktualisierung = function(aktuellesMaterial, targetSlot) {
+        if (window.lastPlanData && window.lastPlanData[targetSlot]) {
+            window.lastPlanData[targetSlot].material = "";
+            window.lastPlanData[targetSlot].kommentar = "";
+        }
+        const targetBox = document.querySelector(`[data-slot="${targetSlot}"]`);
+        if (targetBox) {
+            markBoxWithMaterialIcon(targetBox, "", ""); // Entfernt die Badge rückstandslos
+        }
+    };
 
+    console.log("Material-Löschprozess an Weiche übergeben:", payload);
+
+    // 5. Übergabe an die universelle Doppellektions-Weiche
+    if (typeof window.prozessiereAktion === 'function') {
+        window.prozessiereAktion(payload, visuelleAktualisierung);
+    } else {
+        executeDirectMaterialPost(payload, visuelleAktualisierung, btn, originalText, modal);
+    }
+};
+
+
+/* ============================================================
+   FALLBACK: DIREKTER POST-REQUEST (Falls Weiche nicht greift)
+   ============================================================ */
+async function executeDirectMaterialPost(payload, updateCallback, btn, originalText, modal) {
     try {
-        // 4. POST-Request an deine Apps Script URL senden
         const response = await fetch(url, {
             method: "POST",
             body: JSON.stringify(payload)
         });
-
         const result = await response.json();
-        
+
         if (result.status === "success") {
-            clearTimeout(safetyTimeout);
-
-            // 5. Erfolg: Loader durch grünen Haken ersetzen
-            const loaderContainer = btn.querySelector('.inline-loader-container');
-            if (loaderContainer) {
-                loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+            if (btn) {
+                const loaderContainer = btn.querySelector('.inline-loader-container');
+                if (loaderContainer) loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
+                btn.style.background = "rgba(39, 174, 96, 0.4)"; 
             }
-            btn.style.transition = "background 0.3s ease";
-            btn.style.background = "rgba(39, 174, 96, 0.4)"; 
-
-            // 6. Plan im Hintergrund neu laden
-            if (typeof loadPlan === 'function') {
-                await loadPlan();
-            } 
-            
-            // 7. Erst nach erfolgreichem Laden das Menü schließen
-            setTimeout(() => {
-                if (typeof closeEditor === 'function') closeEditor();
-            }, 400);
-
+            updateCallback(payload.material, payload.slot);
+            if (typeof loadPlan === 'function') await loadPlan();
+            setTimeout(() => { if (typeof closeEditor === 'function') closeEditor(); }, 400);
         } else {
-            throw new Error(result.msg || "Server-Fehler beim Löschen");
+            throw new Error(result.msg || "Server-Fehler");
         }
     } catch (e) {
-        clearTimeout(safetyTimeout);
-        console.error("Material-Löschfehler:", e);
-        alert("Löschen fehlgeschlagen: " + e.message);
-        
-        // Bei Fehler: Menü wieder freigeben und UI zurücksetzen
+        alert("Fehler verarbeitet: " + e.message);
         if (modal) modal.style.pointerEvents = "auto";
-        if (typeof handleMaterialUI === 'function') handleMaterialUI(time, slot, klasse, modal);
+        if (btn) {
+            btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
+            btn.style.background = "";
+        }
     }
-};
-    
+}
 
 
-    
-/**
- * Hilfsfunktion: Setzt das Paket-Icon an die entsprechende Stundenplan-Box
- */
+/* ============================================================
+   HILFSFUNKTIONEN: HELPER FÜR DIE BADGES IM STUNDENPLAN
+   ============================================================ */
 function markBoxWithMaterialIcon(box, material, kommentar) {
     if (!box) return;
     const oldIcon = box.querySelector('.material-indicator');
@@ -2762,12 +2736,9 @@ function markBoxWithMaterialIcon(box, material, kommentar) {
     box.appendChild(badge);
 }
 
-/**
- * Zeigt das Info-Overlay, wenn man auf ein Paket-Icon klickt
- */
 function showMaterialDetailPopup(material, kommentar) {
     const overlay = document.createElement('div');
-    overlay.className = 'material-info-overlay'; // CSS Klasse aus deinem Stylesheet
+    overlay.className = 'material-info-overlay'; 
     overlay.onclick = () => overlay.remove(); 
 
     const materialList = material.split(', ').map(item => `• ${item}`).join('<br>');
@@ -2792,7 +2763,6 @@ function showMaterialDetailPopup(material, kommentar) {
     `;
     document.body.appendChild(overlay);
 }
-
 
 
 /**
