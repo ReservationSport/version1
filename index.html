@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1991,27 +1991,10 @@ window.openPasswordModalForReset = function(time, slot, klasse) {
     
 
 /**
- * Verarbeitet das Setzen oder Löschen des Ausfalls (Blitz-Version ohne Popup)
+ * Verarbeitet das Setzen oder Löschen des Ausfalls (Mit Doppellektions-Weiche)
  */
 window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
-    console.log("handleAusfallClick (Direktmodus) getriggert. Modus:", mode);
-
-    // 1. Klick-Blocker & Loader aktivieren
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) modal.style.pointerEvents = "none";
-
-    let originalText = "Ausfall markieren";
-    if (btn) {
-        // Wir holen uns den echten Text direkt aus dem Button, damit es für beide Modi passt
-        originalText = btn.querySelector('.btn-text')?.innerText || btn.innerText;
-        btn.style.position = "relative";
-        btn.innerHTML = `
-            <span class="btn-text">${originalText}</span>
-            <div class="inline-loader-container">
-                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
-            </div>
-        `;
-    }
+    console.log("handleAusfallClick (Weichenmodus) getriggert. Modus:", mode);
 
     // Modus-Weiche: 'LOESCHEN' setzt die Halle auf leer, 'SETZEN' bucht "Ausfall"
     const zielHalle = (mode === 'LOESCHEN') ? "" : "Ausfall";
@@ -2027,50 +2010,54 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         halle: zielHalle
     };
 
-    // 2. Daten ohne Verzögerung direkt absenden
-    saveImmediately(payload)
-        .then((result) => {
-            if (result && result.status === "success") {
-                // Erfolg: Loader durch grünen Haken ersetzen
-                const loaderContainer = btn?.querySelector('.inline-loader-container');
-                if (loaderContainer) {
-                    loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em; margin-left: 8px;">✓</span>`;
-                }
+    // Diese Funktion beschreibt, wie die Box(en) im Grid SOFORT lokal aktualisiert werden (Optimistic UI)
+    const visuelleAktualisierung = function(halleZuSetzen, slotZuSetzen) {
+        const targetBox = document.querySelector(`[data-slot="${slotZuSetzen}"]`);
+        
+        // Lokalen Datenspeicher synchron halten
+        if (window.lastPlanData && window.lastPlanData[slotZuSetzen]) {
+            window.lastPlanData[slotZuSetzen].halle = halleZuSetzen;
+        }
 
-                if (btn) {
-                    // Der Button leuchtet genau wie die Hallen-Auswahl wunderschön grün auf
-                    btn.style.transition = "background 0.3s ease";
-                    btn.style.background = "rgba(39, 174, 96, 0.4)"; 
-                }
-
-                // Grid im Hintergrund neu laden und Editor zeitnah schließen
-                loadPlan().then(() => {
-                    setTimeout(closeEditor, 400);
-                });
+        if (targetBox) {
+            const label = targetBox.querySelector('.halle-label');
+            if (label) label.innerText = halleZuSetzen;
+            
+            // CSS-Klasse je nach Zustand vergeben oder entfernen
+            if (halleZuSetzen === "Ausfall") {
+                targetBox.classList.add('ausfall-mode');
+                targetBox.style.backgroundColor = ""; // Damit das !important CSS greift
             } else {
-                throw new Error("Server-Fehler beim Speichern");
-            }
-        })
-        .catch((err) => {
-            console.error("Fehler beim Ausfall-Speichern:", err);
-            
-            // Fehler-Animation für den Button
-            if (btn) {
-                btn.style.background = "rgba(192, 57, 43, 0.5)";
-                btn.innerHTML = `<span class="btn-text">${originalText}</span> <span style="margin-left:10px;">❌</span>`;
-            }
-            
-            // Nach 1.5 Sekunden UI wieder freigeben bei Fehler
-            setTimeout(() => {
-                if (modal) modal.style.pointerEvents = "auto";
-                if (btn) {
-                    btn.style.background = "";
-                    btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
+                targetBox.classList.remove('ausfall-mode');
+                // Falls die Halle geleert wurde, kriegt sie die Standardfarbe zurück
+                if (typeof configFarben !== 'undefined' && configFarben[halleZuSetzen]) {
+                    targetBox.style.backgroundColor = configFarben[halleZuSetzen];
+                } else {
+                    targetBox.style.backgroundColor = "";
                 }
-            }, 1500);
-        });
-};
+            }
+        }
+    };
 
+    // Klick-Blocker & Loader auf dem geklickten Button aktivieren (falls vorhanden)
+    if (btn) {
+        const modal = document.getElementById('eigenesmenu-modal');
+        if (modal) modal.style.pointerEvents = "none";
+
+        const originalText = btn.querySelector('.btn-text')?.innerText || btn.innerText;
+        btn.style.position = "relative";
+        btn.innerHTML = `
+            <span class="btn-text">${originalText}</span>
+            <div class="inline-loader-container">
+                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
+            </div>
+        `;
+    }
+
+    // AB AN DIE UNIVERSELLE WEICHE!
+    // Erkennt automatisch Doppellektionen und steuert das Umschalten im Modal
+    window.prozessiereAktion(payload, visuelleAktualisierung);
+};
     
 
 
