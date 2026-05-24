@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2171,24 +2171,29 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 }
     
 
+// Ganz wichtig: Diese Variable MUSS außerhalb der Funktion stehen (global)
+window.currentSaveController = null;
+
+
+    
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (!btn) return;
 
-    // --- NEU: KLICK-SCHUTZ (Verhindert Race Conditions bei schnellen Doppel-Klicks) ---
-    if (isSaving) {
-        console.warn("Speichervorgang läuft noch... Klick blockiert.");
-        return; 
+    // 1. --- ALTEN SPEICHERVORGANG ABBRECHEN (Falls vorhanden) ---
+    if (window.currentSaveController) {
+        window.currentSaveController.abort();
+        console.log("Vorheriger Speichervorgang wurde abgebrochen.");
     }
+    // Neuen Controller für diese aktuelle Anfrage erstellen
+    window.currentSaveController = new AbortController();
+    const { signal } = window.currentSaveController;
 
-    // --- Sicherung: Bestehende Werte für einen evtl. Revert speichern ---
+    // --- Sicherung für Revert ---
     const targetBox = document.querySelector(`[data-slot="${slot}"]`);
     const originalStyle = targetBox ? targetBox.style.backgroundColor : "";
     const originalLabel = targetBox ? targetBox.querySelector('.halle-label')?.innerText : "";
 
-    // System auf "Speichern" setzen, um weitere Klicks zu blockieren
-    isSaving = true;
-
-    // 1. Sofortiges lokales Update (Optimistic UI)
+    // 2. Sofortiges lokales Update (Optimistic UI)
     if (targetBox) {
         const label = targetBox.querySelector('.halle-label');
         if (label) label.innerText = neueHalle;
@@ -2199,12 +2204,11 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         targetBox.classList.add('reserviert-local'); 
     }
 
-    // 2. Sofortiges visuelles Feedback
+    // Visuelles Feedback am Button
     btn.style.transition = "background 0.3s ease";
     btn.style.background = "rgba(39, 174, 96, 0.4)"; 
     btn.innerText = "Reserviert ✓"; 
 
-    // 3. Payload vorbereiten
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2215,42 +2219,40 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         halle: neueHalle
     };
 
-    // 4. Speichern und auf Server-Bestätigung warten
-    saveImmediately(payload)
+    // 3. Speichern mit dem Abbruch-Signal ausführen
+    // HINWEIS: Wir müssen das Signal an saveImmediately übergeben!
+    saveImmediately(payload, { signal })
         .then(result => {
             if (!(result && result.status === "success")) {
                 throw new Error(result.msg || "Halle bereits vergeben!");
             }
             
-            // Lokales Datengedächtnis sofort aktualisieren
             if (window.lastPlanData && window.lastPlanData[slot]) {
                 window.lastPlanData[slot].halle = neueHalle;
             }
 
-            // Dem Server Zeit geben, um die DB zu flashen, bevor synchronisiert wird
             setTimeout(() => {
-                isSaving = false; // Schutz aufheben erst NACH dem Sync-Anstoß
                 syncPlan();
             }, 500);
         })
         .catch(e => {
+            // Wenn der Vorgang absichtlich abgebrochen wurde, tun wir einfach gar nichts!
+            if (e.name === 'AbortError') {
+                console.log("Alte Anfrage erfolgreich ignoriert.");
+                return;
+            }
+
             console.error("Reservierungsfehler:", e);
-            isSaving = false; // Schutz bei Fehler aufheben
-            
-            // --- FEHLERBEHANDLUNG (Revert) ---
             if (targetBox) {
                 targetBox.classList.remove('reserviert-local');
                 targetBox.style.backgroundColor = originalStyle;
                 const label = targetBox.querySelector('.halle-label');
                 if (label) label.innerText = originalLabel;
             }
-            
-            btn.style.background = "rgba(192, 57, 43, 0.5)"; 
             alert("Fehler: " + e.message);
             syncPlan();
         });
 
-    // 5. Editor sofort schließen
     closeEditor();
 };
 
@@ -2793,8 +2795,9 @@ function showMaterialDetailPopup(material, kommentar) {
 
 /**
  * Der "Postbote": Sendet Daten an das Google Apps Script
+ * JETZT NEU: Unterstützt ein Abbruch-Signal (options.signal) gegen Race Conditions!
  */
-window.saveImmediately = async function(payload) {
+window.saveImmediately = async function(payload, options = {}) {
     // Falls die URL nicht global definiert ist, hier prüfen
     if (typeof url === 'undefined') {
         console.error("❌ saveImmediately abgebrochen: Die Variable 'url' (Web-App URL) ist nicht definiert!");
@@ -2809,11 +2812,11 @@ window.saveImmediately = async function(payload) {
     try {
         console.log("⏳ Postbote: Sende Speicherbefehl...", payload);
 
-        // KORREKTUR: Wir nutzen das normale Fetch ohne 'no-cors', 
-        // damit wir die Antwort (Erfolg/Fehler) vom Google Sheet verarbeiten können!
+        // KORREKTUR: Wir nutzen das normale Fetch ohne 'no-cors' UND reichen das Abbruch-Signal weiter!
         const response = await fetch(url, {
             method: "POST",
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
+            signal: options.signal // <-- NEU: Hier wird die alte Anfrage im Netzwerk sofort gekillt, falls abgebrochen
         });
 
         if (!response.ok) {
@@ -2830,19 +2833,15 @@ window.saveImmediately = async function(payload) {
             // ============================================================
             // INTERNE NEWS-ZÜNDUNG
             // ============================================================
-            // Wir prüfen, ob die Aktion ein normales Speichern war ('saveBooking')
             const action = payload.action || payload.mode;
             
             if (action === "saveBooking" && typeof triggerNews === "function") {
                 const slotIndex = parseInt(payload.slot);
                 const klasseName = payload.klasse || "";
-                
-                // Wir schauen in das Feld 'halle', wo "Ausfall" oder "Outdoor" drinsteht
                 const halleWert = payload.halle ? payload.halle.toString().trim() : "";
 
                 if (halleWert === "Ausfall") {
                     console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Ausfall für Slot ${slotIndex} erkannt.`);
-                    // Wichtig: Ohne 'await', damit das Schließen des Menüs nicht verzögert wird
                     triggerNews("ausfall", slotIndex, klasseName);
                 } 
                 else if (halleWert.includes("Outdoor")) {
@@ -2863,6 +2862,12 @@ window.saveImmediately = async function(payload) {
         }
 
     } catch (e) {
+        // Wenn der Fehler durch das absichtliche Abbrechen (AbortController) kam, werfen wir ihn weiter,
+        // damit applyHalleSelection ihn im .catch() mit 'AbortError' sauber abfangen kann.
+        if (e.name === 'AbortError') {
+            throw e; 
+        }
+
         console.error("❌ Kritischer Fehler beim Speichern im Fetch-Verlauf:", e);
         alert("Verbindung zum Server fehlgeschlagen! Die Änderung wurde eventuell nicht gespeichert.");
         return { status: "error", msg: e.toString() };
