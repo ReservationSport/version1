@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1285,7 +1285,7 @@ window.loadPlan = async function() {
                 markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
             }
 
-            // 2. 🔥 REPARIERT: Notiz-Icon erzeugen und klickbar machen!
+            // 2. 🔥 REPARIERT: Öffnet jetzt beim Klick das reine Anzeige-Modal
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
@@ -1293,11 +1293,11 @@ window.loadPlan = async function() {
                 notizElement.title = slotData.kommentar; 
                 notizElement.style.cursor = 'pointer';
                 
-                // Klick-Event fängt den Klick ab, merkt sich die Box und öffnet dein UI
                 notizElement.onclick = function(event) {
-                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Edit-Menüs
-                    window.currentEditBox = box; // Box für das Auslesen der bestehenden Notiz registrieren
-                    window.handleNotizUI(box.getAttribute('data-time'), slot, slotData.klasse);
+                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Menüs
+                    if (typeof window.zeigeNotizModal === "function") {
+                        window.zeigeNotizModal(slotData.klasse || "", slotData.kommentar);
+                    }
                 };
                 
                 box.appendChild(notizElement);
@@ -1368,7 +1368,7 @@ window.syncPlan = async function() {
 
                 markBoxWithMaterialIcon(box, material, kommentar);
 
-                // 🔥 REPARIERT IM BACKGROUND-SYNC: Altes Icon weg, neues klickbares Icon her
+                // 🔥 REPARIERT IM BACKGROUND-SYNC: Öffnet jetzt auch hier das reine Anzeige-Modal
                 const altesNotizIcon = box.querySelector('.box-notiz-icon');
                 if (altesNotizIcon) altesNotizIcon.remove();
 
@@ -1381,8 +1381,9 @@ window.syncPlan = async function() {
                     
                     neuesNotizIcon.onclick = function(event) {
                         event.stopPropagation();
-                        window.currentEditBox = box;
-                        window.handleNotizUI(box.getAttribute('data-time'), slot, klasse);
+                        if (typeof window.zeigeNotizModal === "function") {
+                            window.zeigeNotizModal(klasse, kommentar);
+                        }
                     };
                     
                     box.appendChild(neuesNotizIcon);
@@ -1393,7 +1394,6 @@ window.syncPlan = async function() {
         console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
-    
 
     
 /* ============================================================
