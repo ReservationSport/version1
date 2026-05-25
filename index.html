@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -178,14 +178,19 @@ body {
     position: absolute;
     top: 4px;
     left: 4px;
-    font-size: 11px;
+    font-size: 1.35rem; /* 🔥 Deutlich größer (vorher 11px) */
     line-height: 1;
     z-index: 15;
-    cursor: help; /* Zeigt ein Fragezeichen/Hilfe-Symbol beim Drüberfahren */
+    cursor: pointer; /* 🔥 Verwandelt das Fragezeichen in eine Klick-Hand */
     transition: transform 0.2s ease;
 }
 
-/* Lässt das Icon dezent mitreagieren, wenn die eigene Box gehoverthovert wird */
+/* Wenn man direkt mit der Maus auf das Icon zeigt, wird es noch ein Stück größer */
+.box-notiz-icon:hover {
+    transform: scale(1.25) !important;
+}
+
+/* Lässt das Icon dezent mitreagieren, wenn die gesamte Box gehovertt wird */
 .box.is-mine:hover .box-notiz-icon {
     transform: scale(1.1);
 }
@@ -1219,10 +1224,10 @@ window.loadPlan = async function() {
         if (json.sperrMsg) {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">${json.sperrMsg}</div>`;
             if (loader) loader.style.display = 'none';
-            return; // Beendet die Funktion, damit KEIN leeres Gitter gezeichnet wird!
+            return; 
         }
         
-        // --- 🔥 MATERIALIEN AUS DEM SERVER-PAKET IM FRONTEND AUSPACKEN ---
+        // --- MATERIALIEN AUS DEM SERVER-PAKET IM FRONTEND AUSPACKEN ---
         if (json.verfügbareMaterialien) {
             verfügbareMaterialien = json.verfügbareMaterialien;
             console.log("Materialien erfolgreich im Frontend-Array geladen:", verfügbareMaterialien);
@@ -1252,11 +1257,10 @@ window.loadPlan = async function() {
                 const klasse = slotData.klasse || "";
                 const halle = slotData.halle || "";
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
-                const kommentar = slotData.kommentar || ""; // 🔥 Kommentar/Notiz holen
+                const kommentar = slotData.kommentar || ""; 
                 const isAusfall = (halle === "Ausfall");
                 const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
                 
-                // 🔥 NEU: data-notiz hinzugefügt, damit das Notiz-UI den Text direkt beim Öffnen auslesen kann
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                         data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
@@ -1270,7 +1274,7 @@ window.loadPlan = async function() {
 
         container.innerHTML = html;
 
-        // 🔥 LIVE-RENDERING DER MATERIAL-ICONS & NOTIZ-ICONS DIREKT NACH DEM ZEICHNEN DES GITTERS
+        // --- LIVE-RENDERING DER MATERIAL-ICONS & NOTIZ-ICONS ---
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
             const box = container.querySelector(`[data-slot="${slot}"]`);
@@ -1281,12 +1285,21 @@ window.loadPlan = async function() {
                 markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
             }
 
-            // 2. 🔥 NEU: Notiz-Schnittstelle live rendern (oben links)
+            // 2. 🔥 REPARIERT: Notiz-Icon erzeugen und klickbar machen!
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
                 notizElement.innerText = '📝';
-                notizElement.title = slotData.kommentar; // Nativer Tooltip beim Drüberfahren!
+                notizElement.title = slotData.kommentar; 
+                notizElement.style.cursor = 'pointer';
+                
+                // Klick-Event fängt den Klick ab, merkt sich die Box und öffnet dein UI
+                notizElement.onclick = function(event) {
+                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Edit-Menüs
+                    window.currentEditBox = box; // Box für das Auslesen der bestehenden Notiz registrieren
+                    window.handleNotizUI(box.getAttribute('data-time'), slot, slotData.klasse);
+                };
+                
                 box.appendChild(notizElement);
             }
         });
@@ -1301,7 +1314,6 @@ window.loadPlan = async function() {
 
 
 window.syncPlan = async function() {
-    // --- NEU: Wenn das System gerade speichert, den Hintergrund-Sync sofort abbrechen ---
     if (isSaving) return; 
 
     const dp = document.getElementById('datePicker');
@@ -1311,10 +1323,8 @@ window.syncPlan = async function() {
         const res = await fetch(`${url}?date=${dp.value}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // Falls im Hintergrund ein Sperrtag erkannt wird, nicht weitersynchronisieren
         if (json.sperrMsg || !json.plan) return;
         
-        // --- 🔥 AUCH IM BACKGROUND-SYNC DIE MATERIALIEN AKTUALISIEREN ---
         if (json.verfügbareMaterialien) {
             verfügbareMaterialien = json.verfügbareMaterialien;
         }
@@ -1322,7 +1332,6 @@ window.syncPlan = async function() {
         window.lastPlanData = json.plan; 
         
         Object.keys(json.plan).forEach(slot => {
-            // --- NEU: Wenn dieser Slot gerade manuell geändert wird, NIEMALS ANFASSEN ---
             if (window.syncBlockierteSlots && window.syncBlockierteSlots[slot]) {
                 console.log(`Sync blockiert: Slot ${slot} wird vom User editiert.`);
                 return; 
@@ -1334,8 +1343,8 @@ window.syncPlan = async function() {
                 const klasse = data.klasse || "";
                 const halle = data.halle || "";
                 const lehrer = data.lehrer || allClassTeachers[klasse] || "";
-                const material = data.material || "";   // Material auslesen
-                const kommentar = data.kommentar || ""; // 🔥 Kommentar/Notiz auslesen
+                const material = data.material || "";   
+                const kommentar = data.kommentar || ""; 
                 
                 const hLabel = box.querySelector('.halle-label');
                 if (hLabel) hLabel.innerText = halle;
@@ -1346,32 +1355,36 @@ window.syncPlan = async function() {
                 const lLabel = box.querySelector('.lehrer-info');
                 if (lLabel) lLabel.innerText = lehrer;
                 
-                // 🔥 NEU: data-notiz Attribut auch im Hintergrund-Sync immer aktuell halten
+                // data-notiz Attribut aktuell halten
                 box.setAttribute('data-notiz', kommentar);
 
-                // --- Steuerung der Ausfall-Klasse im Sync ---
                 if (halle === "Ausfall") {
                     box.classList.add('ausfall-mode');
-                    box.style.backgroundColor = ""; // Damit das CSS !important greift
+                    box.style.backgroundColor = ""; 
                 } else {
                     box.classList.remove('ausfall-mode');
                     box.style.backgroundColor = configFarben[halle] || "";
                 }
 
-                // MATERIAL-ICON LIVE IM HINTERGRUND SYNCHRONISIEREN (Hinzufügen oder Entfernen)
                 markBoxWithMaterialIcon(box, material, kommentar);
 
-                // 🔥 NEU: NOTIZ-ICON IM HINTERGRUND SYNCHRONISIEREN
-                // Altes Icon suchen und entfernen falls vorhanden
+                // 🔥 REPARIERT IM BACKGROUND-SYNC: Altes Icon weg, neues klickbares Icon her
                 const altesNotizIcon = box.querySelector('.box-notiz-icon');
                 if (altesNotizIcon) altesNotizIcon.remove();
 
-                // Neues Icon hinzufügen, falls Text vorhanden ist
                 if (kommentar.trim() !== "") {
                     const neuesNotizIcon = document.createElement('span');
                     neuesNotizIcon.className = 'box-notiz-icon';
                     neuesNotizIcon.innerText = '📝';
                     neuesNotizIcon.title = kommentar;
+                    neuesNotizIcon.style.cursor = 'pointer';
+                    
+                    neuesNotizIcon.onclick = function(event) {
+                        event.stopPropagation();
+                        window.currentEditBox = box;
+                        window.handleNotizUI(box.getAttribute('data-time'), slot, klasse);
+                    };
+                    
                     box.appendChild(neuesNotizIcon);
                 }
             }
