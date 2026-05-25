@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1891,131 +1891,204 @@ window.openEditor = function(el, time, slot, klasse) {
 };
 
 
+/* ==========================================================================
+   MATERIAL-LOGIK: EINHEITLICH & SAUBER (ZENTRALE STEUERUNG)
+   ========================================================================== */
 
+/** * 1. Menü-UI: Materialauswahl anzeigen 
+ */
+function handleMaterialUI(time, slot, klasse, modalElement) {
+    const root = modalElement || document.getElementById('eigenesmenu-modal');
+    if (!root) return;
+    root.style.pointerEvents = "auto";
+
+    const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
+    const title = root.querySelector('.eigenesmenu-title');
+    const subtitle = root.querySelector('#menu-subtitle') || root.querySelector('.eigenesmenu-subtitle');
+
+    if (title) title.innerText = "MATERIAL WÄHLEN";
+    if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
+
+    const currentSlot = slot || window.currentEditSlot;
+    const slotData = (window.lastPlanData && window.lastPlanData[currentSlot]) || {};
+    const hatBereitsMaterial = slotData.material && slotData.material.trim() !== "";
+    window.selectedMaterials = []; 
+
+    let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
+
+    if (hatBereitsMaterial) {
+        html += `<button class="eigenesmenu-item" style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" onclick="applyMaterialDelete('${time}', '${currentSlot}', '${klasse}', this)">
+                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIALBUCHUNG LÖSCHEN</span>
+                 </button>`;
+    }
+
+    (verfügbareMaterialien || []).forEach(mat => {
+        const matClean = mat ? mat.toString().trim() : "";
+        if (matClean === "") return;
+        html += `<button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${matClean}', this)">
+                    <span class="eigenesmenu-icon">📦</span> 
+                    <span class="btn-text">${matClean}</span>
+                    <span class="check-indicator" style="margin-left: auto; color: #666; font-weight: bold;">○</span>
+                 </button>`;
+    });
+
+    html += `</div>
+             <div id="materialNextStep" style="display: none; margin-top: 15px;">
+                <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
+                        onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
+                    <span class="btn-text">DETAILS EINGEBEN ❯</span>
+                </button>
+             </div>`;
+
+    liste.innerHTML = html;
     
-/* ============================================================
-   12. MATERIAL-LOGIK (TOGGLE & DETAILS)
-   ============================================================ */
+    // Zurück-Funktion
+    const backBtn = root.querySelector('.eigenesmenu-cancel');
+    if (backBtn) {
+        backBtn.innerText = "← ZURÜCK";
+        backBtn.onclick = () => {
+            const box = document.querySelector(`[data-slot="${currentSlot}"]`);
+            if (typeof openEditor === 'function' && box) openEditor(box, time, currentSlot, klasse);
+            else if (typeof closeEditor === 'function') closeEditor();
+        };
+    }
+}
 
-/**
- * Erlaubt das An- und Abwählen mehrerer Materialien im Menü
+/** * 2. UI: Detail-Eingabe Maske
+ */
+function openMaterialDetail(materialString, time, slot, klasse) {
+    const root = document.getElementById('eigenesmenu-modal');
+    if (!root) return;
+    const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
+    const header = root.querySelector('.eigenesmenu-header');
+
+    if (header) header.innerHTML = `<h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #ff9800;">DETAILS & MENGEN</h3>
+                                    <p class="eigenesmenu-subtitle" style="color: #eee; margin: 10px 0 0 0; font-size: 0.9em;">Gewählt: <span style="color:#ff9800; font-weight:bold;">${materialString}</span></p>`;
+
+    liste.innerHTML = `<div style="display: flex; flex-direction: column; align-items: center; padding: 10px 0;">
+                        <textarea id="material-detail-input" style="width: 100%; max-width: 290px; height: 120px; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #151515; color: white; resize: none; margin-bottom: 20px;" placeholder="Anzahl, Größen..."></textarea>
+                        <button class="eigenesmenu-item" style="width: 100%; max-width: 290px; background: #b84a00; color: white; justify-content: center; font-weight: bold; padding: 14px;" 
+                                onclick="saveMaterialSelection('${materialString}', document.getElementById('material-detail-input').value, '${time}', '${slot}', '${klasse}', this)">
+                            <span class="btn-text">RESERVIERUNG SPEICHERN</span>
+                        </button>
+                       </div>`;
+}
+
+/** * 3. Zentrale Speicher-Funktion
+ */
+async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
+    const modal = document.getElementById('eigenesmenu-modal');
+    if (modal) modal.style.pointerEvents = "none";
+
+    const payload = {
+        action: "saveBooking",
+        pw: typeof userPw !== 'undefined' ? userPw : "",
+        id: `${document.getElementById('datePicker')?.value}_${slot}`,
+        date: document.getElementById('datePicker')?.value,
+        slot: slot,
+        klasse: klasse || "",
+        material: mat,           
+        materialDetail: detail || "" // <--- WICHTIG: Landet in Spalte G
+    };
+
+    const visuellesUpdate = (m, s) => {
+        if (window.lastPlanData?.[s]) {
+            window.lastPlanData[s].material = m;
+            window.lastPlanData[s].materialDetail = detail;
+        }
+        const box = document.querySelector(`[data-slot="${s}"]`);
+        if (box) markBoxWithMaterialIcon(box, m, detail);
+    };
+
+    if (typeof window.prozessiereAktion === 'function') {
+        window.prozessiereAktion(payload, visuellesUpdate);
+    } else {
+        await executeDirectMaterialPost(payload, visuellesUpdate, btn);
+    }
+}
+
+/** * 4. Löschen-Logik
+ */
+async function applyMaterialDelete(time, slot, klasse, btn) {
+    const payload = {
+        action: "saveBooking",
+        pw: typeof userPw !== 'undefined' ? userPw : "",
+        id: `${document.getElementById('datePicker')?.value}_${slot}`,
+        date: document.getElementById('datePicker')?.value,
+        slot: slot,
+        klasse: klasse || "",
+        material: "",           
+        materialDetail: ""
+    };
+
+    const visuellesUpdate = (m, s) => {
+        if (window.lastPlanData?.[s]) {
+            window.lastPlanData[s].material = "";
+            window.lastPlanData[s].materialDetail = "";
+        }
+        const box = document.querySelector(`[data-slot="${s}"]`);
+        if (box) markBoxWithMaterialIcon(box, "", "");
+    };
+
+    if (typeof window.prozessiereAktion === 'function') {
+        window.prozessiereAktion(payload, visuellesUpdate);
+    } else {
+        await executeDirectMaterialPost(payload, visuellesUpdate, btn);
+    }
+}
+
+/** * 5. Helper (Toggles & Badges)
  */
 function toggleMaterialSelection(mat, btn) {
-    // Da das Menü dynamisch ist, suchen wir den Button innerhalb des Modals
     const root = document.getElementById('eigenesmenu-modal');
-    const nextStep = root ? root.querySelector('#materialNextStep') : document.getElementById('materialNextStep');
+    const nextStep = root.querySelector('#materialNextStep');
     const check = btn.querySelector('.check-indicator');
 
-    if (selectedMaterials.includes(mat)) {
-        // Entfernen
-        selectedMaterials = selectedMaterials.filter(m => m !== mat);
-        btn.style.borderColor = "#333";
+    if (window.selectedMaterials.includes(mat)) {
+        window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
         btn.style.background = "transparent";
         if (check) check.innerText = "○";
     } else {
-        // Hinzufügen
-        selectedMaterials.push(mat);
-        btn.style.borderColor = "#ff8c00";
+        window.selectedMaterials.push(mat);
         btn.style.background = "rgba(255, 140, 0, 0.1)";
         if (check) check.innerText = "●";
     }
-
-    // "Weiter"-Button nur zeigen, wenn etwas gewählt wurde
-    if (nextStep) {
-        nextStep.style.display = selectedMaterials.length > 0 ? 'block' : 'none';
-    }
+    if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
 }
 
-    
+function markBoxWithMaterialIcon(box, material, detail) {
+    if (!box) return;
+    const oldIcon = box.querySelector('.material-indicator');
+    if (oldIcon) oldIcon.remove();
+    if (!material || material.trim() === "") return;
 
-/**
- * Finales Speichern im Backend
- */
-async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
-    // 1. UI Feedback: Loader zeigen & Button sperren
-    let loader, btnText;
-    if (btn) {
-        loader = btn.querySelector('.eigenesmenu-loader');
-        btnText = btn.querySelector('.btn-text');
-        if (loader) loader.style.display = 'block';
-        if (btnText) btnText.style.opacity = '0.3';
-        btn.disabled = true;
-    }
-
-    // 2. DATEN-AKQUISE: Absolute Slot-ID (1-60) sicherstellen
-    // Wir nehmen den übergebenen Slot ODER den globalen Sicherheits-Anker
-    const finalSlot = slot || window.currentEditSlot; 
-    
-    const datePicker = document.getElementById('datePicker');
-    const dateVal = datePicker ? datePicker.value : "";
-
-    // 3. VALIDIERUNG: Verhindert "undefined"-Einträge im Sheet
-    if (!finalSlot || finalSlot === "undefined" || !dateVal) {
-        console.error("Speichern abgebrochen: Fehlende Daten", { finalSlot, dateVal });
-        alert("Fehler: Die Slot-ID (1-60) konnte nicht ermittelt werden. Bitte schließen und erneut versuchen.");
-        
-        // UI Reset im Fehlerfall
-        if (btn) {
-            btn.disabled = false;
-            if (loader) loader.style.display = 'none';
-            if (btnText) btnText.style.opacity = '1';
-        }
-        return;
-    }
-
-    // Eindeutige ID für das Sheet (z.B. 2026-05-12_42)
-    const uniqueId = `${dateVal}_${finalSlot}`;
-
-    const payload = {
-        mode: "saveMaterial",
-        id: uniqueId,
-        date: dateVal,
-        time: time || "",
-        slot: finalSlot,
-        klasse: klasse || "",
-        material: mat,
-        kommentar: detail || "",
-        pw: typeof userPw !== 'undefined' ? userPw : "",
-        kuerzel: typeof userKuerzel !== 'undefined' ? userKuerzel : ""
-    };
-
-    console.log("📤 Sende Material-Daten:", payload);
-
-    try {
-        // 'url' muss global definiert sein
-        const response = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) throw new Error("Netzwerk-Antwort war nicht ok");
-
-        const result = await response.json();
-
-        if (result.status === "success") {
-            console.log("✅ Speichern erfolgreich");
-            if (typeof closeEditor === 'function') closeEditor();
-            if (typeof loadPlan === 'function') await loadPlan();
-        } else {
-            throw new Error(result.msg || "Server hat einen Fehler gemeldet");
-        }
-    } catch (e) {
-        console.error("❌ Material Save Error:", e);
-        alert("Verbindung zum Google Sheet fehlgeschlagen: " + e.message);
-        
-        // Button wieder benutzbar machen
-        if (btn) {
-            btn.disabled = false;
-            if (loader) loader.style.display = 'none';
-            if (btnText) btnText.style.opacity = '1';
-        }
-    }
+    const badge = document.createElement('div');
+    badge.className = 'material-indicator';
+    badge.innerHTML = '📦';
+    Object.assign(badge.style, { position: 'absolute', top: '2px', right: '2px', background: '#333', color: 'white', padding: '2px 4px', borderRadius: '4px', cursor: 'pointer' });
+    badge.onclick = (e) => { e.stopPropagation(); showMaterialDetailPopup(material, detail); };
+    box.appendChild(badge);
 }
 
+function showMaterialDetailPopup(material, detail) {
+    const overlay = document.createElement('div');
+    overlay.className = 'material-info-overlay';
+    overlay.onclick = () => overlay.remove();
+    overlay.innerHTML = `<div class="material-info-content" onclick="event.stopPropagation()" style="max-width: 300px; padding: 20px; background: #222; border: 1px solid #ff8c00;">
+                            <div style="color: #ff8c00; font-weight: bold;">📦 Reservierung</div>
+                            <div style="margin: 10px 0;">${material.split(', ').join('<br>')}</div>
+                            <div style="font-size: 0.85em; color: #aaa;">Details: ${detail || "Keine"}</div>
+                        </div>`;
+    document.body.appendChild(overlay);
+}
+    
 
+
+
+    
     
 /* ============================================================
-   13. SOFORT-SPEICHERN (AUTO-SAVE) - DB VERSION
+   14. SOFORT-SPEICHERN (AUTO-SAVE) - DB VERSION
    ============================================================ */
 
 window.addChange = async function(el, time, slot, klasse) {
@@ -2355,121 +2428,6 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
 
     
 
-/**
- * Zeigt die Materialauswahl direkt im Modal an.
- * Erkennt bestehende Buchungen aus window.lastPlanData für den Löschen-Button.
- */
-function handleMaterialUI(time, slot, klasse, modalElement) {
-    console.log("handleMaterialUI aktiv für Slot:", slot);
-
-    // Holt das geöffnete Haupt-Modal
-    const root = modalElement || document.getElementById('eigenesmenu-modal');
-    if (!root) {
-        console.error("Modal nicht gefunden!");
-        return;
-    }
-
-    // Klicks im Modal explizit erlauben
-    root.style.pointerEvents = "auto";
-
-    const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
-    const title = root.querySelector('.eigenesmenu-title');
-    const subtitle = root.querySelector('#menu-subtitle') || root.querySelector('.eigenesmenu-subtitle');
-
-    if (!liste) {
-        console.error("Liste-Container fehlt im Modal!");
-        return;
-    }
-
-    // 1. Titel & Untertitel im Modal anpassen
-    if (title) title.innerText = "MATERIAL WÄHLEN";
-    if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
-
-    // 2. Prüfen über den lokalen Datenspeicher, ob bereits ein Material existiert
-    const currentSlot = slot || window.currentEditSlot;
-    const slotData = (window.lastPlanData && window.lastPlanData[currentSlot]) || {};
-    const hatBereitsMaterial = slotData.material && slotData.material.trim() !== "";
-
-    // 3. ECHTE MATERIALIEN NUTZEN
-    const optionen = verfügbareMaterialien;
-    window.selectedMaterials = []; 
-
-    let html = "";
-
-    // FALLS DIE DATEN VOM SERVER NOCH NICHT DA SIND: Loader zeigen
-    if (!optionen || optionen.length === 0) {
-        html += `
-            <div class="material-loading-state" style="text-align: center; padding: 30px 10px; color: #ccc;">
-                <div class="eigenesmenu-loader" style="width:24px; height:24px; border-width:3px; margin: 0 auto 15px auto;"></div>
-                <p style="font-size: 0.95rem; margin: 0;">Lade Materialien aus Spalte D...</p>
-            </div>`;
-            
-        setTimeout(() => {
-            if (verfügbareMaterialien && verfügbareMaterialien.length > 0) {
-                handleMaterialUI(time, slot, klasse, root);
-            }
-        }, 300);
-    } else {
-        // DATEN SIND DA: Container öffnen
-        html += `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
-        
-        // --- 📦 ZUOBERST: LÖSCH-BUTTON ANZEIGEN (NUR WENN BEREITS GEBUCHT) ---
-        if (hatBereitsMaterial) {
-            html += `
-                <button class="eigenesmenu-item" 
-                        style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" 
-                        onclick="window.applyMaterialDelete('${time}', '${currentSlot}', '${klasse}', this)">
-                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIALBUCHUNG LÖSCHEN</span>
-                </button>`;
-        }
-
-        // Die echten Auswahl-Buttons aus deinem Sheet generieren
-        optionen.forEach(mat => {
-            const matClean = mat ? mat.toString().trim() : "";
-            if (matClean === "") return; // Leere Zeilen aus Spalte D ignorieren
-
-            html += `
-                <button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${matClean}', this)">
-                    <span class="eigenesmenu-icon">📦</span> 
-                    <span class="btn-text">${matClean}</span>
-                    <span class="check-indicator" style="margin-left: auto; color: #666; font-weight: bold;">○</span>
-                </button>`;
-        });
-
-        html += `</div>`;
-    }
-
-    // Der versteckte Container für den nächsten Schritt (Details eingeben)
-    html += `
-        <div id="materialNextStep" style="display: none; margin-top: 15px;">
-            <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
-                    onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-                <span class="btn-text">DETAILS EINGEBEN ❯</span>
-            </button>
-        </div>`;
-
-    // 4. Inhalt im Modal austauschen
-    liste.innerHTML = html;
-
-    // 5. Den unteren Abbrechen-Button in "Zurück" verwandeln
-    const backBtn = root.querySelector('.eigenesmenu-cancel');
-    if (backBtn) {
-        backBtn.innerText = "← ZURÜCK";
-        backBtn.onclick = () => {
-            if (root.style.pointerEvents === "none") return;
-            
-            // Holt die originale Stundenplan-Box für den Rücksprung
-            const aktuelleBox = document.querySelector(`[data-slot="${currentSlot}"]`);
-            if (typeof openEditor === 'function' && aktuelleBox) {
-                openEditor(aktuelleBox, time, currentSlot, klasse);
-            } else if (typeof closeEditor === 'function') {
-                closeEditor();
-            }
-        };
-    }
-}
-
-
 /* ============================================================
    10. NOTIZEN ERFASSEN (HAARGENAU WIE MATERIAL-LOGIK)
    ============================================================ */
@@ -2802,309 +2760,7 @@ window.addChange = async (el, time, slot, klasse) => {
 };
 
 
-/* ============================================================
-   16. MATERIAL-RESERVIERUNG (DETAILS & POPUPS)
-   ============================================================ */
 
-
-function openMaterialDetail(materialString, time, slot, klasse) {
-    console.log("Details-Ansicht aktiv für:", materialString);
-
-    const root = document.getElementById('eigenesmenu-modal');
-    if (!root) return;
-
-    const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
-    const header = root.querySelector('.eigenesmenu-header');
-
-    // 1. Header sicher neu bauen (Modernes, dezenters Orange)
-    if (header) {
-        header.innerHTML = `
-            <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #ff9800;">DETAILS & MENGEN</h3>
-            <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #eee; margin: 10px 0 0 0; font-size: 0.9em;">
-                Gewählt: <span style="color:#ff9800; font-weight:bold;">${materialString}</span>
-            </p>
-        `;
-    }
-
-    // 2. Formular in die Liste schreiben (Zentriert, mattes Orange & Loader-kompatibel)
-    if (liste) {
-        liste.innerHTML = `
-            <div class="details-mengen-content" style="display: flex; flex-direction: column; align-items: center; width: 100%; box-sizing: border-box; padding: 10px 0;">
-                
-                <textarea id="material-kommentar-input" 
-                    style="width: 100%; max-width: 290px; height: 120px; padding: 12px; border-radius: 8px; border: 1px solid #333; background: #151515; color: white; font-family: inherit; resize: none; outline: none; margin: 0 auto 20px auto; box-sizing: border-box;"
-                    placeholder="Anzahl, Größen oder Notizen hier eintragen..."></textarea>
-                
-                <button class="eigenesmenu-item" id="btn-save-reservation"
-                    style="width: 100%; max-width: 290px; background: #b84a00; color: white; justify-content: center; font-weight: bold; border: none; padding: 14px 18px; border-radius: 8px; position: relative; margin: 0 auto; box-sizing: border-box; transition: background 0.2s ease;" 
-                    onclick="saveMaterialSelection('${materialString}', document.getElementById('material-kommentar-input').value, '${time}', '${slot}', '${klasse}', this)">
-                    <span class="btn-text">RESERVIERUNG SPEICHERN</span>
-                </button>
-                
-            </div>
-        `;
-    }
-
-    // 3. Zurück-Button umbauen
-    const backBtn = root.querySelector('.eigenesmenu-cancel');
-    if (backBtn) {
-        backBtn.innerText = "← ZURÜCK";
-        backBtn.onclick = () => {
-            if (root.style.pointerEvents === "none") return;
-            if (typeof handleMaterialUI === 'function') {
-                handleMaterialUI(time, slot, klasse, root);
-            }
-        };
-    }
-
-    // 4. Fokus auf das Textfeld
-    setTimeout(() => {
-        const input = document.getElementById('material-kommentar-input');
-        if (input) input.focus();
-    }, 150);
-}
-
-
-/* ============================================================
-   MATERIAL SPEICHERN (JETZT MIT DOPPELLEKTIONS-WEICHE)
-   ============================================================ */
-async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
-    // 1. Klick-Sperre für das gesamte Modal & Backdrop aktivieren
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) {
-        modal.style.pointerEvents = "none"; 
-    }
-
-    // 2. UI Feedback direkt im Button initialisieren
-    let originalText = "RESERVIERUNG SPEICHERN";
-    if (btn) {
-        const btnTextEl = btn.querySelector('.btn-text');
-        if (btnTextEl) originalText = btnTextEl.innerText;
-        
-        btn.innerHTML = `
-            <span class="btn-text">${originalText}</span>
-            <div class="inline-loader-container" style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center;">
-                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
-            </div>
-        `;
-    }
-
-    // 3. Daten-Validierung
-    const finalSlot = slot || window.currentEditSlot; 
-    const datePicker = document.getElementById('datePicker');
-    const dateVal = datePicker ? datePicker.value : "";
-
-    if (!finalSlot || finalSlot === "undefined" || !dateVal) {
-        alert("Fehler: Slot-ID oder Datum fehlt.");
-        if (modal) modal.style.pointerEvents = "auto";
-        if (btn) {
-            btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
-        }
-        return;
-    }
-
-    const uniqueId = `${dateVal}_${finalSlot}`;
-
-    // Payload für die Weiche vorbereiten (Entspricht exakt deiner Struktur)
-    const payload = {
-        action: "saveBooking", // Verwendet den standardmäßigen Speicher-Endpoint
-        pw: typeof userPw !== 'undefined' ? userPw : "",
-        id: uniqueId,
-        date: dateVal,
-        slot: finalSlot,
-        klasse: klasse || "",
-        material: mat,            
-        kommentar: detail || ""   
-    };
-
-    // 4. Visuelle Update-Logik für das Frontend (Optimistic UI Callback)
-    const visuelleAktualisierung = function(aktuellesMaterial, targetSlot) {
-        // Lokalen Cache synchronisieren
-        if (window.lastPlanData && window.lastPlanData[targetSlot]) {
-            window.lastPlanData[targetSlot].material = payload.material;
-            window.lastPlanData[targetSlot].kommentar = payload.kommentar;
-        }
-
-        // Icon direkt an die Box heften oder entfernen
-        const targetBox = document.querySelector(`[data-slot="${targetSlot}"]`);
-        if (targetBox) {
-            markBoxWithMaterialIcon(targetBox, payload.material, payload.kommentar);
-        }
-    };
-
-    console.log("Material-Speicherprozess an Weiche übergeben:", payload);
-
-    // 5. Übergabe an die universelle Doppellektions-Weiche
-    if (typeof window.prozessiereAktion === 'function') {
-        window.prozessiereAktion(payload, visuelleAktualisierung);
-    } else {
-        // Fallback, falls die Weiche temporär nicht erreichbar sein sollte
-        console.warn("window.prozessiereAktion nicht gefunden! Verwende direkten POST.");
-        executeDirectMaterialPost(payload, visuelleAktualisierung, btn, originalText, modal);
-    }
-}
-
-
-/* ============================================================
-   MATERIAL LÖSCHEN (JETZT EBENFALLS MIT WEICHEN-UNTERSTÜTZUNG)
-   ============================================================ */
-window.applyMaterialDelete = async function(time, slot, klasse, btn) {
-    if (!btn) return;
-
-    // 1. Klick-Sperre für das gesamte Modal & Backdrop aktivieren
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) {
-        modal.style.pointerEvents = "none"; 
-    }
-
-    // 2. Button-Größe fixieren und Inline-Loader rechts einbetten
-    const originalText = btn.querySelector('.btn-text').innerText;
-    btn.style.position = "relative";
-    btn.style.paddingRight = "50px"; 
-    btn.innerHTML = `
-        <span class="btn-text">${originalText}</span>
-        <div class="inline-loader-container">
-            <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
-        </div>
-    `;
-
-    // 3. IDs ermitteln
-    const finalSlot = slot || window.currentEditSlot; 
-    const dateVal = document.getElementById('datePicker')?.value || "";
-    const uniqueId = `${dateVal}_${finalSlot}`;
-
-    // Leere Strings bedeuten Löschung im Backend
-    const payload = {
-        action: "saveBooking",
-        pw: typeof userPw !== 'undefined' ? userPw : "",
-        id: uniqueId,
-        date: dateVal,
-        slot: finalSlot,
-        klasse: klasse || "",
-        material: "",      
-        kommentar: ""      
-    };
-
-    // 4. Visuelle Update-Logik für das Löschen (Löscht das Icon lokal)
-    const visuelleAktualisierung = function(aktuellesMaterial, targetSlot) {
-        if (window.lastPlanData && window.lastPlanData[targetSlot]) {
-            window.lastPlanData[targetSlot].material = "";
-            window.lastPlanData[targetSlot].kommentar = "";
-        }
-        const targetBox = document.querySelector(`[data-slot="${targetSlot}"]`);
-        if (targetBox) {
-            markBoxWithMaterialIcon(targetBox, "", ""); // Entfernt die Badge rückstandslos
-        }
-    };
-
-    console.log("Material-Löschprozess an Weiche übergeben:", payload);
-
-    // 5. Übergabe an die universelle Doppellektions-Weiche
-    if (typeof window.prozessiereAktion === 'function') {
-        window.prozessiereAktion(payload, visuelleAktualisierung);
-    } else {
-        executeDirectMaterialPost(payload, visuelleAktualisierung, btn, originalText, modal);
-    }
-};
-
-
-/* ============================================================
-   FALLBACK: DIREKTER POST-REQUEST (Falls Weiche nicht greift)
-   ============================================================ */
-async function executeDirectMaterialPost(payload, updateCallback, btn, originalText, modal) {
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        const result = await response.json();
-
-        if (result.status === "success") {
-            if (btn) {
-                const loaderContainer = btn.querySelector('.inline-loader-container');
-                if (loaderContainer) loaderContainer.innerHTML = `<span style="color: #2ecc71; font-weight: bold; font-size: 1.2em;">✓</span>`;
-                btn.style.background = "rgba(39, 174, 96, 0.4)"; 
-            }
-            updateCallback(payload.material, payload.slot);
-            if (typeof loadPlan === 'function') await loadPlan();
-            setTimeout(() => { if (typeof closeEditor === 'function') closeEditor(); }, 400);
-        } else {
-            throw new Error(result.msg || "Server-Fehler");
-        }
-    } catch (e) {
-        alert("Fehler verarbeitet: " + e.message);
-        if (modal) modal.style.pointerEvents = "auto";
-        if (btn) {
-            btn.innerHTML = `<span class="btn-text">${originalText}</span>`;
-            btn.style.background = "";
-        }
-    }
-}
-
-
-/* ============================================================
-   HILFSFUNKTIONEN: HELPER FÜR DIE BADGES IM STUNDENPLAN
-   ============================================================ */
-function markBoxWithMaterialIcon(box, material, kommentar) {
-    if (!box) return;
-    const oldIcon = box.querySelector('.material-indicator');
-    if (oldIcon) oldIcon.remove();
-
-    if (!material || material.trim() === "") return;
-
-    const badge = document.createElement('div');
-    badge.className = 'material-indicator';
-    badge.innerHTML = '📦';
-
-    Object.assign(badge.style, {
-        position: 'absolute',
-        top: '2px',
-        right: '2px',
-        background: 'rgba(51, 51, 51, 0.9)',
-        color: 'white',
-        padding: '2px 4px',
-        borderRadius: '4px',
-        fontSize: '16px',
-        zIndex: '10',
-        cursor: 'pointer'
-    });
-
-    // WICHTIG: Das Klick-Event für die Info-Anzeige
-    badge.onclick = (e) => {
-        e.stopPropagation();
-        showMaterialDetailPopup(material, kommentar);
-    };
-
-    box.appendChild(badge);
-}
-
-function showMaterialDetailPopup(material, kommentar) {
-    const overlay = document.createElement('div');
-    overlay.className = 'material-info-overlay'; 
-    overlay.onclick = () => overlay.remove(); 
-
-    const materialList = material.split(', ').map(item => `• ${item}`).join('<br>');
-
-    overlay.innerHTML = `
-        <div class="material-info-content" onclick="event.stopPropagation()" style="max-width: 350px; border: 1px solid #ff8c00;">
-            <div class="material-info-title" style="color: #ff8c00; font-weight: bold; margin-bottom: 15px;">
-                📦 Material-Reservierung
-            </div>
-            
-            <div style="margin-bottom: 15px; text-align: left; font-size: 0.95rem;">
-                ${materialList}
-            </div>
-
-            <div style="background: #111; padding: 10px; border-radius: 6px; border-left: 3px solid #ff8c00; text-align: left; font-style: italic; font-size: 0.85rem;">
-                <span style="color: #666; font-size: 0.7rem; font-style: normal; display: block; margin-bottom: 4px;">NOTIZEN:</span>
-                ${kommentar ? kommentar : "Keine Details vorhanden."}
-            </div>
-
-            <button class="eigenesmenu-cancel" style="width:100%; margin-top: 20px;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
 
 
 /**
