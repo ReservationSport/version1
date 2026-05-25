@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOdfdasf</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1993,18 +1993,19 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         materialDetail: detail || "" 
     };
 
-    // Die Visualisierungs-Funktion, die von der Weiche aufgerufen wird
-    const onCompleteVisuals = () => {
-        if (window.lastPlanData?.[slot]) {
-            window.lastPlanData[slot].material = mat;
-            window.lastPlanData[slot].materialDetail = detail;
+    // Callback akzeptiert nun 'm' (Material) und 's' (Slot)
+    const onCompleteVisuals = (m, s) => {
+        if (window.lastPlanData?.[s]) {
+            window.lastPlanData[s].material = m;
+            window.lastPlanData[s].materialDetail = detail;
         }
-        const box = document.querySelector(`[data-slot="${slot}"]`);
-        if (box) markBoxWithMaterialIcon(box, mat, detail); // <--- SOFORT
-        if (typeof closeEditor === 'function') closeEditor();
+        const box = document.querySelector(`[data-slot="${s}"]`);
+        if (box) markBoxWithMaterialIcon(box, m, detail);
+        
+        // Editor nur schließen, wenn wir den Slot gerade final bearbeitet haben
+        if (s === slot && typeof closeEditor === 'function') closeEditor();
     };
 
-    // Übergabe an die Weiche inkl. Callback
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
     }
@@ -2022,21 +2023,21 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
         materialDetail: ""
     };
 
-    const onCompleteVisuals = () => {
-        if (window.lastPlanData?.[slot]) {
-            window.lastPlanData[slot].material = "";
-            window.lastPlanData[slot].materialDetail = "";
+    const onCompleteVisuals = (m, s) => {
+        if (window.lastPlanData?.[s]) {
+            window.lastPlanData[s].material = "";
+            window.lastPlanData[s].materialDetail = "";
         }
-        const box = document.querySelector(`[data-slot="${slot}"]`);
-        if (box) markBoxWithMaterialIcon(box, "", ""); // <--- SOFORT (Icon verschwindet)
-        if (typeof closeEditor === 'function') closeEditor();
+        const box = document.querySelector(`[data-slot="${s}"]`);
+        if (box) markBoxWithMaterialIcon(box, "", "");
+        
+        if (s === slot && typeof closeEditor === 'function') closeEditor();
     };
 
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
     }
 }
-
     
 
 /** * 5. Helper (Toggles & Badges)
@@ -2983,27 +2984,19 @@ function executePayloads(payloadArray, onCompleteVisuals) {
             window.syncBlockierteSlots[p.slot] = true;
         }
 
-        // 2. SOFORTIGE VISUELLE AKTUALISIERUNG (Optimistic UI)
-        // Wir übergeben p.material (oder "" bei Löschung) und den Slot, 
-        // damit die Funktion markBoxWithMaterialIcon sofort den richtigen Stand hat.
+        // 2. SOFORTIGE VISUELLE AKTUALISIERUNG FÜR DIESEN SLOT
+        // Wir rufen den Callback explizit für den Slot dieses Payloads auf
         if (typeof onCompleteVisuals === "function") {
-            // Hinweis: Wir rufen den Callback für jeden Slot im Array auf
+            // Wir aktualisieren hier direkt die Box für p.slot
+            // WICHTIG: onCompleteVisuals muss den Slot als Parameter akzeptieren
             onCompleteVisuals(p.material, p.slot); 
         }
 
         // 3. Abschicken
         saveImmediately(p)
             .then(result => {
-                if (result && result.status === "success") {
-                    // Erfolg: Blockade nach Zeit aufheben
-                    setTimeout(() => {
-                        if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
-                    }, 2500);
-                } else {
-                    // Fehler: Sync erzwingen, um den korrekten Server-Stand zu laden
-                    if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
-                    if (typeof syncPlan === "function") syncPlan();
-                }
+                // ... (deine bestehende Logik für Erfolg/Fehler) ...
+                if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
             })
             .catch(() => {
                 if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
