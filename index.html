@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1223</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2047,23 +2047,8 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             break;
 
         case 'nachricht':
-            const note = prompt("Notiz für " + klasse + " erfassen:", "");
-            if (note !== null) {
-                // Wir senden ein Payload mit dem Kommentar an die DB
-                const payload = {
-                    action: "saveBooking",
-                    pw: userPw,
-                    kuerzel: userKuerzel,
-                    date: document.getElementById('datePicker').value,
-                    slot: slot,
-                    klasse: klasse,
-                    kommentar: note
-                };
-                saveImmediately(payload).then(() => {
-                    closeEditor();
-                    loadPlan();
-                });
-            }
+            // 🔥 NEU: Kein prompt() mehr! Wir laden das UI direkt ins Modal
+            window.handleNotizUI(time, slot, klasse);
             break;
             
         default:
@@ -2422,6 +2407,107 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     }
 }
 
+
+/* ============================================================
+   10. NOTIZEN ERFASSEN (HAARGENAU WIE MATERIAL-LOGIK)
+   ============================================================ */
+
+/**
+ * Phase 1: Erzeugt das Textfeld für die Notiz direkt im bestehenden Modal
+ */
+window.handleNotizUI = function(time, slot, klasse) {
+    const root = document.getElementById('eigenesmenu-modal');
+    if (!root) return;
+
+    const liste = root.querySelector('#menu-options-list');
+    const title = root.querySelector('.eigenesmenu-title');
+    const subtitle = root.querySelector('#menu-subtitle');
+
+    if (title) title.innerText = "📝 NOTIZ ERFASSEN";
+    if (subtitle) subtitle.innerHTML = `Notiz für Klasse <span style="color:#ff9800; font-weight:bold;">${klasse}</span> eingeben:`;
+
+    // Aktuell bestehende Notiz aus der Box auslesen (falls vorhanden), um sie im Feld anzuzeigen
+    const bestehendeNotiz = window.currentEditBox ? (window.currentEditBox.getAttribute('data-notiz') || "") : "";
+
+    let html = `
+        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px; width: 100%; box-sizing: border-box;">
+            <textarea id="notiz-text-feld" placeholder="Hinweis, spezielle Übung, Lektionsinhalt..." rows="3"
+                   style="width: 100%; padding: 12px; background: #222; border: 1px solid #ff9800; color: white; font-family: inherit; font-size: 1em; border-radius: 6px; box-sizing: border-box; resize: vertical;">${bestehendeNotiz}</textarea>
+            
+            <button id="btn-save-notiz" class="eigenesmenu-item" style="background: #e67e22; justify-content: center; border:none; border-radius:6px;" 
+                    onclick="window.speichereNotizVomModal('${slot}', '${klasse}')">
+                <span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>
+            </button>
+        </div>
+    `;
+
+    if (liste) liste.innerHTML = html;
+
+    // Zurück-Button einrichten
+    const cancelBtn = root.querySelector('.eigenesmenu-cancel');
+    if (cancelBtn) {
+        cancelBtn.innerText = "← ZURÜCK";
+        cancelBtn.onclick = () => openEditor(window.currentEditBox, time, slot, klasse);
+    }
+
+    // Fokus ins Textfeld setzen
+    setTimeout(() => {
+        document.getElementById('notiz-text-feld')?.focus();
+    }, 50);
+};
+
+/**
+ * Phase 2: Sendet den Text via GET an die DB (Genau wie beim Material)
+ */
+window.speichereNotizVomModal = async function(slot, klasse) {
+    const textFeld = document.getElementById('notiz-text-feld');
+    const saveBtn = document.getElementById('btn-save-notiz');
+    if (!textFeld) return;
+
+    const notizText = textFeld.value.trim();
+    const dateVal = document.getElementById('datePicker').value;
+
+    // Loader auf dem Button aktivieren
+    if (saveBtn) {
+        saveBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
+        saveBtn.style.pointerEvents = "none";
+    }
+
+    // Payload analog zu deiner Material/Buchungs-Logik bauen
+    const params = new URLSearchParams({
+        action: "saveBooking", // Nutzt deine bestehende Speicher-Aktion
+        pw: userPw,
+        kuerzel: userKuerzel,
+        date: dateVal,
+        slot: slot,
+        klasse: klasse,
+        kommentar: notizText // Schreibt den Text in das Kommentarfeld
+    });
+
+    try {
+        const response = await fetch(`${url}?${params.toString()}`, {
+            method: "GET",
+            mode: "cors"
+        });
+        const result = await response.json();
+
+        if (result.status === "success") {
+            closeEditor();
+            await loadPlan(); // Plan neu laden, damit das Icon erscheint
+        } else {
+            throw new Error(result.error || "Fehler beim Speichern");
+        }
+    } catch (e) {
+        console.error("Notiz Save Error:", e);
+        alert("Notiz konnte nicht gespeichert werden: " + e.message);
+        if (saveBtn) {
+            saveBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>';
+            saveBtn.style.pointerEvents = "auto";
+        }
+    }
+};
+
+    
     
 /* ============================================================
    15. DATEN-SYNCHRONISATION (addChange)
