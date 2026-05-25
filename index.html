@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1285,7 +1285,7 @@ window.loadPlan = async function() {
                 markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
             }
 
-            // 2. 🔥 REPARIERT: Öffnet jetzt beim Klick das reine Anzeige-Modal
+            // 2. 🔥 REPARIERT: Nutzt jetzt das identische, dynamische Material-Popup-System
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
@@ -1294,9 +1294,9 @@ window.loadPlan = async function() {
                 notizElement.style.cursor = 'pointer';
                 
                 notizElement.onclick = function(event) {
-                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Menüs
-                    if (typeof window.zeigeNotizModal === "function") {
-                        window.zeigeNotizModal(slotData.klasse || "", slotData.kommentar);
+                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Edit-Menüs
+                    if (typeof showNotizDetailPopup === "function") {
+                        showNotizDetailPopup(slotData.klasse || "", slotData.kommentar);
                     }
                 };
                 
@@ -1368,7 +1368,7 @@ window.syncPlan = async function() {
 
                 markBoxWithMaterialIcon(box, material, kommentar);
 
-                // 🔥 REPARIERT IM BACKGROUND-SYNC: Öffnet jetzt auch hier das reine Anzeige-Modal
+                // 🔥 REPARIERT IM BACKGROUND-SYNC: Altes Icon weg, neues dynamisches Popup-Icon her
                 const altesNotizIcon = box.querySelector('.box-notiz-icon');
                 if (altesNotizIcon) altesNotizIcon.remove();
 
@@ -1381,8 +1381,8 @@ window.syncPlan = async function() {
                     
                     neuesNotizIcon.onclick = function(event) {
                         event.stopPropagation();
-                        if (typeof window.zeigeNotizModal === "function") {
-                            window.zeigeNotizModal(klasse, kommentar);
+                        if (typeof showNotizDetailPopup === "function") {
+                            showNotizDetailPopup(klasse, kommentar);
                         }
                     };
                     
@@ -1394,7 +1394,6 @@ window.syncPlan = async function() {
         console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
-
     
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
@@ -2581,47 +2580,30 @@ window.speichereNotizVomModal = async function(slot, klasse) {
 
 
 
-/**
- * Öffnet das reine Anzeige-Modal für die Lektionsnotiz (Variante mit Klassen-Steuerung)
- */
-window.zeigeNotizModal = function(klasse, notizText) {
-    console.log("Notiz-Modal Trigger erhalten:", klasse);
+function showNotizDetailPopup(klasse, notizText) {
+    const overlay = document.createElement('div');
+    overlay.className = 'material-info-overlay'; // Nutzt dein bestehendes Overlay-Styling
+    overlay.onclick = () => overlay.remove(); // Schließt beim Klick auf den dunklen Hintergrund
 
-    const root = document.getElementById('eigenesmenu-modal');
-    if (!root) return;
-
-    const liste = root.querySelector('#menu-options-list');
-    const title = root.querySelector('.eigenesmenu-title');
-    const subtitle = root.querySelector('#menu-subtitle');
-
-    // 1. Titel & Untertitel setzen
-    if (title) title.innerText = "📝 LEKTIONSNOTIZ";
-    if (subtitle) subtitle.innerHTML = `Eingetragene Notiz für Klasse: <span style="color:#ff9800; font-weight:bold;">${klasse}</span>`;
-
-    // 2. Inhalt generieren
-    let html = `
-        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px; width: 100%; box-sizing: border-box;">
-            <div style="width: 100%; padding: 15px; background: #1a1a1a; border: 1px solid #444; border-left: 4px solid #ff9800; color: #eee; font-family: inherit; font-size: 1.05em; border-radius: 6px; box-sizing: border-box; white-space: pre-wrap; word-break: break-word; text-align: left; max-height: 200px; overflow-y: auto;">${notizText}</div>
+    overlay.innerHTML = `
+        <div class="material-info-content" onclick="event.stopPropagation()" style="max-width: 350px; border: 1px solid #ff9800;">
+            <div class="material-info-title" style="color: #ff9800; font-weight: bold; margin-bottom: 15px;">
+                📝 Lektionsnotiz
+            </div>
             
-            <button class="eigenesmenu-item" style="background: #333; justify-content: center; border: 1px solid #555; border-radius:6px; cursor: pointer; padding: 10px;" 
-                    onclick="if(typeof closeEditor === 'function') { closeEditor(); } else { document.getElementById('eigenesmenu-modal').classList.remove('active', 'show'); document.getElementById('eigenesmenu-modal').style.display='none'; }">
-                <span class="btn-text" style="font-weight: bold; color:#fff;">SCHLIESSEN</span>
-            </button>
+            <div style="margin-bottom: 15px; text-align: left; font-size: 0.95rem;">
+                Klasse: <span style="color: #ff9800; font-weight: bold;">${klasse}</span>
+            </div>
+
+            <div style="background: #111; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800; text-align: left; font-size: 0.9rem; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto;">
+                ${notizText ? notizText : "Keine Details vorhanden."}
+            </div>
+
+            <button class="eigenesmenu-cancel" style="width:100%; margin-top: 20px; cursor: pointer;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
         </div>
     `;
-
-    if (liste) liste.innerHTML = html;
-
-    // 3. Sichtbarkeit erzwingen (wir bedienen alle gängigen Methoden)
-    root.style.display = 'block';         // Methode 1: Inline-Style
-    root.classList.add('active');         // Methode 2: CSS-Klasse "active"
-    root.classList.add('show');           // Methode 3: CSS-Klasse "show"
-
-    // 4. Falls dein System eine globale Funktion zum Öffnen nutzt, führen wir sie aus
-    if (typeof openModal === "function") {
-        openModal(root);
-    }
-};
+    document.body.appendChild(overlay);
+}
 
     
     
