@@ -128,7 +128,7 @@ body {
     justify-content: center; 
     text-align: center; 
     font-size: 11px; 
-    position: relative; 
+    position: relative; /* Wichtig für die absolute Positionierung der Icons */
     cursor: default; 
     overflow: hidden;
     transition: none !important;
@@ -171,6 +171,23 @@ body {
     transition: transform 0.2s ease; /* NUR hier die Animation, nicht global */
     transform: scale(1.03);
     z-index: 100;
+}
+
+/* 🔥 NEU: Das Notiz-Icon oben links in der Box (Gegenspieler zum Material-Paket) */
+.box-notiz-icon {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    font-size: 11px;
+    line-height: 1;
+    z-index: 15;
+    cursor: help; /* Zeigt ein Fragezeichen/Hilfe-Symbol beim Drüberfahren */
+    transition: transform 0.2s ease;
+}
+
+/* Lässt das Icon dezent mitreagieren, wenn die eigene Box gehoverthovert wird */
+.box.is-mine:hover .box-notiz-icon {
+    transform: scale(1.1);
 }
 
 /* Inhalt der Boxen */
@@ -1235,12 +1252,14 @@ window.loadPlan = async function() {
                 const klasse = slotData.klasse || "";
                 const halle = slotData.halle || "";
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
+                const kommentar = slotData.kommentar || ""; // 🔥 Kommentar/Notiz holen
                 const isAusfall = (halle === "Ausfall");
                 const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
                 
+                // 🔥 NEU: data-notiz hinzugefügt, damit das Notiz-UI den Text direkt beim Öffnen auslesen kann
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}" data-time="${zeitStr}" 
+                        data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
                         style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
@@ -1251,14 +1270,24 @@ window.loadPlan = async function() {
 
         container.innerHTML = html;
 
-        // 🔥 NEU: LIVE-RENDERING DER MATERIAL-ICONS DIREKT NACH DEM ZEICHNEN DES GITTERS
+        // 🔥 LIVE-RENDERING DER MATERIAL-ICONS & NOTIZ-ICONS DIREKT NACH DEM ZEICHNEN DES GITTERS
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
+            const box = container.querySelector(`[data-slot="${slot}"]`);
+            if (!box) return;
+
+            // 1. Material-Schnittstelle bedienen
             if (slotData.material && slotData.material.trim() !== "") {
-                const box = container.querySelector(`[data-slot="${slot}"]`);
-                if (box) {
-                    markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
-                }
+                markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
+            }
+
+            // 2. 🔥 NEU: Notiz-Schnittstelle live rendern (oben links)
+            if (slotData.kommentar && slotData.kommentar.trim() !== "") {
+                const notizElement = document.createElement('span');
+                notizElement.className = 'box-notiz-icon';
+                notizElement.innerText = '📝';
+                notizElement.title = slotData.kommentar; // Nativer Tooltip beim Drüberfahren!
+                box.appendChild(notizElement);
             }
         });
 
@@ -1305,8 +1334,8 @@ window.syncPlan = async function() {
                 const klasse = data.klasse || "";
                 const halle = data.halle || "";
                 const lehrer = data.lehrer || allClassTeachers[klasse] || "";
-                const material = data.material || "";   // 🔥 Material auslesen
-                const kommentar = data.kommentar || ""; // 🔥 Kommentar auslesen
+                const material = data.material || "";   // Material auslesen
+                const kommentar = data.kommentar || ""; // 🔥 Kommentar/Notiz auslesen
                 
                 const hLabel = box.querySelector('.halle-label');
                 if (hLabel) hLabel.innerText = halle;
@@ -1317,6 +1346,9 @@ window.syncPlan = async function() {
                 const lLabel = box.querySelector('.lehrer-info');
                 if (lLabel) lLabel.innerText = lehrer;
                 
+                // 🔥 NEU: data-notiz Attribut auch im Hintergrund-Sync immer aktuell halten
+                box.setAttribute('data-notiz', kommentar);
+
                 // --- Steuerung der Ausfall-Klasse im Sync ---
                 if (halle === "Ausfall") {
                     box.classList.add('ausfall-mode');
@@ -1326,17 +1358,31 @@ window.syncPlan = async function() {
                     box.style.backgroundColor = configFarben[halle] || "";
                 }
 
-                // 🔥 NEU: MATERIAL-ICON LIVE IM HINTERGRUND SYNCHRONISIEREN (Hinzufügen oder Entfernen)
+                // MATERIAL-ICON LIVE IM HINTERGRUND SYNCHRONISIEREN (Hinzufügen oder Entfernen)
                 markBoxWithMaterialIcon(box, material, kommentar);
+
+                // 🔥 NEU: NOTIZ-ICON IM HINTERGRUND SYNCHRONISIEREN
+                // Altes Icon suchen und entfernen falls vorhanden
+                const altesNotizIcon = box.querySelector('.box-notiz-icon');
+                if (altesNotizIcon) altesNotizIcon.remove();
+
+                // Neues Icon hinzufügen, falls Text vorhanden ist
+                if (kommentar.trim() !== "") {
+                    const neuesNotizIcon = document.createElement('span');
+                    neuesNotizIcon.className = 'box-notiz-icon';
+                    neuesNotizIcon.innerText = '📝';
+                    neuesNotizIcon.title = kommentar;
+                    box.appendChild(neuesNotizIcon);
+                }
             }
         });
     } catch(e) {
         console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
-
     
 
+    
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
    ============================================================ */
@@ -2414,6 +2460,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
 /**
  * Phase 1: Erzeugt das Textfeld für die Notiz direkt im bestehenden Modal
+ * (Bleibt unverändert, nutzt aber die IDs korrekt)
  */
 window.handleNotizUI = function(time, slot, klasse) {
     const root = document.getElementById('eigenesmenu-modal');
@@ -2435,7 +2482,7 @@ window.handleNotizUI = function(time, slot, klasse) {
                    style="width: 100%; padding: 12px; background: #222; border: 1px solid #ff9800; color: white; font-family: inherit; font-size: 1em; border-radius: 6px; box-sizing: border-box; resize: vertical;">${bestehendeNotiz}</textarea>
             
             <button id="btn-save-notiz" class="eigenesmenu-item" style="background: #e67e22; justify-content: center; border:none; border-radius:6px;" 
-                    onclick="window.speichereNotizVomModal('${slot}', '${klasse}')">
+                   onclick="window.speichereNotizVomModal('${slot}', '${klasse}')">
                 <span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>
             </button>
         </div>
@@ -2457,7 +2504,7 @@ window.handleNotizUI = function(time, slot, klasse) {
 };
 
 /**
- * Phase 2: Sendet den Text via GET an die DB (Genau wie beim Material)
+ * 🔥 Phase 2: SENDER GEÄNDERT! Sendet den Text jetzt sicher als JSON via POST an die doPost der DB
  */
 window.speichereNotizVomModal = async function(slot, klasse) {
     const textFeld = document.getElementById('notiz-text-feld');
@@ -2473,33 +2520,42 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         saveBtn.style.pointerEvents = "none";
     }
 
-    // Payload analog zu deiner Material/Buchungs-Logik bauen
-    const params = new URLSearchParams({
-        action: "saveBooking", // Nutzt deine bestehende Speicher-Aktion
+    // 1. Payload als sauberes JavaScript-Objekt bauen (Nutzt deine globalen Variablen userPw und userKuerzel)
+    const payload = {
+        action: "saveBooking",
         pw: userPw,
         kuerzel: userKuerzel,
         date: dateVal,
         slot: slot,
         klasse: klasse,
-        kommentar: notizText // Schreibt den Text in das Kommentarfeld
-    });
+        kommentar: notizText // Geht im Backend direkt in Spalte G (7)
+    };
 
     try {
-        const response = await fetch(`${url}?${params.toString()}`, {
-            method: "GET",
-            mode: "cors"
+        // 2. Per POST abschicken (Inhalt als JSON-String verpackt)
+        const response = await fetch(url, {
+            method: "POST",
+            mode: "cors",
+            headers: {
+                // text/plain verhindert nervige CORS-Vorauswahlen bei Google Apps Script
+                "Content-Type": "text/plain;charset=utf-8" 
+            },
+            body: JSON.stringify(payload)
         });
+        
         const result = await response.json();
 
         if (result.status === "success") {
-            closeEditor();
+            closeEditor(); // Schließt das Modal
             await loadPlan(); // Plan neu laden, damit das Icon erscheint
         } else {
-            throw new Error(result.error || "Fehler beim Speichern");
+            throw new Error(result.msg || "Fehler beim Speichern");
         }
     } catch (e) {
         console.error("Notiz Save Error:", e);
         alert("Notiz konnte nicht gespeichert werden: " + e.message);
+        
+        // Button bei Fehler zurücksetzen
         if (saveBtn) {
             saveBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>';
             saveBtn.style.pointerEvents = "auto";
