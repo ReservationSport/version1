@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2519,58 +2519,89 @@ window.handleNotizUI = function(time, slot, klasse) {
 };
 
 /**
- * 🔥 Phase 2: SENDER GEÄNDERT! Sendet den Text jetzt sicher als JSON via POST an die doPost der DB
+ * 🔥 Phase 2: SENDER GEÄNDERT! Jetzt mit maßgeschneidertem In-App-Bestätigungsfenster
+ * für Doppellektionen anstelle des hässlichen Browser-Confirm-Fensters.
  */
-window.speichereNotizVomModal = async function(slot, klasse) {
+window.speichereNotizVomModal = async function(slot, klasse, forceBothSlots = null) {
     const textFeld = document.getElementById('notiz-text-feld');
     const saveBtn = document.getElementById('btn-save-notiz');
-    if (!textFeld) return;
-
-    const notizText = textFeld.value.trim();
+    
+    // Notiz-Text auslesen (nur wenn das Feld existiert, ansonsten nehmen wir den temporär gespeicherten Text)
+    if (textFeld) {
+        window.tempNotizText = textFeld.value.trim();
+    }
+    const notizText = window.tempNotizText || "";
     const dateVal = document.getElementById('datePicker').value;
+    const currentSlotNum = parseInt(slot);
 
-    // Loader auf dem Button aktivieren
+    // --- DOPPELLEKTION-LOGIK PRÜFEN (nur wenn noch keine Entscheidung erzwungen wurde) ---
+    if (forceBothSlots === null) {
+        const nextSlotNum = currentSlotNum + 1;
+        const nextBox = document.querySelector(`[data-slot="${nextSlotNum}"]`);
+        
+        if (nextBox && klasse.trim() !== "") {
+            const nextKlasse = nextBox.querySelector('.klasse-label')?.innerText.trim() || "";
+            
+            // Wenn im nächsten Slot die exakt gleiche Klasse steht -> Doppellektion-Weiche anzeigen!
+            if (nextKlasse.toLowerCase() === klasse.trim().toLowerCase()) {
+                window.zeigeDoppellektionNotizAbfrage(slot, klasse);
+                return; // Funktion hier abbrechen, wir warten auf den Klick im Modal!
+            }
+        }
+        // Keine Doppellektion gefunden? Dann standardmäßig nur diesen einen Slot speichern
+        forceBothSlots = false;
+    }
+
+    // Loader auf dem aktuellen Button aktivieren (falls vorhanden)
     if (saveBtn) {
         saveBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
         saveBtn.style.pointerEvents = "none";
     }
 
-    // 1. Payload als sauberes JavaScript-Objekt bauen (Nutzt deine globalen Variablen userPw und userKuerzel)
-    const payload = {
-        action: "saveBooking",
-        pw: userPw,
-        kuerzel: userKuerzel,
-        date: dateVal,
-        slot: slot,
-        klasse: klasse,
-        kommentar: notizText // Geht im Backend direkt in Spalte G (7)
-    };
+    // Slots bestimmen anhand der User-Entscheidung
+    let slotsToSave = [currentSlotNum];
+    if (forceBothSlots === true) {
+        slotsToSave.push(currentSlotNum + 1);
+    }
 
     try {
-        // 2. Per POST abschicken (Inhalt als JSON-String verpackt)
-        const response = await fetch(url, {
-            method: "POST",
-            mode: "cors",
-            headers: {
-                // text/plain verhindert nervige CORS-Vorauswahlen bei Google Apps Script
-                "Content-Type": "text/plain;charset=utf-8" 
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
+        // Alle gewählten Slots nacheinander per POST abschicken
+        for (const slotId of slotsToSave) {
+            const payload = {
+                action: "saveBooking",
+                pw: userPw,
+                kuerzel: userKuerzel,
+                date: dateVal,
+                slot: slotId.toString(),
+                klasse: klasse,
+                kommentar: notizText
+            };
 
-        if (result.status === "success") {
-            closeEditor(); // Schließt das Modal
-            await loadPlan(); // Plan neu laden, damit das Icon erscheint
-        } else {
-            throw new Error(result.msg || "Fehler beim Speichern");
+            const response = await fetch(url, {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8" 
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            if (result.status !== "success") {
+                throw new Error(result.msg || `Fehler bei Slot ${slotId}`);
+            }
         }
+
+        // Speicher-Variablen aufräumen und schließen
+        window.tempNotizText = null;
+        closeEditor(); 
+        await loadPlan(); 
+
     } catch (e) {
         console.error("Notiz Save Error:", e);
         alert("Notiz konnte nicht gespeichert werden: " + e.message);
         
-        // Button bei Fehler zurücksetzen
+        // Bei Fehler wieder zurücksetzen
         if (saveBtn) {
             saveBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>';
             saveBtn.style.pointerEvents = "auto";
@@ -2578,6 +2609,45 @@ window.speichereNotizVomModal = async function(slot, klasse) {
     }
 };
 
+/**
+ * Erzeugt die In-App-Abfrage direkt im Modal-Inhalt (identisch zu deinen anderen Aktionen)
+ */
+window.zeigeDoppellektionNotizAbfrage = function(slot, klasse) {
+    const root = document.getElementById('eigenesmenu-modal');
+    if (!root) return;
+
+    const liste = root.querySelector('#menu-options-list');
+    const title = root.querySelector('.eigenesmenu-title');
+    const subtitle = root.querySelector('#menu-subtitle');
+
+    if (title) title.innerText = "🔁 DOPPELLEKTION DETEKTIERT";
+    if (subtitle) subtitle.innerHTML = `Möchtest du diese Notiz für beide Stunden übernehmen?`;
+
+    let html = `
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px; width: 100%; box-sizing: border-box;">
+            
+            <button class="eigenesmenu-item" style="background: #e67e22; justify-content: center; border:none; border-radius:6px; padding: 12px; cursor:pointer;"
+                    onclick="window.speichereNotizVomModal('${slot}', '${klasse}', true)">
+                <span class="btn-text" style="font-weight: bold; color:#fff;">Für beide Stunden übernehmen</span>
+            </button>
+            
+            <button class="eigenesmenu-item" style="background: #333; justify-content: center; border: 1px solid #555; border-radius:6px; padding: 12px; cursor:pointer;"
+                    onclick="window.speichereNotizVomModal('${slot}', '${klasse}', false)">
+                <span class="btn-text" style="font-weight: normal; color:#eee;">Nur für diese Stunde</span>
+            </button>
+            
+        </div>
+    `;
+
+    if (liste) liste.innerHTML = html;
+
+    // Den Abbruch-Button unten links so belassen, dass er einfach zurück zur UI führt
+    const cancelBtn = root.querySelector('.eigenesmenu-cancel');
+    if (cancelBtn) {
+        cancelBtn.innerText = "Abbrechen";
+        cancelBtn.onclick = () => window.handleNotizUI(window.currentEditBox.getAttribute('data-time'), slot, klasse);
+    }
+};
 
 
 function showNotizDetailPopup(klasse, notizText) {
