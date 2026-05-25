@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2519,8 +2519,8 @@ window.handleNotizUI = function(time, slot, klasse) {
 };
 
 /**
- * 🔥 Phase 2: SENDER GEÄNDERT! Nutzt jetzt deine universelle Weiche 'window.prozessiereAktion'
- * für die Doppellektions-Prüfung. Keine neue Logik, exakt dasselbe Verhalten!
+ * 🔥 Phase 2: SENDER GEÄNDERT! Jetzt mit echtem Optimistic-UI-Verhalten
+ * für die Notiz-Icons (keine Verzögerung mehr beim Erstellen/Löschen).
  */
 window.speichereNotizVomModal = async function(slot, klasse) {
     const textFeld = document.getElementById('notiz-text-feld');
@@ -2530,13 +2530,11 @@ window.speichereNotizVomModal = async function(slot, klasse) {
     const notizText = textFeld.value.trim();
     const dateVal = document.getElementById('datePicker').value;
 
-    // Loader auf dem Button aktivieren
     if (saveBtn) {
         saveBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
         saveBtn.style.pointerEvents = "none";
     }
 
-    // 1. Payload exakt so aufbauen, wie es deine universelle Logik / saveImmediately erwartet
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2547,26 +2545,52 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         kommentar: notizText
     };
 
-    // 2. Visuelle Callback-Funktion definieren, die nach dem Absenden ausgeführt wird
-    const onCompleteVisuals = function() {
-        // Aktualisiert das data-notiz Attribut am DOM-Element direkt (Optimistic UI)
-        if (window.currentEditBox) {
-            window.currentEditBox.setAttribute('data-notiz', notizText);
+    // 🔥 DIESER BLOCK REPARIERT DIE VERZÖGERUNG:
+    const onCompleteVisuals = function(aktuelleHalle, zielSlot) {
+        console.log("Triggere Sofort-Update für Notiz-Icon in Slot:", zielSlot);
+        
+        // Die betroffene Box im Grid direkt ansteuern
+        const box = document.querySelector(`[data-slot="${zielSlot}"]`);
+        if (box) {
+            // 1. Attribut sofort setzen, damit das Popup aktuell ist
+            box.setAttribute('data-notiz', notizText);
+
+            // 2. Altes Icon entfernen (falls vorhanden)
+            const altesIcon = box.querySelector('.box-notiz-icon');
+            if (altesIcon) altesIcon.remove();
+
+            // 3. Wenn Text eingegeben wurde -> Icon SOFORT ohne Server-Wartezeit zeichnen
+            if (notizText !== "") {
+                const neuesNotizIcon = document.createElement('span');
+                neuesNotizIcon.className = 'box-notiz-icon';
+                neuesNotizIcon.innerText = '📝';
+                neuesNotizIcon.title = notizText;
+                neuesNotizIcon.style.cursor = 'pointer';
+                
+                neuesNotizIcon.onclick = function(event) {
+                    event.stopPropagation();
+                    if (typeof showNotizDetailPopup === "function") {
+                        showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", notizText);
+                    }
+                };
+                box.appendChild(neuesNotizIcon);
+            }
         }
-        // Lädt den Plan frisch vom Server, damit Icons gezeichnet werden
-        if (typeof loadPlan === "function") loadPlan();
+
+        // Im Hintergrund trotzdem den Plan abgleichen, um 100% synchron mit der DB zu sein
+        if (typeof loadPlan === "function") {
+            // Ein minimaler Timeout verhindert, dass das Flackern der Server-Anfrage 
+            // unser soeben gezeichnetes Icon direkt wieder überschreibt, bevor die DB fertig ist.
+            setTimeout(() => { loadPlan(); }, 800);
+        }
     };
 
-    // 3. 🔥 DEINE BESTEHENDE WEICHE TRIGGERN
-    // Diese prüft über lastPlanData die Slots (+5/-5), schaltet bei Bedarf das Modal um
-    // und übergibt die Payloads an executePayloads -> saveImmediately.
     if (typeof window.prozessiereAktion === "function") {
         window.prozessiereAktion(payload, onCompleteVisuals);
     } else {
-        // Sicherer Fallback, falls die Funktion aus irgendeinem Grund nicht greift
         console.warn("window.prozessiereAktion nicht gefunden, nutze Direktversand.");
         if (typeof saveImmediately === "function") {
-            saveImmediately(payload).then(() => onCompleteVisuals());
+            saveImmediately(payload).then(() => onCompleteVisuals(null, slot));
             if (typeof closeEditor === "function") closeEditor();
         }
     }
