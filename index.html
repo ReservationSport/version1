@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2519,102 +2519,55 @@ window.handleNotizUI = function(time, slot, klasse) {
 };
 
 /**
- * 🔥 Phase 2: SENDER GEÄNDERT! Mit robuster Doppellektions-Erkennung
- * und detaillierten Konsolen-Protokollen zur Fehlersuche.
+ * 🔥 Phase 2: SENDER GEÄNDERT! Nutzt jetzt deine universelle Weiche 'window.prozessiereAktion'
+ * für die Doppellektions-Prüfung. Keine neue Logik, exakt dasselbe Verhalten!
  */
-window.speichereNotizVomModal = async function(slot, klasse, forceBothSlots = null) {
+window.speichereNotizVomModal = async function(slot, klasse) {
     const textFeld = document.getElementById('notiz-text-feld');
     const saveBtn = document.getElementById('btn-save-notiz');
-    
-    if (textFeld) {
-        window.tempNotizText = textFeld.value.trim();
-    }
-    const notizText = window.tempNotizText || "";
+    if (!textFeld) return;
+
+    const notizText = textFeld.value.trim();
     const dateVal = document.getElementById('datePicker').value;
-    
-    // 🔥 WICHTIG: Absolut sicherstellen, dass der Slot als echte Zahl berechnet wird!
-    const currentSlotNum = parseInt(slot, 10);
 
-    console.log("Speichern gestartet für Slot:", currentSlotNum, "Klasse:", klasse);
-
-    // --- DOPPELLEKTION-LOGIK PRÜFEN ---
-    if (forceBothSlots === null) {
-        const nextSlotNum = currentSlotNum + 1;
-        console.log("Prüfe Folgeslot Nummer:", nextSlotNum);
-        
-        const nextBox = document.querySelector(`[data-slot="${nextSlotNum}"]`);
-        
-        if (nextBox && klasse && klasse.trim() !== "") {
-            // Wir versuchen die Klasse auf zwei Wegen zu lesen, falls '.klasse-label' fehlschlägt
-            const labelEl = nextBox.querySelector('.klasse-label');
-            const nextKlasse = labelEl ? labelEl.innerText.trim() : "";
-            
-            console.log("Klasse im Folgeslot gefunden:", nextKlasse);
-            
-            // Wenn im nächsten Slot die exakt gleiche Klasse steht -> Doppellektion-Weiche!
-            if (nextKlasse.toLowerCase() === klasse.trim().toLowerCase()) {
-                console.log("--> DOPPELLEKTION ERKANNT! Schalte UI um.");
-                window.zeigeDoppellektionNotizAbfrage(slot, klasse);
-                return; 
-            }
-        } else {
-            console.log("Keine Folge-Box im Grid gefunden oder aktuelle Klasse ist leer.");
-        }
-        forceBothSlots = false;
-    }
-
-    // Loader auf dem aktuellen Button aktivieren
+    // Loader auf dem Button aktivieren
     if (saveBtn) {
         saveBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
         saveBtn.style.pointerEvents = "none";
     }
 
-    // Slots bestimmen
-    let slotsToSave = [currentSlotNum];
-    if (forceBothSlots === true) {
-        slotsToSave.push(currentSlotNum + 1);
-    }
+    // 1. Payload exakt so aufbauen, wie es deine universelle Logik / saveImmediately erwartet
+    const payload = {
+        action: "saveBooking",
+        pw: userPw,
+        kuerzel: userKuerzel,
+        date: dateVal,
+        slot: slot.toString(),
+        klasse: klasse,
+        kommentar: notizText
+    };
 
-    console.log("Folgende Slots werden jetzt an die DB gesendet:", slotsToSave);
-
-    try {
-        for (const slotId of slotsToSave) {
-            const payload = {
-                action: "saveBooking",
-                pw: userPw,
-                kuerzel: userKuerzel,
-                date: dateVal,
-                slot: slotId.toString(),
-                klasse: klasse,
-                kommentar: notizText
-            };
-
-            const response = await fetch(url, {
-                method: "POST",
-                mode: "cors",
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8" 
-                },
-                body: JSON.stringify(payload)
-            });
-            
-            const result = await response.json();
-            if (result.status !== "success") {
-                throw new Error(result.msg || `Fehler bei Slot ${slotId}`);
-            }
+    // 2. Visuelle Callback-Funktion definieren, die nach dem Absenden ausgeführt wird
+    const onCompleteVisuals = function() {
+        // Aktualisiert das data-notiz Attribut am DOM-Element direkt (Optimistic UI)
+        if (window.currentEditBox) {
+            window.currentEditBox.setAttribute('data-notiz', notizText);
         }
+        // Lädt den Plan frisch vom Server, damit Icons gezeichnet werden
+        if (typeof loadPlan === "function") loadPlan();
+    };
 
-        window.tempNotizText = null;
-        closeEditor(); 
-        await loadPlan(); 
-
-    } catch (e) {
-        console.error("Notiz Save Error:", e);
-        alert("Notiz konnte nicht gespeichert werden: " + e.message);
-        
-        if (saveBtn) {
-            saveBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>';
-            saveBtn.style.pointerEvents = "auto";
+    // 3. 🔥 DEINE BESTEHENDE WEICHE TRIGGERN
+    // Diese prüft über lastPlanData die Slots (+5/-5), schaltet bei Bedarf das Modal um
+    // und übergibt die Payloads an executePayloads -> saveImmediately.
+    if (typeof window.prozessiereAktion === "function") {
+        window.prozessiereAktion(payload, onCompleteVisuals);
+    } else {
+        // Sicherer Fallback, falls die Funktion aus irgendeinem Grund nicht greift
+        console.warn("window.prozessiereAktion nicht gefunden, nutze Direktversand.");
+        if (typeof saveImmediately === "function") {
+            saveImmediately(payload).then(() => onCompleteVisuals());
+            if (typeof closeEditor === "function") closeEditor();
         }
     }
 };
