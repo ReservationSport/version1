@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1488,6 +1488,89 @@ window.zeigePasswortFuerAbkleben = function(klasse, time, slot) {
 };
     
 
+    // ────────────────────────────────────────────────────────────
+// PHASE 3: Absenden via GET an den Server
+// ────────────────────────────────────────────────────────────
+window.fuehreAbklebenAus = async function(klasse) {
+    const pwFeld = document.getElementById('abkleben-pw-field');
+    const deleteBtn = document.getElementById('btn-final-perma-delete');
+    
+    if (!pwFeld || !pwFeld.value.trim()) {
+        alert("Bitte Passwort eingeben!");
+        return;
+    }
+
+    const eingegebenesPw = pwFeld.value.trim();
+
+    // 1. Passwort-Check gegen das im System hinterlegte Passwort (wie in deinem alten Modal)
+    if (eingegebenesPw !== userPw) {
+        pwFeld.style.borderColor = "#c0392b";
+        pwFeld.value = "";
+        pwFeld.placeholder = "Falsches Passwort!";
+        pwFeld.focus();
+        return;
+    }
+
+    // 2. Button in Ladezustand versetzen
+    if (deleteBtn) {
+        deleteBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
+        deleteBtn.style.pointerEvents = "none";
+    }
+    
+    // Grid sperren (visueller Schutz während der Server arbeitet)
+    const gridContainer = document.querySelector('.stundentafel-container') || document.body;
+    gridContainer.style.opacity = "0.6";
+    gridContainer.style.pointerEvents = "none";
+
+    // 3. Parameter für den GET-Request vorbereiten
+    const dateVal = document.getElementById('datePicker').value;
+    const slotsParamString = window.slotsToClear.join(","); // Erzeugt z.B. "13" oder "13,18"
+    
+    const params = new URLSearchParams({
+        action: "permaDelete",
+        klasse: klasse,
+        slot: slotsParamString, 
+        startDate: dateVal,
+        pw: eingegebenesPw,
+        kuerzel: userKuerzel
+    });
+
+    const targetUrl = `${url}?${params.toString()}`;
+
+    try {
+        console.log("Sende Löschbefehl via GET an Google Script für Slots:", slotsParamString);
+
+        const response = await fetch(targetUrl, {
+            method: "GET",
+            mode: "cors"
+        });
+
+        const result = await response.json();
+        console.log("Server-Antwort erhalten:", result);
+
+        if (result.status === "success") {
+            console.log(`Klasse ${klasse} erfolgreich aus DB entfernt.`);
+            closeEditor(); // Schließt das Taskmanager-Modal komplett
+            await loadPlan(); // Aktualisiert das Stundenplan-Grid
+        } else {
+            throw new Error(result.error || result.msg || "Fehler von der Datenbank.");
+        }
+
+    } catch (e) {
+        console.error("PermaDelete Error:", e);
+        alert("Löschvorgang fehlgeschlagen: " + e.message);
+        
+        // Bei Fehler: Button wieder reaktivieren
+        if (deleteBtn) {
+            deleteBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">JA, PERMANENT ABKLEBEN</span>';
+            deleteBtn.style.pointerEvents = "auto";
+        }
+    } finally {
+        // Grid wieder freigeben
+        gridContainer.style.opacity = "1";
+        gridContainer.style.pointerEvents = "auto";
+    }
+};
 
 /* ============================================================
    10. NEWS-ZENTRALE & AUTOMATISCHE NOTIFIKATIONEN
