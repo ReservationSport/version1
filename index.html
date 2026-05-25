@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -2498,7 +2498,7 @@ window.handleNotizUI = function(time, slot, klasse) {
             
             <button id="btn-save-notiz" class="eigenesmenu-item" style="background: #e67e22; justify-content: center; border:none; border-radius:6px;" 
                    onclick="window.speichereNotizVomModal('${slot}', '${klasse}')">
-                <span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>
+                <span class="btn-text" style="font-weight: bold; color:#fff;">NOTIZ SPEICHERN</span>
             </button>
         </div>
     `;
@@ -2519,53 +2519,65 @@ window.handleNotizUI = function(time, slot, klasse) {
 };
 
 /**
- * 🔥 Phase 2: SENDER GEÄNDERT! Jetzt mit maßgeschneidertem In-App-Bestätigungsfenster
- * für Doppellektionen anstelle des hässlichen Browser-Confirm-Fensters.
+ * 🔥 Phase 2: SENDER GEÄNDERT! Mit robuster Doppellektions-Erkennung
+ * und detaillierten Konsolen-Protokollen zur Fehlersuche.
  */
 window.speichereNotizVomModal = async function(slot, klasse, forceBothSlots = null) {
     const textFeld = document.getElementById('notiz-text-feld');
     const saveBtn = document.getElementById('btn-save-notiz');
     
-    // Notiz-Text auslesen (nur wenn das Feld existiert, ansonsten nehmen wir den temporär gespeicherten Text)
     if (textFeld) {
         window.tempNotizText = textFeld.value.trim();
     }
     const notizText = window.tempNotizText || "";
     const dateVal = document.getElementById('datePicker').value;
-    const currentSlotNum = parseInt(slot);
+    
+    // 🔥 WICHTIG: Absolut sicherstellen, dass der Slot als echte Zahl berechnet wird!
+    const currentSlotNum = parseInt(slot, 10);
 
-    // --- DOPPELLEKTION-LOGIK PRÜFEN (nur wenn noch keine Entscheidung erzwungen wurde) ---
+    console.log("Speichern gestartet für Slot:", currentSlotNum, "Klasse:", klasse);
+
+    // --- DOPPELLEKTION-LOGIK PRÜFEN ---
     if (forceBothSlots === null) {
         const nextSlotNum = currentSlotNum + 1;
+        console.log("Prüfe Folgeslot Nummer:", nextSlotNum);
+        
         const nextBox = document.querySelector(`[data-slot="${nextSlotNum}"]`);
         
-        if (nextBox && klasse.trim() !== "") {
-            const nextKlasse = nextBox.querySelector('.klasse-label')?.innerText.trim() || "";
+        if (nextBox && klasse && klasse.trim() !== "") {
+            // Wir versuchen die Klasse auf zwei Wegen zu lesen, falls '.klasse-label' fehlschlägt
+            const labelEl = nextBox.querySelector('.klasse-label');
+            const nextKlasse = labelEl ? labelEl.innerText.trim() : "";
             
-            // Wenn im nächsten Slot die exakt gleiche Klasse steht -> Doppellektion-Weiche anzeigen!
+            console.log("Klasse im Folgeslot gefunden:", nextKlasse);
+            
+            // Wenn im nächsten Slot die exakt gleiche Klasse steht -> Doppellektion-Weiche!
             if (nextKlasse.toLowerCase() === klasse.trim().toLowerCase()) {
+                console.log("--> DOPPELLEKTION ERKANNT! Schalte UI um.");
                 window.zeigeDoppellektionNotizAbfrage(slot, klasse);
-                return; // Funktion hier abbrechen, wir warten auf den Klick im Modal!
+                return; 
             }
+        } else {
+            console.log("Keine Folge-Box im Grid gefunden oder aktuelle Klasse ist leer.");
         }
-        // Keine Doppellektion gefunden? Dann standardmäßig nur diesen einen Slot speichern
         forceBothSlots = false;
     }
 
-    // Loader auf dem aktuellen Button aktivieren (falls vorhanden)
+    // Loader auf dem aktuellen Button aktivieren
     if (saveBtn) {
         saveBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
         saveBtn.style.pointerEvents = "none";
     }
 
-    // Slots bestimmen anhand der User-Entscheidung
+    // Slots bestimmen
     let slotsToSave = [currentSlotNum];
     if (forceBothSlots === true) {
         slotsToSave.push(currentSlotNum + 1);
     }
 
+    console.log("Folgende Slots werden jetzt an die DB gesendet:", slotsToSave);
+
     try {
-        // Alle gewählten Slots nacheinander per POST abschicken
         for (const slotId of slotsToSave) {
             const payload = {
                 action: "saveBooking",
@@ -2592,7 +2604,6 @@ window.speichereNotizVomModal = async function(slot, klasse, forceBothSlots = nu
             }
         }
 
-        // Speicher-Variablen aufräumen und schließen
         window.tempNotizText = null;
         closeEditor(); 
         await loadPlan(); 
@@ -2601,7 +2612,6 @@ window.speichereNotizVomModal = async function(slot, klasse, forceBothSlots = nu
         console.error("Notiz Save Error:", e);
         alert("Notiz konnte nicht gespeichert werden: " + e.message);
         
-        // Bei Fehler wieder zurücksetzen
         if (saveBtn) {
             saveBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">💾 NOTIZ SPEICHERN</span>';
             saveBtn.style.pointerEvents = "auto";
@@ -2610,7 +2620,7 @@ window.speichereNotizVomModal = async function(slot, klasse, forceBothSlots = nu
 };
 
 /**
- * Erzeugt die In-App-Abfrage direkt im Modal-Inhalt (identisch zu deinen anderen Aktionen)
+ * Erzeugt die In-App-Abfrage direkt im Modal-Inhalt
  */
 window.zeigeDoppellektionNotizAbfrage = function(slot, klasse) {
     const root = document.getElementById('eigenesmenu-modal');
@@ -2625,7 +2635,6 @@ window.zeigeDoppellektionNotizAbfrage = function(slot, klasse) {
 
     let html = `
         <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 15px; width: 100%; box-sizing: border-box;">
-            
             <button class="eigenesmenu-item" style="background: #e67e22; justify-content: center; border:none; border-radius:6px; padding: 12px; cursor:pointer;"
                     onclick="window.speichereNotizVomModal('${slot}', '${klasse}', true)">
                 <span class="btn-text" style="font-weight: bold; color:#fff;">Für beide Stunden übernehmen</span>
@@ -2635,13 +2644,11 @@ window.zeigeDoppellektionNotizAbfrage = function(slot, klasse) {
                     onclick="window.speichereNotizVomModal('${slot}', '${klasse}', false)">
                 <span class="btn-text" style="font-weight: normal; color:#eee;">Nur für diese Stunde</span>
             </button>
-            
         </div>
     `;
 
     if (liste) liste.innerHTML = html;
 
-    // Den Abbruch-Button unten links so belassen, dass er einfach zurück zur UI führt
     const cancelBtn = root.querySelector('.eigenesmenu-cancel');
     if (cancelBtn) {
         cancelBtn.innerText = "Abbrechen";
