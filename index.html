@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1827,9 +1827,10 @@ window.openEditor = function(el, time, slot, klasse) {
     const halleLabel = el.querySelector('.halle-label')?.innerText.trim() || "";
     const hatReservierung = !isAusfall && halleLabel !== "";
 
-    // 🔥 NEU: Material-Status direkt aus dem zentralen Datenspeicher (window.lastPlanData) ermitteln
+    // 🔥 NEU: Material- & Notiz-Status direkt aus dem zentralen Datenspeicher (window.lastPlanData) ermitteln
     const slotData = (window.lastPlanData && window.lastPlanData[absoluteSlot]) || {};
     const hatMaterial = slotData.material && slotData.material.trim() !== "";
+    const hatNotiz = slotData.kommentar && slotData.kommentar.trim() !== ""; // Prüft, ob bereits Text da ist
 
     const backdrop = document.createElement('div');
     backdrop.className = 'eigenesmenu-backdrop';
@@ -1865,8 +1866,8 @@ window.openEditor = function(el, time, slot, klasse) {
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', '${absoluteSlot}', '${klasse}')">
-                    <span class="eigenesmenu-icon">💬</span> 
-                    <span class="btn-text">NOTIZ HINZUFÜGEN</span>
+                    <span class="eigenesmenu-icon">📝</span> 
+                    <span class="btn-text" style="font-weight: bold;">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', '${absoluteSlot}', '${klasse}')">
