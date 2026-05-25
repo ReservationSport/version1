@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOdfdasf</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1993,16 +1993,17 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         materialDetail: detail || "" 
     };
 
-    // Callback akzeptiert nun 'm' (Material) und 's' (Slot)
-    const onCompleteVisuals = (m, s) => {
+    // Callback erhält nun das gesamte Payload-Objekt 'p'
+    const onCompleteVisuals = (p) => {
+        const s = p.slot;
         if (window.lastPlanData?.[s]) {
-            window.lastPlanData[s].material = m;
-            window.lastPlanData[s].materialDetail = detail;
+            window.lastPlanData[s].material = p.material;
+            window.lastPlanData[s].materialDetail = p.materialDetail;
         }
         const box = document.querySelector(`[data-slot="${s}"]`);
-        if (box) markBoxWithMaterialIcon(box, m, detail);
+        if (box) markBoxWithMaterialIcon(box, p.material, p.materialDetail);
         
-        // Editor nur schließen, wenn wir den Slot gerade final bearbeitet haben
+        // Editor nur schließen, wenn wir den ursprünglichen Slot bearbeiten
         if (s === slot && typeof closeEditor === 'function') closeEditor();
     };
 
@@ -2023,7 +2024,9 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
         materialDetail: ""
     };
 
-    const onCompleteVisuals = (m, s) => {
+    // Callback erhält nun das gesamte Payload-Objekt 'p'
+    const onCompleteVisuals = (p) => {
+        const s = p.slot;
         if (window.lastPlanData?.[s]) {
             window.lastPlanData[s].material = "";
             window.lastPlanData[s].materialDetail = "";
@@ -2218,16 +2221,11 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
 };
     
 
-/**
- * Verarbeitet das Setzen oder Löschen des Ausfalls (Mit Doppellektions-Weiche)
- */
 window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     console.log("handleAusfallClick (Weichenmodus) getriggert. Modus:", mode);
 
-    // Modus-Weiche: 'LOESCHEN' setzt die Halle auf leer, 'SETZEN' bucht "Ausfall"
     const zielHalle = (mode === 'LOESCHEN') ? "" : "Ausfall";
     
-    // Payload für dein Google Script zusammenbauen
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2238,28 +2236,30 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         halle: zielHalle
     };
 
-    // Diese Funktion beschreibt, wie die Box(en) im Grid SOFORT lokal aktualisiert werden (Optimistic UI)
-    const visuelleAktualisierung = function(halleZuSetzen, slotZuSetzen) {
-        const targetBox = document.querySelector(`[data-slot="${slotZuSetzen}"]`);
+    // Callback bekommt nun das komplette Payload-Objekt 'p'
+    const visuelleAktualisierung = function(p) {
+        const s = p.slot;
+        const h = p.halle; // Wert sicher aus dem Payload p
         
-        // Lokalen Datenspeicher synchron halten
-        if (window.lastPlanData && window.lastPlanData[slotZuSetzen]) {
-            window.lastPlanData[slotZuSetzen].halle = halleZuSetzen;
+        const targetBox = document.querySelector(`[data-slot="${s}"]`);
+        
+        // 1. Lokalen Datenspeicher synchron halten
+        if (window.lastPlanData && window.lastPlanData[s]) {
+            window.lastPlanData[s].halle = h;
         }
 
+        // 2. UI sofort aktualisieren
         if (targetBox) {
             const label = targetBox.querySelector('.halle-label');
-            if (label) label.innerText = halleZuSetzen;
+            if (label) label.innerText = h;
             
-            // CSS-Klasse je nach Zustand vergeben oder entfernen
-            if (halleZuSetzen === "Ausfall") {
+            if (h === "Ausfall") {
                 targetBox.classList.add('ausfall-mode');
-                targetBox.style.backgroundColor = ""; // Damit das !important CSS greift
+                targetBox.style.backgroundColor = ""; 
             } else {
                 targetBox.classList.remove('ausfall-mode');
-                // Falls die Halle geleert wurde, kriegt sie die Standardfarbe zurück
-                if (typeof configFarben !== 'undefined' && configFarben[halleZuSetzen]) {
-                    targetBox.style.backgroundColor = configFarben[halleZuSetzen];
+                if (typeof configFarben !== 'undefined' && configFarben[h]) {
+                    targetBox.style.backgroundColor = configFarben[h];
                 } else {
                     targetBox.style.backgroundColor = "";
                 }
@@ -2267,23 +2267,15 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         }
     };
 
-    // Klick-Blocker & Loader auf dem geklickten Button aktivieren (falls vorhanden)
+    // UI-Loader (bleibt gleich)
     if (btn) {
         const modal = document.getElementById('eigenesmenu-modal');
         if (modal) modal.style.pointerEvents = "none";
-
         const originalText = btn.querySelector('.btn-text')?.innerText || btn.innerText;
-        btn.style.position = "relative";
-        btn.innerHTML = `
-            <span class="btn-text">${originalText}</span>
-            <div class="inline-loader-container">
-                <div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div>
-            </div>
-        `;
+        btn.innerHTML = `<span class="btn-text">${originalText}</span> <div class="inline-loader-container"><div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div></div>`;
     }
 
-    // AB AN DIE UNIVERSELLE WEICHE!
-    // Erkennt automatisch Doppellektionen und steuert das Umschalten im Modal
+    // Übergabe an die Weiche
     window.prozessiereAktion(payload, visuelleAktualisierung);
 };
     
@@ -2422,36 +2414,44 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         halle: neueHalle
     };
 
-    // Diese Funktion beschreibt, WIE eine Box optisch geupdated wird (wird von der Weiche genutzt)
-    const visuelleAktualisierung = function(halleZuSetzen, slotZuSetzen) {
-        const targetBox = document.querySelector(`[data-slot="${slotZuSetzen}"]`);
+    // Callback erhält nun das gesamte Payload-Objekt 'p'
+    const visuelleAktualisierung = function(p) {
+        const h = p.halle; // Wert sicher aus dem Payload lesen
+        const s = p.slot;  // Slot sicher aus dem Payload lesen
         
-        if (window.lastPlanData && window.lastPlanData[slotZuSetzen]) {
-            window.lastPlanData[slotZuSetzen].halle = halleZuSetzen;
+        const targetBox = document.querySelector(`[data-slot="${s}"]`);
+        
+        // 1. Lokalen Datenstand aktualisieren
+        if (window.lastPlanData && window.lastPlanData[s]) {
+            window.lastPlanData[s].halle = h;
         }
 
+        // 2. UI direkt aktualisieren
         if (targetBox) {
             const label = targetBox.querySelector('.halle-label');
-            if (label) label.innerText = halleZuSetzen;
+            if (label) label.innerText = h;
             
             targetBox.classList.remove('ausfall-mode');
             
-            if (configFarben && configFarben[halleZuSetzen]) {
-                targetBox.style.backgroundColor = configFarben[halleZuSetzen];
+            // Farb-Logik
+            if (configFarben && configFarben[h]) {
+                targetBox.style.backgroundColor = configFarben[h];
             } else {
                 targetBox.style.backgroundColor = ""; 
             }
 
-            if (halleZuSetzen === "Ausfall") {
+            // Ausfall-Spezialbehandlung
+            if (h === "Ausfall") {
                 targetBox.classList.add('ausfall-mode');
             }
         }
     };
 
-    // JETZT AN DIE WEICHE ÜBERGEBEN
-    window.prozessiereAktion(payload, visuelleAktualisierung);
+    // Übergabe an die Weiche
+    if (typeof window.prozessiereAktion === 'function') {
+        window.prozessiereAktion(payload, visuelleAktualisierung);
+    }
 };
-
     
 
 /* ============================================================
@@ -2554,63 +2554,60 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         date: dateVal,
         slot: slot.toString(),
         klasse: klasse,
-        kommentar: notizText
+        kommentar: notizText // WICHTIG: Das ist unser Datenfeld
     };
 
-    // 🔥 DIESER BLOCK REPARIERT DAS NACHLADEN:
-    const onCompleteVisuals = function(aktuelleHalle, zielSlot) {
-        console.log("Triggere Sofort-Update für Notiz-Icon in Slot:", zielSlot);
+    // Callback erhält nun das gesamte Payload-Objekt 'p'
+    const onCompleteVisuals = function(p) {
+        const n = p.kommentar; // Notiz direkt aus dem Payload
+        const s = p.slot;      // Slot direkt aus dem Payload
         
-        // 1. Die betroffene Box im Grid direkt ansteuern & Attribut setzen
-        const box = document.querySelector(`[data-slot="${zielSlot}"]`);
+        console.log("Triggere Sofort-Update für Notiz in Slot:", s);
+        
+        const box = document.querySelector(`[data-slot="${s}"]`);
         if (box) {
-            box.setAttribute('data-notiz', notizText);
+            box.setAttribute('data-notiz', n);
 
-            // Altes Icon entfernen (falls vorhanden)
+            // Altes Icon entfernen
             const altesIcon = box.querySelector('.box-notiz-icon');
             if (altesIcon) altesIcon.remove();
 
-            // Wenn Text eingegeben wurde -> Icon SOFORT zeichnen
-            if (notizText !== "") {
+            // Wenn Text da ist -> Icon neu zeichnen
+            if (n !== "") {
                 const neuesNotizIcon = document.createElement('span');
                 neuesNotizIcon.className = 'box-notiz-icon';
                 neuesNotizIcon.innerText = '📝';
-                neuesNotizIcon.title = notizText;
+                neuesNotizIcon.title = n;
                 neuesNotizIcon.style.cursor = 'pointer';
                 
                 neuesNotizIcon.onclick = function(event) {
                     event.stopPropagation();
                     if (typeof showNotizDetailPopup === "function") {
-                        showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", notizText);
+                        showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", n);
                     }
                 };
                 box.appendChild(neuesNotizIcon);
             }
         }
 
-        // 2. WICHTIG: Den lokalen Daten-Cache (lastPlanData) aktualisieren!
-        // Dadurch weiß dein Hintergrund-Sync (syncPlan), dass diese Notiz gewollt ist 
-        // und überschreibt sie beim nächsten Durchlauf nicht mit alten Serverdaten.
+        // Cache aktualisieren
         if (window.lastPlanData) {
-            if (!window.lastPlanData[zielSlot]) {
-                window.lastPlanData[zielSlot] = {};
-            }
-            window.lastPlanData[zielSlot].kommentar = notizText;
+            if (!window.lastPlanData[s]) window.lastPlanData[s] = {};
+            window.lastPlanData[s].kommentar = n;
+        }
+
+        // Editor schließen (nur wenn wir den ursprünglichen Slot bearbeiten)
+        if (s === slot.toString() && typeof closeEditor === 'function') {
+            closeEditor();
         }
     };
 
     if (typeof window.prozessiereAktion === "function") {
         window.prozessiereAktion(payload, onCompleteVisuals);
-    } else {
-        console.warn("window.prozessiereAktion nicht gefunden, nutze Direktversand.");
-        if (typeof saveImmediately === "function") {
-            saveImmediately(payload).then(() => onCompleteVisuals(null, slot));
-            if (typeof closeEditor === "function") {
-                closeEditor();
-            }
-        }
     }
 };
+
+    
 
 /**
  * Erzeugt die In-App-Abfrage direkt im Modal-Inhalt
@@ -2740,8 +2737,8 @@ window.addChange = async (el, time, slot, klasse) => {
     if (typeof triggerNews === "function") {
         try {
             if (res === "Ausfall") {
-                console.log(`📢 [MELDUNG] Typ: Ausfall für Klasse: ${newsKlasse}`);
-                await triggerNews("ausfall", parseInt(slot), newsKlasse);
+                console.log(`📢 [MELDUNG] Typ:  für Klasse: ${newsKlasse}`);
+                await triggerNews("", parseInt(slot), newsKlasse);
             } 
             else if (res && res.toString().includes("Outdoor")) {
                 console.log(`📢 [MELDUNG] Typ: Outdoor für Klasse: ${newsKlasse}`);
@@ -2836,9 +2833,9 @@ window.saveImmediately = async function(payload, options = {}) {
                 const klasseName = payload.klasse || "";
                 const halleWert = payload.halle ? payload.halle.toString().trim() : "";
 
-                if (halleWert === "Ausfall") {
-                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Ausfall für Slot ${slotIndex} erkannt.`);
-                    triggerNews("ausfall", slotIndex, klasseName);
+                if (halleWert === "") {
+                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER:  für Slot ${slotIndex} erkannt.`);
+                    triggerNews("", slotIndex, klasseName);
                 } 
                 else if (halleWert.includes("Outdoor")) {
                     console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Outdoor für Slot ${slotIndex} erkannt.`);
@@ -2955,7 +2952,7 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     `;
 
 // 🔥 DIESE ZEILE JETZT HIER EINFÜGEN:
-    // Falls das Modal durch den Ausfall-Klick gesperrt wurde, geben wir es jetzt für die Buttons frei!
+    // Falls das Modal durch den -Klick gesperrt wurde, geben wir es jetzt für die Buttons frei!
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "auto";
     
@@ -2979,23 +2976,17 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
 // Interne Hilfsfunktion, die die Payloads nacheinander an saveImmediately übergibt
 function executePayloads(payloadArray, onCompleteVisuals) {
     payloadArray.forEach(p => {
-        // 1. Lokalen Sync-Schutz aktivieren
         if (window.syncBlockierteSlots) {
             window.syncBlockierteSlots[p.slot] = true;
         }
 
-        // 2. SOFORTIGE VISUELLE AKTUALISIERUNG FÜR DIESEN SLOT
-        // Wir rufen den Callback explizit für den Slot dieses Payloads auf
+        // HIER DIE ÄNDERUNG: Übergib das gesamte Payload-Objekt p
         if (typeof onCompleteVisuals === "function") {
-            // Wir aktualisieren hier direkt die Box für p.slot
-            // WICHTIG: onCompleteVisuals muss den Slot als Parameter akzeptieren
-            onCompleteVisuals(p.material, p.slot); 
+            onCompleteVisuals(p); 
         }
 
-        // 3. Abschicken
         saveImmediately(p)
             .then(result => {
-                // ... (deine bestehende Logik für Erfolg/Fehler) ...
                 if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
             })
             .catch(() => {
