@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1389,11 +1389,54 @@ async function startYearReset(klasse, validiertesPw) {
     const dateVal = document.getElementById('datePicker').value;
     const finalesPw = validiertesPw || userPw;
 
+    // --- 🔥 NEU: DOPPELLEKTIONS-WEICHE VOR DEM GET-REQUEST ---
+    const currentSlot = parseInt(slotVal);
+    const aktuelleHalle = (window.lastPlanData && window.lastPlanData[currentSlot]?.halle) || "";
+    
+    // Wir starten mit dem aktuellen Slot im Array
+    let slotsToClear = [currentSlot];
+
+    // Prüfen auf Folgestunde (+5) oder Vorherige Stunde (-5)
+    const nextSlot = currentSlot + 5;
+    const nextSlotData = (window.lastPlanData && window.lastPlanData[nextSlot]) || {};
+    
+    const prevSlot = currentSlot - 5;
+    const prevSlotData = (window.lastPlanData && window.lastPlanData[prevSlot]) || {};
+
+    let doppellektionGefunden = false;
+    let targetSlot = null;
+
+    if (nextSlotData.klasse === klasse && nextSlotData.halle === aktuelleHalle && klasse && klasse.trim() !== "") {
+        doppellektionGefunden = true;
+        targetSlot = nextSlot;
+    } else if (prevSlotData.klasse === klasse && prevSlotData.halle === aktuelleHalle && klasse && klasse.trim() !== "") {
+        doppellektionGefunden = true;
+        targetSlot = prevSlot;
+    }
+
+    // Wenn eine Doppellektion existiert, fragen wir den User
+    if (doppellektionGefunden && targetSlot) {
+        const beideLoeschen = confirm(
+            `Doppellektion erkannt!\n\nMöchtest du die Klasse ${klasse} für BEIDE Stunden aus der ${aktuelleHalle} entfernen?\n\n` +
+            `[OK] = Beide Stunden abkleben\n` +
+            `[Abbrechen] = Nur diese eine Stunde abkleben`
+        );
+        
+        if (beideLoeschen) {
+            slotsToClear.push(targetSlot); // Zweiten Slot ins Array packen
+        }
+    }
+
+    // Wir machen aus dem Array einen String (z.B. "13" oder "13,18")
+    const slotsParamString = slotsToClear.join(",");
+    console.log("Sende folgende Slots an den Server:", slotsParamString);
+    // --------------------------------------------------------
+
     // Wir bauen die Parameter direkt in die URL ein (GET-Request)
     const params = new URLSearchParams({
         action: "permaDelete",
         klasse: klasse,
-        slot: slotVal,
+        slot: slotsParamString, // 🔥 NEU: Schickt jetzt eine ID oder eine kommagetrennte Liste (z.B. "13,18")
         startDate: dateVal,
         pw: finalesPw,
         kuerzel: userKuerzel
