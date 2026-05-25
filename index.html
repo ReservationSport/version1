@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1807,6 +1807,36 @@ async function markAsReadAndJump(news) {
     setTimeout(() => sidebar.style.display = 'none', 300);
 };
 
+
+
+/**
+ * Zentrale Logik für News-Meldungen.
+ * @param {string} aktion - "Ausfall", "Outdoor", "Beendet", etc.
+ * @param {string|number} slot - Der Slot-Index.
+ * @param {string} klasse - Die betroffene Klasse.
+ */
+window.triggerNewsWrapper = async function(aktion, slot, klasse) {
+    if (typeof triggerNews !== "function") {
+        console.warn("⚠️ triggerNews ist nicht definiert.");
+        return;
+    }
+
+    try {
+        console.log(`📢 [MELDUNG] Typ: ${aktion} für Klasse: ${klasse} in Slot: ${slot}`);
+        
+        // Mapping von deiner Logik auf den benötigten Typ für triggerNews
+        let newsTyp = "";
+        if (aktion === "Ausfall") newsTyp = ""; 
+        else if (aktion.includes("Outdoor")) newsTyp = "outdoor";
+        else if (aktion.toLowerCase() === "beendet") newsTyp = "beendet";
+
+        await triggerNews(newsTyp, parseInt(slot), klasse);
+        console.log("✅ News erfolgreich versendet.");
+    } catch (error) {
+        console.error("⚠️ Fehler im News-Ablauf:", error);
+    }
+};
+    
     
 
 /* ============================================================
@@ -2111,49 +2141,6 @@ function showMaterialDetailPopup(material, detail) {
     document.body.appendChild(overlay);
 }
     
-
-
-
-    
-    
-/* ============================================================
-   14. SOFORT-SPEICHERN (AUTO-SAVE) - DB VERSION
-   ============================================================ */
-
-window.addChange = async function(el, time, slot, klasse) {
-    const val = el.value; 
-    const parent = el.closest ? el.closest('.box') : window.currentEditBox;
-    if (!parent) return;
-
-    const absoluteSlot = parent.getAttribute('data-slot'); 
-    const dateVal = document.getElementById('datePicker').value;
-
-    // Visuelles Feedback
-    if (val === "Ausfall") {
-        parent.classList.add('ausfall-mode');
-    } else {
-        parent.classList.remove('ausfall-mode');
-    }
-
-    // Wir senden genau das, was die Tabellen-Spalten erwarten
-    const payload = {
-        // 'action' ist nur für das Script-Handling (doPost) wichtig
-        action: "saveBooking", 
-        pw: userPw,
-        kuerzel: userKuerzel,
-        
-        // Diese Felder landen in der Tabelle:
-        date: dateVal,
-        slot: absoluteSlot,
-        klasse: klasse,
-        halle: (val === "---" ? "" : val),
-        material: "", 
-        kommentar: ""
-    };
-
-    await saveImmediately(payload);
-};
-
 
 /* ============================================================
    14. MENÜ-STEUERUNG & WEICHENSTELLUNG
@@ -2674,117 +2661,6 @@ function showNotizDetailPopup(klasse, notizText) {
 
     
     
-/* ============================================================
-   15. DATEN-SYNCHRONISATION (addChange)
-   ============================================================ */
-
-window.addChange = async (el, time, slot, klasse) => { 
-    let res = el.value; 
-    console.log(`\n=== 🔄 addChange ausgelöst für Slot ${slot} ===`);
-    console.log(`Eingegebener Wert (res): "${res}"`, klasse ? `| Übergebene Klasse: ${klasse}` : "");
-    
-    // Parent Box finden
-    const parent = el.closest('.box') || window.currentEditBox; 
-    if (!parent) {
-        console.error("❌ addChange abgebrochen: Keine Parent-Box (.box) gefunden!");
-        return;
-    }
-
-    const r = parent.getAttribute('data-row');
-    const c = slot; // Wir nutzen den übergebenen slot-Index
-
-    // 1. VISUELLES UPDATE DER BOX
-    if (res === "Ausfall") {
-        parent.classList.add('ausfall-mode');
-    } else {
-        parent.classList.remove('ausfall-mode');
-    }
-
-    // Text in der Box aktualisieren (.res ist das Feld für die Halle)
-    const resDisplay = parent.querySelector('.res');
-    if (resDisplay) {
-        resDisplay.innerText = (res === "" || res === "---") ? "" : res; 
-    }
-    
-    // Farbe setzen (falls in configFarben definiert)
-    parent.style.backgroundColor = (typeof configFarben !== 'undefined' && configFarben[res]) ? configFarben[res] : ""; 
-
-    // 2. STRING FÜR GOOGLE SHEETS BAUEN
-    // Formatiert den Wert zu "Klasse | Halle | Kommentar"
-    let finalVal = buildFinalValue(r, c, (res === "---" ? "" : res), undefined);
-
-    // Errechnen/Bestimmen der Klasse für die Newsmeldung (Fehlerschutz!)
-    let newsKlasse = klasse;
-    if (!newsKlasse) {
-        // Fallback 1: Versuchen aus dem Box-Titel (.title) zu lesen
-        const titleEl = parent.querySelector('.title');
-        if (titleEl && titleEl.innerText.trim() !== "") {
-            newsKlasse = titleEl.innerText.split(/[ |]/)[0].trim();
-        } 
-        // Fallback 2: Versuchen aus dem bestehenden lokalen Daten-String zu parsen
-        else if (currentPlanData && currentPlanData[r] && currentPlanData[r][c]) {
-            newsKlasse = currentPlanData[r][c].toString().split(/[ |]/)[0].trim();
-        } else {
-            newsKlasse = "Unbekannt";
-        }
-    }
-
-    // 3. NEWS-LOGIK (Erweitert & Abgesichert)
-    if (typeof pendingNews !== "undefined") {
-        pendingNews = pendingNews.filter(n => n.slot !== parseInt(slot));
-    }
-
-    if (typeof triggerNews === "function") {
-        try {
-            if (res === "Ausfall") {
-                console.log(`📢 [MELDUNG] Typ:  für Klasse: ${newsKlasse}`);
-                await triggerNews("", parseInt(slot), newsKlasse);
-            } 
-            else if (res && res.toString().includes("Outdoor")) {
-                console.log(`📢 [MELDUNG] Typ: Outdoor für Klasse: ${newsKlasse}`);
-                await triggerNews("outdoor", parseInt(slot), newsKlasse);
-            }
-            else if (res === "Beendet" || res === "beendet" || (res && res.toString().includes("beendet"))) {
-                console.log(`📢 [MELDUNG] Typ: Beendet für Klasse: ${newsKlasse}`);
-                await triggerNews("beendet", parseInt(slot), newsKlasse);
-            } else {
-                console.log(`ℹ️ Keine News-Bedingung erfüllt für Wert: "${res}".`);
-            }
-        } catch (newsError) {
-            console.error("⚠️ Fehler im triggerNews-Ablauf (wird übersprungen, damit Auto-Save läuft):", newsError);
-        }
-    } else {
-        console.warn("⚠️ Funktion 'triggerNews' existiert im globalen Scope nicht!");
-    }
-
-    // 4. LOKALEN DATENSTAND AKTUALISIEREN
-    if (!currentPlanData[r]) currentPlanData[r] = [];
-    currentPlanData[r][c] = finalVal;
-    
-    // 5. IN DIE SPEICHERLISTE (Warteschlange)
-    pendingChanges = pendingChanges.filter(ch => !(ch.slotIndex === slot)); 
-    pendingChanges.push({ 
-        row: parseInt(r), 
-        col: parseInt(c), 
-        time: time, 
-        slotIndex: slot, 
-        val: finalVal 
-    }); 
-
-    // 6. SOFORTIGER VERSAND (WICHTIG: await!)
-    try {
-        console.log("⏳ Starte saveImmediately()...");
-        await saveImmediately();
-        console.log("=== 🏁 addChange erfolgreich beendet ===");
-    } catch (error) {
-        console.error("❌ Fehler beim Auto-Save in addChange:", error);
-        throw error; // Re-throw damit updateSelection den Fehler merkt
-    }
-};
-
-
-
-
 
 /**
  * Der "Postbote": Sendet Daten an das Google Apps Script
@@ -2976,18 +2852,33 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
 // Interne Hilfsfunktion, die die Payloads nacheinander an saveImmediately übergibt
 function executePayloads(payloadArray, onCompleteVisuals) {
     payloadArray.forEach(p => {
+        // Sync-Schutz
         if (window.syncBlockierteSlots) {
             window.syncBlockierteSlots[p.slot] = true;
         }
 
-        // HIER DIE ÄNDERUNG: Übergib das gesamte Payload-Objekt p
+        // Visuelles UI-Update sofort triggern
         if (typeof onCompleteVisuals === "function") {
             onCompleteVisuals(p); 
         }
 
+        // 3. Abschicken
         saveImmediately(p)
             .then(result => {
-                if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
+                if (result && result.status === "success") {
+                    // --- HIER: NEWS NUR BEI ERFOLG AUSLÖSEN ---
+                    // Wir prüfen, ob im Payload eine Hallen-Info steckt, die News auslöst
+                    if (p.halle === "Ausfall" || (p.halle && p.halle.includes("Outdoor"))) {
+                        window.triggerNewsWrapper(p.halle, p.slot, p.klasse);
+                    }
+                    
+                    setTimeout(() => {
+                        if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
+                    }, 2500);
+                } else {
+                    if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
+                    if (typeof syncPlan === "function") syncPlan();
+                }
             })
             .catch(() => {
                 if (window.syncBlockierteSlots) delete window.syncBlockierteSlots[p.slot];
@@ -2996,8 +2887,9 @@ function executePayloads(payloadArray, onCompleteVisuals) {
     });
 }
 
-
     
+
+
 
 </script>
 
