@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1610,8 +1610,18 @@ window.fuehreAbklebenAus = async function(klasse) {
 
         if (result.status === "success") {
             console.log(`Klasse ${klasse} erfolgreich aus DB entfernt.`);
-            closeEditor(); // Schließt das Taskmanager-Modal komplett
-            await loadPlan(); // Aktualisiert das Stundenplan-Grid
+            
+            // --- NEU: News triggern, da die Klasse nun abgeklebt/gelöscht wurde ---
+            // Da 'slotsParamString' eine Liste wie "13,18" sein kann, 
+            // müssen wir die News für jeden Slot einzeln auslösen:
+            const betroffeneSlots = slotsParamString.split(",");
+            for (const s of betroffeneSlots) {
+                await window.triggerNewsWrapper("Abkleben", s, klasse);
+            }
+
+            closeEditor(); 
+            await loadPlan(); 
+        }
         } else {
             // Greift jetzt sauber auf result.msg aus deiner doPost zurück
             throw new Error(result.msg || "Fehler von der Datenbank.");
