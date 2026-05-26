@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1126,43 +1126,62 @@ function getDataBySlotIndex(index) {
     /**
      * Ändert das Datum im Picker und lädt den Plan neu
      */
+   /**
+     * Ändert das Datum im Picker und lädt den Plan neu
+     */
     window.changeDate = (days) => {
         const dp = document.getElementById('datePicker');
-        let d = new Date(dp.value.replace(/-/g, "/")); // Sicherere Datum-Konvertierung
         
-        // Berechnung
+        // 1. Datum lokal aus dem String parsen
+        const [year, month, day] = dp.value.split('-').map(Number);
+        let d = new Date(year, month - 1, day);
+        
+        // 2. Berechnung
         d.setDate(d.getDate() + days);
         
-        // Verhindert das Navigieren vor das heutige Datum
+        // 3. Verhindert das Navigieren vor das heutige Datum
         const heute = new Date();
-        heute.setHours(0,0,0,0);
+        heute.setHours(0, 0, 0, 0);
         if (d < heute) d = heute;
 
-        // Datum setzen und UI aktualisieren
-        const dateStr = d.toISOString().split('T')[0];
-        dp.value = dateStr;
+        // 4. Lokal korrekt zurückformatieren (YYYY-MM-DD)
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(d.getDate()).padStart(2, '0');
+        const newDateStr = `${y}-${m}-${dayStr}`;
+        
+        // 5. UI aktualisieren
+        dp.value = newDateStr;
         updateNavButtons();
         
-        // ANPASSUNG: Hier wird der Wrapper aufgerufen, nicht mehr loadPlan()
-        changeDayAndLoad(dateStr); 
+        // 6. Zentralen Wrapper aufrufen
+        changeDayAndLoad(newDateStr); 
     };
 
+
+    
     /**
      * Setzt den Picker auf den heutigen Tag zurück
      */
+   /**
+     * Setzt den Picker auf den heutigen Tag zurück
+     */
     window.goToToday = () => {
-        const dp = document.getElementById('datePicker');
-        const today = new Date();
-        const offset = today.getTimezoneOffset();
-        today.setMinutes(today.getMinutes() - offset);
+        const d = new Date();
         
-        const dateStr = today.toISOString().split('T')[0];
+        // Lokal das heutige Datum extrahieren
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const dayStr = String(d.getDate()).padStart(2, '0');
+        const dateStr = `${y}-${m}-${dayStr}`;
         
+        // Navigation-Buttons visuell aktualisieren
         updateNavButtons();
         
-        // ANPASSUNG: Auch hier den Wrapper nutzen
+        // Zentralen Wrapper nutzen, um das Laden und das Overlay zu starten
         changeDayAndLoad(dateStr);
     };
+    
 
     /**
      * Steuert die Sichtbarkeit der Buttons
