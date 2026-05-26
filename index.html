@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1213</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1753,11 +1753,9 @@ window.refreshAndShowNews = function() {
         .catch(e => console.error("Hintergrund-Update fehlgeschlagen:", e));
 };
 
-/**
- * Markiert News als gelesen, UI reagiert sofort.
- */
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
+    const currentPickerValue = document.getElementById('datePicker').value; // Dein aktuelles Datum
     
     // 1. Sofortige UI-Reaktion
     const clickedCard = event.currentTarget;
@@ -1781,13 +1779,17 @@ async function markAsReadAndJump(news) {
     // 4. Zentrale schließen
     window.closeNews();
 
-    // 5. Navigation
+    // 5. Bedingte Navigation (Hier passiert die Magie)
     if (news.datum) {
-        document.getElementById('datePicker').value = news.datum;
-        await loadPlan(); 
+        // Prüfen, ob wir bereits am richtigen Tag sind
+        if (currentPickerValue !== news.datum) {
+            document.getElementById('datePicker').value = news.datum;
+            await loadPlan(); // Nur wenn Tag anders, muss geladen werden
+        }
     }
 
-    // 6. Scrollen & Blinken
+    // 6. Scrollen & Blinken (Jetzt absolut performant)
+    // Wir nutzen hier ein sehr kurzes Timeout, da das DOM jetzt nicht mehr "zappelt"
     setTimeout(() => {
         const box = document.querySelector(`[data-slot="${news.slot}"]`); 
         if (box) {
@@ -1795,7 +1797,7 @@ async function markAsReadAndJump(news) {
             setTimeout(() => box.classList.add('blink-animation'), 300);
             setTimeout(() => box.classList.remove('blink-animation'), 4300);
         }
-    }, 300);
+    }, 100); // 100ms reicht völlig, wenn kein loadPlan() läuft
 }
 
 window.closeNews = () => {
