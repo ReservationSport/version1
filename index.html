@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1213</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1649,7 +1649,7 @@ window.fuehreAbklebenAus = async function(klasse) {
 let meineRelevanteNews = []; 
 
 /**
- * Initialisiert das News-System und lädt Daten vom Server.
+ * Initialisiert das News-System.
  */
 async function initNewsSystem() {
     console.log("🚀 News-System wird initialisiert...");
@@ -1660,7 +1660,6 @@ async function initNewsSystem() {
         const zielUrl = typeof url !== 'undefined' ? url : "";
         const pw = typeof userPw !== 'undefined' ? userPw : "";
         
-        // Anti-Caching durch Date.now()
         const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(pw)}&t=${Date.now()}`);
         const data = await response.json();
         
@@ -1677,45 +1676,38 @@ async function initNewsSystem() {
 }
 
 /**
- * Aktualisiert den roten Punkt (Badge) basierend auf ungelesenen Nachrichten.
- * Wird sofort aufgerufen, wenn eine News als gelesen markiert wird.
+ * Aktualisiert den roten Punkt (Badge).
  */
 function updateNewsDot() {
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     const dot = document.getElementById('news-dot');
     if (!dot) return;
 
-    // Wir filtern die Liste:
-    // Eine News ist UNGELESEN, wenn mein User-Kürzel NICHT in der "gelesen"-Liste steht.
     const hatUngelesene = meineRelevanteNews.some(n => {
         const gelesenListe = (n.gelesen || "").toUpperCase().split(',').map(s => s.trim());
         return !gelesenListe.includes(aktuellerUser);
     });
 
-    // Wenn mindestens eine Nachricht ungelesen ist, zeigen wir den Punkt, sonst nicht.
     dot.style.display = hatUngelesene ? 'block' : 'none';
-    
-    console.log("📍 News-Badge Status:", hatUngelesene ? "Sichtbar (Ungelesene vorhanden)" : "Versteckt (Alles gelesen)");
 }
 
-    
+/**
+ * Zeigt die Sidebar sofort an, ohne auf den Server zu warten.
+ */
 window.showNews = function() {
     const sidebar = document.getElementById('newsSidebar');
     const newsContainer = document.getElementById('newsContent');
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
 
+    // 1. Sofort anzeigen
     sidebar.style.display = 'block';
-    setTimeout(() => sidebar.classList.add('active'), 10);
     
+    // 2. Rendern mit bestehenden Daten
     newsContainer.innerHTML = "";
-    let hatUngelesene = false;
-
     meineRelevanteNews.forEach(news => {
         const gelesenListe = (news.gelesen || "").toUpperCase().split(',').map(s => s.trim());
         const istGelesen = gelesenListe.includes(aktuellerUser);
         
-        if (!istGelesen) hatUngelesene = true;
-
         const card = document.createElement('div');
         card.className = `news-item ${istGelesen ? 'news-gelesen' : 'news-unread'}`;
         card.innerHTML = `
@@ -1729,27 +1721,40 @@ window.showNews = function() {
         newsContainer.appendChild(card);
     });
 
+    // 3. Animation starten
+    setTimeout(() => sidebar.classList.add('active'), 10);
     updateNewsDot();
 };
 
-window.refreshAndShowNews = async function() {
-    // 1. Visuelles Feedback (optional, z.B. einen Lade-Spinner kurz zeigen)
-    console.log("🔄 Aktualisiere News...");
+/**
+ * Öffnet die Zentrale und aktualisiert im Hintergrund die Daten.
+ */
+window.refreshAndShowNews = function() {
+    // A: Sofort anzeigen
+    showNews();
     
-    // 2. Daten laden (wir nutzen den await aus initNewsSystem, um sicher zu sein)
-    await initNewsSystem(); 
-    
-    // 3. Jetzt zeigen wir die Sidebar
-    showNews(); 
-    
-    // 4. Erzwinge ein sofortiges Update des Badges
-    updateNewsDot(); 
+    // B: Hintergrund-Sync
+    fetch(`${url}?action=getNews&pw=${encodeURIComponent(userPw)}&t=${Date.now()}`)
+        .then(res => res.json())
+        .then(data => {
+            const allNews = data.news || (Array.isArray(data) ? data : []);
+            const aktuellerUser = userKuerzel.toUpperCase().trim();
+            meineRelevanteNews = allNews.filter(n => {
+                const empfaenger = (n.empfaenger || "").toUpperCase();
+                return empfaenger.split(',').map(e => e.trim()).includes(aktuellerUser);
+            });
+            
+            // Falls Sidebar noch offen ist, neu rendern
+            if(document.getElementById('newsSidebar').classList.contains('active')) {
+                showNews();
+            }
+            updateNewsDot();
+        })
+        .catch(e => console.error("Hintergrund-Update fehlgeschlagen:", e));
 };
 
-    
 /**
- * Markiert News als gelesen und springt zum Plan.
- * Die UI reagiert sofort, während der Server-Call im Hintergrund läuft.
+ * Markiert News als gelesen, UI reagiert sofort.
  */
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
@@ -1760,15 +1765,14 @@ async function markAsReadAndJump(news) {
     clickedCard.style.pointerEvents = "none";
     clickedCard.querySelector('.status-icon').innerText = '⚪ Gelesen';
 
-    // 2. Lokales Update der News-Liste & Badge (damit der Punkt sofort verschwindet)
-    // Wir markieren die Nachricht lokal als gelesen
+    // 2. Lokales Update für sofortigen Badge-Verschwinden-Effekt
     if (!news.gelesen) news.gelesen = "";
     if (!news.gelesen.includes(user)) {
         news.gelesen = news.gelesen ? `${news.gelesen},${user}` : user;
     }
     updateNewsDot(); 
 
-    // 3. Server-Update im Hintergrund (ohne 'await', damit die UI flüssig bleibt)
+    // 3. Server-Update im Hintergrund
     fetch(url, {
         method: "POST",
         body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
@@ -1794,21 +1798,15 @@ async function markAsReadAndJump(news) {
     }, 300);
 }
 
-/**
- * Schließt die Sidebar und aktualisiert den Status final.
- */
 window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
     sidebar.classList.remove('active');
     setTimeout(() => {
         sidebar.style.display = 'none';
-        updateNewsDot(); // Sicherstellen, dass das Badge final korrekt ist
+        updateNewsDot();
     }, 300);
 };
 
-/**
- * Wrapper für den News-Trigger.
- */
 window.triggerNewsWrapper = async function(aktion, slot, klasse) {
     if (typeof triggerNews !== "function") return;
     try {
