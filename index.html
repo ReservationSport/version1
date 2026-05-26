@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1678,20 +1678,27 @@ async function initNewsSystem() {
 
 /**
  * Aktualisiert den roten Punkt (Badge) basierend auf ungelesenen Nachrichten.
+ * Wird sofort aufgerufen, wenn eine News als gelesen markiert wird.
  */
 function updateNewsDot() {
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     const dot = document.getElementById('news-dot');
     if (!dot) return;
 
-    const ungelesen = meineRelevanteNews.filter(n => {
+    // Wir filtern die Liste:
+    // Eine News ist UNGELESEN, wenn mein User-Kürzel NICHT in der "gelesen"-Liste steht.
+    const hatUngelesene = meineRelevanteNews.some(n => {
         const gelesenListe = (n.gelesen || "").toUpperCase().split(',').map(s => s.trim());
         return !gelesenListe.includes(aktuellerUser);
     });
 
-    dot.style.display = ungelesen.length > 0 ? 'block' : 'none';
+    // Wenn mindestens eine Nachricht ungelesen ist, zeigen wir den Punkt, sonst nicht.
+    dot.style.display = hatUngelesene ? 'block' : 'none';
+    
+    console.log("📍 News-Badge Status:", hatUngelesene ? "Sichtbar (Ungelesene vorhanden)" : "Versteckt (Alles gelesen)");
 }
 
+    
 window.showNews = function() {
     const sidebar = document.getElementById('newsSidebar');
     const newsContainer = document.getElementById('newsContent');
@@ -1730,31 +1737,44 @@ window.refreshAndShowNews = async function() {
     showNews();             // Zeichnet Sidebar neu
 };
 
+    
 /**
- * Markiert News als gelesen im Backend und springt zum Plan.
+ * Markiert News als gelesen und springt zum Plan.
+ * Die UI reagiert sofort, während der Server-Call im Hintergrund läuft.
  */
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // UI Update
+    // 1. Sofortige UI-Reaktion
     const clickedCard = event.currentTarget;
     clickedCard.style.opacity = "0.4";
     clickedCard.style.pointerEvents = "none";
     clickedCard.querySelector('.status-icon').innerText = '⚪ Gelesen';
 
-    // Server-Update
-    await fetch(url, {
+    // 2. Lokales Update der News-Liste & Badge (damit der Punkt sofort verschwindet)
+    // Wir markieren die Nachricht lokal als gelesen
+    if (!news.gelesen) news.gelesen = "";
+    if (!news.gelesen.includes(user)) {
+        news.gelesen = news.gelesen ? `${news.gelesen},${user}` : user;
+    }
+    updateNewsDot(); 
+
+    // 3. Server-Update im Hintergrund (ohne 'await', damit die UI flüssig bleibt)
+    fetch(url, {
         method: "POST",
         body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
-    });
+    }).catch(e => console.error("Fehler beim Markieren:", e));
 
+    // 4. Zentrale schließen
     window.closeNews();
 
+    // 5. Navigation
     if (news.datum) {
         document.getElementById('datePicker').value = news.datum;
         await loadPlan(); 
     }
 
+    // 6. Scrollen & Blinken
     setTimeout(() => {
         const box = document.querySelector(`[data-slot="${news.slot}"]`); 
         if (box) {
@@ -1765,12 +1785,21 @@ async function markAsReadAndJump(news) {
     }, 300);
 }
 
+/**
+ * Schließt die Sidebar und aktualisiert den Status final.
+ */
 window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
     sidebar.classList.remove('active');
-    setTimeout(() => sidebar.style.display = 'none', 300);
+    setTimeout(() => {
+        sidebar.style.display = 'none';
+        updateNewsDot(); // Sicherstellen, dass das Badge final korrekt ist
+    }, 300);
 };
 
+/**
+ * Wrapper für den News-Trigger.
+ */
 window.triggerNewsWrapper = async function(aktion, slot, klasse) {
     if (typeof triggerNews !== "function") return;
     try {
