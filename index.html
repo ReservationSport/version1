@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1234</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -822,6 +822,40 @@ body {
 }  
 
 
+  /* ============================================================
+   11. OVERLAY BEIM LADEN
+   ============================================================ */
+    
+
+#loadingOverlay {
+    display: none; 
+    position: fixed; /* Fixiert, nimmt nicht am Flow teil */
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(255, 255, 255, 0.85); 
+    z-index: 999999;
+    /* Zentrierung nur, wenn sichtbar */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Sichtbar machen via JS */
+#loadingOverlay.is-visible {
+    display: flex !important;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+    
     
 
 </style>
@@ -832,63 +866,62 @@ body {
 
 <body>
 
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <p>Lade Plan...</p>
+    </div>
     
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
-<div id="loginOverlay">
-    <div class="login-card">
-        <h2>BBZO <span>Sport</span></h2>
-        
-        <input type="text" id="userKuerzel" placeholder="Kürzel" autocomplete="username"
-               onfocus="document.getElementById('loginError').innerText=''"
-               oninput="document.getElementById('loginError').innerText=''">
-        
-        <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"
-               onfocus="document.getElementById('loginError').innerText=''"
-               oninput="document.getElementById('loginError').innerText=''"
-               onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleLogin(); }">
-
-        <button id="loginBtn" onclick="handleLogin()">ON YOUR MARKS...</button>
-        
-        <div id="loginBall" class="basketball-bounce">🏀</div>
-        
-        <p id="loginError"></p>
+    <div id="loginOverlay">
+        <div class="login-card">
+            <h2>BBZO <span>Sport</span></h2>
+            <input type="text" id="userKuerzel" placeholder="Kürzel" autocomplete="username"
+                   onfocus="document.getElementById('loginError').innerText=''"
+                   oninput="document.getElementById('loginError').innerText=''">
+            <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"
+                   onfocus="document.getElementById('loginError').innerText=''"
+                   oninput="document.getElementById('loginError').innerText=''"
+                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleLogin(); }">
+            <button id="loginBtn" onclick="handleLogin()">ON YOUR MARKS...</button>
+            <div id="loginBall" class="basketball-bounce">🏀</div>
+            <p id="loginError"></p>
+        </div>
     </div>
-</div>
 
-   <div class="date-control">
-    <div class="nav-section nav-left">
-        <div id="news-btn-container" style="display: none;">
-            <div class="news-btn-premium" onclick="refreshAndShowNews()">
-                <span class="btn-text">NEWS</span>
-                <i class="fas fa-bell bell-icon"></i>
-                <div id="news-dot" class="badge" style="display: none;"></div>
+    <div class="date-control">
+        <div class="nav-section nav-left">
+            <div id="news-btn-container" style="display: none;">
+                <div class="news-btn-premium" onclick="refreshAndShowNews()">
+                    <span class="btn-text">NEWS</span>
+                    <i class="fas fa-bell bell-icon"></i>
+                    <div id="news-dot" class="badge" style="display: none;"></div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="nav-section nav-center">
-        <div class="nav-group">
-            <button class="nav-btn" onclick="changeDate(-7)" title="1 Woche zurück"><i class="fas fa-angle-double-left"></i></button>
-            <button id="prev-day" class="nav-btn" onclick="changeDate(-1)" title="1 Tag zürück"><i class="fas fa-angle-left"></i></button>
+        <div class="nav-section nav-center">
+            <div class="nav-group">
+                <button class="nav-btn" onclick="changeDate(-7)" title="1 Woche zurück"><i class="fas fa-angle-double-left"></i></button>
+                <button id="prev-day" class="nav-btn" onclick="changeDate(-1)" title="1 Tag zurück"><i class="fas fa-angle-left"></i></button>
+            </div>
+            
+            <button class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-home"></i></button>
+            
+            <input type="date" id="datePicker" onchange="changeDayAndLoad(this.value)">
+            
+            <div class="nav-group">
+                <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor"><i class="fas fa-angle-right"></i></button>
+                <button class="nav-btn" onclick="changeDate(7)" title="1 Woche vor"><i class="fas fa-angle-double-right"></i></button>
+            </div>
         </div>
-        
-        <button class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-home"></i></button>
-        
-        <input type="date" id="datePicker" onchange="loadPlan()">
-        
-        <div class="nav-group">
-            <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor"><i class="fas fa-angle-right"></i></button>
-            <button class="nav-btn" onclick="changeDate(7)" title="1 Woche vor"><i class="fas fa-angle-double-right"></i></button>
-        </div>
-    </div>
 
-    <div class="nav-section nav-right">
-        <button class="refresh-btn" onclick="loadPlan()" title="Aktualisieren">
-            <i class="fas fa-sync-alt"></i>
-        </button>
+        <div class="nav-section nav-right">
+            <button class="refresh-btn" onclick="changeDayAndLoad(document.getElementById('datePicker').value)" title="Aktualisieren">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
     </div>
-</div>
 
     <div id="plan-container"></div>
 
@@ -897,8 +930,7 @@ body {
             <h2 style="margin: 0; font-size: 1.2em; color: #e67e22;">NEUIGKEITEN</h2>
             <button onclick="closeNews()" style="background: none; border: none; color: #666; cursor: pointer; font-size: 1.5em;">&times;</button>
         </div>
-        <div id="newsContent" style="padding: 0 15px;">
-            </div>
+        <div id="newsContent" style="padding: 0 15px;"></div>
     </div>
 
     <div id="customMenuBackdrop" class="eigenesmenu-backdrop" style="display: none;" onclick="closeCustomMenu()">
@@ -907,8 +939,7 @@ body {
                 <h3 id="menuTitle">Aktionen wählen</h3>
                 <p id="menuSubtitle">Slot bearbeiten</p>
             </div>
-            <div id="menuOptions" class="eigenesmenu-liste">
-                </div>
+            <div id="menuOptions" class="eigenesmenu-liste"></div>
             <button class="eigenesmenu-cancel" onclick="closeCustomMenu()">Abbrechen</button>
         </div>
     </div>
@@ -920,8 +951,6 @@ body {
             <button class="btn-cancel" onclick="document.getElementById('materialInfoOverlay').style.display='none'" style="width:100%; padding: 10px; margin-top: 10px; background: #333; border: none; border-radius: 4px; color: #fff;">Schliessen</button>
         </div>
     </div>
-
-
 
 </body>
 
@@ -1091,18 +1120,17 @@ function getDataBySlotIndex(index) {
 
 
 /* ============================================================
-       5. DATUMSSTEUERUNG & NAVIGATION
-       ============================================================ */
+   5. DATUMSSTEUERUNG & NAVIGATION
+   ============================================================ */
 
     /**
      * Ändert das Datum im Picker und lädt den Plan neu
-     * @param {number} days - Anzahl der Tage (+/-)
      */
     window.changeDate = (days) => {
         const dp = document.getElementById('datePicker');
-        let d = new Date(dp.value);
+        let d = new Date(dp.value.replace(/-/g, "/")); // Sicherere Datum-Konvertierung
         
-        // Berechnung des neuen Datums
+        // Berechnung
         d.setDate(d.getDate() + days);
         
         // Verhindert das Navigieren vor das heutige Datum
@@ -1110,9 +1138,13 @@ function getDataBySlotIndex(index) {
         heute.setHours(0,0,0,0);
         if (d < heute) d = heute;
 
-        dp.valueAsDate = d;
-        updateNavButtons(); // UI anpassen
-        loadPlan();         // Daten neu laden
+        // Datum setzen und UI aktualisieren
+        const dateStr = d.toISOString().split('T')[0];
+        dp.value = dateStr;
+        updateNavButtons();
+        
+        // ANPASSUNG: Hier wird der Wrapper aufgerufen, nicht mehr loadPlan()
+        changeDayAndLoad(dateStr); 
     };
 
     /**
@@ -1121,49 +1153,42 @@ function getDataBySlotIndex(index) {
     window.goToToday = () => {
         const dp = document.getElementById('datePicker');
         const today = new Date();
-        // Lokale Zeitkorrektur für ISO-String
         const offset = today.getTimezoneOffset();
         today.setMinutes(today.getMinutes() - offset);
         
         const dateStr = today.toISOString().split('T')[0];
-        dp.value = dateStr;
         
         updateNavButtons();
-        loadPlan();
+        
+        // ANPASSUNG: Auch hier den Wrapper nutzen
+        changeDayAndLoad(dateStr);
     };
 
     /**
-     * Steuert die Sichtbarkeit der Buttons (Vergangenheit ausblenden)
+     * Steuert die Sichtbarkeit der Buttons
      */
     function updateNavButtons() {
+        // Dieser Bereich kann so bleiben, er ist logisch unabhängig vom Ladevorgang
         const dp = document.getElementById('datePicker');
         if (!dp || !dp.value) return;
 
-        const pickerDate = new Date(dp.value);
+        const pickerDate = new Date(dp.value.replace(/-/g, "/"));
         pickerDate.setHours(0, 0, 0, 0);
 
         const heute = new Date();
         heute.setHours(0, 0, 0, 0);
 
-        // IDs aus deinem HTML: prev-day und die Buttons für Wochen
         const prevDayBtn = document.getElementById('prev-day');
-        // Falls du die Wochen-Buttons auch dynamisch verstecken willst:
         const allPrevBtns = document.querySelectorAll('.nav-group:first-child .nav-btn');
 
-        // GESTERN-Button: Verstecken, wenn wir heute sind
         if (prevDayBtn) {
-            if (pickerDate <= heute) {
-                prevDayBtn.style.visibility = 'hidden';
-            } else {
-                prevDayBtn.style.visibility = 'visible';
-            }
+            prevDayBtn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
         }
 
-        // Alle "Zurück"-Buttons (Woche & Tag) verstecken, wenn Limit erreicht
         allPrevBtns.forEach(btn => {
-            const isWeekBtn = btn.getAttribute('onclick').includes('-7');
+            const onclickAttr = btn.getAttribute('onclick') || "";
+            const isWeekBtn = onclickAttr.includes('-7');
             if (isWeekBtn) {
-                // Woche zurück nur erlauben, wenn wir min. 7 Tage in der Zukunft sind
                 const limitWoche = new Date(heute);
                 limitWoche.setDate(heute.getDate() + 7);
                 btn.style.visibility = (pickerDate < limitWoche) ? 'hidden' : 'visible';
@@ -1171,23 +1196,29 @@ function getDataBySlotIndex(index) {
         });
     }
 
+
+    
     /* ============================================================
        6. INITIALISIERUNG BEIM LADEN
        ============================================================ */
 
-    document.addEventListener('DOMContentLoaded', () => { 
-        // Heute-Einstellung
-        const today = new Date(); 
-        const offset = today.getTimezoneOffset(); 
-        today.setMinutes(today.getMinutes() - offset); 
-        const dateStr = today.toISOString().split('T')[0];
-        
-        const dp = document.getElementById('datePicker');
-        dp.value = dateStr;
-        dp.min = dateStr; // Verhindert manuelle Datumswahl in der Vergangenheit
-        
-        updateNavButtons();
-    });
+   document.addEventListener('DOMContentLoaded', () => { 
+    // Heute-Einstellung
+    const today = new Date(); 
+    const offset = today.getTimezoneOffset(); 
+    today.setMinutes(today.getMinutes() - offset); 
+    const dateStr = today.toISOString().split('T')[0];
+    
+    const dp = document.getElementById('datePicker');
+    dp.value = dateStr;
+    dp.min = dateStr; 
+    
+    updateNavButtons();
+    
+    // HIER DIE ANPASSUNG:
+    // Nutze den Wrapper, damit das Overlay auch beim ersten Start korrekt arbeitet
+    changeDayAndLoad(dateStr); 
+});
 
 
 /* ============================================================
@@ -1197,22 +1228,20 @@ function getDataBySlotIndex(index) {
 window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
-    const loader = document.getElementById('global-loader'); 
-
+    
+    // global-loader Aufrufe entfernt, da jetzt changeDayAndLoad das Overlay steuert
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
     container.innerHTML = ""; 
-    if (loader) loader.style.display = 'block'; 
     
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
-    // --- 1. NORMALE WOCHENEND-PRÜFUNG (LOKAL) ---
+    // Wochenende prüfen
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
-        if (loader) loader.style.display = 'none'; 
         return; 
     }
 
@@ -1220,17 +1249,13 @@ window.loadPlan = async function() {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // --- 2. SPERRZEITEN/FEIERTAGS-PRÜFUNG VOM SERVER ---
         if (json.sperrMsg) {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">${json.sperrMsg}</div>`;
-            if (loader) loader.style.display = 'none';
             return; 
         }
         
-        // --- MATERIALIEN AUS DEM SERVER-PAKET IM FRONTEND AUSPACKEN ---
         if (json.verfügbareMaterialien) {
             verfügbareMaterialien = json.verfügbareMaterialien;
-            console.log("Materialien erfolgreich im Frontend-Array geladen:", verfügbareMaterialien);
         }
         
         const plan = json.plan; 
@@ -1274,32 +1299,21 @@ window.loadPlan = async function() {
 
         container.innerHTML = html;
 
-        // --- LIVE-RENDERING DER MATERIAL-ICONS & NOTIZ-ICONS ---
+        // Icons hinzufügen... (dein bestehender Code bleibt hier identisch)
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (!box) return;
 
-            // 1. Material-Schnittstelle bedienen
-            if (slotData.material && slotData.material.trim() !== "") {
-                markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
-            }
+            if (slotData.material && slotData.material.trim() !== "") markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
 
-            // 2. 🔥 REPARIERT: Nutzt jetzt das identische, dynamische Material-Popup-System
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
                 notizElement.innerText = '📝';
                 notizElement.title = slotData.kommentar; 
                 notizElement.style.cursor = 'pointer';
-                
-                notizElement.onclick = function(event) {
-                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Edit-Menüs
-                    if (typeof showNotizDetailPopup === "function") {
-                        showNotizDetailPopup(slotData.klasse || "", slotData.kommentar);
-                    }
-                };
-                
+                notizElement.onclick = (e) => { e.stopPropagation(); if (typeof showNotizDetailPopup === "function") showNotizDetailPopup(slotData.klasse || "", slotData.kommentar); };
                 box.appendChild(notizElement);
             }
         });
@@ -1307,8 +1321,6 @@ window.loadPlan = async function() {
     } catch(e) { 
         console.error("Fehler:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Verbindungsfehler.</div>`;
-    } finally {
-        if (loader) loader.style.display = 'none';
     }
 };
 
@@ -1394,6 +1406,46 @@ window.syncPlan = async function() {
         console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
+
+
+
+// Variable außerhalb der Funktion definieren
+let isNavigating = false; 
+
+async function changeDayAndLoad(zielDatum) {
+    // 1. Schutz gegen Doppel-Klicks
+    if (isNavigating) return;
+    isNavigating = true;
+
+    const dp = document.getElementById('datePicker');
+    const overlay = document.getElementById('loadingOverlay');
+    
+    // UI vorbereiten
+    dp.value = zielDatum;
+    document.body.style.opacity = "0.7"; 
+    
+    // 2. Timer: Overlay erst nach 300ms zeigen, um Flackern bei schnellen Servern zu vermeiden
+    const timer = setTimeout(() => {
+        overlay.classList.add('is-visible');
+    }, 300); 
+
+    try {
+        await loadPlan(); 
+    } catch (e) {
+        console.error("Fehler beim Laden:", e);
+        // Optional: Benutzer informieren
+        alert("Der Plan konnte nicht geladen werden. Bitte versuche es erneut.");
+    } finally {
+        // 3. Immer aufräumen
+        clearTimeout(timer);
+        overlay.classList.remove('is-visible');
+        document.body.style.opacity = "1";
+        isNavigating = false; // Sperre aufheben
+    }
+}
+
+
+
     
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
