@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1733,8 +1733,17 @@ window.showNews = function() {
 };
 
 window.refreshAndShowNews = async function() {
-    await initNewsSystem(); // Aktualisiert Daten vom Server
-    showNews();             // Zeichnet Sidebar neu
+    // 1. Visuelles Feedback (optional, z.B. einen Lade-Spinner kurz zeigen)
+    console.log("🔄 Aktualisiere News...");
+    
+    // 2. Daten laden (wir nutzen den await aus initNewsSystem, um sicher zu sein)
+    await initNewsSystem(); 
+    
+    // 3. Jetzt zeigen wir die Sidebar
+    showNews(); 
+    
+    // 4. Erzwinge ein sofortiges Update des Badges
+    updateNewsDot(); 
 };
 
     
