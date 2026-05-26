@@ -36,13 +36,12 @@ body {
 }
 
 /* Das Haupt-Grid */
-#plan-container { 
+#plan-container, .grid { 
     display: grid; 
     grid-template-columns: 120px repeat(5, 1fr); 
     gap: 2px; 
     max-width: 1000px; 
-    margin: 20px auto !important; /* !important überschreibt mögliche Störungen */
-    width: 95%; /* Falls der Bildschirm zu klein ist, flexibel bleiben */
+    margin: auto; 
 }
 
 
@@ -241,40 +240,6 @@ body {
     animation: spin 1s linear infinite; display: none; z-index: 9999; 
 }
 
-#loadingOverlay {
-    display: none; 
-    position: fixed;
-    top: 0; 
-    left: 0;
-    width: 100vw; 
-    height: 100vh;
-    background: rgba(255, 255, 255, 0.85); 
-    z-index: 999999;
-    /* Verhindert Layout-Einfluss im inaktiven Zustand */
-    pointer-events: none; 
-}
-
-/* Wenn sichtbar: Flexbox aktivieren und Pointer-Events erlauben */
-#loadingOverlay[style*="display: flex"] {
-    display: flex !important; /* Erzwingt die Sichtbarkeit */
-    pointer-events: auto;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-}
-
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
-    margin-bottom: 15px;
-}
-
-
-    
 /* ============================================================
    5. LOGIN-OVERLAY & CARD-DESIGN (DEIN ORIGINAL)
    ============================================================ */
@@ -902,26 +867,27 @@ body {
         </div>
     </div>
 
-   <div class="nav-section nav-center">
-    <div class="nav-group">
-        <button class="nav-btn" onclick="changeDate(-7)" title="1 Woche zurück"><i class="fas fa-angle-double-left"></i></button>
-        <button id="prev-day" class="nav-btn" onclick="changeDate(-1)" title="1 Tag zurück"><i class="fas fa-angle-left"></i></button>
+    <div class="nav-section nav-center">
+        <div class="nav-group">
+            <button class="nav-btn" onclick="changeDate(-7)" title="1 Woche zurück"><i class="fas fa-angle-double-left"></i></button>
+            <button id="prev-day" class="nav-btn" onclick="changeDate(-1)" title="1 Tag zürück"><i class="fas fa-angle-left"></i></button>
+        </div>
+        
+        <button class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-home"></i></button>
+        
+        <input type="date" id="datePicker" onchange="loadPlan()">
+        
+        <div class="nav-group">
+            <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor"><i class="fas fa-angle-right"></i></button>
+            <button class="nav-btn" onclick="changeDate(7)" title="1 Woche vor"><i class="fas fa-angle-double-right"></i></button>
+        </div>
     </div>
-    
-    <button class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-home"></i></button>
-    
-    <input type="date" id="datePicker" onchange="changeDayAndLoad(this.value)">
-    
-    <div class="nav-group">
-        <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor"><i class="fas fa-angle-right"></i></button>
-        <button class="nav-btn" onclick="changeDate(7)" title="1 Woche vor"><i class="fas fa-angle-double-right"></i></button>
-    </div>
-</div>
 
-<div class="nav-section nav-right">
-    <button class="refresh-btn" onclick="changeDayAndLoad(document.getElementById('datePicker').value)" title="Aktualisieren">
-        <i class="fas fa-sync-alt"></i>
-    </button>
+    <div class="nav-section nav-right">
+        <button class="refresh-btn" onclick="loadPlan()" title="Aktualisieren">
+            <i class="fas fa-sync-alt"></i>
+        </button>
+    </div>
 </div>
 
     <div id="plan-container"></div>
@@ -955,10 +921,6 @@ body {
         </div>
     </div>
 
-
-    <div id="loadingOverlay">
-    <div class="spinner"></div> <p>Lade Plan...</p>
-</div>
 
 
 </body>
@@ -1129,140 +1091,128 @@ function getDataBySlotIndex(index) {
 
 
 /* ============================================================
-   5. DATUMSSTEUERUNG & NAVIGATION
-   ============================================================ */
+       5. DATUMSSTEUERUNG & NAVIGATION
+       ============================================================ */
 
-/**
- * Ändert das Datum im Picker und lädt den Plan neu über den Wrapper
- */
-window.changeDate = (days) => {
-    const dp = document.getElementById('datePicker');
-    let d = new Date(dp.value);
-    
-    d.setDate(d.getDate() + days);
-    
-    // Verhindert das Navigieren vor das heutige Datum
-    const heute = new Date();
-    heute.setHours(0,0,0,0);
-    if (d < heute) d = heute;
+    /**
+     * Ändert das Datum im Picker und lädt den Plan neu
+     * @param {number} days - Anzahl der Tage (+/-)
+     */
+    window.changeDate = (days) => {
+        const dp = document.getElementById('datePicker');
+        let d = new Date(dp.value);
+        
+        // Berechnung des neuen Datums
+        d.setDate(d.getDate() + days);
+        
+        // Verhindert das Navigieren vor das heutige Datum
+        const heute = new Date();
+        heute.setHours(0,0,0,0);
+        if (d < heute) d = heute;
 
-    // Wir nutzen jetzt den Wrapper, der das Overlay und die ID-Prüfung übernimmt
-    changeDayAndLoad(d.toISOString().split('T')[0]);
-};
+        dp.valueAsDate = d;
+        updateNavButtons(); // UI anpassen
+        loadPlan();         // Daten neu laden
+    };
 
-/**
- * Setzt den Picker auf den heutigen Tag zurück über den Wrapper
- */
-window.goToToday = () => {
-    const today = new Date();
-    const offset = today.getTimezoneOffset();
-    today.setMinutes(today.getMinutes() - offset);
-    
-    const dateStr = today.toISOString().split('T')[0];
-    
-    // Wir nutzen jetzt den Wrapper
-    changeDayAndLoad(dateStr);
-};
+    /**
+     * Setzt den Picker auf den heutigen Tag zurück
+     */
+    window.goToToday = () => {
+        const dp = document.getElementById('datePicker');
+        const today = new Date();
+        // Lokale Zeitkorrektur für ISO-String
+        const offset = today.getTimezoneOffset();
+        today.setMinutes(today.getMinutes() - offset);
+        
+        const dateStr = today.toISOString().split('T')[0];
+        dp.value = dateStr;
+        
+        updateNavButtons();
+        loadPlan();
+    };
 
-/**
- * Steuert die Sichtbarkeit der Buttons
- */
-function updateNavButtons() {
-    const dp = document.getElementById('datePicker');
-    if (!dp || !dp.value) return;
+    /**
+     * Steuert die Sichtbarkeit der Buttons (Vergangenheit ausblenden)
+     */
+    function updateNavButtons() {
+        const dp = document.getElementById('datePicker');
+        if (!dp || !dp.value) return;
 
-    const pickerDate = new Date(dp.value);
-    pickerDate.setHours(0, 0, 0, 0);
+        const pickerDate = new Date(dp.value);
+        pickerDate.setHours(0, 0, 0, 0);
 
-    const heute = new Date();
-    heute.setHours(0, 0, 0, 0);
+        const heute = new Date();
+        heute.setHours(0, 0, 0, 0);
 
-    const prevDayBtn = document.getElementById('prev-day');
-    const allPrevBtns = document.querySelectorAll('.nav-group:first-child .nav-btn');
+        // IDs aus deinem HTML: prev-day und die Buttons für Wochen
+        const prevDayBtn = document.getElementById('prev-day');
+        // Falls du die Wochen-Buttons auch dynamisch verstecken willst:
+        const allPrevBtns = document.querySelectorAll('.nav-group:first-child .nav-btn');
 
-    if (prevDayBtn) {
-        prevDayBtn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
+        // GESTERN-Button: Verstecken, wenn wir heute sind
+        if (prevDayBtn) {
+            if (pickerDate <= heute) {
+                prevDayBtn.style.visibility = 'hidden';
+            } else {
+                prevDayBtn.style.visibility = 'visible';
+            }
+        }
+
+        // Alle "Zurück"-Buttons (Woche & Tag) verstecken, wenn Limit erreicht
+        allPrevBtns.forEach(btn => {
+            const isWeekBtn = btn.getAttribute('onclick').includes('-7');
+            if (isWeekBtn) {
+                // Woche zurück nur erlauben, wenn wir min. 7 Tage in der Zukunft sind
+                const limitWoche = new Date(heute);
+                limitWoche.setDate(heute.getDate() + 7);
+                btn.style.visibility = (pickerDate < limitWoche) ? 'hidden' : 'visible';
+            }
+        });
     }
 
-    allPrevBtns.forEach(btn => {
-        const onclickAttr = btn.getAttribute('onclick') || "";
-        if (onclickAttr.includes('-7')) {
-            const limitWoche = new Date(heute);
-            limitWoche.setDate(heute.getDate() + 7);
-            btn.style.visibility = (pickerDate < limitWoche) ? 'hidden' : 'visible';
-        }
+    /* ============================================================
+       6. INITIALISIERUNG BEIM LADEN
+       ============================================================ */
+
+    document.addEventListener('DOMContentLoaded', () => { 
+        // Heute-Einstellung
+        const today = new Date(); 
+        const offset = today.getTimezoneOffset(); 
+        today.setMinutes(today.getMinutes() - offset); 
+        const dateStr = today.toISOString().split('T')[0];
+        
+        const dp = document.getElementById('datePicker');
+        dp.value = dateStr;
+        dp.min = dateStr; // Verhindert manuelle Datumswahl in der Vergangenheit
+        
+        updateNavButtons();
     });
-}
+
 
 /* ============================================================
-   6. INITIALISIERUNG & LADEN
+   7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
    ============================================================ */
-
-document.addEventListener('DOMContentLoaded', () => { 
-    const today = new Date(); 
-    const offset = today.getTimezoneOffset(); 
-    today.setMinutes(today.getMinutes() - offset); 
-    const dateStr = today.toISOString().split('T')[0];
-    
-    const dp = document.getElementById('datePicker');
-    dp.value = dateStr;
-    dp.min = dateStr; 
-    
-    // Beim ersten Laden den Plan initial über den Wrapper laden
-    changeDayAndLoad(dateStr);
-});
-
-/* ============================================================
-   7. ZENTRALE LADESTEUERUNG (WRAPPER & ENGINE)
-   ============================================================ */
-
-let currentRequestID = 0; 
-
-async function changeDayAndLoad(zielDatum) {
-    document.getElementById('datePicker').value = zielDatum;
-    document.body.style.opacity = "0.7"; 
-    
-    const overlay = document.getElementById('loadingOverlay');
-    if (!overlay) {
-        console.error("Overlay nicht gefunden!");
-        await loadPlan(); // Fallback, falls Overlay fehlt
-        return;
-    }
-
-    const timer = setTimeout(() => {
-        overlay.style.display = 'flex';
-    }, 300); 
-
-    const myRequestID = ++currentRequestID;
-
-    try {
-        await loadPlan(); 
-        if (myRequestID === currentRequestID) {
-            console.log("Neuester Request geladen.");
-        }
-    } catch (e) {
-        console.error("Fehler:", e);
-    } finally {
-        clearTimeout(timer);
-        overlay.style.display = 'none';
-        document.body.style.opacity = "1";
-    }
-}
 
 window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
+    const loader = document.getElementById('global-loader'); 
 
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
     container.innerHTML = ""; 
+    if (loader) loader.style.display = 'block'; 
+    
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
+    // --- 1. NORMALE WOCHENEND-PRÜFUNG (LOKAL) ---
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
+        if (loader) loader.style.display = 'none'; 
         return; 
     }
 
@@ -1270,12 +1220,18 @@ window.loadPlan = async function() {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
+        // --- 2. SPERRZEITEN/FEIERTAGS-PRÜFUNG VOM SERVER ---
         if (json.sperrMsg) {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">${json.sperrMsg}</div>`;
+            if (loader) loader.style.display = 'none';
             return; 
         }
         
-        if (json.verfügbareMaterialien) verfügbareMaterialien = json.verfügbareMaterialien;
+        // --- MATERIALIEN AUS DEM SERVER-PAKET IM FRONTEND AUSPACKEN ---
+        if (json.verfügbareMaterialien) {
+            verfügbareMaterialien = json.verfügbareMaterialien;
+            console.log("Materialien erfolgreich im Frontend-Array geladen:", verfügbareMaterialien);
+        }
         
         const plan = json.plan; 
         window.lastPlanData = plan; 
@@ -1307,22 +1263,54 @@ window.loadPlan = async function() {
                 
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                     data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
-                     style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
+                        data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
+                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
                 </div>`;
             }
         });
+
         container.innerHTML = html;
-        // (Render Icons Logik bleibt hier wie gewohnt...)
+
+        // --- LIVE-RENDERING DER MATERIAL-ICONS & NOTIZ-ICONS ---
+        Object.keys(plan).forEach(slot => {
+            const slotData = plan[slot] || {};
+            const box = container.querySelector(`[data-slot="${slot}"]`);
+            if (!box) return;
+
+            // 1. Material-Schnittstelle bedienen
+            if (slotData.material && slotData.material.trim() !== "") {
+                markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
+            }
+
+            // 2. 🔥 REPARIERT: Nutzt jetzt das identische, dynamische Material-Popup-System
+            if (slotData.kommentar && slotData.kommentar.trim() !== "") {
+                const notizElement = document.createElement('span');
+                notizElement.className = 'box-notiz-icon';
+                notizElement.innerText = '📝';
+                notizElement.title = slotData.kommentar; 
+                notizElement.style.cursor = 'pointer';
+                
+                notizElement.onclick = function(event) {
+                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Edit-Menüs
+                    if (typeof showNotizDetailPopup === "function") {
+                        showNotizDetailPopup(slotData.klasse || "", slotData.kommentar);
+                    }
+                };
+                
+                box.appendChild(notizElement);
+            }
+        });
+
     } catch(e) { 
         console.error("Fehler:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Verbindungsfehler.</div>`;
+    } finally {
+        if (loader) loader.style.display = 'none';
     }
 };
-
 
 
 window.syncPlan = async function() {
@@ -1367,6 +1355,7 @@ window.syncPlan = async function() {
                 const lLabel = box.querySelector('.lehrer-info');
                 if (lLabel) lLabel.innerText = lehrer;
                 
+                // data-notiz Attribut aktuell halten
                 box.setAttribute('data-notiz', kommentar);
 
                 if (halle === "Ausfall") {
@@ -1379,6 +1368,7 @@ window.syncPlan = async function() {
 
                 markBoxWithMaterialIcon(box, material, kommentar);
 
+                // 🔥 REPARIERT IM BACKGROUND-SYNC: Altes Icon weg, neues dynamisches Popup-Icon her
                 const altesNotizIcon = box.querySelector('.box-notiz-icon');
                 if (altesNotizIcon) altesNotizIcon.remove();
 
@@ -1404,9 +1394,6 @@ window.syncPlan = async function() {
         console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
-
-    
-
     
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
