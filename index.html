@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -36,12 +36,13 @@ body {
 }
 
 /* Das Haupt-Grid */
-#plan-container, .grid { 
+#plan-container { 
     display: grid; 
     grid-template-columns: 120px repeat(5, 1fr); 
     gap: 2px; 
     max-width: 1000px; 
-    margin: auto; 
+    margin: 20px auto !important; /* !important überschreibt mögliche Störungen */
+    width: 95%; /* Falls der Bildschirm zu klein ist, flexibel bleiben */
 }
 
 
@@ -240,22 +241,28 @@ body {
     animation: spin 1s linear infinite; display: none; z-index: 9999; 
 }
 
-
 #loadingOverlay {
     display: none; 
-    position: fixed; /* WICHTIG: Nimmt das Element aus dem normalen Fluss */
+    position: fixed;
     top: 0; 
     left: 0;
     width: 100vw; 
     height: 100vh;
     background: rgba(255, 255, 255, 0.85); 
-    z-index: 999999; /* Sehr hoch, damit es über ALLEM liegt */
+    z-index: 999999;
+    /* Verhindert Layout-Einfluss im inaktiven Zustand */
+    pointer-events: none; 
+}
+
+/* Wenn sichtbar: Flexbox aktivieren und Pointer-Events erlauben */
+#loadingOverlay[style*="display: flex"] {
+    display: flex !important; /* Erzwingt die Sichtbarkeit */
+    pointer-events: auto;
     justify-content: center;
     align-items: center;
     flex-direction: column;
 }
 
-/* Damit der Spinner nicht das Layout der restlichen Elemente beeinflusst */
 .spinner {
     width: 50px;
     height: 50px;
