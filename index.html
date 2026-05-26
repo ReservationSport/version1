@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -875,7 +875,7 @@ body {
         
         <button class="nav-btn" onclick="goToToday()" title="Heute"><i class="fas fa-home"></i></button>
         
-        <input type="date" id="datePicker" onchange="loadPlan()">
+      <input type="date" id="datePicker" onchange="changeDayAndLoad(this.value)">
         
         <div class="nav-group">
             <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor"><i class="fas fa-angle-right"></i></button>
@@ -1394,6 +1394,44 @@ window.syncPlan = async function() {
         console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
     }
 };
+
+
+
+let currentRequestID = 0; // Zähler für die Klicks
+
+async function changeDayAndLoad(zielDatum) {
+    // 1. Sofortige UI-Reaktion (gibt dem Nutzer Feedback)
+    document.getElementById('datePicker').value = zielDatum;
+    document.body.style.opacity = "0.7"; // Plan leicht dimmen, statt komplett ausblenden
+    
+    // 2. Overlay mit Verzögerung starten
+    const overlay = document.getElementById('loadingOverlay');
+    const timer = setTimeout(() => {
+        overlay.style.display = 'flex';
+    }, 300); // Overlay erscheint erst, wenn es länger als 300ms dauert
+
+    const myRequestID = ++currentRequestID; // Markierung für diesen speziellen Klick
+
+    try {
+        await loadPlan(); // Dein existierendes Laden
+        
+        // 3. Nur rendern, wenn dies der absolut letzte Klick war
+        if (myRequestID === currentRequestID) {
+            console.log("Neuester Request erfolgreich geladen.");
+        } else {
+            console.log("Älterer Request verworfen, ignoriere Anzeige.");
+        }
+    } catch (e) {
+        console.error("Fehler beim Laden:", e);
+    } finally {
+        // 4. Aufräumen (Overlay weg, Opacity zurück)
+        clearTimeout(timer); // Verhindert, dass das Overlay doch noch aufpoppt
+        overlay.style.display = 'none';
+        document.body.style.opacity = "1";
+    }
+}
+
+
     
 /* ============================================================
    8. HILFSFUNKTIONEN FÜR DATEN-STRINGS & FINDER
