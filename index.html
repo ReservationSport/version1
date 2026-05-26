@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -240,6 +240,33 @@ body {
     animation: spin 1s linear infinite; display: none; z-index: 9999; 
 }
 
+
+#loadingOverlay {
+    display: none; 
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(255, 255, 255, 0.7); 
+    z-index: 9999; 
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    cursor: wait;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db; /* Deine Wunschfarbe */
+    border-radius: 50%;
+    /* Nutzt deine bestehende Animation: */
+    animation: spin 1s linear infinite; 
+    margin-bottom: 15px;
+}
+
+
+    
 /* ============================================================
    5. LOGIN-OVERLAY & CARD-DESIGN (DEIN ORIGINAL)
    ============================================================ */
@@ -922,6 +949,10 @@ body {
     </div>
 
 
+    <div id="loadingOverlay">
+    <div class="spinner"></div> <p>Lade Plan...</p>
+</div>
+
 
 </body>
 
@@ -1190,29 +1221,25 @@ function getDataBySlotIndex(index) {
     });
 
 
-/* ============================================================
-   7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
-   ============================================================ */
-
 window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
-    const loader = document.getElementById('global-loader'); 
 
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
     container.innerHTML = ""; 
-    if (loader) loader.style.display = 'block'; 
+    
+    // Hinweis: Die manuelle Steuerung von 'global-loader' wurde hier entfernt,
+    // da dies jetzt zentral durch die changeDayAndLoad-Funktion via Overlay gesteuert wird.
     
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
-    // --- 1. NORMALE WOCHENEND-PRÜFUNG (LOKAL) ---
+    // --- 1. NORMALE WOCHENEND-PRÜFUNG ---
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
-        if (loader) loader.style.display = 'none'; 
         return; 
     }
 
@@ -1220,17 +1247,15 @@ window.loadPlan = async function() {
         const res = await fetch(`${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // --- 2. SPERRZEITEN/FEIERTAGS-PRÜFUNG VOM SERVER ---
+        // --- 2. SPERRZEITEN/FEIERTAGS-PRÜFUNG ---
         if (json.sperrMsg) {
             container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">${json.sperrMsg}</div>`;
-            if (loader) loader.style.display = 'none';
             return; 
         }
         
-        // --- MATERIALIEN AUS DEM SERVER-PAKET IM FRONTEND AUSPACKEN ---
+        // --- MATERIALIEN ---
         if (json.verfügbareMaterialien) {
             verfügbareMaterialien = json.verfügbareMaterialien;
-            console.log("Materialien erfolgreich im Frontend-Array geladen:", verfügbareMaterialien);
         }
         
         const plan = json.plan; 
@@ -1263,8 +1288,8 @@ window.loadPlan = async function() {
                 
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
-                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
+                     data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
+                     style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
@@ -1274,32 +1299,28 @@ window.loadPlan = async function() {
 
         container.innerHTML = html;
 
-        // --- LIVE-RENDERING DER MATERIAL-ICONS & NOTIZ-ICONS ---
+        // --- RENDER ICONS ---
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (!box) return;
 
-            // 1. Material-Schnittstelle bedienen
             if (slotData.material && slotData.material.trim() !== "") {
                 markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
             }
 
-            // 2. 🔥 REPARIERT: Nutzt jetzt das identische, dynamische Material-Popup-System
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
                 notizElement.innerText = '📝';
                 notizElement.title = slotData.kommentar; 
                 notizElement.style.cursor = 'pointer';
-                
                 notizElement.onclick = function(event) {
-                    event.stopPropagation(); // Verhindert das Öffnen des Standard-Edit-Menüs
+                    event.stopPropagation();
                     if (typeof showNotizDetailPopup === "function") {
                         showNotizDetailPopup(slotData.klasse || "", slotData.kommentar);
                     }
                 };
-                
                 box.appendChild(notizElement);
             }
         });
@@ -1307,11 +1328,11 @@ window.loadPlan = async function() {
     } catch(e) { 
         console.error("Fehler:", e); 
         container.innerHTML = `<div class="box info-box" style="color:red; grid-column: span 6;">Verbindungsfehler.</div>`;
-    } finally {
-        if (loader) loader.style.display = 'none';
     }
 };
 
+
+    
 
 window.syncPlan = async function() {
     if (isSaving) return; 
@@ -1397,35 +1418,36 @@ window.syncPlan = async function() {
 
 
 
-let currentRequestID = 0; // Zähler für die Klicks
+let currentRequestID = 0; 
 
 async function changeDayAndLoad(zielDatum) {
-    // 1. Sofortige UI-Reaktion (gibt dem Nutzer Feedback)
+    // 1. Sofortige UI-Reaktion
     document.getElementById('datePicker').value = zielDatum;
-    document.body.style.opacity = "0.7"; // Plan leicht dimmen, statt komplett ausblenden
+    document.body.style.opacity = "0.7"; 
     
     // 2. Overlay mit Verzögerung starten
     const overlay = document.getElementById('loadingOverlay');
     const timer = setTimeout(() => {
         overlay.style.display = 'flex';
-    }, 300); // Overlay erscheint erst, wenn es länger als 300ms dauert
+    }, 300); 
 
-    const myRequestID = ++currentRequestID; // Markierung für diesen speziellen Klick
+    const myRequestID = ++currentRequestID; 
 
     try {
-        await loadPlan(); // Dein existierendes Laden
+        // Hier wird der Plan geladen. 
+        // WICHTIG: Da loadPlan nun keine eigenen Lade-Status-Elemente mehr steuert,
+        // läuft hier alles synchron über diesen try-catch-Block.
+        await loadPlan(); 
         
-        // 3. Nur rendern, wenn dies der absolut letzte Klick war
         if (myRequestID === currentRequestID) {
-            console.log("Neuester Request erfolgreich geladen.");
-        } else {
-            console.log("Älterer Request verworfen, ignoriere Anzeige.");
+            console.log("Aktuellsten Plan geladen.");
         }
     } catch (e) {
         console.error("Fehler beim Laden:", e);
+        // Optional: Hier eine kleine Toast-Nachricht oder Alert anzeigen
     } finally {
-        // 4. Aufräumen (Overlay weg, Opacity zurück)
-        clearTimeout(timer); // Verhindert, dass das Overlay doch noch aufpoppt
+        // 4. Aufräumen: Hier wird alles zurückgesetzt, egal was passiert ist
+        clearTimeout(timer); 
         overlay.style.display = 'none';
         document.body.style.opacity = "1";
     }
