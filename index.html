@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO23242</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1423,6 +1423,8 @@ let currentRequestID = 0;
 async function changeDayAndLoad(zielDatum) {
     document.getElementById('datePicker').value = zielDatum;
     document.body.style.opacity = "0.7"; 
+
+console.log("Klick erkannt!");
     
     // Suche das Overlay DIREKT hier drin
     const overlay = document.getElementById('loadingOverlay');
