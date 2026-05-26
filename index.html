@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -996,6 +996,7 @@ async function handleLogin() {
     const errorDiv = document.getElementById('loginError');
     const dp = document.getElementById('datePicker');
     const loginOverlay = document.getElementById('loginOverlay');
+    const loadingOverlay = document.getElementById('loadingOverlay'); // Referenz hinzugefügt
     
     const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
     const pwVal = document.getElementById('pw').value;
@@ -1005,7 +1006,6 @@ async function handleLogin() {
         return; 
     }
 
-    // Visuelles Feedback
     btn.style.visibility = 'hidden'; 
     ball.classList.add('active'); 
     errorDiv.innerText = "";
@@ -1019,27 +1019,31 @@ async function handleLogin() {
             btn.style.visibility = 'visible';
             ball.classList.remove('active');
         } else {
-            // Erfolg: Daten lokal speichern
             userPw = pwVal;
             userKuerzel = kuerzelVal;
             
-            // 1. Overlay ausblenden
+            // 1. SOFORT den Spinner einblenden, BEVOR wir den Login ausblenden
+            loadingOverlay.classList.add('is-visible');
+            
+            // 2. Login-Maske parallel ausblenden
             loginOverlay.classList.add('fade-out');
             
-            // Warten bis Fade-Out fertig ist (kurz), dann direkt laden
+            // Kurze Wartezeit für die Animation des Login-Overlays
             await new Promise(resolve => setTimeout(resolve, 300));
             loginOverlay.style.display = 'none';
             
-            // 2. UI-Elemente vorbereiten
+            // 3. UI-Elemente vorbereiten
             const newsContainer = document.getElementById('news-btn-container');
             if(newsContainer) newsContainer.style.display = 'block';
             
-            // 3. SOFORT Laden und Sync vorbereiten
-            // Das Overlay kommt automatisch durch den Aufruf von changeDayAndLoad
+            // 4. Laden
             await initNewsSystem();
+            
+            // changeDayAndLoad ruft loadPlan() auf und entfernt das loadingOverlay
+            // im 'finally'-Block wieder. Da es jetzt schon an ist, ist der Übergang perfekt.
             await changeDayAndLoad(dp.value);
 
-            // 4. Hintergrund-Sync starten (wird nur einmalig nach Login gestartet)
+            // 5. Hintergrund-Sync
             setInterval(async () => {
                 if (document.visibilityState === 'visible') {
                     await syncPlan();
@@ -1051,6 +1055,8 @@ async function handleLogin() {
         errorDiv.innerText = "Verbindung fehlgeschlagen.";
         btn.style.visibility = 'visible';
         ball.classList.remove('active');
+        // Falls Fehler auftreten, Overlay hier manuell schließen
+        loadingOverlay.classList.remove('is-visible');
         console.error("Login Error:", e);
     }
 }
