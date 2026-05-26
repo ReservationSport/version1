@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO23242</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1421,34 +1421,33 @@ window.syncPlan = async function() {
 let currentRequestID = 0; 
 
 async function changeDayAndLoad(zielDatum) {
-    // 1. Sofortige UI-Reaktion
     document.getElementById('datePicker').value = zielDatum;
     document.body.style.opacity = "0.7"; 
     
-    // 2. Overlay mit Verzögerung starten
+    // Suche das Overlay DIREKT hier drin
     const overlay = document.getElementById('loadingOverlay');
+    
+    if (!overlay) {
+        console.error("Overlay nicht im DOM gefunden!");
+        return; // Stoppe hier, damit kein Fehler geworfen wird
+    }
+
     const timer = setTimeout(() => {
-        overlay.style.display = 'flex';
+        overlay.style.display = 'flex'; // Hier muss es klappen
     }, 300); 
 
-    const myRequestID = ++currentRequestID; 
+    const myRequestID = ++currentRequestID;
 
     try {
-        // Hier wird der Plan geladen. 
-        // WICHTIG: Da loadPlan nun keine eigenen Lade-Status-Elemente mehr steuert,
-        // läuft hier alles synchron über diesen try-catch-Block.
         await loadPlan(); 
-        
         if (myRequestID === currentRequestID) {
-            console.log("Aktuellsten Plan geladen.");
+            console.log("Neuester Request geladen.");
         }
     } catch (e) {
-        console.error("Fehler beim Laden:", e);
-        // Optional: Hier eine kleine Toast-Nachricht oder Alert anzeigen
+        console.error("Fehler:", e);
     } finally {
-        // 4. Aufräumen: Hier wird alles zurückgesetzt, egal was passiert ist
-        clearTimeout(timer); 
-        overlay.style.display = 'none';
+        clearTimeout(timer);
+        overlay.style.display = 'none'; // Hier verstecken
         document.body.style.opacity = "1";
     }
 }
