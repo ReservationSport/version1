@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -1010,11 +1010,11 @@ async function handleLogin() {
 
                 // --- SCHRITT 1: Hintergrund-Sync starten (NUR syncPlan) ---
                 setInterval(async () => {
-                    if (document.visibilityState === 'visible') {
-                        // Ruft jetzt die sichere "Pfleger-Funktion" auf
-                        await syncPlan(); 
-                    }
-                }, 30000); // 30 Sekunden Intervall
+    if (document.visibilityState === 'visible') {
+        await syncPlan();
+        await initNewsSystem(); // Hier wird der Badge automatisch aktualisiert
+    }
+}, 30000); // 30 Sekunden Intervall
                 
             }, 500);
         }
@@ -1646,47 +1646,50 @@ window.fuehreAbklebenAus = async function(klasse) {
    10. NEWS-ZENTRALE & AUTOMATISCHE NOTIFIKATIONEN
    ============================================================ */
 
-/**
- * GLOBALER SPEICHER & INIT
- * Lädt die News sofort beim Start im Hintergrund.
- */
 let meineRelevanteNews = []; 
 
+/**
+ * Initialisiert das News-System und lädt Daten vom Server.
+ */
 async function initNewsSystem() {
     console.log("🚀 News-System wird initialisiert...");
     const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
-    if (!aktuellerUser) {
-        console.warn("⚠️ Kein User-Kürzel gefunden, News-System pausiert.");
-        return;
-    }
+    if (!aktuellerUser) return;
 
     try {
         const zielUrl = typeof url !== 'undefined' ? url : "";
-        const pw = typeof userPw !== 'undefined' ? userPw : (typeof SECRET_PASSWORD !== 'undefined' ? SECRET_PASSWORD : "");
+        const pw = typeof userPw !== 'undefined' ? userPw : "";
         
-        const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(pw)}`);
+        // Anti-Caching durch Date.now()
+        const response = await fetch(`${zielUrl}?action=getNews&pw=${encodeURIComponent(pw)}&t=${Date.now()}`);
         const data = await response.json();
-
-        // Debug: Zeige uns, was genau vom Server kommt (Array oder Objekt?)
-        console.log("DEBUG: Rohdaten vom Server:", data);
         
-        // Flexibles Mapping: Egal ob Array oder Objekt mit {news: []}
         const allNews = data.news || (Array.isArray(data) ? data : []);
 
-        // Radikaler Filter: Nur News anzeigen, wo mein Kürzel in Spalte G steht
         meineRelevanteNews = allNews.filter(n => {
             const empfaenger = (n.empfaenger || "").toUpperCase();
             return empfaenger.split(',').map(e => e.trim()).includes(aktuellerUser);
         });
 
-        console.log("✅ Gefilterte News für die Sidebar:", meineRelevanteNews);
-
-        // Badge aktualisieren
-        const ungelesen = meineRelevanteNews.filter(n => !(n.gelesen || "").toUpperCase().includes(aktuellerUser));
-        const dot = document.getElementById('news-dot');
-        if (dot) dot.style.display = ungelesen.length > 0 ? 'block' : 'none';
+        updateNewsDot();
         
     } catch (e) { console.error("Fehler beim Init:", e); }
+}
+
+/**
+ * Aktualisiert den roten Punkt (Badge) basierend auf ungelesenen Nachrichten.
+ */
+function updateNewsDot() {
+    const aktuellerUser = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
+    const dot = document.getElementById('news-dot');
+    if (!dot) return;
+
+    const ungelesen = meineRelevanteNews.filter(n => {
+        const gelesenListe = (n.gelesen || "").toUpperCase().split(',').map(s => s.trim());
+        return !gelesenListe.includes(aktuellerUser);
+    });
+
+    dot.style.display = ungelesen.length > 0 ? 'block' : 'none';
 }
 
 window.showNews = function() {
@@ -1696,12 +1699,8 @@ window.showNews = function() {
 
     sidebar.style.display = 'block';
     setTimeout(() => sidebar.classList.add('active'), 10);
-
-    // NEU: Punkt NICHT mehr hier ausblenden, sondern erst prüfen!
     
     newsContainer.innerHTML = "";
-    
-    // Prüfen, ob überhaupt ungelesene Nachrichten da sind
     let hatUngelesene = false;
 
     meineRelevanteNews.forEach(news => {
@@ -1723,129 +1722,62 @@ window.showNews = function() {
         newsContainer.appendChild(card);
     });
 
-    // Erst HIER den Punkt ausblenden, wenn wirklich alle gelesen sind
-    const dot = document.getElementById('news-dot');
-    if (dot) {
-        dot.style.display = hatUngelesene ? 'block' : 'none';
-    }
+    updateNewsDot();
 };
 
-
-
-window.refreshAndShowNews = function() {
-    // 1. Sidebar sofort öffnen (mit existierenden Daten aus der Variable)
-    showNews(); 
-    
-    // 2. Im Hintergrund den Server fragen, ob es NEUE Nachrichten gibt
-    // Wir nutzen hier 'await' NICHT, damit der Rest des Browsers nicht blockiert wird
-    fetch(`${url}?action=getNews&pw=${encodeURIComponent(userPw)}&t=${Date.now()}`)
-        .then(response => response.json())
-        .then(data => {
-            // Falls data ein Objekt mit .news ist, sonst direkt das Array
-            const allNews = data.news || (Array.isArray(data) ? data : []);
-            
-            // Filter anwenden
-            const aktuellerUser = userKuerzel.toUpperCase().trim();
-            meineRelevanteNews = allNews.filter(n => {
-                const empfaenger = (n.empfaenger || "").toUpperCase();
-                return empfaenger.split(',').map(e => e.trim()).includes(aktuellerUser);
-            });
-            
-            // 3. Wenn neue Daten geladen wurden, Liste kurz aktualisieren
-            // Wir prüfen, ob die Sidebar noch offen ist, bevor wir neu zeichnen
-            if(document.getElementById('newsSidebar').classList.contains('active')) {
-                showNews();
-            }
-        })
-        .catch(e => console.error("Hintergrund-Update fehlgeschlagen:", e));
+window.refreshAndShowNews = async function() {
+    await initNewsSystem(); // Aktualisiert Daten vom Server
+    showNews();             // Zeichnet Sidebar neu
 };
-    
-    
 
 /**
- * Markiert News als gelesen, springt zum Datum und zum Slot.
+ * Markiert News als gelesen im Backend und springt zum Plan.
  */
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // 1. Visuelle sofort-Reaktion (UI bleibt direkt im Sidebar-Element)
+    // UI Update
     const clickedCard = event.currentTarget;
     clickedCard.style.opacity = "0.4";
-    clickedCard.style.filter = "grayscale(1)";
     clickedCard.style.pointerEvents = "none";
-    clickedCard.querySelector('.news-header span').innerText = '⚪ Gelesen';
+    clickedCard.querySelector('.status-icon').innerText = '⚪ Gelesen';
 
-    // 2. Server informieren
-    fetch(url, {
+    // Server-Update
+    await fetch(url, {
         method: "POST",
         body: JSON.stringify({ action: "markAsRead", id: news.id, user: user, pw: userPw })
     });
 
-    // 3. Zentrale schließen
     window.closeNews();
 
-    // 4. Navigation & Warten auf DOM-Update
     if (news.datum) {
         document.getElementById('datePicker').value = news.datum;
-        await loadPlan(); // Hier wird der Plan komplett neu aufgebaut
+        await loadPlan(); 
     }
 
-    // 5. Scrollen & Blinken mit absolutem Timing
-    // Wir warten kurz, bis das neue DOM "gerendert" wurde
     setTimeout(() => {
         const box = document.querySelector(`[data-slot="${news.slot}"]`); 
         if (box) {
-            // Erst scrollen, dann blinken
             box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            setTimeout(() => {
-                box.classList.add('blink-animation');
-            }, 300); // Kleine Verzögerung, damit das Scrollen nicht das Blinken unterbricht
-            
-            // Blink-Animation entfernen nach 4 Sekunden
+            setTimeout(() => box.classList.add('blink-animation'), 300);
             setTimeout(() => box.classList.remove('blink-animation'), 4300);
         }
-    }, 300); // 300ms warten, damit loadPlan garantiert fertig ist
+    }, 300);
 }
 
-
-    
- window.closeNews = () => {
+window.closeNews = () => {
     const sidebar = document.getElementById('newsSidebar');
     sidebar.classList.remove('active');
     setTimeout(() => sidebar.style.display = 'none', 300);
 };
 
-
-
-/**
- * Zentrale Logik für News-Meldungen.
- * @param {string} aktion - "Ausfall", "Outdoor", "Beendet", etc.
- * @param {string|number} slot - Der Slot-Index.
- * @param {string} klasse - Die betroffene Klasse.
- */
 window.triggerNewsWrapper = async function(aktion, slot, klasse) {
-    if (typeof triggerNews !== "function") {
-        console.warn("⚠️ triggerNews ist nicht definiert.");
-        return;
-    }
-
+    if (typeof triggerNews !== "function") return;
     try {
-        console.log(`📢 [MELDUNG] Typ: ${aktion} für Klasse: ${klasse} in Slot: ${slot}`);
-        
-        // Mapping von deiner Logik auf den benötigten Typ für triggerNews
-        let newsTyp = "";
-        if (aktion === "Ausfall") newsTyp = ""; 
-        else if (aktion.includes("Outdoor")) newsTyp = "outdoor";
-        else if (aktion.toLowerCase() === "beendet") newsTyp = "beendet";
-
+        let newsTyp = aktion.toLowerCase().includes("outdoor") ? "outdoor" : (aktion.toLowerCase() === "beendet" ? "beendet" : "");
         await triggerNews(newsTyp, parseInt(slot), klasse);
-        console.log("✅ News erfolgreich versendet.");
-    } catch (error) {
-        console.error("⚠️ Fehler im News-Ablauf:", error);
-    }
+    } catch (error) { console.error("Fehler im News-Ablauf:", error); }
 };
-    
     
 
 /* ============================================================
