@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -994,6 +994,7 @@ async function handleLogin() {
     const btn = document.getElementById('loginBtn');
     const ball = document.getElementById('loginBall');
     const errorDiv = document.getElementById('loginError');
+    const dp = document.getElementById('datePicker'); // Zugriff auf Picker für das Datum
     
     const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
     const pwVal = document.getElementById('pw').value;
@@ -1034,16 +1035,17 @@ async function handleLogin() {
                 // News sofort laden
                 await initNewsSystem();
                 
-                // Erster Aufbau des Plans
-                await loadPlan();
+                // --- ANGEPASST: Erster Aufbau des Plans über den Wrapper ---
+                // Holt das aktuelle Datum aus dem Picker und lädt mit Overlay
+                await changeDayAndLoad(dp.value);
 
-                // --- SCHRITT 1: Hintergrund-Sync starten (NUR syncPlan) ---
+                // --- Hintergrund-Sync starten ---
                 setInterval(async () => {
-    if (document.visibilityState === 'visible') {
-        await syncPlan();
-        await initNewsSystem(); // Hier wird der Badge automatisch aktualisiert
-    }
-}, 30000); // 30 Sekunden Intervall
+                    if (document.visibilityState === 'visible') {
+                        await syncPlan();
+                        await initNewsSystem(); 
+                    }
+                }, 30000); // 30 Sekunden Intervall
                 
             }, 500);
         }
