@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -241,7 +241,7 @@ body {
 }
 
 /* ============================================================
-   5. LOGIN-OVERLAY & CARD-DESIGN (DEIN ORIGINAL)
+   5. LOGIN-OVERLAY & CARD-DESIGN
    ============================================================ */
 #loginOverlay { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -282,23 +282,30 @@ body {
 }
 
 /* ============================================================
-   6. LOGIN-BUTTON MIT BLITZ-EFFEKT
+   6. LOGIN-BUTTON-CONTAINER (Fixiert für Ruckelfreiheit)
    ============================================================ */
+.button-wrapper {
+    height: 85px; /* Fester Platzhalter, verhindert Layout-Sprung */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-top: 25px;
+}
+
 #loginBtn { 
-    padding: 18px; margin-top: 25px; 
+    padding: 18px; 
     background: linear-gradient(180deg, #ff9f43 0%, #e67e22 100%); 
     color: white; border: none; border-radius: 16px; cursor: pointer; width: 100%; 
     font-family: 'Oswald', sans-serif; font-size: 20px; font-weight: 700; 
     text-transform: uppercase; letter-spacing: 1.5px;
     box-shadow: 0 10px 20px -5px rgba(230, 126, 34, 0.5);
     transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-    position: relative; overflow: hidden; z-index: 1;
+    position: absolute; /* Überlagert den Platzhalter */
+    z-index: 1;
 }
 
 #loginBtn:hover { transform: translateY(-3px); filter: brightness(1.1); }
-
-/* Verstecken wenn aktiv geladen wird */
-#loginBtn.loading { display: none !important; }
 
 /* Dynamischer Blitz */
 #loginBtn::after {
@@ -308,31 +315,31 @@ body {
 }
 #loginBtn:hover::after { left: 150%; }
 
-/* ============================================================
-   7. HÜPFENDER BASKETBALL (LOADER-EDITION)
-   ============================================================ */
-#loginBall {
-    display: none; /* Erst beim Klick sichtbar */
-    margin-top: 30px;
-    font-size: 50px; /* Schön groß */
-    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+/* Zustand wenn geladen wird: Button unsichtbar, behält aber Platz */
+#loginBtn.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.9);
 }
 
-/* Wird von handleLogin() hinzugefügt */
+/* ============================================================
+   7. HÜPFENDER BASKETBALL
+   ============================================================ */
+#loginBall {
+    display: none; 
+    font-size: 50px;
+    filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+    position: absolute; /* Gleiche Position wie Button */
+}
+
 #loginBall.active {
-    display: inline-block !important;
+    display: block !important;
     animation: bounceAndGrow 0.8s infinite alternate ease-in-out;
 }
 
 @keyframes bounceAndGrow {
-    0% { 
-        transform: translateY(0) scale(1); 
-        animation-timing-function: ease-out;
-    }
-    100% { 
-        transform: translateY(-45px) scale(1.5); /* Springt hoch und wird massiv größer */
-        animation-timing-function: ease-in;
-    }
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-20px) scale(1.2); }
 }
 
 /* Fehlertext Styling */
@@ -879,21 +886,27 @@ body {
     
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
-    <div id="loginOverlay">
-        <div class="login-card">
-            <h2>BBZO <span>Sport</span></h2>
-            <input type="text" id="userKuerzel" placeholder="Kürzel" autocomplete="username"
-                   onfocus="document.getElementById('loginError').innerText=''"
-                   oninput="document.getElementById('loginError').innerText=''">
-            <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"
-                   onfocus="document.getElementById('loginError').innerText=''"
-                   oninput="document.getElementById('loginError').innerText=''"
-                   onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleLogin(); }">
+   <div id="loginOverlay">
+    <div class="login-card">
+        <h2>BBZO <span>Sport</span></h2>
+        
+        <input type="text" id="userKuerzel" placeholder="Kürzel" autocomplete="username"
+               onfocus="document.getElementById('loginError').innerText=''"
+               oninput="document.getElementById('loginError').innerText=''">
+        
+        <input type="password" id="pw" placeholder="Passwort" autocomplete="current-password"
+               onfocus="document.getElementById('loginError').innerText=''"
+               oninput="document.getElementById('loginError').innerText=''"
+               onkeydown="if(event.key === 'Enter') { event.preventDefault(); handleLogin(); }">
+        
+        <div class="button-wrapper">
             <button id="loginBtn" onclick="handleLogin()">ON YOUR MARKS...</button>
-            <div id="loginBall" class="basketball-bounce">🏀</div>
-            <p id="loginError"></p>
+            <div id="loginBall">🏀</div>
         </div>
+        
+        <p id="loginError"></p>
     </div>
+</div>
 
     <div class="date-control">
         <div class="nav-section nav-left">
