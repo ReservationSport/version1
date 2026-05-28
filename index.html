@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -453,6 +453,10 @@ body {
    9. EIGENES KONTEXT-MENÜ (MATERIAL SYMBOLS OPTIMIZED)
    ============================================================ */
 
+/* ============================================================
+   9. EIGENES KONTEXT-MENÜ (FINALER CLEAN LOOK)
+   ============================================================ */
+
 .eigenesmenu-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -483,9 +487,21 @@ body {
 }
 
 .eigenesmenu-header {
+    position: relative; /* Wichtig für die Positionierung des Wasserzeichen-Icons */
     padding: 20px;
     background: #1a1a1a;
     border-bottom: 1px solid #333;
+}
+
+/* Das große Wasserzeichen-Icon oben rechts */
+.header-icon {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 40px !important;
+    color: #e67e22 !important;
+    opacity: 0.2; /* Sehr dezent als Hintergrund */
+    pointer-events: none;
 }
 
 .eigenesmenu-header h3 {
@@ -511,7 +527,7 @@ body {
     gap: 10px;
 }
 
-/* --- OPTIMIERTER BUTTON MIT MATERIAL ICONS --- */
+/* --- BUTTONS --- */
 .eigenesmenu-item {
     position: relative;
     width: 100%;
@@ -545,7 +561,7 @@ body {
     transition: color 0.3s ease;
 }
 
-/* --- INLINE LOADER --- */
+/* --- LOADER --- */
 .eigenesmenu-loader {
     position: absolute;
     right: 18px;
@@ -585,7 +601,6 @@ body {
     border-color: #2d6a4f !important;
     color: #fff !important;
 }
-
 
     
 /* 10. MATERIAL-VISUALS & TOOLTIPS */
@@ -1932,11 +1947,14 @@ window.openEditor = function(el, time, slot, klasse) {
 backdrop.innerHTML = `
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
-                <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
-                    Wähle eine Aktion für die Klasse <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
-                </p>
-            </div>
+    <!-- Das neue große Icon oben rechts -->
+    <span class="material-symbols-outlined header-icon">settings</span>
+    
+    <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
+    <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
+        Wähle eine Aktion für die Klasse <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
+    </p>
+</div>
             
             <div class="eigenesmenu-liste" id="menu-options-list">
                 
@@ -1961,7 +1979,7 @@ backdrop.innerHTML = `
                 </button>
 
                 <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', '${absoluteSlot}', '${klasse}')">
-                    <span class="material-symbols-outlined">sports-score</span>
+                    <span class="material-symbols-outlined">sports_score</span>
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
                 
