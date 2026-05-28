@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO124</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -241,7 +241,7 @@ body {
 }
 
 /* ============================================================
-   5. LOGIN-OVERLAY & CARD-DESIGN (GLOBAL COLLAPSE)
+   5. LOGIN-OVERLAY, CARD-DESIGN & COLLAPSE-ANIMATION
    ============================================================ */
 #loginOverlay { 
     position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
@@ -262,12 +262,10 @@ body {
     overflow: hidden;
 }
 
-/* Die Karte schrumpft in sich zusammen */
 .login-card.is-collapsing {
     transform: scale(0.5); opacity: 0; pointer-events: none; padding: 0; margin: 0;
 }
 
-/* H2 & Input Styling */
 .login-card h2 { 
     color: #ffffff; font-size: 30px; margin-bottom: 35px; font-weight: 800; 
     letter-spacing: -1.5px; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
@@ -282,11 +280,7 @@ body {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Die Kollaps-Animation für alle Kind-Elemente */
-.is-collapsing h2, 
-.is-collapsing h2 span,
-.is-collapsing input, 
-.is-collapsing #loginError {
+.is-collapsing h2, .is-collapsing h2 span, .is-collapsing input, .is-collapsing #loginError {
     height: 0; margin: 0; padding: 0; opacity: 0; overflow: hidden;
 }
 
@@ -322,13 +316,40 @@ body {
     min-height: 20px; font-weight: 600; transition: all 0.3s ease;
 }
 
-#loadingOverlay {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.95); z-index: 999999;
-    display: none; justify-content: center; align-items: center;
+/* ============================================================
+   7. PERSISTENTER STATUS-LOADER (ZENTRAL)
+   ============================================================ */
+.status-loader {
+    display: none; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center;
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.95); 
+    z-index: 999999;
 }
-#loadingOverlay.is-visible { display: flex; }
+.status-loader.is-visible { display: flex; }
 
+.status-loader .spinner {
+    width: 60px; height: 60px; 
+    border: 4px solid rgba(230, 126, 34, 0.2);
+    border-top: 4px solid #e67e22; 
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+#statusText { 
+    color: white; 
+    margin-top: 25px; 
+    font-family: 'Oswald', sans-serif; 
+    font-size: 20px; 
+    letter-spacing: 2px;
+    transition: opacity 0.4s ease; 
+}
+
+    
 
 /* ============================================================
    6. SIDEBAR & 8. NEWS-SIDEBAR (Von Links)
@@ -857,12 +878,12 @@ body {
 
 <body>
 
-    <div id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>Stundenplan wird geladen...</p>
-    </div>
-    
-    <div id="global-loader" class="global-loader" style="display:none;"></div>
+    <div id="statusLoader" class="status-loader">
+    <div class="spinner"></div>
+    <p id="statusText">WELCOME</p>
+</div>
+
+<div id="global-loader" class="global-loader" style="display:none;"></div>
 
 <div id="loginOverlay">
     <div class="login-card">
@@ -885,6 +906,7 @@ body {
     </div>
 </div>
 
+    
     <div class="date-control">
         <div class="nav-section nav-left">
             <div id="news-btn-container" style="display: none;">
@@ -982,27 +1004,23 @@ body {
     });
 
 
-/* ============================================================
-   3. LOGIN-LOGIK (Globaler Kollaps & Button-Morphing)
-   ============================================================ */
-
 async function handleLogin() {
     const card = document.querySelector('.login-card');
     const btn = document.getElementById('loginBtn');
     const errorDiv = document.getElementById('loginError');
-    const dp = document.getElementById('datePicker');
+    const statusLoader = document.getElementById('statusLoader');
+    const statusText = document.getElementById('statusText');
     const loginOverlay = document.getElementById('loginOverlay');
-    const loadingOverlay = document.getElementById('loadingOverlay');
+    const dp = document.getElementById('datePicker');
     
     const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
     const pwVal = document.getElementById('pw').value;
 
     if (!kuerzelVal) { 
-        errorDiv.innerText = "Kürzel fehlt!"; 
-        return; 
+        errorDiv.innerText = "Kürzel fehlt!"; return; 
     }
 
-    // 1. Animation starten: Karte schrumpft, Button morpht
+    // 1. Start der Animationen
     card.classList.add('is-collapsing');
     btn.classList.add('is-loading');
     errorDiv.innerText = "";
@@ -1012,44 +1030,43 @@ async function handleLogin() {
         const json = await response.json();
 
         if (json.error) {
-            // Fehler: Alles flüssig zurücksetzen
             errorDiv.innerText = json.error === "Falsches Passwort" ? "Passwort inkorrekt!" : "Fehler: " + json.error;
-            
-            await new Promise(r => setTimeout(r, 100)); // Kurze Verzögerung für Übergang
+            await new Promise(r => setTimeout(r, 100));
             card.classList.remove('is-collapsing');
             btn.classList.remove('is-loading');
         } else {
             userPw = pwVal;
             userKuerzel = kuerzelVal;
             
-            // 2. Loading-Overlay einblenden (kurz warten für Animationseffekt)
-            await new Promise(r => setTimeout(r, 400));
-            loadingOverlay.classList.add('is-visible');
+            // 2. Status-Loader zeigen (Welcome-Phase)
+            statusLoader.classList.add('is-visible');
+            statusText.innerText = "WELCOME";
             
-            // 3. Login-Karte komplett ausblenden
+            // Login-Karte ausblenden
+            await new Promise(r => setTimeout(r, 400));
             loginOverlay.style.display = 'none';
             
-            // 4. UI-Elemente vorbereiten
+            // 3. Übergang: Text zu "Stundenplan wird geladen..."
+            statusText.style.opacity = '0';
+            await new Promise(r => setTimeout(r, 400));
+            statusText.innerText = "STUNDENPLAN WIRD GELADEN...";
+            statusText.style.opacity = '1';
+            
+            // 4. Daten laden
             const newsContainer = document.getElementById('news-btn-container');
             if(newsContainer) newsContainer.style.display = 'block';
             
             await initNewsSystem();
             await changeDayAndLoad(dp.value);
 
-            // 5. Hintergrund-Sync
-            setInterval(async () => {
-                if (document.visibilityState === 'visible') {
-                    await syncPlan();
-                    await initNewsSystem(); 
-                }
-            }, 30000); 
+            // Fertig: Loader entfernen
+            statusLoader.classList.remove('is-visible');
         }
     } catch (e) {
         errorDiv.innerText = "Verbindung fehlgeschlagen.";
-        
-        // Fehlerfall: Alles zurücksetzen
         card.classList.remove('is-collapsing');
         btn.classList.remove('is-loading');
+        statusLoader.classList.remove('is-visible');
         console.error("Login Error:", e);
     }
 }
