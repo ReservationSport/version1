@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -998,7 +998,7 @@ body {
 
 
 /* ============================================================
-   3. LOGIN-LOGIK (Optimiert mit Button-Morphing)
+   3. LOGIN-LOGIK (Sicherer Übergang & Zutrittskontrolle)
    ============================================================ */
 
 async function handleLogin() {
@@ -1006,7 +1006,8 @@ async function handleLogin() {
     const errorDiv = document.getElementById('loginError');
     const dp = document.getElementById('datePicker');
     const loginOverlay = document.getElementById('loginOverlay');
-    const loadingOverlay = document.getElementById('loadingOverlay');
+    const statusLoader = document.getElementById('statusLoader'); // Dein Status-Loader
+    const statusText = document.getElementById('statusText');
     
     const kuerzelVal = document.getElementById('userKuerzel').value.trim().toLowerCase();
     const pwVal = document.getElementById('pw').value;
@@ -1024,46 +1025,52 @@ async function handleLogin() {
         const response = await fetch(`${url}?mode=login&pw=${encodeURIComponent(pwVal)}&kuerzel=${encodeURIComponent(kuerzelVal)}`);
         const json = await response.json();
 
+        // SICHERHEITSPRÜFUNG: Wenn Fehler, hier hart abbrechen!
         if (json.error) {
             errorDiv.innerText = json.error === "Falsches Passwort" ? "Passwort inkorrekt!" : "Fehler: " + json.error;
-            
-            // Button zurücksetzen
             btn.classList.remove('is-loading');
-        } else {
-            userPw = pwVal;
-            userKuerzel = kuerzelVal;
-            
-            // 2. Overlay zeigen
-            loadingOverlay.classList.add('is-visible');
-            
-            // 3. Login-Karte ausblenden
-            loginOverlay.classList.add('fade-out');
-            
-            await new Promise(resolve => setTimeout(resolve, 500)); // Kurze Wartezeit für saubere Übergänge
-            loginOverlay.style.display = 'none';
-            
-            // 4. UI-Elemente vorbereiten
-            const newsContainer = document.getElementById('news-btn-container');
-            if(newsContainer) newsContainer.style.display = 'block';
-            
-            await initNewsSystem();
-            await changeDayAndLoad(dp.value);
-
-            // 5. Hintergrund-Sync
-            setInterval(async () => {
-                if (document.visibilityState === 'visible') {
-                    await syncPlan();
-                    await initNewsSystem(); 
-                }
-            }, 30000); 
+            return; // <-- WICHTIG: Stoppt die Funktion, kein weiterer Code wird ausgeführt!
         }
-    } catch (e) {
-        errorDiv.innerText = "Verbindung fehlgeschlagen.";
+
+        // ZUTRITT GEWÄHRT (Erfolgs-Logik):
+        userPw = pwVal;
+        userKuerzel = kuerzelVal;
         
-        // Fehlerfall: Alles zurücksetzen
+        // 2. Status-Loader zeigen (Welcome-Phase)
+        statusLoader.classList.add('is-visible');
+        statusText.innerText = "WELCOME";
+        
+        // 3. Login-Karte ausblenden
+        loginOverlay.style.display = 'none';
+        
+        // 4. Übergang zum Laden (Text-Update)
+        await new Promise(r => setTimeout(r, 600)); 
+        statusText.innerText = "STUNDENPLAN WIRD GELADEN...";
+        
+        // 5. UI-Elemente vorbereiten
+        const newsContainer = document.getElementById('news-btn-container');
+        if(newsContainer) newsContainer.style.display = 'block';
+        
+        // 6. Daten laden
+        await initNewsSystem();
+        await changeDayAndLoad(dp.value);
+
+        // Fertig: Loader entfernen
+        statusLoader.classList.remove('is-visible');
+
+        // 7. Hintergrund-Sync
+        setInterval(async () => {
+            if (document.visibilityState === 'visible') {
+                await syncPlan();
+                await initNewsSystem(); 
+            }
+        }, 30000); 
+
+    } catch (e) {
+        // Verbindungsfehler
+        errorDiv.innerText = "Verbindung fehlgeschlagen.";
         btn.classList.remove('is-loading');
-        loadingOverlay.classList.remove('is-visible');
-        loginOverlay.classList.remove('fade-out');
+        statusLoader.classList.remove('is-visible');
         console.error("Login Error:", e);
     }
 }
