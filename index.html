@@ -1955,10 +1955,10 @@ window.triggerNewsWrapper = async function(aktion, slot, klasse) {
 
     
 /* ============================================================
-   12. ÖFFNEN DES TASKMANAGERS (Korrekt & Sauber)
+   12. ÖFFNEN DES TASKMANAGERS (Dynamischer Header)
    ============================================================ */
 window.openEditor = function(el, time, slot, klasse) {
-    closeEditor(); // Schließt existierende Menüs
+    closeEditor();
 
     const absoluteSlot = el.getAttribute('data-slot') || slot;
     window.currentEditSlot = absoluteSlot;
@@ -1982,28 +1982,28 @@ window.openEditor = function(el, time, slot, klasse) {
             <div class="eigenesmenu-header">
                 <span class="material-symbols-outlined header-icon" id="dynamic-header-icon">settings</span>
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
+                <p class="eigenesmenu-subtitle" id="dynamic-header-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
                     Wähle eine Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
                 </p>
             </div>
             <div class="eigenesmenu-liste" id="menu-options-list">
-                <button class="eigenesmenu-item" onclick="updateHeaderIcon('room_preferences'); handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeader('room_preferences', 'Aktion: Halle für <span style=\'color: #ff8c00; font-weight: bold;\'>${klasse}</span>'); handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">room_preferences</span>
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
                 </button>
-                <button class="eigenesmenu-item" onclick="updateHeaderIcon('trolley'); handleMenuChoice('material', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeader('trolley', 'Aktion: Material für <span style=\'color: #ff8c00; font-weight: bold;\'>${klasse}</span>'); handleMenuChoice('material', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">trolley</span>
                     <span class="btn-text">${hatMaterial ? 'MATERIAL ÄNDERN' : 'MATERIAL BUCHEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" onclick="updateHeaderIcon('${isAusfall ? 'settings_backup_restore' : 'block'}'); handleMenuChoice('ausfall', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeader('${isAusfall ? 'settings_backup_restore' : 'block'}', 'Aktion: Ausfall für <span style=\'color: #ff8c00; font-weight: bold;\'>${klasse}</span>'); handleMenuChoice('ausfall', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
                     <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" onclick="updateHeaderIcon('stylus_note'); handleMenuChoice('nachricht', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeader('stylus_note', 'Aktion: Notiz für <span style=\'color: #ff8c00; font-weight: bold;\'>${klasse}</span>'); handleMenuChoice('nachricht', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">stylus_note</span>
                     <span class="btn-text">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" onclick="updateHeaderIcon('sports_score'); handleMenuChoice('beendet', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeader('sports_score', 'Aktion: Abschluss für <span style=\'color: #ff8c00; font-weight: bold;\'>${klasse}</span>'); handleMenuChoice('beendet', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">sports_score</span>
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
@@ -2013,8 +2013,6 @@ window.openEditor = function(el, time, slot, klasse) {
     `;
 
     document.body.appendChild(backdrop);
-    
-    // Animation starten
     requestAnimationFrame(() => {
         backdrop.style.opacity = "1";
         const container = backdrop.querySelector('.eigenesmenu-container');
@@ -2022,15 +2020,17 @@ window.openEditor = function(el, time, slot, klasse) {
     });
 };
 
-// Hilfsfunktion zum dynamischen Ändern des Icons
-window.updateHeaderIcon = function(iconName) {
+// Aktualisiert beides: Icon und Text
+window.updateHeader = function(iconName, subtitleText) {
     const iconEl = document.getElementById('dynamic-header-icon');
-    if (iconEl) {
-        iconEl.innerText = iconName;
-    }
+    const subEl = document.getElementById('dynamic-header-subtitle');
+    if (iconEl) iconEl.innerText = iconName;
+    if (subEl) subEl.innerHTML = subtitleText;
 };
 
 
+
+    
 /* ==========================================================================
    MATERIAL-LOGIK: EINHEITLICH & SAUBER (ZENTRALE STEUERUNG)
    ========================================================================== */
