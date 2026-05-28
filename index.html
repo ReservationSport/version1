@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -79,7 +79,6 @@ body {
 .nav-left { flex: 1; justify-content: flex-start; }
 .nav-center { flex: 2; justify-content: center; gap: 8px; }
 .nav-right { flex: 1; justify-content: flex-end; }
-
 .nav-group { display: flex; gap: 5px; }
 
 /* Buttons & Picker - Clean & Uniform */
@@ -87,7 +86,7 @@ body {
     height: 40px; 
     background: #262626; 
     border: 1px solid #333; 
-    color: #eee; 
+    color: #e67e22; /* Text/Datum in Orange */
     border-radius: 8px; 
     box-sizing: border-box;
     display: flex;
@@ -99,12 +98,13 @@ body {
 .nav-btn { width: 40px; cursor: pointer; }
 .nav-btn:hover { background: #2d2d2d; border-color: #e67e22; }
 
-/* Material Symbols Styling in Navigation */
+/* Zentrierung der Icons und Entfernung des globalen Margins */
 .nav-btn .material-symbols-outlined, 
 .refresh-btn .material-symbols-outlined,
 .news-btn-premium .material-symbols-outlined {
     font-size: 22px;
     color: #e67e22;
+    margin-right: 0 !important; /* WICHTIG: Erzwingt Zentrierung */
     transition: color 0.2s;
 }
 
@@ -114,6 +114,13 @@ body {
     cursor: pointer; 
     font-family: inherit; 
     font-size: 14px;
+    appearance: none; /* Entfernt Standard-Browser-Design */
+}
+
+/* Kalender-Icon im DatePicker orange färben */
+#datePicker::-webkit-calendar-picker-indicator {
+    filter: invert(60%) sepia(80%) saturate(1500%) hue-rotate(5deg) brightness(100%) contrast(90%);
+    cursor: pointer;
 }
 
 /* Refresh Button */
@@ -129,6 +136,18 @@ body {
     border: 1px solid #333;
     border-radius: 8px;
     padding: 6px 15px;
+    cursor: pointer;
+    height: 40px;
+    transition: all 0.2s;
+}
+.news-btn-premium:hover { background: #2d2d2d; border-color: #e67e22; }
+.news-btn-premium .btn-text {
+    color: #eee; font-size: 13px; letter-spacing: 1px; margin-right: 8px; font-weight: 400;
+}
+.news-btn-premium .badge {
+    position: absolute; top: -3px; right: -3px; width: 9px; height: 9px;
+    background: #e67e22; border-radius: 50%; border: 2px solid #1a1a1a;
+    box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
 }
 
     
