@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -997,6 +997,11 @@ body {
     });
 
 
+
+/* ============================================================
+   3. LOGIN-LOGIK (Optimiert & Sicher)
+   ============================================================ */
+
 async function handleLogin() {
     const btn = document.getElementById('loginBtn');
     const errorDiv = document.getElementById('loginError');
@@ -1012,6 +1017,7 @@ async function handleLogin() {
         return; 
     }
 
+    // 1. Button morpht zum Spinner
     btn.classList.add('is-loading');
     errorDiv.innerText = "";
 
@@ -1019,13 +1025,10 @@ async function handleLogin() {
         const response = await fetch(`${url}?mode=login&pw=${encodeURIComponent(pwVal)}&kuerzel=${encodeURIComponent(kuerzelVal)}`);
         const json = await response.json();
 
-        // --- DEBUG: LÖSUNG GEGEN DAS DURCHKOMMEN ---
-        console.log("Server-Antwort:", json); 
-        
-        // WICHTIG: Prüfe hier, was dein Server wirklich bei Fehlern sendet.
-        // Falls json.error nicht existiert, nutze z.B. json.success === false
-        if (json.error || json.success === false || (json.status && json.status !== 'ok')) {
-            errorDiv.innerText = json.error || "Login fehlgeschlagen!";
+        // SICHERHEITSPRÜFUNG: Basierend auf deiner Server-Antwort
+        // Wir prüfen, ob status NICHT "success" ist.
+        if (json.status !== "success") {
+            errorDiv.innerText = json.msg || "Login fehlgeschlagen!";
             btn.classList.remove('is-loading');
             return; // HIER WIRD JEDER ZUGRIFF GESTOPPT
         }
@@ -1034,20 +1037,25 @@ async function handleLogin() {
         userPw = pwVal;
         userKuerzel = kuerzelVal;
         
+        // 2. Overlay zeigen
         loadingOverlay.classList.add('is-visible');
-        loginOverlay.classList.add('fade-out');
         
+        // 3. Login-Karte ausblenden
+        loginOverlay.classList.add('fade-out');
         await new Promise(resolve => setTimeout(resolve, 500));
         loginOverlay.style.display = 'none';
         
+        // 4. UI-Elemente vorbereiten
         const newsContainer = document.getElementById('news-btn-container');
         if(newsContainer) newsContainer.style.display = 'block';
         
         await initNewsSystem();
         await changeDayAndLoad(dp.value);
 
+        // Fertig: Loading-Overlay entfernen
         loadingOverlay.classList.remove('is-visible');
 
+        // 5. Hintergrund-Sync
         setInterval(async () => {
             if (document.visibilityState === 'visible') {
                 await syncPlan();
@@ -1058,6 +1066,8 @@ async function handleLogin() {
     } catch (e) {
         errorDiv.innerText = "Verbindung fehlgeschlagen.";
         btn.classList.remove('is-loading');
+        
+        // Sicherstellen, dass das Overlay bei Fehler nicht hängen bleibt
         loadingOverlay.classList.remove('is-visible');
         loginOverlay.classList.remove('fade-out');
         loginOverlay.style.display = 'flex';
