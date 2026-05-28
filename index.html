@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1952,13 +1952,6 @@ window.triggerNewsWrapper = async function(aktion, slot, klasse) {
 };
     
 
-/* ============================================================
-   12. ÖFFNEN DES TASKMANAGERS
-   ============================================================ */
-
-/**
- * Öffnet das Aktions-Menü für einen spezifischen Slot
- */
 window.openEditor = function(el, time, slot, klasse) {
     closeEditor();
 
@@ -1970,60 +1963,72 @@ window.openEditor = function(el, time, slot, klasse) {
     const halleLabel = el.querySelector('.halle-label')?.innerText.trim() || "";
     const hatReservierung = !isAusfall && halleLabel !== "";
 
-    // 🔥 NEU: Material- & Notiz-Status direkt aus dem zentralen Datenspeicher (window.lastPlanData) ermitteln
     const slotData = (window.lastPlanData && window.lastPlanData[absoluteSlot]) || {};
     const hatMaterial = slotData.material && slotData.material.trim() !== "";
-    const hatNotiz = slotData.kommentar && slotData.kommentar.trim() !== ""; // Prüft, ob bereits Text da ist
+    const hatNotiz = slotData.kommentar && slotData.kommentar.trim() !== "";
 
     const backdrop = document.createElement('div');
     backdrop.className = 'eigenesmenu-backdrop';
     backdrop.id = 'eigenesmenu-modal';
     backdrop.onclick = closeEditor;
 
-backdrop.innerHTML = `
+    // Wir setzen standardmäßig 'settings' als Header-Icon
+    const headerIcon = 'settings';
+
+    backdrop.innerHTML = `
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
-    <!-- Das neue große Icon oben rechts -->
-    <span class="material-symbols-outlined header-icon">settings</span>
-    
-    <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
-    <p class="eigenesmenu-subtitle" id="menu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
-        Wähle eine Aktion für die Klasse <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
-    </p>
-</div>
+                <span class="material-symbols-outlined header-icon" id="dynamic-header-icon">${headerIcon}</span>
+                
+                <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
+                <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
+                    Wähle eine Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
+                </p>
+            </div>
             
             <div class="eigenesmenu-liste" id="menu-options-list">
-                
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeaderIcon('room_preferences'); handleMenuChoice('reservation', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">room_preferences</span>
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('material', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeaderIcon('trolley'); handleMenuChoice('material', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">trolley</span>
                     <span class="btn-text">${hatMaterial ? 'MATERIAL ÄNDERN' : 'MATERIAL BUCHEN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('ausfall', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeaderIcon('${isAusfall ? 'settings_backup_restore' : 'block'}'); handleMenuChoice('ausfall', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
                     <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('nachricht', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeaderIcon('stylus_note'); handleMenuChoice('nachricht', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">stylus_note</span>
                     <span class="btn-text">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
                 </button>
 
-                <button class="eigenesmenu-item" onclick="handleMenuChoice('beendet', '${time}', '${absoluteSlot}', '${klasse}')">
+                <button class="eigenesmenu-item" onclick="updateHeaderIcon('sports_score'); handleMenuChoice('beendet', '${time}', '${absoluteSlot}', '${klasse}')">
                     <span class="material-symbols-outlined">sports_score</span>
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
-                
             </div>
 
             <button class="eigenesmenu-cancel" onclick="closeEditor()">Abbrechen</button>
         </div>
     `;
+
+    document.body.appendChild(backdrop);
+    setTimeout(() => backdrop.style.opacity = '1', 10);
+};
+
+// Hilfsfunktion, um das Icon oben rechts beim Klicken auf eine Option zu ändern
+window.updateHeaderIcon = function(iconName) {
+    const iconEl = document.getElementById('dynamic-header-icon');
+    if (iconEl) {
+        iconEl.innerText = iconName;
+    }
+};
+    
 
     document.body.appendChild(backdrop);
     
