@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1224,29 +1224,30 @@ function getDataBySlotIndex(index) {
    5. DATUMSSTEUERUNG, NAVIGATION & INITIALISIERUNG
    ============================================================ */
 
-/**
- * Ändert das Datum im Picker, aktualisiert den Anzeige-Button und lädt den Plan neu
- */
+/* ============================================================
+   ROBUSTE DATUMS-LOGIK
+   ============================================================ */
+
 window.changeDate = (days) => {
     const dp = document.getElementById('datePicker');
-    const [year, month, day] = dp.value.split('-').map(Number);
-    let d = new Date(year, month - 1, day);
-    d.setDate(d.getDate() + days);
+    // Wir arbeiten mit ISO-Strings (YYYY-MM-DD), das ist am sichersten
+    let d = new Date(dp.value + 'T00:00:00'); 
+    
+    // Berechnung der Tage
+    d.setUTCDate(d.getUTCDate() + days);
     
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
     if (d < heute) d = heute;
 
     const newDateStr = d.toISOString().split('T')[0];
+    
     dp.value = newDateStr;
     updateDateText(newDateStr);
     updateNavButtons();
     changeDayAndLoad(newDateStr); 
 };
 
-/**
- * Setzt den Picker auf den heutigen Tag zurück
- */
 window.goToToday = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     document.getElementById('datePicker').value = dateStr;
@@ -1255,15 +1256,12 @@ window.goToToday = () => {
     changeDayAndLoad(dateStr);
 };
 
-/**
- * Steuert die Sichtbarkeit der Navigations-Buttons
- */
+// Korrektur: Die Sichtbarkeit im updateNavButtons muss auch auf <= heute prüfen
 function updateNavButtons() {
     const dp = document.getElementById('datePicker');
     if (!dp || !dp.value) return;
 
-    const pickerDate = new Date(dp.value);
-    pickerDate.setHours(0, 0, 0, 0);
+    const pickerDate = new Date(dp.value + 'T00:00:00');
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
 
@@ -1530,42 +1528,65 @@ window.syncPlan = async function() {
 // Variable außerhalb der Funktion definieren
 let isNavigating = false; 
 
+/* ============================================================
+   ZENTRALER LADE-WRAPPER (OPTIMIERT)
+   ============================================================ */
+
+// Stelle sicher, dass diese Variable global existiert
+window.isNavigating = window.isNavigating || false;
+
 async function changeDayAndLoad(zielDatum) {
     // 1. Schutz gegen Doppel-Klicks
-    if (isNavigating) return;
-    isNavigating = true;
+    if (window.isNavigating) return;
+    window.isNavigating = true;
 
-    // UI-Synchronisation: Datum-Button und DatePicker aktualisieren
+    // UI-Elemente finden
     const dp = document.getElementById('datePicker');
     const overlay = document.getElementById('loadingOverlay');
     
-    dp.value = zielDatum;
-    // NEU: Hier wird der Button-Text sofort synchronisiert
-    if (typeof updateDateText === 'function') {
-        updateDateText(zielDatum);
+    // Datum setzen
+    if (dp) {
+        dp.value = zielDatum;
     }
     
+    // Button-Text synchronisieren
+    if (typeof window.updateDateText === 'function') {
+        window.updateDateText(zielDatum);
+    }
+    
+    // UI Feedback
     document.body.style.opacity = "0.7"; 
     
-    // 2. Timer: Overlay erst nach 300ms zeigen, um Flackern bei schnellen Servern zu vermeiden
+    // 2. Timer: Overlay erst nach 300ms zeigen
     const timer = setTimeout(() => {
-        overlay.classList.add('is-visible');
+        if (overlay) overlay.classList.add('is-visible');
     }, 300); 
 
     try {
-        await loadPlan(); 
+        // Sicherstellen, dass loadPlan existiert
+        if (typeof loadPlan === 'function') {
+            await loadPlan(); 
+        } else {
+            console.error("loadPlan ist keine Funktion!");
+        }
     } catch (e) {
         console.error("Fehler beim Laden:", e);
         alert("Der Plan konnte nicht geladen werden. Bitte versuche es erneut.");
     } finally {
         // 3. Immer aufräumen
         clearTimeout(timer);
-        overlay.classList.remove('is-visible');
+        if (overlay) overlay.classList.remove('is-visible');
         document.body.style.opacity = "1";
-        isNavigating = false; // Sperre aufheben
+        
+        // WICHTIG: Sperre IMMER aufheben, egal was passiert
+        window.isNavigating = false;
+        
+        // Navigation-Buttons nach dem Laden aktualisieren (Sichtbarkeit prüfen)
+        if (typeof updateNavButtons === 'function') {
+            updateNavButtons();
+        }
     }
 }
-
 
 
     
