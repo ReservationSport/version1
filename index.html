@@ -1373,35 +1373,33 @@ window.openCalendar = function(offset = 0) {
     nav.innerHTML = '';
     grid.innerHTML = '';
 
-    // NEU: Monat basierend auf dem aktuellen Picker-Datum bestimmen
-    // Wenn kein Picker-Wert da ist, nimm heute
-    let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : new Date();
+    // 1. Basis-Datum und Heute als String für fehlerfreien Vergleich
+    const heuteStr = new Date().toISOString().split('T')[0]; // "2026-05-30"
+    const gewähltesDatumStr = dp.value;
     
-    // Verschiebung für Blättern (offset) anwenden
+    // Monat bestimmen: Picker-Datum (falls vorhanden) oder Heute als Basis
+    let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : new Date();
     let d = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
     
     const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     
+    // 2. Navigation
     nav.innerHTML = `
         <button onclick="openCalendar(${offset - 1})">❮</button>
         <span class="cal-month-title">${monatsName}</span>
         <button onclick="openCalendar(${offset + 1})">❯</button>
     `;
 
-    // Wochentage & Hilfsvariablen
-    const heute = new Date();
-    heute.setHours(0, 0, 0, 0); // WICHTIG: Heute ohne Uhrzeit für Vergleich
-    
-    const gewähltesDatumStr = dp.value; // Der String aus deinem Picker
+    // 3. Wochentage & Grid vorbereiten
     const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     tage.forEach(t => grid.insertAdjacentHTML('beforeend', `<div class="cal-weekday">${t}</div>`));
 
-    const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
-    let startDay = (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1);
+    let startDay = (d.getDay() === 0 ? 6 : d.getDay() - 1);
 
     for (let i = 0; i < startDay; i++) grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
 
+    // 4. Tage generieren
     for (let i = 1; i <= lastDay; i++) {
         let dateObj = new Date(d.getFullYear(), d.getMonth(), i, 12, 0, 0);
         let dateStr = dateObj.toISOString().split('T')[0];
@@ -1410,35 +1408,32 @@ window.openCalendar = function(offset = 0) {
         dayBtn.className = 'cal-day';
         dayBtn.innerText = i;
         
-        // 1. Markierung: Ist das heute?
-        if (dateObj.toDateString() === heute.toDateString()) {
-            dayBtn.classList.add('today');
-        }
-        
-        // 2. Markierung: Ist das das aktuell im Picker gewählte Datum?
-        if (dateStr === gewähltesDatumStr) {
-            dayBtn.classList.add('selected');
-        }
+        // Markierungen
+        if (dateStr === heuteStr) dayBtn.classList.add('today');
+        if (dateStr === gewähltesDatumStr) dayBtn.classList.add('selected');
+        if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
 
-        // 3. Sperre: Vergangenheit?
-        if (dateObj < heute) {
+        // Sperre Vergangenheit: Nur Tage >= heute sind klickbar
+        if (dateStr < heuteStr) {
             dayBtn.classList.add('disabled');
         } else {
-            // Nur wenn nicht in der Vergangenheit, onclick hinzufügen
+            // Nur klickbar, wenn Tag >= heute
             dayBtn.onclick = () => {
-                document.getElementById('datePicker').value = dateStr;
+                dp.value = dateStr;
                 updateDateText(dateStr);
                 updateNavButtons();
                 changeDayAndLoad(dateStr);
                 window.closeCalendar();
             };
         }
-        
-        if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
         grid.appendChild(dayBtn);
     }
 };
-    
+
+
+
+
+        
 window.closeCalendar = function() {
     const modal = document.getElementById('calendar-modal');
     if (modal) modal.style.display = 'none';
