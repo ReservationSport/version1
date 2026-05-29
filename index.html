@@ -176,22 +176,37 @@ body {
 }
 .cal-modal-title { color: #e67e22; text-align: center; margin: 0 0 15px 0; font-size: 16px; }
 
+/* Layout für 7 Spalten (Mon-So) */
 .calendar-grid {
-    display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 15px;
 }
-.cal-day {
-    padding: 10px 0; background: #262626; color: #eee;
-    border: 1px solid #333; border-radius: 6px;
-    text-align: center; cursor: pointer; transition: 0.2s;
-}
-.cal-day:hover { background: #e67e22; color: #fff; }
-.cal-day.disabled { opacity: 0.2; cursor: not-allowed; pointer-events: none; }
 
-.cal-modal-cancel {
-    margin-top: 15px; width: 100%; background: #262626; border: 1px solid #333;
-    color: #888; padding: 10px; border-radius: 8px; cursor: pointer;
+.cal-weekday {
+    text-align: center;
+    color: #888;
+    font-size: 11px;
+    font-weight: bold;
+    padding-bottom: 5px;
+    text-transform: uppercase;
 }
-.cal-modal-cancel:hover { background: #333; color: #fff; }
+
+.cal-day {
+    padding: 8px 0; background: #262626; color: #eee;
+    border-radius: 4px; text-align: center; cursor: pointer; font-size: 13px;
+}
+
+/* Wochenende ausgegraut */
+.cal-day.weekend { color: #666; }
+
+/* Heute markieren */
+.cal-day.today { border: 1px solid #e67e22; color: #e67e22; font-weight: bold; }
+
+.cal-day:hover { background: #e67e22; color: #fff; }
+.cal-day.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
+.cal-day.empty { background: transparent; cursor: default; }
     
 /* ============================================================
    3. BOXEN & ZELLEN-DESIGN
@@ -1308,47 +1323,57 @@ function updateNavButtons() {
 window.openCalendar = function() {
     const modal = document.getElementById('calendar-modal');
     const grid = document.getElementById('calendar-grid');
+    if (!modal || !grid) return;
     
-    if (!modal) {
-        console.error("Fehler: #calendar-modal nicht im HTML gefunden!");
-        return;
-    }
-
-    // Modal erzwingen
-    modal.style.display = 'flex';
-    modal.style.zIndex = "9999"; // Ganz nach vorne holen
-    
-    if (!grid) {
-        console.error("Fehler: #calendar-grid nicht im HTML gefunden!");
-        return;
-    }
-
     grid.innerHTML = ''; 
+    modal.style.display = 'flex';
+
+    // Wochentags-Header erstellen
+    const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    tage.forEach(t => {
+        const header = document.createElement('div');
+        header.className = 'cal-weekday';
+        header.innerText = t;
+        grid.appendChild(header);
+    });
+
     const heute = new Date();
     heute.setHours(0,0,0,0);
+    const firstDay = new Date(heute.getFullYear(), heute.getMonth(), 1);
+    const lastDay = new Date(heute.getFullYear(), heute.getMonth() + 1, 0).getDate();
+    
+    // Wochentag des 1. Tages (0=So, 1=Mo... -> Mo=0, So=6)
+    let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
 
-    for (let i = 0; i < 30; i++) {
-        let d = new Date();
-        d.setDate(d.getDate() + i);
+    // Leere Felder für den Anfang
+    for (let i = 0; i < startDay; i++) {
+        grid.appendChild(document.createElement('div')).className = 'cal-day empty';
+    }
+
+    // Tage des Monats
+    for (let i = 1; i <= lastDay; i++) {
+        let d = new Date(heute.getFullYear(), heute.getMonth(), i);
         const dateStr = d.toISOString().split('T')[0];
-        
         const dayBtn = document.createElement('div');
         dayBtn.className = 'cal-day';
-        dayBtn.innerText = d.getDate();
+        dayBtn.innerText = i;
         
+        if (d.getDay() === 0 || d.getDay() === 6) dayBtn.classList.add('weekend');
+        if (d.toDateString() === heute.toDateString()) dayBtn.classList.add('today');
         if (d < heute) dayBtn.classList.add('disabled');
         
         dayBtn.onclick = () => {
-            console.log("Datum gewählt:", dateStr);
             document.getElementById('datePicker').value = dateStr;
-            window.updateDateText(dateStr);
-            window.updateNavButtons();
-            window.changeDayAndLoad(dateStr);
+            updateDateText(dateStr);
+            updateNavButtons();
+            changeDayAndLoad(dateStr);
             window.closeCalendar();
         };
         grid.appendChild(dayBtn);
     }
 };
+
+    
 window.closeCalendar = function() {
     const modal = document.getElementById('calendar-modal');
     if (modal) modal.style.display = 'none';
