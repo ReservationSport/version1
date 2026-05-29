@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -158,6 +158,25 @@ body {
     background: #e67e22; border-radius: 50%; border: 2px solid #1a1a1a;
     box-shadow: 0 0 8px rgba(230, 126, 34, 0.6);
 }
+
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    padding: 15px;
+}
+.cal-day {
+    padding: 10px;
+    background: #262626;
+    color: #eee;
+    border-radius: 4px;
+    text-align: center;
+    cursor: pointer;
+}
+.cal-day:hover { background: #e67e22; color: #fff; }
+.cal-day.disabled { opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
     
 /* ============================================================
    3. BOXEN & ZELLEN-DESIGN
@@ -985,6 +1004,17 @@ body {
 
     <div id="plan-container"></div>
 
+
+    <div id="calendar-modal" class="eigenesmenu-backdrop" style="display: none;">
+    <div class="eigenesmenu-container" onclick="event.stopPropagation()">
+        <div class="eigenesmenu-header">
+            <h3 class="eigenesmenu-title">DATUM WÄHLEN</h3>
+        </div>
+        <div id="calendar-grid" class="calendar-grid"></div>
+        <button class="eigenesmenu-cancel" onclick="closeCalendar()">Abbrechen</button>
+    </div>
+</div>
+
     <div id="newsSidebar" style="display:none;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 10px;">
             <h2 style="margin: 0; font-size: 1.2em; color: #e67e22;">NEUIGKEITEN</h2>
@@ -1188,7 +1218,7 @@ function getDataBySlotIndex(index) {
 
 
 /* ============================================================
-   5. DATUMSSTEUERUNG & NAVIGATION
+   5. DATUMSSTEUERUNG, NAVIGATION & INITIALISIERUNG
    ============================================================ */
 
 /**
@@ -1196,31 +1226,18 @@ function getDataBySlotIndex(index) {
  */
 window.changeDate = (days) => {
     const dp = document.getElementById('datePicker');
-    
-    // 1. Datum lokal aus dem String parsen
     const [year, month, day] = dp.value.split('-').map(Number);
     let d = new Date(year, month - 1, day);
-    
-    // 2. Berechnung
     d.setDate(d.getDate() + days);
     
-    // 3. Verhindert das Navigieren vor das heutige Datum
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
     if (d < heute) d = heute;
 
-    // 4. Lokal korrekt zurückformatieren (YYYY-MM-DD)
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(d.getDate()).padStart(2, '0');
-    const newDateStr = `${y}-${m}-${dayStr}`;
-    
-    // 5. UI aktualisieren
+    const newDateStr = d.toISOString().split('T')[0];
     dp.value = newDateStr;
-    updateDateText(newDateStr); // NEU: Aktualisiert den Button-Text!
+    updateDateText(newDateStr);
     updateNavButtons();
-    
-    // 6. Zentralen Wrapper aufrufen
     changeDayAndLoad(newDateStr); 
 };
 
@@ -1228,102 +1245,96 @@ window.changeDate = (days) => {
  * Setzt den Picker auf den heutigen Tag zurück
  */
 window.goToToday = () => {
-    const d = new Date();
-    
-    // Lokal das heutige Datum extrahieren
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const dayStr = String(d.getDate()).padStart(2, '0');
-    const dateStr = `${y}-${m}-${dayStr}`;
-    
-    // Datum im Picker setzen und Button-Text aktualisieren
-    const dp = document.getElementById('datePicker');
-    dp.value = dateStr;
-    updateDateText(dateStr); // NEU: Aktualisiert den Button-Text!
-    
-    // Navigation-Buttons visuell aktualisieren
+    const dateStr = new Date().toISOString().split('T')[0];
+    document.getElementById('datePicker').value = dateStr;
+    updateDateText(dateStr);
     updateNavButtons();
-    
-    // Zentralen Wrapper nutzen
     changeDayAndLoad(dateStr);
 };
 
 /**
- * Steuert die Sichtbarkeit der Buttons
+ * Steuert die Sichtbarkeit der Navigations-Buttons
  */
 function updateNavButtons() {
     const dp = document.getElementById('datePicker');
     if (!dp || !dp.value) return;
 
-    const pickerDate = new Date(dp.value.replace(/-/g, "/"));
+    const pickerDate = new Date(dp.value);
     pickerDate.setHours(0, 0, 0, 0);
-
     const heute = new Date();
     heute.setHours(0, 0, 0, 0);
 
     const prevDayBtn = document.getElementById('prev-day');
-    const allPrevBtns = document.querySelectorAll('.nav-group:first-child .nav-btn');
+    if (prevDayBtn) prevDayBtn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
 
-    if (prevDayBtn) {
-        prevDayBtn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
-    }
-
-    allPrevBtns.forEach(btn => {
-        const onclickAttr = btn.getAttribute('onclick') || "";
-        const isWeekBtn = onclickAttr.includes('-7');
-        if (isWeekBtn) {
-            // Logik bleibt wie von dir definiert
+    document.querySelectorAll('.nav-group:first-child .nav-btn').forEach(btn => {
+        if ((btn.getAttribute('onclick') || "").includes('-7')) {
             btn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
         }
     });
 }
 
-
 /* ============================================================
-   DATUMS-HELFER
+   KALENDER MODAL LOGIK
    ============================================================ */
 
-// Aktualisiert den Text im Datum-Button
-function updateDateText(dateValue) {
+window.openCalendar = function() {
+    const modal = document.getElementById('calendar-modal');
+    const grid = document.getElementById('calendar-grid');
+    if (!modal || !grid) return;
+    
+    grid.innerHTML = ''; 
+    modal.style.display = 'flex';
+
+    const heute = new Date();
+    heute.setHours(0,0,0,0);
+
+    for (let i = 0; i < 30; i++) {
+        let d = new Date();
+        d.setDate(d.getDate() + i);
+        
+        const dateStr = d.toISOString().split('T')[0];
+        const dayBtn = document.createElement('div');
+        dayBtn.className = 'cal-day';
+        dayBtn.innerText = d.getDate();
+        
+        if (d < heute) dayBtn.classList.add('disabled');
+        
+        dayBtn.onclick = () => {
+            document.getElementById('datePicker').value = dateStr;
+            updateDateText(dateStr);
+            updateNavButtons();
+            changeDayAndLoad(dateStr);
+            window.closeCalendar();
+        };
+        grid.appendChild(dayBtn);
+    }
+};
+
+window.closeCalendar = function() {
+    const modal = document.getElementById('calendar-modal');
+    if (modal) modal.style.display = 'none';
+};
+
+/**
+ * Aktualisiert den Text im Datum-Button-Container
+ */
+window.updateDateText = (dateValue) => {
     const display = document.getElementById('date-display');
     if (display && dateValue) {
-        // Formatiert YYYY-MM-DD zu DD.MM.YYYY
         const [y, m, d] = dateValue.split('-');
         display.innerText = `${d}.${m}.${y}`;
     }
-}
+};
 
-// Initial beim Laden der Seite den aktuellen Wert aus dem Picker holen
-window.addEventListener('load', () => {
-    const picker = document.getElementById('datePicker');
-    if (picker) {
-        updateDateText(picker.value);
-    }
-});
-
-    
-    /* ============================================================
-       6. INITIALISIERUNG BEIM LADEN
-       ============================================================ */
-
-   document.addEventListener('DOMContentLoaded', () => { 
-    // Heute-Einstellung
-    const today = new Date(); 
-    const offset = today.getTimezoneOffset(); 
-    today.setMinutes(today.getMinutes() - offset); 
-    const dateStr = today.toISOString().split('T')[0];
-    
+document.addEventListener('DOMContentLoaded', () => { 
+    const dateStr = new Date().toISOString().split('T')[0];
     const dp = document.getElementById('datePicker');
     dp.value = dateStr;
-    dp.min = dateStr; 
-    
+    updateDateText(dateStr);
     updateNavButtons();
-    
-    // HIER DIE ANPASSUNG:
-    // Nutze den Wrapper, damit das Overlay auch beim ersten Start korrekt arbeitet
     changeDayAndLoad(dateStr); 
 });
-
 
 /* ============================================================
    7. STUNDENPLAN LADEN & GRID-GENERIERUNG (DB-Version)
