@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1373,10 +1373,15 @@ window.openCalendar = function(offset = 0) {
     nav.innerHTML = '';
     grid.innerHTML = '';
 
-    const d = new Date();
-    d.setMonth(d.getMonth() + offset);
+    // NEU: Monat basierend auf dem aktuellen Picker-Datum bestimmen
+    // Wenn kein Picker-Wert da ist, nimm heute
+    let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : new Date();
+    
+    // Verschiebung für Blättern (offset) anwenden
+    let d = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
     
     const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
+    
     nav.innerHTML = `
         <button onclick="openCalendar(${offset - 1})">❮</button>
         <span class="cal-month-title">${monatsName}</span>
