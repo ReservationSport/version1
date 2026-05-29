@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1286,19 +1286,30 @@ function updateNavButtons() {
 window.openCalendar = function() {
     const modal = document.getElementById('calendar-modal');
     const grid = document.getElementById('calendar-grid');
-    if (!modal || !grid) return;
     
-    grid.innerHTML = ''; 
-    modal.style.display = 'flex';
+    if (!modal) {
+        console.error("Fehler: #calendar-modal nicht im HTML gefunden!");
+        return;
+    }
 
+    // Modal erzwingen
+    modal.style.display = 'flex';
+    modal.style.zIndex = "9999"; // Ganz nach vorne holen
+    
+    if (!grid) {
+        console.error("Fehler: #calendar-grid nicht im HTML gefunden!");
+        return;
+    }
+
+    grid.innerHTML = ''; 
     const heute = new Date();
     heute.setHours(0,0,0,0);
 
     for (let i = 0; i < 30; i++) {
         let d = new Date();
         d.setDate(d.getDate() + i);
-        
         const dateStr = d.toISOString().split('T')[0];
+        
         const dayBtn = document.createElement('div');
         dayBtn.className = 'cal-day';
         dayBtn.innerText = d.getDate();
@@ -1306,16 +1317,16 @@ window.openCalendar = function() {
         if (d < heute) dayBtn.classList.add('disabled');
         
         dayBtn.onclick = () => {
+            console.log("Datum gewählt:", dateStr);
             document.getElementById('datePicker').value = dateStr;
-            updateDateText(dateStr);
-            updateNavButtons();
-            changeDayAndLoad(dateStr);
+            window.updateDateText(dateStr);
+            window.updateNavButtons();
+            window.changeDayAndLoad(dateStr);
             window.closeCalendar();
         };
         grid.appendChild(dayBtn);
     }
 };
-
 window.closeCalendar = function() {
     const modal = document.getElementById('calendar-modal');
     if (modal) modal.style.display = 'none';
