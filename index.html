@@ -1059,7 +1059,11 @@ body {
 <div id="calendar-modal" class="cal-modal-backdrop" style="display: none;">
     <div class="cal-modal-container" onclick="event.stopPropagation()">
         <h3 class="cal-modal-title">DATUM WÄHLEN</h3>
+        
+        <div id="calendar-nav" class="cal-month-nav"></div>
+        
         <div id="calendar-grid" class="calendar-grid"></div>
+        
         <button class="cal-modal-cancel" onclick="closeCalendar()">Abbrechen</button>
     </div>
 </div>
@@ -1343,32 +1347,30 @@ function updateNavButtons() {
 
 window.openCalendar = function(offset = 0) {
     const modal = document.getElementById('calendar-modal');
+    const nav = document.getElementById('calendar-nav');
     const grid = document.getElementById('calendar-grid');
-    if (!modal || !grid) return;
+    if (!modal || !nav || !grid) return;
     
     modal.style.display = 'flex';
+    nav.innerHTML = '';
     grid.innerHTML = '';
 
     const d = new Date();
-    // Monat basierend auf Offset berechnen
     d.setMonth(d.getMonth() + offset);
-    
     const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     
-    // Header & Navigation aufbauen
-    grid.innerHTML = `
-        <div class="cal-month-nav">
-            <button onclick="openCalendar(${offset - 1})">❮</button>
-            <span class="cal-month-title">${monatsName}</span>
-            <button onclick="openCalendar(${offset + 1})">❯</button>
-        </div>
+    // 1. Navigation befüllen
+    nav.innerHTML = `
+        <button onclick="openCalendar(${offset - 1})">❮</button>
+        <span class="cal-month-title">${monatsName}</span>
+        <button onclick="openCalendar(${offset + 1})">❯</button>
     `;
 
-    // Wochentage
+    // 2. Wochentage in das Grid
     const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     tage.forEach(t => grid.insertAdjacentHTML('beforeend', `<div class="cal-weekday">${t}</div>`));
 
-    // Monatstage
+    // ... (restliche Logik wie gehabt)
     const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     let startDay = (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1);
@@ -1376,17 +1378,13 @@ window.openCalendar = function(offset = 0) {
     for (let i = 0; i < startDay; i++) grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
 
     for (let i = 1; i <= lastDay; i++) {
-        // Fix: T12:00:00 verhindert Verschiebung um einen Tag
         let dateObj = new Date(d.getFullYear(), d.getMonth(), i, 12, 0, 0);
         let dateStr = dateObj.toISOString().split('T')[0];
-        
         const dayBtn = document.createElement('div');
         dayBtn.className = 'cal-day';
         dayBtn.innerText = i;
-        
         if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
         if (dateObj.toDateString() === new Date().toDateString()) dayBtn.classList.add('today');
-        
         dayBtn.onclick = () => {
             document.getElementById('datePicker').value = dateStr;
             updateDateText(dateStr);
@@ -1397,7 +1395,6 @@ window.openCalendar = function(offset = 0) {
         grid.appendChild(dayBtn);
     }
 };
-
     
 window.closeCalendar = function() {
     const modal = document.getElementById('calendar-modal');
