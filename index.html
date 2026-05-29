@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -81,8 +81,8 @@ body {
 .nav-right { flex: 1; justify-content: flex-end; }
 .nav-group { display: flex; gap: 5px; }
 
-/* Buttons & Picker - Clean & Uniform */
-.nav-btn, .refresh-btn, #datePicker { 
+/* Buttons & Container - Clean & Uniform */
+.nav-btn, .refresh-btn, .date-container { 
     height: 40px; 
     background: #262626; 
     border: 1px solid #333; 
@@ -93,40 +93,43 @@ body {
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
-.nav-btn { width: 40px; cursor: pointer; }
-.nav-btn:hover { background: #2d2d2d; border-color: #e67e22; }
+.nav-btn, .refresh-btn { width: 40px; }
+.nav-btn:hover, .refresh-btn:hover, .date-container:hover { 
+    background: #2d2d2d; 
+    border-color: #e67e22; 
+}
+
+/* Spezielles Styling für den neuen Datum-Button */
+.date-container {
+    padding: 0 15px;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.date-container span:first-child {
+    color: #eee; /* Datumstext in hellem Grau/Weiß */
+    font-weight: 500;
+}
 
 /* Zentrierung aller Icons */
 .nav-btn .material-symbols-outlined, 
 .refresh-btn .material-symbols-outlined,
+.date-container .material-symbols-outlined,
 .news-btn-premium .material-symbols-outlined {
     font-size: 22px;
     color: #e67e22;
-    margin-right: 0 !important;
+    margin: 0;
     transition: color 0.2s;
 }
 
-/* DatePicker Styling */
-#datePicker { 
-    padding: 0 12px; 
-    cursor: pointer; 
-    font-family: inherit; 
-    font-size: 14px;
-    appearance: none;
-}
+/* Der alte DatePicker-Indicator (versteckt, da Button jetzt alles macht) */
+#datePicker { display: none; }
 
-#datePicker::-webkit-calendar-picker-indicator {
-    filter: invert(60%) sepia(80%) saturate(1500%) hue-rotate(5deg) brightness(100%) contrast(90%);
-    cursor: pointer;
-}
-
-/* Refresh Button */
-.refresh-btn { width: 40px; cursor: pointer; }
-.refresh-btn:hover { background: #2d2d2d; border-color: #e67e22; }
-
-/* News Button Premium Style - Zentriert & 40px Höhe */
+/* News Button Premium Style */
 .news-btn-premium {
     display: flex;
     align-items: center;
@@ -937,7 +940,6 @@ body {
         <div id="news-btn-container" style="display: none;">
             <div class="news-btn-premium" onclick="refreshAndShowNews()">
                 <span class="btn-text">NEWS</span>
-                <!-- Neues Icon: notifications -->
                 <span class="material-symbols-outlined bell-icon">notifications</span>
                 <div id="news-dot" class="badge" style="display: none;"></div>
             </div>
@@ -958,7 +960,11 @@ body {
             <span class="material-symbols-outlined">home</span>
         </button>
         
-        <input type="date" id="datePicker" onchange="changeDayAndLoad(this.value)">
+        <button class="date-container" onclick="document.getElementById('datePicker').showPicker()">
+            <span id="date-display">Datum wählen</span>
+            <span class="material-symbols-outlined">calendar_today</span>
+        </button>
+        <input type="date" id="datePicker" onchange="changeDayAndLoad(this.value); updateDateText(this.value)" style="display: none;">
         
         <div class="nav-group">
             <button id="next-day" class="nav-btn" onclick="changeDate(1)" title="1 Tag vor">
@@ -972,7 +978,6 @@ body {
 
     <div class="nav-section nav-right">
         <button class="refresh-btn" onclick="changeDayAndLoad(document.getElementById('datePicker').value)" title="Aktualisieren">
-            <!-- Neues Icon: refresh -->
             <span class="material-symbols-outlined">refresh</span>
         </button>
     </div>
@@ -1186,98 +1191,115 @@ function getDataBySlotIndex(index) {
    5. DATUMSSTEUERUNG & NAVIGATION
    ============================================================ */
 
-    /**
-     * Ändert das Datum im Picker und lädt den Plan neu
-     */
-   /**
-     * Ändert das Datum im Picker und lädt den Plan neu
-     */
-    window.changeDate = (days) => {
-        const dp = document.getElementById('datePicker');
-        
-        // 1. Datum lokal aus dem String parsen
-        const [year, month, day] = dp.value.split('-').map(Number);
-        let d = new Date(year, month - 1, day);
-        
-        // 2. Berechnung
-        d.setDate(d.getDate() + days);
-        
-        // 3. Verhindert das Navigieren vor das heutige Datum
-        const heute = new Date();
-        heute.setHours(0, 0, 0, 0);
-        if (d < heute) d = heute;
-
-        // 4. Lokal korrekt zurückformatieren (YYYY-MM-DD)
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dayStr = String(d.getDate()).padStart(2, '0');
-        const newDateStr = `${y}-${m}-${dayStr}`;
-        
-        // 5. UI aktualisieren
-        dp.value = newDateStr;
-        updateNavButtons();
-        
-        // 6. Zentralen Wrapper aufrufen
-        changeDayAndLoad(newDateStr); 
-    };
-
-
+/**
+ * Ändert das Datum im Picker, aktualisiert den Anzeige-Button und lädt den Plan neu
+ */
+window.changeDate = (days) => {
+    const dp = document.getElementById('datePicker');
     
-    /**
-     * Setzt den Picker auf den heutigen Tag zurück
-     */
-   /**
-     * Setzt den Picker auf den heutigen Tag zurück
-     */
-    window.goToToday = () => {
-        const d = new Date();
-        
-        // Lokal das heutige Datum extrahieren
-        const y = d.getFullYear();
-        const m = String(d.getMonth() + 1).padStart(2, '0');
-        const dayStr = String(d.getDate()).padStart(2, '0');
-        const dateStr = `${y}-${m}-${dayStr}`;
-        
-        // Navigation-Buttons visuell aktualisieren
-        updateNavButtons();
-        
-        // Zentralen Wrapper nutzen, um das Laden und das Overlay zu starten
-        changeDayAndLoad(dateStr);
-    };
+    // 1. Datum lokal aus dem String parsen
+    const [year, month, day] = dp.value.split('-').map(Number);
+    let d = new Date(year, month - 1, day);
     
+    // 2. Berechnung
+    d.setDate(d.getDate() + days);
+    
+    // 3. Verhindert das Navigieren vor das heutige Datum
+    const heute = new Date();
+    heute.setHours(0, 0, 0, 0);
+    if (d < heute) d = heute;
 
-    /**
-     * Steuert die Sichtbarkeit der Buttons
-     */
-    function updateNavButtons() {
-        // Dieser Bereich kann so bleiben, er ist logisch unabhängig vom Ladevorgang
-        const dp = document.getElementById('datePicker');
-        if (!dp || !dp.value) return;
+    // 4. Lokal korrekt zurückformatieren (YYYY-MM-DD)
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(d.getDate()).padStart(2, '0');
+    const newDateStr = `${y}-${m}-${dayStr}`;
+    
+    // 5. UI aktualisieren
+    dp.value = newDateStr;
+    updateDateText(newDateStr); // NEU: Aktualisiert den Button-Text!
+    updateNavButtons();
+    
+    // 6. Zentralen Wrapper aufrufen
+    changeDayAndLoad(newDateStr); 
+};
 
-        const pickerDate = new Date(dp.value.replace(/-/g, "/"));
-        pickerDate.setHours(0, 0, 0, 0);
+/**
+ * Setzt den Picker auf den heutigen Tag zurück
+ */
+window.goToToday = () => {
+    const d = new Date();
+    
+    // Lokal das heutige Datum extrahieren
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${dayStr}`;
+    
+    // Datum im Picker setzen und Button-Text aktualisieren
+    const dp = document.getElementById('datePicker');
+    dp.value = dateStr;
+    updateDateText(dateStr); // NEU: Aktualisiert den Button-Text!
+    
+    // Navigation-Buttons visuell aktualisieren
+    updateNavButtons();
+    
+    // Zentralen Wrapper nutzen
+    changeDayAndLoad(dateStr);
+};
 
-        const heute = new Date();
-        heute.setHours(0, 0, 0, 0);
+/**
+ * Steuert die Sichtbarkeit der Buttons
+ */
+function updateNavButtons() {
+    const dp = document.getElementById('datePicker');
+    if (!dp || !dp.value) return;
 
-        const prevDayBtn = document.getElementById('prev-day');
-        const allPrevBtns = document.querySelectorAll('.nav-group:first-child .nav-btn');
+    const pickerDate = new Date(dp.value.replace(/-/g, "/"));
+    pickerDate.setHours(0, 0, 0, 0);
 
-        if (prevDayBtn) {
-            prevDayBtn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
-        }
+    const heute = new Date();
+    heute.setHours(0, 0, 0, 0);
 
-        allPrevBtns.forEach(btn => {
-            const onclickAttr = btn.getAttribute('onclick') || "";
-            const isWeekBtn = onclickAttr.includes('-7');
-            if (isWeekBtn) {
-                const limitWoche = new Date(heute);
-                limitWoche.setDate(heute.getDate() + 7);
-                btn.style.visibility = (pickerDate < limitWoche) ? 'hidden' : 'visible';
-            }
-        });
+    const prevDayBtn = document.getElementById('prev-day');
+    const allPrevBtns = document.querySelectorAll('.nav-group:first-child .nav-btn');
+
+    if (prevDayBtn) {
+        prevDayBtn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
     }
 
+    allPrevBtns.forEach(btn => {
+        const onclickAttr = btn.getAttribute('onclick') || "";
+        const isWeekBtn = onclickAttr.includes('-7');
+        if (isWeekBtn) {
+            // Logik bleibt wie von dir definiert
+            btn.style.visibility = (pickerDate <= heute) ? 'hidden' : 'visible';
+        }
+    });
+}
+
+
+/* ============================================================
+   DATUMS-HELFER
+   ============================================================ */
+
+// Aktualisiert den Text im Datum-Button
+function updateDateText(dateValue) {
+    const display = document.getElementById('date-display');
+    if (display && dateValue) {
+        // Formatiert YYYY-MM-DD zu DD.MM.YYYY
+        const [y, m, d] = dateValue.split('-');
+        display.innerText = `${d}.${m}.${y}`;
+    }
+}
+
+// Initial beim Laden der Seite den aktuellen Wert aus dem Picker holen
+window.addEventListener('load', () => {
+    const picker = document.getElementById('datePicker');
+    if (picker) {
+        updateDateText(picker.value);
+    }
+});
 
     
     /* ============================================================
@@ -1499,11 +1521,16 @@ async function changeDayAndLoad(zielDatum) {
     if (isNavigating) return;
     isNavigating = true;
 
+    // UI-Synchronisation: Datum-Button und DatePicker aktualisieren
     const dp = document.getElementById('datePicker');
     const overlay = document.getElementById('loadingOverlay');
     
-    // UI vorbereiten
     dp.value = zielDatum;
+    // NEU: Hier wird der Button-Text sofort synchronisiert
+    if (typeof updateDateText === 'function') {
+        updateDateText(zielDatum);
+    }
+    
     document.body.style.opacity = "0.7"; 
     
     // 2. Timer: Overlay erst nach 300ms zeigen, um Flackern bei schnellen Servern zu vermeiden
@@ -1515,7 +1542,6 @@ async function changeDayAndLoad(zielDatum) {
         await loadPlan(); 
     } catch (e) {
         console.error("Fehler beim Laden:", e);
-        // Optional: Benutzer informieren
         alert("Der Plan konnte nicht geladen werden. Bitte versuche es erneut.");
     } finally {
         // 3. Immer aufräumen
