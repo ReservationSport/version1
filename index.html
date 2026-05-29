@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -213,8 +213,24 @@ body {
 /* Wochenende ausgegraut */
 .cal-day.weekend { color: #666; }
 
-/* Heute markieren */
-.cal-day.today { border: 1px solid #e67e22; color: #e67e22; font-weight: bold; }
+/* Markierung für das aktuell gewählte Datum */
+.cal-day.selected {
+    background: #e67e22 !important;
+    color: #fff !important;
+    border: 2px solid #fff; /* Zusätzlicher weißer Rahmen */
+}
+
+/* Heute-Markierung (nur Outline, falls es nicht gewählt ist) */
+.cal-day.today {
+    border: 1px solid #e67e22;
+    color: #e67e22;
+}
+
+/* Heute-Markierung WENN es auch das gewählte Datum ist */
+.cal-day.today.selected {
+    border: 2px solid #fff;
+    color: #fff;
+}
 
 .cal-day:hover { background: #e67e22; color: #fff; }
 .cal-day.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
@@ -1349,6 +1365,8 @@ window.openCalendar = function(offset = 0) {
     const modal = document.getElementById('calendar-modal');
     const nav = document.getElementById('calendar-nav');
     const grid = document.getElementById('calendar-grid');
+    const dp = document.getElementById('datePicker');
+    
     if (!modal || !nav || !grid) return;
     
     modal.style.display = 'flex';
@@ -1357,20 +1375,22 @@ window.openCalendar = function(offset = 0) {
 
     const d = new Date();
     d.setMonth(d.getMonth() + offset);
-    const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     
-    // 1. Navigation befüllen
+    const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     nav.innerHTML = `
         <button onclick="openCalendar(${offset - 1})">❮</button>
         <span class="cal-month-title">${monatsName}</span>
         <button onclick="openCalendar(${offset + 1})">❯</button>
     `;
 
-    // 2. Wochentage in das Grid
+    // Wochentage & Hilfsvariablen
+    const heute = new Date();
+    heute.setHours(0, 0, 0, 0); // WICHTIG: Heute ohne Uhrzeit für Vergleich
+    
+    const gewähltesDatumStr = dp.value; // Der String aus deinem Picker
     const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     tage.forEach(t => grid.insertAdjacentHTML('beforeend', `<div class="cal-weekday">${t}</div>`));
 
-    // ... (restliche Logik wie gehabt)
     const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     let startDay = (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1);
@@ -1380,18 +1400,36 @@ window.openCalendar = function(offset = 0) {
     for (let i = 1; i <= lastDay; i++) {
         let dateObj = new Date(d.getFullYear(), d.getMonth(), i, 12, 0, 0);
         let dateStr = dateObj.toISOString().split('T')[0];
+        
         const dayBtn = document.createElement('div');
         dayBtn.className = 'cal-day';
         dayBtn.innerText = i;
+        
+        // 1. Markierung: Ist das heute?
+        if (dateObj.toDateString() === heute.toDateString()) {
+            dayBtn.classList.add('today');
+        }
+        
+        // 2. Markierung: Ist das das aktuell im Picker gewählte Datum?
+        if (dateStr === gewähltesDatumStr) {
+            dayBtn.classList.add('selected');
+        }
+
+        // 3. Sperre: Vergangenheit?
+        if (dateObj < heute) {
+            dayBtn.classList.add('disabled');
+        } else {
+            // Nur wenn nicht in der Vergangenheit, onclick hinzufügen
+            dayBtn.onclick = () => {
+                document.getElementById('datePicker').value = dateStr;
+                updateDateText(dateStr);
+                updateNavButtons();
+                changeDayAndLoad(dateStr);
+                window.closeCalendar();
+            };
+        }
+        
         if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
-        if (dateObj.toDateString() === new Date().toDateString()) dayBtn.classList.add('today');
-        dayBtn.onclick = () => {
-            document.getElementById('datePicker').value = dateStr;
-            updateDateText(dateStr);
-            updateNavButtons();
-            changeDayAndLoad(dateStr);
-            window.closeCalendar();
-        };
         grid.appendChild(dayBtn);
     }
 };
