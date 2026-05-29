@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1230,24 +1230,28 @@ function getDataBySlotIndex(index) {
 
 window.changeDate = (days) => {
     const dp = document.getElementById('datePicker');
-    // Wir arbeiten mit ISO-Strings (YYYY-MM-DD), das ist am sichersten
-    let d = new Date(dp.value + 'T00:00:00'); 
-    
-    // Berechnung der Tage
+    console.log("Aktueller Wert im Picker vor Klick:", dp.value);
+
+    // Wenn der Wert leer ist, nimm heute
+    if (!dp.value) dp.value = new Date().toISOString().split('T')[0];
+
+    // Berechnung
+    let d = new Date(dp.value + 'T12:00:00'); // T12:00:00 verhindert Zeitzonen-Sprünge
     d.setUTCDate(d.getUTCDate() + days);
     
-    const heute = new Date();
-    heute.setHours(0, 0, 0, 0);
-    if (d < heute) d = heute;
-
     const newDateStr = d.toISOString().split('T')[0];
+    console.log("Berechnetes neues Datum:", newDateStr);
     
+    // UI aktualisieren
     dp.value = newDateStr;
-    updateDateText(newDateStr);
-    updateNavButtons();
+    console.log("Neuer Wert im Picker nach Zuweisung:", dp.value);
+    
+    // Laden
     changeDayAndLoad(newDateStr); 
 };
 
+
+    
 window.goToToday = () => {
     const dateStr = new Date().toISOString().split('T')[0];
     document.getElementById('datePicker').value = dateStr;
