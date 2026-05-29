@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -127,7 +127,10 @@ body {
 }
 
 /* Der alte DatePicker-Indicator (versteckt, da Button jetzt alles macht) */
-#datePicker { display: none; }
+#datePicker { 
+    display: none; 
+    pointer-events: none; /* Verhindert Interaktion komplett */
+}
 
 /* News Button Premium Style */
 .news-btn-premium {
@@ -979,10 +982,10 @@ body {
             <span class="material-symbols-outlined">home</span>
         </button>
         
-        <button class="date-container" onclick="document.getElementById('datePicker').showPicker()">
-            <span id="date-display">Datum wählen</span>
-            <span class="material-symbols-outlined">calendar_today</span>
-        </button>
+        <button class="date-container" onclick="openCalendar()">
+    <span id="date-display">Datum wählen</span>
+    <span class="material-symbols-outlined">calendar_today</span>
+</button>
         <input type="date" id="datePicker" onchange="changeDayAndLoad(this.value); updateDateText(this.value)" style="display: none;">
         
         <div class="nav-group">
