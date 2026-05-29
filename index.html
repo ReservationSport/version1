@@ -163,7 +163,9 @@ body {
 }
 
 
-/* Kalender Modal Design */
+/* ============================================================
+   KALENDER MODAL DESIGN (FINAL MIT NAVIGATION)
+   ============================================================ */
 .cal-modal-backdrop {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0, 0, 0, 0.9);
@@ -176,6 +178,19 @@ body {
 }
 .cal-modal-title { color: #e67e22; text-align: center; margin: 0 0 15px 0; font-size: 16px; }
 
+/* Monat Navigation */
+.cal-month-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin: 10px 0 20px 0;
+}
+.cal-month-nav button {
+    background: #262626; border: 1px solid #333; color: #e67e22;
+    border-radius: 6px; padding: 5px 12px; cursor: pointer; font-size: 16px;
+    transition: 0.2s;
+}
+.cal-month-nav button:hover { background: #333; }
+.cal-month-title { color: #eee; font-size: 14px; font-weight: bold; }
+
 /* Layout für 7 Spalten (Mon-So) */
 .calendar-grid {
     display: grid;
@@ -185,17 +200,14 @@ body {
 }
 
 .cal-weekday {
-    text-align: center;
-    color: #888;
-    font-size: 11px;
-    font-weight: bold;
-    padding-bottom: 5px;
-    text-transform: uppercase;
+    text-align: center; color: #888; font-size: 11px;
+    font-weight: bold; padding-bottom: 5px; text-transform: uppercase;
 }
 
 .cal-day {
     padding: 8px 0; background: #262626; color: #eee;
     border-radius: 4px; text-align: center; cursor: pointer; font-size: 13px;
+    transition: 0.2s;
 }
 
 /* Wochenende ausgegraut */
@@ -207,6 +219,15 @@ body {
 .cal-day:hover { background: #e67e22; color: #fff; }
 .cal-day.disabled { opacity: 0.1; cursor: not-allowed; pointer-events: none; }
 .cal-day.empty { background: transparent; cursor: default; }
+
+/* Dezenter Abbrechen Button */
+.cal-modal-cancel {
+    background: transparent; border: 1px solid #333;
+    color: #666; padding: 8px; border-radius: 6px;
+    cursor: pointer; width: 100%; margin-top: 20px; font-size: 12px;
+    transition: 0.2s;
+}
+.cal-modal-cancel:hover { background: #333; color: #eee; }
     
 /* ============================================================
    3. BOXEN & ZELLEN-DESIGN
@@ -1320,47 +1341,51 @@ function updateNavButtons() {
    KALENDER MODAL LOGIK
    ============================================================ */
 
-window.openCalendar = function() {
+window.openCalendar = function(offset = 0) {
     const modal = document.getElementById('calendar-modal');
     const grid = document.getElementById('calendar-grid');
     if (!modal || !grid) return;
     
-    grid.innerHTML = ''; 
     modal.style.display = 'flex';
+    grid.innerHTML = '';
 
-    // Wochentags-Header erstellen
-    const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-    tage.forEach(t => {
-        const header = document.createElement('div');
-        header.className = 'cal-weekday';
-        header.innerText = t;
-        grid.appendChild(header);
-    });
-
-    const heute = new Date();
-    heute.setHours(0,0,0,0);
-    const firstDay = new Date(heute.getFullYear(), heute.getMonth(), 1);
-    const lastDay = new Date(heute.getFullYear(), heute.getMonth() + 1, 0).getDate();
+    const d = new Date();
+    // Monat basierend auf Offset berechnen
+    d.setMonth(d.getMonth() + offset);
     
-    // Wochentag des 1. Tages (0=So, 1=Mo... -> Mo=0, So=6)
-    let startDay = firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
+    const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
+    
+    // Header & Navigation aufbauen
+    grid.innerHTML = `
+        <div class="cal-month-nav">
+            <button onclick="openCalendar(${offset - 1})">❮</button>
+            <span class="cal-month-title">${monatsName}</span>
+            <button onclick="openCalendar(${offset + 1})">❯</button>
+        </div>
+    `;
 
-    // Leere Felder für den Anfang
-    for (let i = 0; i < startDay; i++) {
-        grid.appendChild(document.createElement('div')).className = 'cal-day empty';
-    }
+    // Wochentage
+    const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+    tage.forEach(t => grid.insertAdjacentHTML('beforeend', `<div class="cal-weekday">${t}</div>`));
 
-    // Tage des Monats
+    // Monatstage
+    const firstDay = new Date(d.getFullYear(), d.getMonth(), 1);
+    const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    let startDay = (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1);
+
+    for (let i = 0; i < startDay; i++) grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
+
     for (let i = 1; i <= lastDay; i++) {
-        let d = new Date(heute.getFullYear(), heute.getMonth(), i);
-        const dateStr = d.toISOString().split('T')[0];
+        // Fix: T12:00:00 verhindert Verschiebung um einen Tag
+        let dateObj = new Date(d.getFullYear(), d.getMonth(), i, 12, 0, 0);
+        let dateStr = dateObj.toISOString().split('T')[0];
+        
         const dayBtn = document.createElement('div');
         dayBtn.className = 'cal-day';
         dayBtn.innerText = i;
         
-        if (d.getDay() === 0 || d.getDay() === 6) dayBtn.classList.add('weekend');
-        if (d.toDateString() === heute.toDateString()) dayBtn.classList.add('today');
-        if (d < heute) dayBtn.classList.add('disabled');
+        if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
+        if (dateObj.toDateString() === new Date().toDateString()) dayBtn.classList.add('today');
         
         dayBtn.onclick = () => {
             document.getElementById('datePicker').value = dateStr;
