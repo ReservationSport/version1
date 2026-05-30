@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1385,33 +1385,37 @@ window.openCalendar = function(offset = 0) {
     
     modal.style.display = 'flex';
     nav.innerHTML = '';
-    grid.innerHTML = '';
+    grid.innerHTML = ''; // Hier wird das Grid geleert
 
-    // 1. Basis-Datum: Immer vom Picker-Wert ausgehen, falls vorhanden
+    // 1. Basis-Datum
+    const heuteStr = new Date().toISOString().split('T')[0];
+    const gewähltesDatumStr = dp.value;
     let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : new Date();
-    
-    // 2. Datum berechnen: Nimm den Monat aus dem Picker-Datum und addiere den Offset
-    // Hier entfernen wir das "offset === 0 -> erzwinge heute"
     let d = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
     
     const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     
-    // 3. Navigation
+    // 2. Navigation (oben)
     nav.innerHTML = `
         <button onclick="openCalendar(${offset - 1})">❮</button>
         <span class="cal-month-title">${monatsName}</span>
         <button onclick="openCalendar(${offset + 1})">❯</button>
     `;
 
-    // 4. Grid aufbauen
+    // 3. Wochentage (Header)
     const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     tage.forEach(t => grid.insertAdjacentHTML('beforeend', `<div class="cal-weekday">${t}</div>`));
 
+    // 4. Tage berechnen
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     let startDay = (d.getDay() === 0 ? 6 : d.getDay() - 1);
 
-    for (let i = 0; i < startDay; i++) grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
+    // Leere Felder für den Monatstart
+    for (let i = 0; i < startDay; i++) {
+        grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
+    }
 
+    // 5. Die eigentliche Schleife für die Tage
     for (let i = 1; i <= lastDay; i++) {
         let dateObj = new Date(d.getFullYear(), d.getMonth(), i, 12, 0, 0);
         let dateStr = dateObj.toISOString().split('T')[0];
@@ -1420,12 +1424,12 @@ window.openCalendar = function(offset = 0) {
         dayBtn.className = 'cal-day';
         dayBtn.innerText = i;
         
-        // Markierungen
+        // Klassen hinzufügen
         if (dateStr === heuteStr) dayBtn.classList.add('today');
         if (dateStr === gewähltesDatumStr) dayBtn.classList.add('selected');
         if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
 
-        // Sperre Vergangenheit
+        // Logik: Vergangenheit sperren
         if (dateStr < heuteStr) {
             dayBtn.classList.add('disabled');
         } else {
@@ -1437,7 +1441,7 @@ window.openCalendar = function(offset = 0) {
                 window.closeCalendar();
             };
         }
-        grid.appendChild(dayBtn);
+        grid.appendChild(dayBtn); // WICHTIG: Hier werden die Tage in das Grid geschoben
     }
 };
 
