@@ -1228,17 +1228,37 @@ setInterval(async () => {
     }
 }, 30000); 
 
-// 6. Automatischer Tageswechsel-Check (alle 60s)
+// 6. Automatischer Tageswechsel-Check (nur wenn der User "Heute" betrachtet)
 setInterval(async () => {
     const jetzt = new Date();
-    // Erstelle ein Datum im lokalen Format YYYY-MM-DD
     const localToday = `${jetzt.getFullYear()}-${String(jetzt.getMonth() + 1).padStart(2, '0')}-${String(jetzt.getDate()).padStart(2, '0')}`;
-    
     const dp = document.getElementById('datePicker');
     
-    // Prüfe: Ist der Picker-Wert veraltet?
+    // Wir speichern den Zustand, ob der User "Heute" aktiv hat
+    // Wenn dp.value dem heutigen Tag entspricht, ist alles gut.
+    // Wenn er NICHT dem heutigen Tag entspricht, lassen wir ihn in Ruhe!
+    
+    // Aber: Wenn wir BEIM LADEN oder BEIM LOGIN "Heute" gewählt hatten
+    // und nun ein Tag vergangen ist, WOLLEN wir das Update.
+    
+    // Neue Logik: Springe nur, wenn der Tag tatsächlich gewechselt hat 
+    // UND der User nicht aktiv an einem anderen Tag arbeitet.
+    
+    // Ein einfacher Weg: Prüfe, ob das Datum im DatePicker veraltet ist,
+    // ABER setze ein Flag, wenn der User den Tag manuell geändert hat.
+    
     if (dp && dp.value !== localToday) {
-        console.log("Datumswechsel erkannt! Synchronisiere auf: " + localToday);
+        // Wir fragen den User nicht, wir prüfen: 
+        // Hat der User aktiv ein Datum gewählt, das in der ZUKUNFT liegt?
+        // Wenn der User aktiv den 5. Juni gewählt hat, ist dp.value > localToday.
+        // Dann NICHT zurückspringen!
+        
+        if (dp.value > localToday) {
+            console.log("User arbeitet in der Zukunft, kein automatischer Sprung.");
+            return; 
+        }
+
+        console.log("Neuer Tag erkannt! Synchronisiere auf: " + localToday);
         dp.value = localToday;
         updateDateText(localToday);
         updateNavButtons();
@@ -1246,6 +1266,7 @@ setInterval(async () => {
     }
 }, 60000);
 
+        
     } catch (e) {
         errorDiv.innerText = "Verbindung fehlgeschlagen.";
         btn.classList.remove('is-loading');
