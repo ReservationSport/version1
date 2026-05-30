@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2199,7 +2199,7 @@ window.openEditor = function(el, time, slot, klasse) {
                     <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
                     <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note" data-title="Aktion: Notiz für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note" data-title="Erfasse eine Notiz für die Klasse <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">stylus_note</span>
                     <span class="btn-text">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
                 </button>
@@ -2779,7 +2779,7 @@ window.handleNotizUI = function(time, slot, klasse) {
     const title = root.querySelector('.eigenesmenu-title');
     const subtitle = root.querySelector('#menu-subtitle');
 
-    if (title) title.innerText = "📝 NOTIZ ERFASSEN";
+    if (title) title.innerText = "NOTIZ ERFASSEN";
     if (subtitle) subtitle.innerHTML = `Notiz für Klasse <span style="color:#ff9800; font-weight:bold;">${klasse}</span> eingeben:`;
 
     // Aktuell bestehende Notiz aus der Box auslesen (falls vorhanden), um sie im Feld anzuzeigen
@@ -2788,7 +2788,7 @@ window.handleNotizUI = function(time, slot, klasse) {
 
     let html = `
         <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px; width: 100%; box-sizing: border-box;">
-            <textarea id="notiz-text-feld" placeholder="Hinweis, spezielle Übung, Lektionsinhalt..." rows="3"
+            <textarea id="notiz-text-feld" placeholder="Notiz..." rows="3"
                    style="width: 100%; padding: 12px; background: #222; border: 1px solid #ff9800; color: white; font-family: inherit; font-size: 1em; border-radius: 6px; box-sizing: border-box; resize: vertical;">${bestehendeNotiz}</textarea>
             
             <button id="btn-save-notiz" class="eigenesmenu-item" style="background: #e67e22; justify-content: center; border:none; border-radius:6px; margin: 0;" 
