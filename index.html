@@ -1225,25 +1225,29 @@ async function handleLogin() {
         loadingOverlay.classList.remove('is-visible');
 
         // 5. Hintergrund-Sync (alle 30s)
-        setInterval(async () => {
-            if (document.visibilityState === 'visible') {
-                await syncPlan();
-                await initNewsSystem(); 
-            }
-        }, 30000); 
-
-        // 6. Automatischer Tageswechsel-Check (alle 60s)
+        // 5. Hintergrund-Sync (alle 30s)
 setInterval(async () => {
-    const heuteLokal = getLocalISODate();
+    if (document.visibilityState === 'visible') {
+        await syncPlan();
+        await initNewsSystem(); 
+    }
+}, 30000); 
+
+// 6. Automatischer Tageswechsel-Check (alle 60s)
+setInterval(async () => {
+    const jetzt = new Date();
+    // Erstelle ein Datum im lokalen Format YYYY-MM-DD
+    const localToday = `${jetzt.getFullYear()}-${String(jetzt.getMonth() + 1).padStart(2, '0')}-${String(jetzt.getDate()).padStart(2, '0')}`;
+    
     const dp = document.getElementById('datePicker');
     
-    // Wenn der User auf "Heute" steht, aber der Picker nicht das aktuelle Datum hat:
-    if (dp.value !== heuteLokal) {
-        console.log("Neuer Tag erkannt! Lade Plan neu...");
-        dp.value = heuteLokal;
-        updateDateText(heuteLokal);
+    // Prüfe: Ist der Picker-Wert veraltet?
+    if (dp && dp.value !== localToday) {
+        console.log("Datumswechsel erkannt! Synchronisiere auf: " + localToday);
+        dp.value = localToday;
+        updateDateText(localToday);
         updateNavButtons();
-        await changeDayAndLoad(heuteLokal);
+        await changeDayAndLoad(localToday);
     }
 }, 60000);
 
