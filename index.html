@@ -2167,12 +2167,14 @@ async function markAsReadAndJump(news) {
     // 4. Zentrale schließen
     window.closeNews();
 
-    // 5. Bedingte Navigation (Hier passiert die Magie)
+    // 5. Bedingte Navigation (Korrigiert)
     if (news.datum) {
         // Prüfen, ob wir bereits am richtigen Tag sind
         if (currentPickerValue !== news.datum) {
-            document.getElementById('datePicker').value = news.datum;
-            await loadPlan(); // Nur wenn Tag anders, muss geladen werden
+            // Nutze die zentrale Funktion statt loadPlan() direkt aufzurufen!
+            // changeDayAndLoad erledigt das Setzen von dp.value, 
+            // den Aufruf von updateDateText, updateNavButtons UND loadPlan().
+            await changeDayAndLoad(news.datum);
         }
     }
 
