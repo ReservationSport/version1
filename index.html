@@ -1352,11 +1352,15 @@ window.changeDate = (days) => {
 
     
 window.goToToday = () => {
-    const dateStr = new Date().toISOString().split('T')[0];
-    document.getElementById('datePicker').value = dateStr;
-    updateDateText(dateStr);
+    const now = new Date();
+    const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
+    const dp = document.getElementById('datePicker');
+    dp.value = localDateStr;
+    
+    updateDateText(localDateStr);
     updateNavButtons();
-    changeDayAndLoad(dateStr);
+    changeDayAndLoad(localDateStr);
 };
 
 // Korrektur: Die Sichtbarkeit im updateNavButtons muss auch auf <= heute prüfen
