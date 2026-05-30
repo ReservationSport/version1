@@ -2958,28 +2958,29 @@ window.zeigeDoppellektionNotizAbfrage = function(slot, klasse) {
 
 function showNotizDetailPopup(klasse, notizText) {
     const overlay = document.createElement('div');
-    overlay.className = 'material-info-overlay'; // Nutzt dein bestehendes Overlay-Styling
-    overlay.onclick = () => overlay.remove(); // Schließt beim Klick auf den dunklen Hintergrund
+    overlay.className = 'material-info-overlay';
+    overlay.onclick = () => overlay.remove();
 
+    // Alles muss innerhalb der Backticks (``) stehen!
     overlay.innerHTML = `
     <div class="material-info-content" onclick="event.stopPropagation()" style="max-width: 350px; border: 1px solid #ff9800;">
         <div class="material-info-title" style="color: #ff9800; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
             <span class="material-symbols-outlined" style="font-size: 20px;">stylus_note</span> 
             Lektionsnotiz
         </div>
-`;
-            
-            <div style="margin-bottom: 15px; text-align: left; font-size: 0.95rem;">
-                Klasse: <span style="color: #ff9800; font-weight: bold;">${klasse}</span>
-            </div>
-
-            <div style="background: #111; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800; text-align: left; font-size: 0.9rem; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto;">
-                ${notizText ? notizText : "Keine Details vorhanden."}
-            </div>
-
-            <button class="eigenesmenu-cancel" style="width:100%; margin-top: 20px; cursor: pointer;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
+        
+        <div style="margin-bottom: 15px; text-align: left; font-size: 0.95rem;">
+            Klasse: <span style="color: #ff9800; font-weight: bold;">${klasse}</span>
         </div>
+
+        <div style="background: #111; padding: 12px; border-radius: 6px; border-left: 3px solid #ff9800; text-align: left; font-size: 0.9rem; white-space: pre-wrap; word-break: break-word; max-height: 200px; overflow-y: auto;">
+            ${notizText ? notizText : "Keine Details vorhanden."}
+        </div>
+
+        <button class="eigenesmenu-cancel" style="width:100%; margin-top: 20px; cursor: pointer;" onclick="this.closest('.material-info-overlay').remove()">Schließen</button>
+    </div>
     `;
+    
     document.body.appendChild(overlay);
 }
 
