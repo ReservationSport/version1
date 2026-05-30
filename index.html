@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -304,6 +304,15 @@ body {
     z-index: 100;
 }
 
+.material-indicator {
+    transition: transform 0.2s ease; /* Macht den Übergang weich */
+}
+
+.material-indicator:hover {
+    transform: scale(1.2); /* Vergrößert das Icon leicht */
+}
+
+    
 /* 🔥 NEU: Das Notiz-Icon oben links in der Box (Gegenspieler zum Material-Paket) */
 .box-notiz-icon {
     position: absolute;
@@ -2418,25 +2427,23 @@ function toggleMaterialSelection(mat, btn) {
 function markBoxWithMaterialIcon(box, material, detail) {
     if (!box) return;
     
-    // Altes Icon entfernen
     const oldIcon = box.querySelector('.material-indicator');
     if (oldIcon) oldIcon.remove();
 
     if (!material || material.trim() === "") return;
 
     const badge = document.createElement('div');
-    badge.className = 'material-indicator';
-    // Das Icon direkt als HTML
+    badge.className = 'material-indicator'; // CSS-Klasse für Hover-Effekt
     badge.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; vertical-align: middle;">trolley</span>';
 
-    // Hier wurde der Hintergrund und das Padding entfernt
-    Object.assign(badge.style, {
-        position: 'absolute',
-        top: '4px',
-        right: '4px',
-        zIndex: '10',
-        cursor: 'pointer'
-    });
+    // Positionierung anpassen
+Object.assign(badge.style, {
+    position: 'absolute',
+    top: '2px',    // Noch etwas höher
+    right: '2px',  // Noch etwas weiter nach rechts
+    zIndex: '10',
+    cursor: 'pointer'
+});
 
     badge.onclick = (e) => {
         e.stopPropagation();
@@ -2446,6 +2453,7 @@ function markBoxWithMaterialIcon(box, material, detail) {
     box.appendChild(badge);
 }
 
+    
 function showMaterialDetailPopup(material, detail) {
     const overlay = document.createElement('div');
     overlay.className = 'material-info-overlay';
