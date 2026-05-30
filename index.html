@@ -1398,7 +1398,8 @@ function updateNavButtons() {
    KALENDER MODAL LOGIK
    ============================================================ */
 
-window.openCalendar = function(offset = 0) {
+
+   window.openCalendar = function(offset = 0) {
     const modal = document.getElementById('calendar-modal');
     const nav = document.getElementById('calendar-nav');
     const grid = document.getElementById('calendar-grid');
@@ -1408,24 +1409,27 @@ window.openCalendar = function(offset = 0) {
     
     modal.style.display = 'flex';
     nav.innerHTML = '';
-    grid.innerHTML = ''; // Hier wird das Grid geleert
+    grid.innerHTML = ''; 
 
-    // 1. Basis-Datum
-    const heuteStr = new Date().toISOString().split('T')[0];
+    // 1. Basis-Datum (LOKAL statt UTC)
+    const now = new Date();
+    // Hilfsfunktion für lokales YYYY-MM-DD
+    const getLocalStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    
+    const heuteStr = getLocalStr(now);
     const gewähltesDatumStr = dp.value;
-    let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : new Date();
+    
+    let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : now;
     let d = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
     
     const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     
-    // 2. Navigation (oben)
+    // ... (Navigation & Header bleiben gleich)
     nav.innerHTML = `
         <button onclick="openCalendar(${offset - 1})">❮</button>
         <span class="cal-month-title">${monatsName}</span>
         <button onclick="openCalendar(${offset + 1})">❯</button>
     `;
-
-    // 3. Wochentage (Header)
     const tage = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
     tage.forEach(t => grid.insertAdjacentHTML('beforeend', `<div class="cal-weekday">${t}</div>`));
 
@@ -1433,26 +1437,23 @@ window.openCalendar = function(offset = 0) {
     const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
     let startDay = (d.getDay() === 0 ? 6 : d.getDay() - 1);
 
-    // Leere Felder für den Monatstart
     for (let i = 0; i < startDay; i++) {
         grid.insertAdjacentHTML('beforeend', `<div class="cal-day empty"></div>`);
     }
 
-    // 5. Die eigentliche Schleife für die Tage
+    // 5. Schleife
     for (let i = 1; i <= lastDay; i++) {
         let dateObj = new Date(d.getFullYear(), d.getMonth(), i, 12, 0, 0);
-        let dateStr = dateObj.toISOString().split('T')[0];
+        let dateStr = getLocalStr(dateObj); // LOKAL
         
         const dayBtn = document.createElement('div');
         dayBtn.className = 'cal-day';
         dayBtn.innerText = i;
         
-        // Klassen hinzufügen
         if (dateStr === heuteStr) dayBtn.classList.add('today');
         if (dateStr === gewähltesDatumStr) dayBtn.classList.add('selected');
         if (dateObj.getDay() === 0 || dateObj.getDay() === 6) dayBtn.classList.add('weekend');
 
-        // Logik: Vergangenheit sperren
         if (dateStr < heuteStr) {
             dayBtn.classList.add('disabled');
         } else {
@@ -1464,9 +1465,10 @@ window.openCalendar = function(offset = 0) {
                 window.closeCalendar();
             };
         }
-        grid.appendChild(dayBtn); // WICHTIG: Hier werden die Tage in das Grid geschoben
+        grid.appendChild(dayBtn);
     }
-};
+}; 
+    
 
 
 
