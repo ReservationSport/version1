@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1134,17 +1134,31 @@ body {
     let pendingNews = [];
     let isSaving = false;          // Status für den Global Loader
 
-    /* ============================================================
-       2. INITIALISIERUNG
-       ============================================================ */
+   /* ============================================================
+   2. INITIALISIERUNG & AUTOMATISCHER TAGESWECHSEL
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+    const today = new Date().toISOString().split('T')[0];
+    const dp = document.getElementById('datePicker');
+    dp.value = today;
     
-    // Setzt das heutige Datum in den Picker beim Start
-    document.addEventListener('DOMContentLoaded', () => {
-        const today = new Date().toISOString().split('T')[0];
-        document.getElementById('datePicker').value = today;
-    });
+    // Initialer Load
+    updateDateText(today);
+    updateNavButtons();
+    changeDayAndLoad(today);
 
-
+    // Automatischer Tageswechsel-Check
+    setInterval(() => {
+        const now = new Date().toISOString().split('T')[0];
+        if (dp.value !== now) {
+            console.log("Neuer Tag erkannt, lade Plan neu...");
+            dp.value = now;
+            updateDateText(now);
+            updateNavButtons();
+            changeDayAndLoad(now);
+        }
+    }, 60000); // Checkt jede Minute
+});
 
 /* ============================================================
    3. LOGIN-LOGIK (Optimiert & Sicher)
@@ -1373,17 +1387,12 @@ window.openCalendar = function(offset = 0) {
     nav.innerHTML = '';
     grid.innerHTML = '';
 
-    // 1. ABSOLUTE SYSTEM-ZEIT (Heute, 30.05.2026)
-    const heuteStr = new Date().toISOString().split('T')[0]; 
-    const gewähltesDatumStr = dp.value;
-    
-    // 2. Monat bestimmen: Wenn offset 0 ist, starte IMMER im aktuellen Monat von HEUTE
+    // 1. Basis-Datum: Immer vom Picker-Wert ausgehen, falls vorhanden
     let baseDate = dp.value ? new Date(dp.value + 'T12:00:00') : new Date();
     
-    // Wenn offset 0, erzwinge den aktuellen Monat, ansonsten blättere
-    let d = offset === 0 
-        ? new Date(new Date().getFullYear(), new Date().getMonth(), 1) 
-        : new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
+    // 2. Datum berechnen: Nimm den Monat aus dem Picker-Datum und addiere den Offset
+    // Hier entfernen wir das "offset === 0 -> erzwinge heute"
+    let d = new Date(baseDate.getFullYear(), baseDate.getMonth() + offset, 1);
     
     const monatsName = d.toLocaleString('de-DE', { month: 'long', year: 'numeric' });
     
