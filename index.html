@@ -1147,7 +1147,13 @@ body {
    2. INITIALISIERUNG
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    const today = new Date().toISOString().split('T')[0];
+    // Lokales Datum berechnen
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
+    
     const dp = document.getElementById('datePicker');
     
     // WICHTIG: Setze den Wert NUR, wenn er leer ist
@@ -1157,7 +1163,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     updateDateText(dp.value);
     updateNavButtons();
-    changeDayAndLoad(dp.value); // Einmaliges Laden beim Start
+    changeDayAndLoad(dp.value); 
 });
 
 /* ============================================================
