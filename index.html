@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1134,30 +1134,21 @@ body {
     let pendingNews = [];
     let isSaving = false;          // Status für den Global Loader
 
-   /* ============================================================
-   2. INITIALISIERUNG & AUTOMATISCHER TAGESWECHSEL
+/* ============================================================
+   2. INITIALISIERUNG
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
     const today = new Date().toISOString().split('T')[0];
     const dp = document.getElementById('datePicker');
-    dp.value = today;
     
-    // Initialer Load
-    updateDateText(today);
+    // WICHTIG: Setze den Wert NUR, wenn er leer ist
+    if (!dp.value) {
+        dp.value = today;
+    }
+    
+    updateDateText(dp.value);
     updateNavButtons();
-    changeDayAndLoad(today);
-
-    // Automatischer Tageswechsel-Check
-    setInterval(() => {
-        const now = new Date().toISOString().split('T')[0];
-        if (dp.value !== now) {
-            console.log("Neuer Tag erkannt, lade Plan neu...");
-            dp.value = now;
-            updateDateText(now);
-            updateNavButtons();
-            changeDayAndLoad(now);
-        }
-    }, 60000); // Checkt jede Minute
+    changeDayAndLoad(dp.value); // Einmaliges Laden beim Start
 });
 
 /* ============================================================
@@ -1187,12 +1178,10 @@ async function handleLogin() {
         const response = await fetch(`${url}?mode=login&pw=${encodeURIComponent(pwVal)}&kuerzel=${encodeURIComponent(kuerzelVal)}`);
         const json = await response.json();
 
-        // SICHERHEITSPRÜFUNG: Basierend auf deiner Server-Antwort
-        // Wir prüfen, ob status NICHT "success" ist.
         if (json.status !== "success") {
             errorDiv.innerText = json.msg || "Login fehlgeschlagen!";
             btn.classList.remove('is-loading');
-            return; // HIER WIRD JEDER ZUGRIFF GESTOPPT
+            return;
         }
 
         // ZUTRITT GEWÄHRT
@@ -1217,7 +1206,7 @@ async function handleLogin() {
         // Fertig: Loading-Overlay entfernen
         loadingOverlay.classList.remove('is-visible');
 
-        // 5. Hintergrund-Sync
+        // 5. Hintergrund-Sync (alle 30s)
         setInterval(async () => {
             if (document.visibilityState === 'visible') {
                 await syncPlan();
@@ -1225,11 +1214,24 @@ async function handleLogin() {
             }
         }, 30000); 
 
+        // 6. Automatischer Tageswechsel-Check (alle 60s)
+        setInterval(async () => {
+            const now = new Date().toISOString().split('T')[0];
+            const dp = document.getElementById('datePicker');
+            const heute = new Date().toISOString().split('T')[0];
+            
+            // Lade nur neu, wenn der User aktuell "Heute" betrachtet und ein neuer Tag angebrochen ist
+            if (dp.value === heute && dp.value !== now) {
+                dp.value = now;
+                updateDateText(now);
+                updateNavButtons();
+                await changeDayAndLoad(now);
+            }
+        }, 60000); 
+
     } catch (e) {
         errorDiv.innerText = "Verbindung fehlgeschlagen.";
         btn.classList.remove('is-loading');
-        
-        // Sicherstellen, dass das Overlay bei Fehler nicht hängen bleibt
         loadingOverlay.classList.remove('is-visible');
         loginOverlay.classList.remove('fade-out');
         loginOverlay.style.display = 'flex';
