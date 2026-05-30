@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2831,23 +2831,18 @@ window.handleNotizUI = function(time, slot, klasse) {
 };
 
 /**
- * 🔥 Hilfsfunktion für den Lösch-Button:
- * Leert das Textfeld im DOM und schickt es durch deine saveBooking- & Doppellektionslogik
+ * 🔥 Hilfsfunktion für den Lösch-Button
  */
 window.loescheNotizVomModal = function(slot, klasse) {
     const textFeld = document.getElementById('notiz-text-feld');
     if (textFeld) {
-        textFeld.value = ""; // Leerer String triggert das Löschen auf dem Server & lokal
+        textFeld.value = ""; 
     }
-    // Direkt an Phase 2 übergeben, damit die Doppellektions-Weiche aufgerufen wird
     window.speichereNotizVomModal(slot, klasse);
 };
 
-    
-
 /**
- * 🔥 Phase 2: SENDER GEÄNDERT! Perfektes Optimistic-UI-Verhalten.
- * Das Icon ploppt sofort auf und bleibt stabil stehen, ohne störenden Nachlade-Effekt.
+ * 🔥 Phase 2: Korrigierte Klammerstruktur
  */
 window.speichereNotizVomModal = async function(slot, klasse) {
     const textFeld = document.getElementById('notiz-text-feld');
@@ -2869,13 +2864,12 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         date: dateVal,
         slot: slot.toString(),
         klasse: klasse,
-        kommentar: notizText // WICHTIG: Das ist unser Datenfeld
+        kommentar: notizText
     };
 
-    // Callback erhält nun das gesamte Payload-Objekt 'p'
     const onCompleteVisuals = function(p) {
-        const n = p.kommentar; // Notiz direkt aus dem Payload
-        const s = p.slot;      // Slot direkt aus dem Payload
+        const n = p.kommentar;
+        const s = p.slot;
         
         console.log("Triggere Sofort-Update für Notiz in Slot:", s);
         
@@ -2883,52 +2877,47 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         if (box) {
             box.setAttribute('data-notiz', n);
 
-            // Altes Icon entfernen
             const altesIcon = box.querySelector('.box-notiz-icon');
             if (altesIcon) altesIcon.remove();
 
-            // Wenn Text da ist -> Icon neu zeichnen
-if (n !== "") {
-    const neuesNotizIcon = document.createElement('span');
-    neuesNotizIcon.className = 'box-notiz-icon';
-    neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 18px; line-height: 1;">stylus_note</span>';
-    neuesNotizIcon.title = n;
-    
-    // Positionierung erzwingen
-    Object.assign(neuesNotizIcon.style, {
-        position: 'absolute',
-        top: '4px',    // Hier kannst du den Abstand von oben feinjustieren
-        left: '4px',   // Falls es links oben sein soll
-        cursor: 'pointer',
-        zIndex: '5'
-    });
-    
-    neuesNotizIcon.onclick = function(event) {
-        event.stopPropagation();
-        if (typeof showNotizDetailPopup === "function") {
-            showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", n);
+            if (n !== "") {
+                const neuesNotizIcon = document.createElement('span');
+                neuesNotizIcon.className = 'box-notiz-icon';
+                neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 18px; line-height: 1;">stylus_note</span>';
+                neuesNotizIcon.title = n;
+                
+                Object.assign(neuesNotizIcon.style, {
+                    position: 'absolute',
+                    top: '4px',
+                    left: '4px',
+                    cursor: 'pointer',
+                    zIndex: '5'
+                });
+                
+                neuesNotizIcon.onclick = function(event) {
+                    event.stopPropagation();
+                    if (typeof showNotizDetailPopup === "function") {
+                        showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", n);
+                    }
+                };
+                box.appendChild(neuesNotizIcon);
+            }
         }
-    };
-    box.appendChild(neuesNotizIcon);
-}
 
-        // Cache aktualisieren
         if (window.lastPlanData) {
             if (!window.lastPlanData[s]) window.lastPlanData[s] = {};
             window.lastPlanData[s].kommentar = n;
         }
 
-        // Editor schließen (nur wenn wir den ursprünglichen Slot bearbeiten)
         if (s === slot.toString() && typeof closeEditor === 'function') {
             closeEditor();
         }
-    };
+    }; // <--- HIER war die Klammer gefehlt hat!
 
     if (typeof window.prozessiereAktion === "function") {
         window.prozessiereAktion(payload, onCompleteVisuals);
     }
 };
-
     
 
 /**
