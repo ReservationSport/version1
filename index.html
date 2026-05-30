@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1575,7 +1575,7 @@ window.loadPlan = async function() {
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
-                notizElement.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 18px; line-height: 1;">stylus_note</span>';
+                notizElement.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 22px; line-height: 1;">stylus_note</span>';
                 notizElement.title = slotData.kommentar;
                 
                 Object.assign(notizElement.style, {
@@ -1663,7 +1663,7 @@ window.syncPlan = async function() {
                 if (kommentar.trim() !== "") {
                     const neuesNotizIcon = document.createElement('span');
                     neuesNotizIcon.className = 'box-notiz-icon';
-                    neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 18px; line-height: 1;">stylus_note</span>';
+                    neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 22px; line-height: 1;">stylus_note</span>';
                     neuesNotizIcon.title = kommentar;
                     
                     Object.assign(neuesNotizIcon.style, {
@@ -2904,7 +2904,7 @@ window.speichereNotizVomModal = async function(slot, klasse) {
             if (n !== "") {
                 const neuesNotizIcon = document.createElement('span');
                 neuesNotizIcon.className = 'box-notiz-icon';
-                neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 24px; line-height: 1;">stylus_note</span>';
+                neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 22px; line-height: 1;">stylus_note</span>';
                 neuesNotizIcon.title = n;
                 
                 Object.assign(neuesNotizIcon.style, {
