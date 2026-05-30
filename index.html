@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2888,22 +2888,29 @@ window.speichereNotizVomModal = async function(slot, klasse) {
             if (altesIcon) altesIcon.remove();
 
             // Wenn Text da ist -> Icon neu zeichnen
-            if (n !== "") {
-                const neuesNotizIcon = document.createElement('span');
-                neuesNotizIcon.className = 'box-notiz-icon';
- neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800;">stylus_note</span>';
-                neuesNotizIcon.title = n;
-                neuesNotizIcon.style.cursor = 'pointer';
-                
-                neuesNotizIcon.onclick = function(event) {
-                    event.stopPropagation();
-                    if (typeof showNotizDetailPopup === "function") {
-                        showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", n);
-                    }
-                };
-                box.appendChild(neuesNotizIcon);
-            }
+if (n !== "") {
+    const neuesNotizIcon = document.createElement('span');
+    neuesNotizIcon.className = 'box-notiz-icon';
+    neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 18px; line-height: 1;">stylus_note</span>';
+    neuesNotizIcon.title = n;
+    
+    // Positionierung erzwingen
+    Object.assign(neuesNotizIcon.style, {
+        position: 'absolute',
+        top: '4px',    // Hier kannst du den Abstand von oben feinjustieren
+        left: '4px',   // Falls es links oben sein soll
+        cursor: 'pointer',
+        zIndex: '5'
+    });
+    
+    neuesNotizIcon.onclick = function(event) {
+        event.stopPropagation();
+        if (typeof showNotizDetailPopup === "function") {
+            showNotizDetailPopup(box.querySelector('.klasse-label')?.innerText || "", n);
         }
+    };
+    box.appendChild(neuesNotizIcon);
+}
 
         // Cache aktualisieren
         if (window.lastPlanData) {
