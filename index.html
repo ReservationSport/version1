@@ -1146,24 +1146,19 @@ body {
 /* ============================================================
    2. INITIALISIERUNG
    ============================================================ */
-function getLocalISODate() {
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Lokales Datum korrekt berechnen (vermeidet UTC-Falle)
     const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
-    
-    
-    
-    document.addEventListener('DOMContentLoaded', () => {
-    // 1. Lokales Datum VORHER erzwingen
-    const now = new Date();
-    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     const dp = document.getElementById('datePicker');
     
-    // 2. Den Picker JETZT auf heute erzwingen, bevor changeDayAndLoad aufgerufen wird
-    dp.value = today; 
+    // 2. Nur setzen, wenn noch kein Datum vorhanden ist
+    // (Damit der Login-Prozess das Datum nicht überschrieben bekommt)
+    if (!dp.value) {
+        dp.value = localDateStr;
+    }
     
-    // 3. Jetzt erst laden
     updateDateText(dp.value);
     updateNavButtons();
     changeDayAndLoad(dp.value); 
@@ -1488,15 +1483,6 @@ window.updateDateText = (dateValue) => {
         display.innerText = `${d}.${m}.${y}`;
     }
 };
-
-document.addEventListener('DOMContentLoaded', () => { 
-    const dateStr = new Date().toISOString().split('T')[0];
-    const dp = document.getElementById('datePicker');
-    dp.value = dateStr;
-    updateDateText(dateStr);
-    updateNavButtons();
-    changeDayAndLoad(dateStr); 
-});
 
     
 /* ============================================================
