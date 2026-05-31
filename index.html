@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2223,12 +2223,20 @@ window.closeNews = () => {
     }, 300);
 };
 
-window.triggerNewsWrapper = async function(aktion, slot, klasse) {
+/**
+ * Wrapper für den News-Trigger
+ * Nimmt nun optional das kuerzel entgegen, um es an triggerNews weiterzureichen.
+ */
+window.triggerNewsWrapper = async function(aktion, slot, klasse, kuerzel) {
     if (typeof triggerNews !== "function") return;
     try {
         let newsTyp = aktion.toLowerCase().includes("outdoor") ? "outdoor" : (aktion.toLowerCase() === "beendet" ? "beendet" : "");
-        await triggerNews(newsTyp, parseInt(slot), klasse);
-    } catch (error) { console.error("Fehler im News-Ablauf:", error); }
+        
+        // Wir übergeben das Kürzel als 4. Argument an die Funktion triggerNews
+        await triggerNews(newsTyp, parseInt(slot), klasse, kuerzel);
+    } catch (error) { 
+        console.error("Fehler im News-Ablauf:", error); 
+    }
 };
     
 
@@ -3064,12 +3072,10 @@ function showNotizDetailPopup(klasse, notizText) {
 
 /**
  * Der "Postbote": Sendet Daten an das Google Apps Script
- * JETZT NEU: Unterstützt ein Abbruch-Signal (options.signal) gegen Race Conditions!
  */
 window.saveImmediately = async function(payload, options = {}) {
-    // Falls die URL nicht global definiert ist, hier prüfen
     if (typeof url === 'undefined') {
-        console.error("❌ saveImmediately abgebrochen: Die Variable 'url' (Web-App URL) ist nicht definiert!");
+        console.error("❌ saveImmediately abgebrochen: Die Variable 'url' ist nicht definiert!");
         return { status: "error", msg: "Skript-URL fehlt" };
     }
 
@@ -3079,23 +3085,16 @@ window.saveImmediately = async function(payload, options = {}) {
     }
 
     try {
-        console.log("⏳ Postbote: Sende Speicherbefehl...", payload);
-
-        // KORREKTUR: Wir nutzen das normale Fetch ohne 'no-cors' UND reichen das Abbruch-Signal weiter!
         const response = await fetch(url, {
             method: "POST",
             body: JSON.stringify(payload),
-            signal: options.signal // <-- NEU: Hier wird die alte Anfrage im Netzwerk sofort gekillt, falls abgebrochen
+            signal: options.signal
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP-Fehler! Status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP-Fehler! Status: ${response.status}`);
 
         const result = await response.json();
-        console.log("📥 Postbote: Antwort vom Server erhalten:", result);
 
-        // Wenn das Google Sheet die Buchung erfolgreich eingetragen hat
         if (result.status === "success") {
             console.log("🎯 Speicherbefehl erfolgreich ausgeführt:", payload);
 
@@ -3108,37 +3107,31 @@ window.saveImmediately = async function(payload, options = {}) {
                 const slotIndex = parseInt(payload.slot);
                 const klasseName = payload.klasse || "";
                 const halleWert = payload.halle ? payload.halle.toString().trim() : "";
+                // Wir holen das Kürzel aus dem Payload (dein User-Kürzel), falls vorhanden
+                const userKuerzelInput = payload.kuerzel || (typeof userKuerzel !== 'undefined' ? userKuerzel : "System");
 
                 if (halleWert === "") {
-                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER:  für Slot ${slotIndex} erkannt.`);
                     triggerNews("", slotIndex, klasseName);
                 } 
                 else if (halleWert.includes("Outdoor")) {
-                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Outdoor für Slot ${slotIndex} erkannt.`);
                     triggerNews("outdoor", slotIndex, klasseName);
                 }
                 else if (halleWert === "Beendet" || halleWert === "beendet") {
-                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Beendet für Slot ${slotIndex} erkannt.`);
-                    triggerNews("beendet", slotIndex, klasseName);
+                    console.log(`📢 AUTOMATISCHER NEWS-TRIGGER: Beendet durch ${userKuerzelInput} erkannt.`);
+                    // Übergabe des Kürzels an triggerNews
+                    triggerNews("beendet", slotIndex, klasseName, userKuerzelInput);
                 }
             }
             // ============================================================
 
-            return result; // Gibt { status: "success" } zurück
+            return result;
         } else {
-            console.error("❌ Server meldete einen Fehler beim Speichern:", result.msg);
+            console.error("❌ Server meldete einen Fehler:", result.msg);
             return result;
         }
-
     } catch (e) {
-        // Wenn der Fehler durch das absichtliche Abbrechen (AbortController) kam, werfen wir ihn weiter,
-        // damit applyHalleSelection ihn im .catch() mit 'AbortError' sauber abfangen kann.
-        if (e.name === 'AbortError') {
-            throw e; 
-        }
-
-        console.error("❌ Kritischer Fehler beim Speichern im Fetch-Verlauf:", e);
-        alert("Verbindung zum Server fehlgeschlagen! Die Änderung wurde eventuell nicht gespeichert.");
+        if (e.name === 'AbortError') throw e;
+        console.error("❌ Kritischer Fehler:", e);
         return { status: "error", msg: e.toString() };
     }
 };
