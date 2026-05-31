@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -724,6 +724,66 @@ body {
     color: #fff !important;
 }
 
+
+/* Container für die 70/30 Aufteilung */
+.hallen-option-wrapper {
+    display: flex;
+    width: 100%;
+    height: 45px;
+    align-items: stretch;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+    border: 1px solid #444;
+    transition: all 0.2s ease;
+}
+
+/* Linker Bereich (Locker buchen - 70%) */
+.opt-locker {
+    flex: 0 0 70%;
+    display: flex;
+    align-items: center;
+    padding-left: 10px;
+    cursor: pointer;
+    background: #333;
+    color: #eee;
+}
+
+.opt-locker:hover {
+    background: #444;
+}
+
+/* Rechter Bereich (Fix buchen - 30%) */
+.opt-fix {
+    flex: 0 0 30%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-left: 1px solid #444;
+    background: #2a2a2a;
+    transition: background 0.2s;
+}
+
+.opt-fix:hover {
+    background: #553311 !important; /* Ein sanfter oranger Ton beim Hover */
+}
+
+/* Wenn die Halle bereits gewählt ist (Aktuelle Wahl) */
+.opt-locker.active {
+    background: #442d11 !important;
+    color: #ffca88 !important;
+    font-weight: bold;
+}
+
+.opt-fix.active {
+    background: #66441a !important;
+}
+
+
+
+
+    
     
 /* 10. MATERIAL-VISUALS & TOOLTIPS */
 .material-icon {
@@ -2753,42 +2813,35 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 
         if (istGesperrt) {
             html += `
-                <button class="eigenesmenu-item" style="justify-content: center; opacity: 0.2; cursor: not-allowed; background: #222;" disabled>
+                <button class="eigenesmenu-item" style="justify-content: center; opacity: 0.2; cursor: not-allowed; background: #222; margin-bottom: 8px;" disabled>
                     <span class="btn-text" style="text-decoration: line-through; color: #666;">${h}</span>
                 </button>`;
         } else {
             const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
             const configBorderColor = configFarben[h] || "#444";
-            
-            let buttonStyle = "";
-            let iconHtml = "";
 
-            if (istAktuelleWahl) {
-                buttonStyle = `justify-content: flex-start; background: #442d11 !important; color: #ffca88 !important; font-weight: bold !important; border: 1px solid #774c11 !important; margin-bottom: 8px;`;
-                iconHtml = `<span class="eigenesmenu-icon" style="margin-right: 10px; color: #ff8c00;">🔸</span>`;
-            } else {
-                // Standard-Button Style mit orangefarbenem SVG-Icon statt Emoji
-                buttonStyle = `justify-content: flex-start; background: #333; margin-bottom: 8px; border-left: 5px solid ${configBorderColor}; border-top: 1px solid #444; border-right: 1px solid #444; border-bottom: 1px solid #444;`;
-                
-                // Ein sauberes, oranges Haus-Icon (Farbe: #ff9800)
-                iconHtml = `
-                    <svg class="eigenesmenu-icon" style="margin-right: 10px; width: 16px; height: 16px; fill: #ff9800; vertical-align: middle;" viewBox="0 0 24 24">
-                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                    </svg>`;
-            }
-
+            // 70/30 Container
             html += `
-                <button class="eigenesmenu-item" style="${buttonStyle}" 
-                        onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this)">
-                    ${iconHtml}
-                    <span class="btn-text">${h}</span>
-                    ${istAktuelleWahl ? '<span style="margin-left: auto; font-size: 0.7rem; background: rgba(0,0,0,0.4); padding: 2px 6px; border-radius: 4px; color: #ff8c00; border: 1px solid rgba(255,140,0,0.2); font-weight: normal;">AKTUELL</span>' : ''}
-                </button>`;
+                <div class="hallen-option-wrapper" style="display: flex; margin-bottom: 8px; border: 1px solid #444; border-left: 5px solid ${configBorderColor}; background: #333; height: 45px; align-items: stretch; border-radius: 4px; overflow: hidden;">
+                    
+                    <div style="flex: 0 0 70%; display: flex; align-items: center; padding-left: 10px; cursor: pointer; ${istAktuelleWahl ? 'background: #442d11; color: #ffca88;' : ''}" 
+                         onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
+                        <svg class="eigenesmenu-icon" style="margin-right: 10px; width: 16px; height: 16px; fill: ${istAktuelleWahl ? '#ff8c00' : '#ff9800'};" viewBox="0 0 24 24">
+                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                        </svg>
+                        <span class="btn-text" style="font-weight: ${istAktuelleWahl ? 'bold' : 'normal'};">${h}</span>
+                    </div>
+
+                    <div style="flex: 0 0 30%; display: flex; align-items: center; justify-content: center; cursor: pointer; border-left: 1px solid #444; background: ${istAktuelleWahl ? '#66441a' : '#2a2a2a'};" 
+                         onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')"
+                         title="Fix buchen">
+                        <span class="material-symbols-outlined" style="color: ${istAktuelleWahl ? '#ffca88' : '#888'}; font-size: 18px;">lock</span>
+                    </div>
+                </div>`;
         }
     });
 
     container.innerHTML = html;
-}
     
 
 // Ganz wichtig: Diese Variable MUSS außerhalb der Funktion stehen (global)
@@ -2799,10 +2852,10 @@ window.currentSaveController = null;
 // Globaler Speicher für blockierte Slots
 window.syncBlockierteSlots = window.syncBlockierteSlots || {};
 
-window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
+window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn, typ) {
     if (!btn) return;
 
-    // Basis-Payload zusammenbauen
+    // Basis-Payload zusammenbauen (jetzt inklusive 'typ')
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2810,19 +2863,22 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
         date: document.getElementById('datePicker').value,
         slot: slot,
         klasse: klasse,
-        halle: neueHalle
+        halle: neueHalle,
+        typ: typ || "" // "fix" oder leerer String
     };
 
     // Callback erhält nun das gesamte Payload-Objekt 'p'
     const visuelleAktualisierung = function(p) {
-        const h = p.halle; // Wert sicher aus dem Payload lesen
-        const s = p.slot;  // Slot sicher aus dem Payload lesen
+        const h = p.halle;
+        const s = p.slot;
+        const t = p.typ; // Status aus dem Payload lesen
         
         const targetBox = document.querySelector(`[data-slot="${s}"]`);
         
         // 1. Lokalen Datenstand aktualisieren
         if (window.lastPlanData && window.lastPlanData[s]) {
             window.lastPlanData[s].halle = h;
+            window.lastPlanData[s].typ = t; // Status lokal speichern
         }
 
         // 2. UI direkt aktualisieren
@@ -2843,6 +2899,17 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
             if (h === "Ausfall") {
                 targetBox.classList.add('ausfall-mode');
             }
+
+            // 🔥 UI: Schloss-Icon bei Fix-Buchung anzeigen
+            let lockIcon = targetBox.querySelector('.lock-icon-container');
+            if (!lockIcon) {
+                lockIcon = document.createElement('div');
+                lockIcon.className = 'lock-icon-container';
+                lockIcon.style.position = 'absolute';
+                lockIcon.style.right = '5px';
+                targetBox.appendChild(lockIcon);
+            }
+            lockIcon.innerHTML = (t === "fix") ? '<span class="material-symbols-outlined" style="font-size:14px;">lock</span>' : '';
         }
     };
 
@@ -2850,6 +2917,9 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn) {
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, visuelleAktualisierung);
     }
+    
+    // Modal schließen (falls deine Funktion so heißt)
+    if (typeof closeModal === 'function') closeModal();
 };
     
 
