@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2172,8 +2172,7 @@ window.refreshAndShowNews = function() {
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
     
-    // 1. LOKALES DATEN-UPDATE (Das ist der entscheidende Punkt!)
-    // Wir finden das Objekt in deiner globalen Liste und aktualisieren es direkt.
+    // 1. LOKALES DATEN-UPDATE
     const newsInListe = meineRelevanteNews.find(n => n.id === news.id);
     if (newsInListe) {
         if (!newsInListe.gelesen) newsInListe.gelesen = "";
@@ -2199,24 +2198,21 @@ async function markAsReadAndJump(news) {
     }).catch(e => console.error("Fehler beim Markieren:", e));
 
     window.closeNews();
-    
 
-    // 5. Bedingte Navigation
+    // 5. Bedingte Navigation (Hier wird das Datum frisch aus dem DOM geholt)
     if (news.datum) {
-        if (currentPickerValue !== news.datum) {
-            // Warten bis der Tag geladen wurde, bevor wir scrollen
+        const pickerValue = document.getElementById('datePicker').value;
+        if (pickerValue !== news.datum) {
             await changeDayAndLoad(news.datum);
         }
     }
 
     // 6. Scrollen & Blinken
-    // Kurzes Timeout, um sicherzustellen, dass das Grid nach dem Laden fertig gerendert ist
     setTimeout(() => {
         const box = document.querySelector(`[data-slot="${news.slot}"]`); 
         if (box) {
             box.scrollIntoView({ behavior: 'smooth', block: 'center' });
             box.classList.add('blink-animation');
-            // Blinken nach 4 Sekunden automatisch entfernen
             setTimeout(() => box.classList.remove('blink-animation'), 4000);
         }
     }, 200); 
