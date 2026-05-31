@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2759,7 +2759,7 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     
 
 
-   function handleReservationUI(time, slot, klasse) {
+function handleReservationUI(time, slot, klasse) {
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
     
@@ -2767,6 +2767,11 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     const titleEl = root ? root.querySelector('.eigenesmenu-title') : null;
     
     if (!container) return;
+
+    // SCROLL-LOGIK: Container begrenzen, damit er scrollbar wird
+    container.style.maxHeight = "70vh";
+    container.style.overflowY = "auto";
+    container.style.paddingRight = "5px";
 
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
 
@@ -2802,7 +2807,7 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <button class="eigenesmenu-item" 
-                    style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 15px;" 
+                    style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 15px; padding: 18px; width: 100%;" 
                     onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
                 <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ RESERVIERUNG LÖSCHEN</span>
             </button>`;
@@ -2828,28 +2833,30 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 
         if (istGesperrt) {
             html += `
-                <button class="eigenesmenu-item" style="justify-content: center; opacity: 0.2; cursor: not-allowed; background: #222; margin-bottom: 8px;" disabled>
+                <button class="eigenesmenu-item" style="justify-content: center; opacity: 0.2; cursor: not-allowed; background: #222; margin-bottom: 8px; padding: 18px; width: 100%;" disabled>
                     <span class="btn-text" style="text-decoration: line-through; color: #666;">${h}</span>
                 </button>`;
         } else {
             const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
             const configBorderColor = configFarben[h] || "#444";
+            
+            // HIER: Höhe auf 60px angepasst für bessere Klickbarkeit
             html += `
-                <div class="hallen-option-wrapper" style="display: flex; margin-bottom: 8px; border: 1px solid #444; border-left: 5px solid ${configBorderColor}; background: #333; height: 45px; align-items: stretch; border-radius: 4px; overflow: hidden;">
-                    <div style="flex: 0 0 70%; display: flex; align-items: center; padding-left: 10px; cursor: pointer; ${istAktuelleWahl ? 'background: #442d11; color: #ffca88;' : ''}" 
+                <div class="hallen-option-wrapper" style="display: flex; margin-bottom: 10px; border: 1px solid #444; border-left: 5px solid ${configBorderColor}; background: #333; height: 60px; align-items: stretch; border-radius: 4px; overflow: hidden;">
+                    <div style="flex: 0 0 70%; display: flex; align-items: center; padding-left: 15px; cursor: pointer; ${istAktuelleWahl ? 'background: #442d11; color: #ffca88;' : ''}" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
-                        <span class="btn-text">${h}</span>
+                        <span class="btn-text" style="font-weight: 500;">${h}</span>
                     </div>
                     <div style="flex: 0 0 30%; display: flex; align-items: center; justify-content: center; cursor: pointer; border-left: 1px solid #444; background: ${istAktuelleWahl ? '#66441a' : '#2a2a2a'};" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
-                        <span class="material-symbols-outlined" style="color: ${istAktuelleWahl ? '#ffca88' : '#888'}; font-size: 18px;">lock</span>
+                        <span class="material-symbols-outlined" style="color: ${istAktuelleWahl ? '#ffca88' : '#888'}; font-size: 22px;">lock</span>
                     </div>
                 </div>`;
         }
     });
 
     container.innerHTML = html;
-} // <--- HIER MUSS DIE FUNKTION ZU ENDE SEIN!
+}
 
 // --- GLOBALE VARIABLEN UND FUNKTIONEN (AUẞERHALB DER FUNKTIONEN) ---
 window.currentSaveController = null;
