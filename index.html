@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO124789</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1147,17 +1147,16 @@ body {
    2. INITIALISIERUNG
    ============================================================ */
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Lokales Datum korrekt berechnen (vermeidet UTC-Falle)
+    // 1. Lokales Datum korrekt berechnen
     const now = new Date();
     const localDateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     const dp = document.getElementById('datePicker');
     
-    // 2. Nur setzen, wenn noch kein Datum vorhanden ist
-    // (Damit der Login-Prozess das Datum nicht überschrieben bekommt)
-    if (!dp.value) {
-        dp.value = localDateStr;
-    }
+    // --- ÄNDERUNG HIER ---
+    // Erzwinge heute beim PC, wenn kein expliziter Grund dagegen spricht.
+    // Wir setzen das Datum immer auf HEUTE, egal was der Browser im Cache hat.
+    dp.value = localDateStr;
     
     updateDateText(dp.value);
     updateNavButtons();
