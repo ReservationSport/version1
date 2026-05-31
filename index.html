@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -576,7 +576,7 @@ body {
 
 
 /* ============================================================
-   9. EIGENES KONTEXT-MENÜ (FINALER CLEAN LOOK)
+   9. EIGENES KONTEXT-MENÜ (FINALER CLEAN LOOK - OPTIMIERT)
    ============================================================ */
 
 .eigenesmenu-backdrop {
@@ -609,20 +609,19 @@ body {
 }
 
 .eigenesmenu-header {
-    position: relative; /* Wichtig für die Positionierung des Wasserzeichen-Icons */
+    position: relative;
     padding: 20px;
     background: #1a1a1a;
     border-bottom: 1px solid #333;
 }
 
-/* Das große Wasserzeichen-Icon oben rechts */
 .header-icon {
     position: absolute;
     top: 15px;
     right: 20px;
     font-size: 40px !important;
     color: #e67e22 !important;
-    opacity: 0.2; /* Sehr dezent als Hintergrund */
+    opacity: 0.2;
     pointer-events: none;
 }
 
@@ -647,58 +646,82 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    box-sizing: border-box;
 }
 
-/* --- BUTTONS --- */
-.eigenesmenu-item {
-    position: relative;
+/* --- BUTTONS & WRAPPER EINHEITLICH AUF 60px --- */
+.eigenesmenu-item, .hallen-option-wrapper {
     width: 100%;
-    min-height: 52px;
+    height: 60px !important;
+    min-height: 60px !important;
+    box-sizing: border-box !important;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 0; /* Abstand wird über 'gap' im Container gesteuert */
+    display: flex;
+    align-items: stretch;
+}
+
+.eigenesmenu-item {
     background: #262626;
     color: #eee;
     border: 1px solid #333;
-    padding: 12px 50px 12px 18px;
-    border-radius: 10px;
+    padding: 0 15px;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
     font-size: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    text-align: left;
+    font-weight: bold;
     transition: all 0.3s ease;
 }
 
 .eigenesmenu-item:hover:not(:disabled) {
     border-color: #e67e22;
     background: #2d2d2d;
-    transform: translateX(5px);
 }
 
-/* Material Icon Styling im Menü */
-.eigenesmenu-item .material-symbols-outlined {
-    color: #e67e22;
-    margin-right: 15px;
-    font-size: 24px;
+/* Hallen-Optionen (70/30) */
+.hallen-option-wrapper {
+    border: 1px solid #444;
+    background: #333;
+    padding: 0;
+}
+
+.opt-locker {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    padding-left: 15px;
+    cursor: pointer;
+    background: #333;
+    color: #eee;
+}
+
+.opt-fix {
+    width: 50px;
     flex-shrink: 0;
-    transition: color 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-left: 1px solid #444;
+    background: #2a2a2a;
 }
 
-/* --- LOADER --- */
+/* Zustände */
+.opt-locker.active { background: #442d11 !important; color: #ffca88 !important; font-weight: bold; }
+.opt-fix.active { background: #66441a !important; }
+
+/* --- LOADER & SONSTIGES --- */
 .eigenesmenu-loader {
-    position: absolute;
-    right: 18px;
-    width: 18px;
-    height: 18px;
+    position: absolute; right: 18px; width: 18px; height: 18px;
     border: 2px solid rgba(230, 126, 34, 0.2);
     border-top: 2px solid #e67e22;
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .eigenesmenu-cancel {
     width: 100%;
@@ -714,73 +737,7 @@ body {
     transition: color 0.2s ease;
 }
 
-.eigenesmenu-cancel:hover {
-    color: #888;
-}
-
-.btn-success-state {
-    background: #1b4332 !important;
-    border-color: #2d6a4f !important;
-    color: #fff !important;
-}
-
-
-/* Container für die 70/30 Aufteilung */
-.hallen-option-wrapper {
-    display: flex;
-    width: 100%;
-    height: 45px;
-    align-items: stretch;
-    border-radius: 4px;
-    overflow: hidden;
-    margin-bottom: 8px;
-    border: 1px solid #444;
-    transition: all 0.2s ease;
-}
-
-/* Linker Bereich (Locker buchen - 70%) */
-.opt-locker {
-    flex: 0 0 70%;
-    display: flex;
-    align-items: center;
-    padding-left: 10px;
-    cursor: pointer;
-    background: #333;
-    color: #eee;
-}
-
-.opt-locker:hover {
-    background: #444;
-}
-
-/* Rechter Bereich (Fix buchen - 30%) */
-.opt-fix {
-    flex: 0 0 30%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    border-left: 1px solid #444;
-    background: #2a2a2a;
-    transition: background 0.2s;
-}
-
-.opt-fix:hover {
-    background: #553311 !important; /* Ein sanfter oranger Ton beim Hover */
-}
-
-/* Wenn die Halle bereits gewählt ist (Aktuelle Wahl) */
-.opt-locker.active {
-    background: #442d11 !important;
-    color: #ffca88 !important;
-    font-weight: bold;
-}
-
-.opt-fix.active {
-    background: #66441a !important;
-}
-
-
+.eigenesmenu-cancel:hover { color: #888; }
 
 
     
@@ -2760,36 +2717,27 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 
 
 function handleReservationUI(time, slot, klasse) {
-    const container = document.getElementById('menu-options-list');
+    const container = document.getElementById('menu-options-list'); // Deine Liste im HTML
     const subtitle = document.getElementById('menu-subtitle');
     const root = document.getElementById('eigenesmenu-modal');
     const titleEl = root ? root.querySelector('.eigenesmenu-title') : null;
     
     if (!container) return;
 
-    // SCROLL-LOGIK: Container begrenzen, damit er scrollbar wird, wenn er zu lang ist
-    container.style.maxHeight = "65vh";
-    container.style.overflowY = "auto";
-    container.style.boxSizing = "border-box";
-    container.style.paddingRight = "5px";
-
-    const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
-
+    // Titel & Untertitel
     if (titleEl) {
         titleEl.innerText = "HALLE/RAUM WÄHLEN";
-        titleEl.style.color = "#ff9800";
+        titleEl.style.color = "#e67e22";
     }
-
     if (subtitle) {
-        subtitle.innerHTML = `Welche Räumlichkeit möchtest du für die <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> reservieren?`;
+        subtitle.innerHTML = `Reservierung für: <b>${klasse}</b>`;
     }
 
-    // Besetzte Hallen berechnen
+    // Besetzte Hallen Berechnung (Logik bleibt gleich)
     const currentSlot = parseInt(slot);
     const rowIndex = Math.floor((currentSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
     const endSlot = startSlot + 4;
-
     let besetzteHallen = [];
     for (let s = startSlot; s <= endSlot; s++) {
         if (s === currentSlot) continue;
@@ -2797,63 +2745,42 @@ function handleReservationUI(time, slot, klasse) {
         if (data && data.halle && data.halle !== "Ausfall") {
             const hName = data.halle.trim();
             if (hName.toLowerCase().includes("aussenplatz") || hName.toLowerCase().includes("outdoor")) continue; 
-            if (hName.includes('+')) {
-                besetzteHallen.push(...hName.split('+').map(t => t.trim()));
-            }
+            if (hName.includes('+')) besetzteHallen.push(...hName.split('+').map(t => t.trim()));
             besetzteHallen.push(hName);
         }
     }
 
+    const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
     let html = "";
-    
-    // RESERVIERUNG LÖSCHEN (Einheitliche Höhe: 60px)
+
+    // 1. LÖSCHEN BUTTON (Nutzt .eigenesmenu-item aus dem CSS)
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
-            <button class="eigenesmenu-item" 
-                    style="display: flex; align-items: center; justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 10px; width: 100%; height: 60px; border-radius: 4px; cursor: pointer;" 
-                    onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
-                <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ RESERVIERUNG LÖSCHEN</span>
+            <button class="eigenesmenu-item" onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
+                ❌ RESERVIERUNG LÖSCHEN
             </button>`;
     }
 
-    const hallen = (typeof configFarben !== 'undefined' && Object.keys(configFarben).length > 0) 
-                   ? Object.keys(configFarben) 
-                   : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21", "Aussenplatz"];
+    // 2. HALLEN OPTIONEN (Nutzt .hallen-option-wrapper aus dem CSS)
+    const hallen = (typeof configFarben !== 'undefined') ? Object.keys(configFarben) : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21", "Aussenplatz"];
     
     hallen.forEach(h => {
-        const hClean = h.trim();
-        const isOutdoor = hClean.toLowerCase().includes("aussenplatz") || hClean.toLowerCase().includes("outdoor");
-        
-        let istGesperrt = false;
-        if (!isOutdoor) {
-            if (hClean.includes('+')) {
-                const hTeile = hClean.split('+').map(t => t.trim());
-                istGesperrt = hTeile.some(teil => besetzteHallen.includes(teil));
-            } else {
-                istGesperrt = besetzteHallen.includes(hClean);
-            }
-        }
+        const istGesperrt = besetzteHallen.includes(h.trim());
+        const istAktuelleWahl = h.trim().toLowerCase() === aktuelleHalleInBox.toLowerCase();
+        const color = configFarben[h] || "#444";
 
         if (istGesperrt) {
-            // GESPERRTE OPTION (Einheitliche Höhe: 60px)
-            html += `
-                <button class="eigenesmenu-item" style="display: flex; align-items: center; justify-content: center; opacity: 0.2; cursor: not-allowed; background: #222; margin-bottom: 10px; width: 100%; height: 60px; border: 1px solid #444; border-radius: 4px;" disabled>
-                    <span class="btn-text" style="text-decoration: line-through; color: #666;">${h}</span>
-                </button>`;
+            html += `<button class="eigenesmenu-item" style="opacity: 0.3; cursor: not-allowed;" disabled>${h}</button>`;
         } else {
-            const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
-            const configBorderColor = configFarben[h] || "#444";
-            
-            // HALLEN-OPTION-WRAPPER (Einheitliche Höhe: 60px)
             html += `
-                <div class="hallen-option-wrapper" style="display: flex; margin-bottom: 10px; border: 1px solid #444; border-left: 5px solid ${configBorderColor}; background: #333; height: 60px; align-items: stretch; border-radius: 4px; overflow: hidden;">
-                    <div style="flex: 1; display: flex; align-items: center; padding-left: 15px; cursor: pointer; ${istAktuelleWahl ? 'background: #442d11; color: #ffca88;' : ''}" 
+                <div class="hallen-option-wrapper" style="border-left: 5px solid ${color};">
+                    <div class="opt-locker ${istAktuelleWahl ? 'active' : ''}" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
-                        <span class="btn-text" style="font-weight: 500;">${h}</span>
+                        ${h}
                     </div>
-                    <div style="flex: 0 0 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-left: 1px solid #444; background: ${istAktuelleWahl ? '#66441a' : '#2a2a2a'};" 
+                    <div class="opt-fix ${istAktuelleWahl ? 'active' : ''}" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
-                        <span class="material-symbols-outlined" style="color: ${istAktuelleWahl ? '#ffca88' : '#888'}; font-size: 22px;">lock</span>
+                        <span class="material-symbols-outlined">lock</span>
                     </div>
                 </div>`;
         }
