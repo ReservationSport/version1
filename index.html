@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1579,17 +1579,14 @@ window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
     
-    // global-loader Aufrufe entfernt, da jetzt changeDayAndLoad das Overlay steuert
     const dateVal = dp.value;
     if (!userPw || !dateVal) return;
 
     container.innerHTML = ""; 
-    
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     
-    // Wochenende prüfen
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
         return; 
@@ -1604,9 +1601,7 @@ window.loadPlan = async function() {
             return; 
         }
         
-        if (json.verfügbareMaterialien) {
-            verfügbareMaterialien = json.verfügbareMaterialien;
-        }
+        if (json.verfügbareMaterialien) verfügbareMaterialien = json.verfügbareMaterialien;
         
         const plan = json.plan; 
         window.lastPlanData = plan; 
@@ -1631,22 +1626,22 @@ window.loadPlan = async function() {
                 const slotData = plan[absoluteSlot] || {};
                 const klasse = slotData.klasse || "";
                 const halle = slotData.halle || "";
+                const typ = slotData.typ || ""; // <-- Typ aus DB lesen
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
-                const kommentar = slotData.kommentar || ""; 
                 const isAusfall = (halle === "Ausfall");
                 const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
                 
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
-                        data-slot="${absoluteSlot}" data-time="${zeitStr}" data-notiz="${kommentar.replace(/"/g, '&quot;')}" 
+                        data-slot="${absoluteSlot}" data-time="${zeitStr}" 
                         style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
+                        <div class="lock-icon-container" style="position:absolute; right:5px; top:5px;">${typ === 'fix' ? '<span class="material-symbols-outlined" style="font-size:14px;">lock</span>' : ''}</div>
                 </div>`;
             }
         });
-
         container.innerHTML = html;
 
         // Icons hinzufügen... (dein bestehender Code bleibt hier identisch)
@@ -1686,8 +1681,12 @@ window.loadPlan = async function() {
 };
 
 
+/* ============================================================
+   HINTERGRUND-SYNCHRONISATION (Mit Schloss-Icon Unterstützung)
+   ============================================================ */
+
 window.syncPlan = async function() {
-    if (isSaving) return; 
+    if (isSaving) return; // Wenn gerade eine Aktion läuft, Sync pausieren
 
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
@@ -1696,15 +1695,15 @@ window.syncPlan = async function() {
         const res = await fetch(`${url}?date=${dp.value}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
+        // Abbruch bei Fehler oder ungültigen Daten
         if (json.sperrMsg || !json.plan) return;
         
-        if (json.verfügbareMaterialien) {
-            verfügbareMaterialien = json.verfügbareMaterialien;
-        }
-        
+        // Lokalen Datenstand aktualisieren
         window.lastPlanData = json.plan; 
         
+        // Über alle Slots iterieren und UI anpassen
         Object.keys(json.plan).forEach(slot => {
+            // Nur aktualisieren, wenn der User diesen Slot gerade nicht aktiv bearbeitet
             if (window.syncBlockierteSlots && window.syncBlockierteSlots[slot]) {
                 console.log(`Sync blockiert: Slot ${slot} wird vom User editiert.`);
                 return; 
@@ -1718,7 +1717,9 @@ window.syncPlan = async function() {
                 const lehrer = data.lehrer || allClassTeachers[klasse] || "";
                 const material = data.material || "";   
                 const kommentar = data.kommentar || ""; 
-                
+                const typ = data.typ || ""; // <-- Status (fix/leer) abholen
+
+                // Labels aktualisieren
                 const hLabel = box.querySelector('.halle-label');
                 if (hLabel) hLabel.innerText = halle;
                 
@@ -1728,9 +1729,9 @@ window.syncPlan = async function() {
                 const lLabel = box.querySelector('.lehrer-info');
                 if (lLabel) lLabel.innerText = lehrer;
                 
-                // data-notiz Attribut aktuell halten
                 box.setAttribute('data-notiz', kommentar);
 
+                // Farb-Logik & Ausfall
                 if (halle === "Ausfall") {
                     box.classList.add('ausfall-mode');
                     box.style.backgroundColor = ""; 
@@ -1739,9 +1740,26 @@ window.syncPlan = async function() {
                     box.style.backgroundColor = configFarben[halle] || "";
                 }
 
+                // Material-Icon aktualisieren
                 markBoxWithMaterialIcon(box, material, kommentar);
 
-                // 🔥 REPARIERT IM BACKGROUND-SYNC: Altes Icon weg, neues dynamisches Popup-Icon her
+                // Schloss-Icon (Lock-Container) verwalten
+                let lockIcon = box.querySelector('.lock-icon-container');
+                if (!lockIcon) {
+                    lockIcon = document.createElement('div');
+                    lockIcon.className = 'lock-icon-container';
+                    Object.assign(lockIcon.style, {
+                        position: 'absolute',
+                        right: '5px',
+                        top: '5px',
+                        display: 'flex',
+                        alignItems: 'center'
+                    });
+                    box.appendChild(lockIcon);
+                }
+                lockIcon.innerHTML = (typ === 'fix') ? '<span class="material-symbols-outlined" style="font-size:14px; color:#ff9800;">lock</span>' : '';
+
+                // Notiz-Icon neu zeichnen
                 const altesNotizIcon = box.querySelector('.box-notiz-icon');
                 if (altesNotizIcon) altesNotizIcon.remove();
 
