@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2070,6 +2070,8 @@ function updateNewsDot() {
     const dot = document.getElementById('news-dot');
     if (!dot) return;
 
+    // Sicherstellen, dass wir die aktuellsten Daten aus dem Speicher oder der globalen Variable prüfen
+    // Wenn 'meineRelevanteNews' eine globale Variable ist, wird sie hier verwendet:
     const hatUngelesene = meineRelevanteNews.some(n => {
         const gelesenListe = (n.gelesen || "").toUpperCase().split(',').map(s => s.trim());
         return !gelesenListe.includes(aktuellerUser);
@@ -2169,13 +2171,16 @@ window.refreshAndShowNews = function() {
 
 async function markAsReadAndJump(news) {
     const user = typeof userKuerzel !== 'undefined' ? userKuerzel.toUpperCase().trim() : "";
-    const currentPickerValue = document.getElementById('datePicker').value; // Dein aktuelles Datum
+    const currentPickerValue = document.getElementById('datePicker').value;
     
-    // 1. Sofortige UI-Reaktion
+    // 1. Sofortige UI-Reaktion (Icons anpassen)
     const clickedCard = event.currentTarget;
     clickedCard.style.opacity = "0.4";
     clickedCard.style.pointerEvents = "none";
-    clickedCard.querySelector('.status-icon').innerText = '⚪ Gelesen';
+    
+    // Icon auf 'Gelesen' umstellen
+    clickedCard.querySelector('.status-icon').innerHTML = 
+        `<span class="material-symbols-outlined" style="vertical-align: middle; margin-right: 5px; color: #27ae60;">mark_email_read</span> Gelesen`;
 
     // 2. Lokales Update für sofortigen Badge-Verschwinden-Effekt
     if (!news.gelesen) news.gelesen = "";
@@ -2193,27 +2198,25 @@ async function markAsReadAndJump(news) {
     // 4. Zentrale schließen
     window.closeNews();
 
-    // 5. Bedingte Navigation (Korrigiert)
+    // 5. Bedingte Navigation
     if (news.datum) {
-        // Prüfen, ob wir bereits am richtigen Tag sind
         if (currentPickerValue !== news.datum) {
-            // Nutze die zentrale Funktion statt loadPlan() direkt aufzurufen!
-            // changeDayAndLoad erledigt das Setzen von dp.value, 
-            // den Aufruf von updateDateText, updateNavButtons UND loadPlan().
+            // Warten bis der Tag geladen wurde, bevor wir scrollen
             await changeDayAndLoad(news.datum);
         }
     }
 
-    // 6. Scrollen & Blinken (Jetzt absolut performant)
-    // Wir nutzen hier ein sehr kurzes Timeout, da das DOM jetzt nicht mehr "zappelt"
+    // 6. Scrollen & Blinken
+    // Kurzes Timeout, um sicherzustellen, dass das Grid nach dem Laden fertig gerendert ist
     setTimeout(() => {
         const box = document.querySelector(`[data-slot="${news.slot}"]`); 
         if (box) {
             box.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            setTimeout(() => box.classList.add('blink-animation'), 300);
-            setTimeout(() => box.classList.remove('blink-animation'), 4300);
+            box.classList.add('blink-animation');
+            // Blinken nach 4 Sekunden automatisch entfernen
+            setTimeout(() => box.classList.remove('blink-animation'), 4000);
         }
-    }, 100); // 100ms reicht völlig, wenn kein loadPlan() läuft
+    }, 200); 
 }
 
 window.closeNews = () => {
