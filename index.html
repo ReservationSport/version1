@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2744,7 +2744,6 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
     
-    // --- NEU: Den Titel des Modals greifen ---
     const root = document.getElementById('eigenesmenu-modal');
     const titleEl = root ? root.querySelector('.eigenesmenu-title') : null;
     
@@ -2752,13 +2751,12 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
 
-    // --- NEU: Titel dynamisch anpassen ---
     if (titleEl) {
         titleEl.innerText = "HALLE/RAUM WÄHLEN";
-        titleEl.style.color = "#ff9800"; // Passt zum restlichen edlen Orange
+        titleEl.style.color = "#ff9800";
     }
 
-   if (subtitle) {
+    if (subtitle) {
         subtitle.innerHTML = `Welche Räumlichkeit möchtest du für die <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> reservieren?`;
     }
 
@@ -2782,13 +2780,11 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     }
 
     let html = "";
-
-    // --- LÖSCHEN AN ERSTER STELLE ---
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <button class="eigenesmenu-item" 
                     style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 15px;" 
-                    onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this)">
+                    onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
                 <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ RESERVIERUNG LÖSCHEN</span>
             </button>`;
     }
@@ -2819,22 +2815,14 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         } else {
             const istAktuelleWahl = hClean.toLowerCase() === aktuelleHalleInBox.toLowerCase();
             const configBorderColor = configFarben[h] || "#444";
-
-            // 70/30 Container
             html += `
                 <div class="hallen-option-wrapper" style="display: flex; margin-bottom: 8px; border: 1px solid #444; border-left: 5px solid ${configBorderColor}; background: #333; height: 45px; align-items: stretch; border-radius: 4px; overflow: hidden;">
-                    
                     <div style="flex: 0 0 70%; display: flex; align-items: center; padding-left: 10px; cursor: pointer; ${istAktuelleWahl ? 'background: #442d11; color: #ffca88;' : ''}" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
-                        <svg class="eigenesmenu-icon" style="margin-right: 10px; width: 16px; height: 16px; fill: ${istAktuelleWahl ? '#ff8c00' : '#ff9800'};" viewBox="0 0 24 24">
-                            <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                        </svg>
-                        <span class="btn-text" style="font-weight: ${istAktuelleWahl ? 'bold' : 'normal'};">${h}</span>
+                        <span class="btn-text">${h}</span>
                     </div>
-
                     <div style="flex: 0 0 30%; display: flex; align-items: center; justify-content: center; cursor: pointer; border-left: 1px solid #444; background: ${istAktuelleWahl ? '#66441a' : '#2a2a2a'};" 
-                         onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')"
-                         title="Fix buchen">
+                         onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
                         <span class="material-symbols-outlined" style="color: ${istAktuelleWahl ? '#ffca88' : '#888'}; font-size: 18px;">lock</span>
                     </div>
                 </div>`;
@@ -2842,20 +2830,14 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
     });
 
     container.innerHTML = html;
-    
+} // <--- HIER MUSS DIE FUNKTION ZU ENDE SEIN!
 
-// Ganz wichtig: Diese Variable MUSS außerhalb der Funktion stehen (global)
+// --- GLOBALE VARIABLEN UND FUNKTIONEN (AUẞERHALB DER FUNKTIONEN) ---
 window.currentSaveController = null;
-
-
-    
-// Globaler Speicher für blockierte Slots
 window.syncBlockierteSlots = window.syncBlockierteSlots || {};
 
 window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn, typ) {
     if (!btn) return;
-
-    // Basis-Payload zusammenbauen (jetzt inklusive 'typ')
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -2864,43 +2846,27 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn, typ) {
         slot: slot,
         klasse: klasse,
         halle: neueHalle,
-        typ: typ || "" // "fix" oder leerer String
+        typ: typ || ""
     };
 
-    // Callback erhält nun das gesamte Payload-Objekt 'p'
     const visuelleAktualisierung = function(p) {
         const h = p.halle;
         const s = p.slot;
-        const t = p.typ; // Status aus dem Payload lesen
-        
+        const t = p.typ;
         const targetBox = document.querySelector(`[data-slot="${s}"]`);
         
-        // 1. Lokalen Datenstand aktualisieren
         if (window.lastPlanData && window.lastPlanData[s]) {
             window.lastPlanData[s].halle = h;
-            window.lastPlanData[s].typ = t; // Status lokal speichern
+            window.lastPlanData[s].typ = t;
         }
 
-        // 2. UI direkt aktualisieren
         if (targetBox) {
             const label = targetBox.querySelector('.halle-label');
             if (label) label.innerText = h;
-            
             targetBox.classList.remove('ausfall-mode');
-            
-            // Farb-Logik
-            if (configFarben && configFarben[h]) {
-                targetBox.style.backgroundColor = configFarben[h];
-            } else {
-                targetBox.style.backgroundColor = ""; 
-            }
+            targetBox.style.backgroundColor = (configFarben && configFarben[h]) ? configFarben[h] : "";
+            if (h === "Ausfall") targetBox.classList.add('ausfall-mode');
 
-            // Ausfall-Spezialbehandlung
-            if (h === "Ausfall") {
-                targetBox.classList.add('ausfall-mode');
-            }
-
-            // 🔥 UI: Schloss-Icon bei Fix-Buchung anzeigen
             let lockIcon = targetBox.querySelector('.lock-icon-container');
             if (!lockIcon) {
                 lockIcon = document.createElement('div');
@@ -2913,12 +2879,9 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn, typ) {
         }
     };
 
-    // Übergabe an die Weiche
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, visuelleAktualisierung);
     }
-    
-    // Modal schließen (falls deine Funktion so heißt)
     if (typeof closeModal === 'function') closeModal();
 };
     
