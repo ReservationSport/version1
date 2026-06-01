@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3188,8 +3188,15 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
 // DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
+    // 1. ZUERST: Sicherstellen, dass die Daten aktuell sind
+    if (typeof syncPlan === "function") {
+        syncPlan(); // Aktualisiert window.lastPlanData
+    }
+
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
     const container = document.getElementById('menu-options-list');
+
+    // ... der Rest deines Codes ...
 
     console.log(`🔍 Doppellektions-Prüfung für Slot ${payload.slot}. Partner gefunden: ${partnerSlot}`);
 
@@ -3328,4 +3335,5 @@ function isHalleAvailableInPartnerSlot(partnerSlot, desiredHalle) {
 
     
 </script>
-/html>
+    
+</html>
