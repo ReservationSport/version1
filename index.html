@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3229,13 +3229,24 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     if (modal) modal.style.pointerEvents = "auto";
     
     // Klick-Handler für "Für beide Stunden"
-    document.getElementById('btn-doppel-beide').onclick = function() {
+   document.getElementById('btn-doppel-beide').onclick = async function() {
+    console.log(`🔍 Prüfe Verfügbarkeit für Partner: ${partnerSlot}`);
+    
+    // 1. Hier erfolgt die Prüfung (Simuliert oder deine echte Check-Funktion)
+    const isPartnerFree = await checkSingleSlot(partnerSlot); 
+
+    if (isPartnerFree) {
+        // 2. Alles okay, jetzt erst senden
         console.log(`🚀 Sende Doppellektion: Slot ${payload.slot} und Partner ${partnerSlot}`);
-        const partnerPayload = { ...payload, slot: partnerSlot.toString() }; // Partner als String mitschicken
-        
+        const partnerPayload = { ...payload, slot: partnerSlot.toString() };
         executePayloads([payload, partnerPayload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
-    };
+    } else {
+        // 3. Fehlerfall: Partner ist belegt!
+        alert("Achtung: Der Partner-Slot ist leider bereits belegt!");
+        // Hier könntest du optional den "Nur für diese Stunde"-Button hervorheben
+    }
+};
 
     // Klick-Handler für "Nur für diese Stunde"
     document.getElementById('btn-doppel-einzel').onclick = function() {
@@ -3283,7 +3294,28 @@ function executePayloads(payloadArray, onCompleteVisuals) {
     });
 }
 
+
     
+ // Diese Funktion prüft, ob ein Slot überhaupt "frei" für eine Übernahme ist.
+// Du kannst sie direkt in deine Skript-Datei einfügen.
+function checkSingleSlot(slotId) {
+    if (!window.lastPlanData) return false;
+
+    // Slot-ID als Zahl normalisieren
+    const id = parseInt(slotId, 10);
+    const data = window.lastPlanData[id] || window.lastPlanData[id.toString()];
+
+    // Definition von "Frei": 
+    // Entweder das Datenobjekt existiert gar nicht ODER 
+    // die Klasse ist leer/Platzhalter.
+    if (!data || !data.klasse || data.klasse.toString().trim() === "" || data.klasse.toString().trim() === "---") {
+        return true; // Slot ist frei
+    }
+
+    // Wenn hier etwas steht, ist der Slot bereits durch eine Klasse belegt
+    console.warn(`⚠️ Slot ${id} ist bereits belegt durch: ${data.klasse}`);
+    return false;
+}   
 
 
 
