@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3303,33 +3303,31 @@ function executePayloads(payloadArray, onCompleteVisuals) {
     
 
 function isHalleAvailableInPartnerSlot(partnerSlot, desiredHalle) {
-    if (!window.lastPlanData) {
-        console.log("❌ Test: lastPlanData nicht gefunden!");
-        return false;
-    }
-
+    // 1. Blick in den globalen Datenstand (falls der Slot nicht gerade gesperrt ist)
     const id = parseInt(partnerSlot, 10);
-    const data = window.lastPlanData[id] || window.lastPlanData[id.toString()];
+    const data = window.lastPlanData ? (window.lastPlanData[id] || window.lastPlanData[id.toString()]) : null;
 
-    if (!data) {
-        console.log(`✅ Test: Slot ${id} ist leer (keine Daten).`);
-        return true;
+    let partnerHalle = "";
+    
+    if (data && data.halle) {
+        partnerHalle = data.halle.toString().trim().toLowerCase();
     }
-
-    const partnerHalle = (data.halle || "").toString().trim().toLowerCase();
+    
+    // 2. KRITISCH: Wenn die Halle dort leer ist, müssen wir schauen, ob es sich um eine
+    // "flüchtige" Buchung handelt, die gerade erst im Speicher liegt (dein Sync-Problem)
+    // Wenn das globale Data leer ist, ist der Slot für uns im Moment "frei".
+    
     const cleanDesiredHalle = (desiredHalle || "").toString().trim().toLowerCase();
-
+    
     console.log(`🔍 Test: Slot ${id} Inhalt:`, data);
     console.log(`🔍 Test: Partner-Halle ist "${partnerHalle}", Gewünschte Halle ist "${cleanDesiredHalle}"`);
 
-    // HIER DER TEST-KONFLIKT
-    if (partnerHalle === cleanDesiredHalle && partnerHalle !== "") {
-        console.log("❌ Test: KONFLIKT GEFUNDEN! Halle ist identisch.");
-        return false;
+    // HIER DER KONFLIKT-CHECK
+    if (partnerHalle !== "" && partnerHalle === cleanDesiredHalle) {
+        return false; // Belegt!
     }
 
-    console.log("✅ Test: Keine identische Halle gefunden.");
-    return true;
+    return true; // Frei
 }
 
 
