@@ -3186,77 +3186,84 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
     
 
+// DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
-    // 1. Hole den Partner-Slot
+    // 1. ZUERST: Sicherstellen, dass die Daten aktuell sind
+    if (typeof syncPlan === "function") {
+        syncPlan(); 
+    }
+
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
     const container = document.getElementById('menu-options-list');
     
-    // Daten frisch holen
-    if (typeof syncPlan === "function") syncPlan();
+    // 2. Prüfung: Gibt es einen Konflikt im Partner-Slot?
+    let isHalleConflicting = false;
+    if (partnerSlot && window.lastPlanData && window.lastPlanData[partnerSlot]) {
+        const partnerBuchung = window.lastPlanData[partnerSlot];
+        // Vergleich der Wunsch-Halle (payload.halle) mit der Belegung im Partner-Slot
+        if (partnerBuchung.halle && partnerBuchung.halle.trim().toLowerCase() === payload.halle.trim().toLowerCase()) {
+            isHalleConflicting = true;
+        }
+    }
 
-    // 2. Prüfung: Ist die gewählte Halle im Partner-Slot schon belegt?
-    // Wir schauen in lastPlanData, ob der PartnerSlot schon eine Hallen-Buchung hat, 
-    // die mit payload.halle kollidiert.
-    const isPartnerConflict = checkPartnerConflict(partnerSlot, payload.halle);
+    console.log(`🔍 Doppellektions-Prüfung: Slot ${payload.slot} mit Partner ${partnerSlot}. Konflikt: ${isHalleConflicting}`);
 
-    // 3. Modal-Inhalt aufbauen
+    // Falls keine Doppellektion vorliegt oder das Menüfeld nicht da ist -> Sofort normal feuern!
+    if (!partnerSlot || !container) {
+        executePayloads([payload], onCompleteVisuals);
+        if (typeof closeEditor === "function") closeEditor();
+        return;
+    }
+
+    // --- VARIANTE: INHALT IM MODAL (Mit Konfliktabfrage) ---
     container.innerHTML = `
         <div class="doppel-abfrage-container" style="text-align: center; padding: 20px 10px;">
-            <p style="color: #ff9800; font-weight: bold; font-size: 1.2rem;">🔗 Doppellektion erkannt!</p>
+            <p style="color: #ff9800; font-weight: bold; margin-bottom: 15px; font-size: 1.2rem;">
+                🔗 Doppellektion erkannt!
+            </p>
             
-            ${isPartnerConflict ? `
-                <div style="background: #2a2a2a; border: 1px solid #ff4444; color: #ff4444; padding: 15px; margin: 15px 0; border-radius: 5px;">
-                    <strong>⚠️ Doppellektion nicht möglich</strong><br>
-                    Die Halle "${payload.halle}" ist im Partnerslot (Slot ${partnerSlot}) bereits durch eine andere Lektion belegt.
+            ${isHalleConflicting ? `
+                <div style="background: #2a2a2a; border: 1px solid #ff4444; color: #ff4444; padding: 15px; margin-bottom: 20px; border-radius: 5px; font-weight: bold; line-height: 1.3;">
+                    ⚠️ Achtung: Die Halle "${payload.halle}" ist im Partner-Slot (${partnerSlot}) bereits belegt. 
+                    Eine Doppellektion ist daher nicht möglich.
                 </div>
             ` : `
-                <p style="color: #ccc; margin: 15px 0;">Möchtest du diese Änderung für die gesamte Doppellektion übernehmen?</p>
-                <button id="btn-doppel-beide" class="eigenesmenu-item" style="background: #ff9800; width: 100%; padding: 10px; margin-bottom: 10px;">
+                <p style="color: #ccc; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.4;">
+                    Möchtest du diese Änderung für die <span style="color: #ff9800; font-weight: bold;">gesamte Doppellektion</span> übernehmen oder nur für diese Stunde?
+                </p>
+                <button id="btn-doppel-beide" class="eigenesmenu-item" style="justify-content: center; background: #ff9800; color: #111; font-weight: bold; margin-bottom: 12px; border: none; width: 100%; padding: 12px;">
                     👥 Für beide Stunden übernehmen
                 </button>
             `}
             
-            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="background: #333; width: 100%; padding: 10px;">
+            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="justify-content: center; background: #333; border: 1px solid #555; color: #fff; margin-bottom: 12px; width: 100%; padding: 12px;">
                 👤 Nur für diese Stunde
             </button>
         </div>
     `;
 
-    // Modal freigeben
+    // Modal wieder freigeben
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "auto";
-
-    // Klick-Handler für "Beide" (nur wenn Button existiert)
+    
+    // Klick-Handler für "Für beide Stunden" (nur wenn Button existiert)
     const btnBeide = document.getElementById('btn-doppel-beide');
     if (btnBeide) {
         btnBeide.onclick = function() {
+            console.log(`🚀 Sende Doppellektion: Slot ${payload.slot} und Partner ${partnerSlot}`);
             const partnerPayload = { ...payload, slot: partnerSlot.toString() };
             executePayloads([payload, partnerPayload], onCompleteVisuals);
             if (typeof closeEditor === "function") closeEditor();
         };
     }
 
-    // Klick-Handler "Einzel"
+    // Klick-Handler für "Nur für diese Stunde"
     document.getElementById('btn-doppel-einzel').onclick = function() {
+        console.log(`🚀 Sende nur Einzelstunde: Slot ${payload.slot}`);
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
     };
 };
-
-// Hilfsfunktion zur Konfliktprüfung
-function checkPartnerConflict(partnerSlot, desiredHalle) {
-    if (!partnerSlot || !window.lastPlanData) return false;
-    
-    const data = window.lastPlanData[partnerSlot] || window.lastPlanData[partnerSlot.toString()];
-    
-    // Wenn Daten vorhanden sind, die Halle eingetragen ist und NICHT leer ist:
-    if (data && data.halle && data.halle.trim() !== "") {
-        // Vergleich (Case-Insensitive)
-        return data.halle.trim().toLowerCase() === desiredHalle.trim().toLowerCase();
-    }
-    return false;
-}
-
 
     
     
