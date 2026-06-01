@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3230,21 +3230,19 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     
     // Klick-Handler für "Für beide Stunden"
    document.getElementById('btn-doppel-beide').onclick = async function() {
-    // Hol dir die Halle aus deinem aktuellen payload
-    const meineWunschHalle = payload.halle; 
+    const meineWunschHalle = payload.halle; // Die Halle, die LP B buchen will
     
-    console.log(`🔍 Prüfe ob Halle "${meineWunschHalle}" im Partner ${partnerSlot} frei ist`);
-    
-    // Prüfung der Halle statt der ganzen Klasse
+    // Wir prüfen den Partner-Slot
     const isHalleFree = isHalleAvailableInPartnerSlot(partnerSlot, meineWunschHalle);
 
     if (isHalleFree) {
-        console.log(`🚀 Halle frei! Sende Doppellektion: Slot ${payload.slot} und Partner ${partnerSlot}`);
+        // Alles gut, buchen
         const partnerPayload = { ...payload, slot: partnerSlot.toString() };
         executePayloads([payload, partnerPayload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
     } else {
-        alert(`Achtung: Die Halle "${meineWunschHalle}" ist im Partner-Slot leider bereits belegt!`);
+        // HIER KOMMT DEINE FEHLERMELDUNG
+        alert("Fehler: Diese Halle ist in der Doppellektion bereits von einer anderen Klasse belegt!");
     }
 };
 
@@ -3298,25 +3296,26 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 
     
 
-
 function isHalleAvailableInPartnerSlot(partnerSlot, desiredHalle) {
     if (!window.lastPlanData) return false;
 
     const id = parseInt(partnerSlot, 10);
     const data = window.lastPlanData[id] || window.lastPlanData[id.toString()];
 
-    // Falls Slot leer ist, ist er verfügbar
-    if (!data) return true;
+    // 1. Wenn der Partner-Slot leer ist -> Frei!
+    if (!data || !data.klasse || data.klasse === "---" || data.klasse === "") {
+        return true; 
+    }
 
-    // Wir holen die Halle und bereinigen sie (Leerzeichen weg, kleingeschrieben für Vergleich)
+    // 2. Wenn da eine andere Buchung drin ist, prüfen wir die Halle
     const partnerHalle = (data.halle || "").toString().trim().toLowerCase();
     const cleanDesiredHalle = (desiredHalle || "").toString().trim().toLowerCase();
     
-    console.log(`DEBUG: PartnerSlot ${id} hat Halle "${partnerHalle}", Wunsch ist "${cleanDesiredHalle}"`);
-
-    // Wenn die Halle exakt übereinstimmt, ist es ein Konflikt
-    if (partnerHalle === cleanDesiredHalle && partnerHalle !== "") {
-        console.warn(`⚠️ Konflikt: Halle "${desiredHalle}" ist im Partner-Slot ${id} bereits belegt!`);
+    // 3. WICHTIG: Wenn die Halle identisch ist, ist es ein Konflikt
+    // Da wir wissen, dass der Slot nicht leer ist (siehe Punkt 1),
+    // belegt hier gerade jemand anderes die Halle.
+    if (partnerHalle === cleanDesiredHalle) {
+        console.warn(`⚠️ KONFLIKT: Halle "${desiredHalle}" ist im Partner-Slot ${id} bereits belegt durch "${data.klasse}"!`);
         return false; 
     }
 
