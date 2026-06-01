@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3301,21 +3301,27 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 function checkSingleSlot(slotId) {
     if (!window.lastPlanData) return false;
 
-    // Slot-ID als Zahl normalisieren
     const id = parseInt(slotId, 10);
     const data = window.lastPlanData[id] || window.lastPlanData[id.toString()];
 
-    // Definition von "Frei": 
-    // Entweder das Datenobjekt existiert gar nicht ODER 
-    // die Klasse ist leer/Platzhalter.
-    if (!data || !data.klasse || data.klasse.toString().trim() === "" || data.klasse.toString().trim() === "---") {
-        return true; // Slot ist frei
+    // DEBUG: Schau mal in die Konsole (F12), was hier genau ankommt!
+    console.log(`🔍 Prüfe Slot ${id}:`, data);
+
+    // Wenn data nicht existiert, ist es frei
+    if (!data) return true; 
+
+    // Wenn data existiert, prüfen wir den Inhalt
+    const klasse = data.klasse ? data.klasse.toString().trim() : "";
+    
+    // DEBUG: Was ist der Wert von klasse?
+    console.log(`🔍 Wert der Klasse: "${klasse}"`);
+
+    if (klasse === "" || klasse === "---") {
+        return true; 
     }
 
-    // Wenn hier etwas steht, ist der Slot bereits durch eine Klasse belegt
-    console.warn(`⚠️ Slot ${id} ist bereits belegt durch: ${data.klasse}`);
     return false;
-}   
+}
 
 
 
