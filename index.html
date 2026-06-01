@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3186,17 +3186,14 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
     
 
-// DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
     // 1. ZUERST: Sicherstellen, dass die Daten aktuell sind
     if (typeof syncPlan === "function") {
-        syncPlan(); // Aktualisiert window.lastPlanData
+        syncPlan(); 
     }
 
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
     const container = document.getElementById('menu-options-list');
-
-    // ... der Rest deines Codes ...
 
     console.log(`🔍 Doppellektions-Prüfung für Slot ${payload.slot}. Partner gefunden: ${partnerSlot}`);
 
@@ -3207,8 +3204,9 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         return;
     }
 
-    // VORPRÜFUNG: Ist die Halle im Partnerslot überhaupt verfügbar?
-    const isHalleFree = isHalleAvailableInPartnerSlot(partnerSlot, payload.halle);
+    // NEU: Prüfung für BEIDE Slots (aktueller Slot + Partner)
+    // Wir nutzen die Funktion, die prüft, ob die Wunsch-Halle in irgendeinem der beiden Slots belegt ist
+    const isDoubleAvailable = isHalleAvailableForDoubleLesson(payload.slot, partnerSlot, payload.halle);
 
     // --- VARIANTE B: INHALT IM MODAL ERSETZEN ---
     container.innerHTML = `
@@ -3217,9 +3215,10 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
                 🔗 Doppellektion erkannt!
             </p>
             
-            ${!isHalleFree ? `
-                <div style="color: #ff4444; margin-bottom: 20px; font-weight: bold;">
-                    ⚠️ Achtung: Die Halle "${payload.halle}" ist im Partnerslot bereits belegt!
+            ${!isDoubleAvailable ? `
+                <div style="color: #ff4444; margin-bottom: 20px; font-weight: bold; line-height: 1.3;">
+                    ⚠️ Achtung: Die Halle "${payload.halle}" ist in einem der beiden Slots bereits belegt. 
+                    Eine Doppellektion ist daher nicht möglich!
                 </div>
             ` : `
                 <p style="color: #ccc; margin-bottom: 25px; font-size: 0.95rem; line-height: 1.4;">
@@ -3240,7 +3239,7 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "auto";
     
-    // Klick-Handler für "Für beide Stunden" (nur wenn Button existiert)
+    // Klick-Handler für "Für beide Stunden"
     const btnBeide = document.getElementById('btn-doppel-beide');
     if (btnBeide) {
         btnBeide.onclick = function() {
@@ -3258,7 +3257,6 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         if (typeof closeEditor === "function") closeEditor();
     };
 };
-
 
     
 // Interne Hilfsfunktion, die die Payloads nacheinander an saveImmediately übergibt
@@ -3302,32 +3300,30 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 
     
 
-function isHalleAvailableInPartnerSlot(partnerSlot, desiredHalle) {
-    // 1. Blick in den globalen Datenstand (falls der Slot nicht gerade gesperrt ist)
-    const id = parseInt(partnerSlot, 10);
-    const data = window.lastPlanData ? (window.lastPlanData[id] || window.lastPlanData[id.toString()]) : null;
+function isHalleAvailableForDoubleLesson(slotA, slotB, desiredHalle) {
+    if (!window.lastPlanData) return false;
 
-    let partnerHalle = "";
-    
-    if (data && data.halle) {
-        partnerHalle = data.halle.toString().trim().toLowerCase();
-    }
-    
-    // 2. KRITISCH: Wenn die Halle dort leer ist, müssen wir schauen, ob es sich um eine
-    // "flüchtige" Buchung handelt, die gerade erst im Speicher liegt (dein Sync-Problem)
-    // Wenn das globale Data leer ist, ist der Slot für uns im Moment "frei".
-    
+    const slotsToCheck = [parseInt(slotA), parseInt(slotB)];
     const cleanDesiredHalle = (desiredHalle || "").toString().trim().toLowerCase();
-    
-    console.log(`🔍 Test: Slot ${id} Inhalt:`, data);
-    console.log(`🔍 Test: Partner-Halle ist "${partnerHalle}", Gewünschte Halle ist "${cleanDesiredHalle}"`);
 
-    // HIER DER KONFLIKT-CHECK
-    if (partnerHalle !== "" && partnerHalle === cleanDesiredHalle) {
-        return false; // Belegt!
+    for (let slotId of slotsToCheck) {
+        const data = window.lastPlanData[slotId] || window.lastPlanData[slotId.toString()];
+        
+        // Wenn der Slot belegt ist, prüfen wir die Halle
+        if (data && data.halle) {
+            const currentHalle = data.halle.toString().trim().toLowerCase();
+            
+            // WICHTIG: Wenn die Halle belegt ist UND nicht mir gehört, ist sie tabu
+            // Wir prüfen hier auf Konflikt:
+            if (currentHalle === cleanDesiredHalle) {
+                // Wenn es meine eigene Buchung ist, ist es okay.
+                // Wenn aber jemand anderes dort ist -> KONFLIKT!
+                console.warn(`⚠️ Konflikt in Slot ${slotId}: Halle ${desiredHalle} ist bereits vergeben!`);
+                return false;
+            }
+        }
     }
-
-    return true; // Frei
+    return true; // Halle ist in beiden Slots frei
 }
 
 
