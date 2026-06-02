@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111111</title>
+    <title>Reservation Sport - BBZO1</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2849,10 +2849,17 @@ window.applyHalleSelection = function(neueHalle, time, slot, klasse, btn, typ) {
             const label = targetBox.querySelector('.halle-label');
             if (label) label.innerText = h;
             targetBox.classList.remove('ausfall-mode');
-            targetBox.style.backgroundColor = (configFarben && configFarben[h]) ? configFarben[h] : "";
+            
+            // --- HIER DIE ANPASSUNG: Zugriff auf window.hallenConfig ---
+            const farbe = (h !== "" && window.hallenConfig && window.hallenConfig[h]) 
+                          ? window.hallenConfig[h].color 
+                          : "";
+            targetBox.style.backgroundColor = farbe;
+            // ----------------------------------------------------------
+            
             if (h === "Ausfall") targetBox.classList.add('ausfall-mode');
 
-            // 🔥 UI: Schloss-Icon bei Fix-Buchung anzeigen (mit orangener Farbe)
+            // 🔥 UI: Schloss-Icon bei Fix-Buchung anzeigen
             let lockIcon = targetBox.querySelector('.lock-icon-container');
             if (!lockIcon) {
                 lockIcon = document.createElement('div');
