@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3188,58 +3188,56 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
 // DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
-    console.log("--- START PROZESS: prozessiereAktion ---");
-    console.log("Payload:", payload);
-
-    if (typeof syncPlan === "function") {
-        console.log("-> Syncing Plan...");
-        syncPlan();
-    }
-
-    const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
-    console.log("-> Ermittelter Partner-Slot:", partnerSlot);
+    const currentSlot = parseInt(payload.slot);
+    const partnerSlot = getDoppellektionPartnerSlot(currentSlot); // Dein Partner!
     
-    const container = document.getElementById('menu-options-list');
-    
-    // Debug: Was steht eigentlich in lastPlanData?
-    console.log("-> Aktueller Plan-Datenstand (lastPlanData):", window.lastPlanData);
+    // 1. Bereich definieren (5er-Block)
+    const rowIndex = Math.floor((currentSlot - 1) / 5);
+    const startSlot = (rowIndex * 5) + 1;
+    const endSlot = startSlot + 4;
 
-    const isKonflikt = (slot, gewaehlteHalle) => {
-    // 1. Suche das HTML-Element für den Partner-Slot auf der Seite
-    const slotElement = document.querySelector(`[data-slot="${slot}"]`);
-    
-    if (slotElement) {
-        // Wir suchen das Label, in dem die Halle steht. 
-        // PASSE DIESEN SELECTOR AN, falls deine Halle nicht in .halle-label steht!
-        const label = slotElement.querySelector('.halle-label');
-        if (label) {
-            const belegteHalle = label.innerText.trim().toLowerCase();
-            const meineHalle = gewaehlteHalle.trim().toLowerCase();
-            
-            console.log(`DEBUG: DOM-Check für Slot ${slot}: Gefunden im DOM -> '${belegteHalle}'`);
-            return belegteHalle === meineHalle;
+    // 2. Konflikt-Prüfung mit "Partner-Ausnahme"
+    const checkKonflikte = (gewaehlteHalle) => {
+        for (let s = startSlot; s <= endSlot; s++) {
+            // AUSNAHME: Wir ignorieren den aktuellen Slot (den wir bearbeiten)
+            // UND wir ignorieren den Partner-Slot (da darf die gleiche Halle stehen)
+            if (s === currentSlot || s === partnerSlot) continue;
+
+            const slotElement = document.querySelector(`[data-slot="${s}"]`);
+            const label = slotElement ? slotElement.querySelector('.halle-label') : null;
+            const belegteHalle = label ? label.innerText.trim().toLowerCase() : "";
+
+            if (belegteHalle === gewaehlteHalle.trim().toLowerCase()) {
+                console.log(`❌ Konflikt mit fremdem Slot ${s} gefunden.`);
+                return true; // Echter Konflikt mit einer fremden Lektion
+            }
         }
-    }
-    
-    // Fallback falls DOM-Element nicht gefunden:
-    console.log(`DEBUG: DOM-Check fehlgeschlagen, nutze lastPlanData für Slot ${slot}`);
-    if (!window.lastPlanData || !window.lastPlanData[slot]) return false;
-    return window.lastPlanData[slot].halle.trim().toLowerCase() === gewaehlteHalle.trim().toLowerCase();
-};
+        return false;
+    };
 
-    const isHalleConflicting = isKonflikt(partnerSlot, payload.halle);
-    console.log("-> Endergebnis Konfliktprüfung:", isHalleConflicting);
+    const isHalleConflicting = checkKonflikte(payload.halle);
 
+    // 3. Modal aufbauen
+    const container = document.getElementById('menu-options-list');
     container.innerHTML = `
         <div style="text-align: center; padding: 20px;">
-            <p>Halle: <b>${payload.halle}</b> (Slot ${payload.slot})</p>
-            ${isHalleConflicting ? 
-                `<div style="color: red; padding: 10px; border: 1px solid red;">BLOCKIERT: "${payload.halle}" belegt in Slot ${partnerSlot}</div>` : 
-                `<button id="btn-doppel-beide" style="background: orange; width: 100%; padding: 10px;">👥 Doppellektion</button>`
-            }
-            <button id="btn-doppel-einzel" style="background: #444; color: white; width: 100%; padding: 10px; margin-top: 10px;">👤 Nur Einzel</button>
+            ${isHalleConflicting ? `
+                <div style="color: #ff4444; border: 1px solid #ff4444; padding: 10px;">
+                    ⚠️ Halle bereits anderweitig belegt!
+                </div>
+            ` : `
+                <button id="btn-doppel-beide" class="eigenesmenu-item" style="background: #e67e22; width: 100%; padding: 10px;">
+                    👥 Für beide Stunden übernehmen
+                </button>
+            `}
+            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="background: #444; width: 100%; padding: 10px; margin-top: 10px;">
+                👤 Nur für diese Stunde
+            </button>
         </div>
     `;
+
+    // ... Event-Handler bleiben gleich
+};
 
     if (document.getElementById('btn-doppel-beide')) {
         document.getElementById('btn-doppel-beide').onclick = function() {
