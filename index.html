@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2283,9 +2283,6 @@ window.triggerNewsWrapper = async function(aktion, slot, klasse, kuerzel) {
 
 
     
-/* ============================================================
-   12. ÖFFNEN DES TASKMANAGERS (Sichere Version)
-   ============================================================ */
 window.openEditor = function(el, time, slot, klasse) {
     closeEditor();
 
@@ -2307,9 +2304,28 @@ window.openEditor = function(el, time, slot, klasse) {
     backdrop.onclick = closeEditor;
 
     backdrop.innerHTML = `
+        <style>
+            .eigenesmenu-item {
+                transition: all 0.25s ease !important;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+            .eigenesmenu-item:hover {
+                transform: translateX(8px) scale(1.02);
+                background: #333 !important;
+                border-left: 4px solid #e67e22 !important;
+            }
+            .eigenesmenu-item:hover .material-symbols-outlined {
+                color: #e67e22 !important;
+            }
+            .eigenesmenu-item .material-symbols-outlined {
+                transition: color 0.2s ease;
+            }
+        </style>
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
-                <span class="material-symbols-outlined header-icon" id="dynamic-header-icon">settings</span>
+                <span class="material-symbols-outlined header-icon" id="dynamic-header-icon" style="color: #e67e22;">settings</span>
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
                 <p class="eigenesmenu-subtitle" id="dynamic-header-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
                     Wähle eine Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
@@ -2341,15 +2357,12 @@ window.openEditor = function(el, time, slot, klasse) {
         </div>
     `;
 
-    // Event Delegation: Statt onclick nutzen wir einen zentralen Listener für alle Buttons
     backdrop.querySelector('.eigenesmenu-liste').addEventListener('click', (e) => {
         const btn = e.target.closest('.eigenesmenu-item');
         if (!btn) return;
-        
         const action = btn.getAttribute('data-action');
         const icon = btn.getAttribute('data-icon');
         const title = btn.getAttribute('data-title');
-        
         window.updateHeader(icon, title);
         window.handleMenuChoice(action, time, absoluteSlot, klasse);
     });
@@ -2361,6 +2374,8 @@ window.openEditor = function(el, time, slot, klasse) {
         if(container) container.style.transform = "translateY(0)";
     });
 };
+
+    
 
 window.updateHeader = function(iconName, subtitleText) {
     const iconEl = document.getElementById('dynamic-header-icon');
