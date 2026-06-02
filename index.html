@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1233</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2763,14 +2763,18 @@ function handleReservationUI(time, slot, klasse) {
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
     let html = "";
 
-    // RESERVIERUNG LÖSCHEN
-    if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
-        html += `
-            <button class="eigenesmenu-item" style="color: #ffaaaa; justify-content: center; margin-bottom: 15px; background: #332222; border-radius: 8px; border: 1px solid #553333; padding: 12px; width: 100%; cursor: pointer;" 
-                    onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
-                ❌ RESERVIERUNG LÖSCHEN
-            </button>`;
-    }
+    // RESERVIERUNG LÖSCHEN (angepasst an Hallen-Button-Look)
+if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
+    html += `
+        <div class="hallen-option-wrapper" 
+             style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa; font-weight: bold;"
+             onmouseover="this.style.borderColor='#ff6666'; this.style.transform='scale(1.02)';" 
+             onmouseout="this.style.borderColor='#553333'; this.style.transform='scale(1)';"
+             onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
+            <span class="material-symbols-outlined" style="margin-right: 10px;">delete</span>
+            RESERVIERUNG LÖSCHEN
+        </div>`;
+}
 
     const hallen = window.hallenConfig ? Object.keys(window.hallenConfig) : [];
     
