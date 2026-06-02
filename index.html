@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO4567</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1232,6 +1232,10 @@ async function handleLogin() {
         await initNewsSystem();
         await changeDayAndLoad(dp.value);
 
+            if (window.lastPlanResponse) {
+                window.hallenConfig = window.lastPlanResponse.hallenConfig;
+            }
+        
         // Fertig: Loading-Overlay entfernen
         loadingOverlay.classList.remove('is-visible');
 
@@ -1558,14 +1562,15 @@ window.loadPlan = async function() {
             return; 
         }
         
+        // --- HIER DIE NEUEN ZUWEISUNGEN ---
         if (json.verfügbareMaterialien) verfügbareMaterialien = json.verfügbareMaterialien;
+        window.hallenConfig = json.hallenConfig || {}; 
+        // ----------------------------------
         
         const plan = json.plan; 
         window.lastPlanData = plan; 
         myClasses = json.userClasses || [];
         allClassTeachers = json.allClassTeachers || {};
-        configFarben = {}; 
-        if (json.options) json.options.forEach(opt => configFarben[opt[0]] = opt[1]);
         
         const wtArr = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
         const [y, m, d] = dateVal.split('-').map(Number);
@@ -1588,10 +1593,13 @@ window.loadPlan = async function() {
                 const isAusfall = (halle === "Ausfall");
                 const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
                 
+                // Farbe aus der neuen hallenConfig holen
+                const bgFarbe = (window.hallenConfig[halle] && !isAusfall) ? window.hallenConfig[halle].color : '';
+                
                 html += `
                 <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
                         data-slot="${absoluteSlot}" data-time="${zeitStr}" 
-                        style="background-color: ${isAusfall ? '' : (configFarben[halle] || '')}; cursor: ${canEdit ? 'pointer' : 'default'}">
+                        style="background-color: ${bgFarbe}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
                         <div class="lehrer-info">${lehrer}</div>
                         <div class="halle-label">${halle}</div>
@@ -1603,6 +1611,7 @@ window.loadPlan = async function() {
         });
         container.innerHTML = html;
 
+        // ... restlicher Code für Material/Notiz Icons bleibt identisch ...
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
             const box = container.querySelector(`[data-slot="${slot}"]`);
@@ -1615,15 +1624,7 @@ window.loadPlan = async function() {
                 notizElement.className = 'box-notiz-icon';
                 notizElement.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 22px; line-height: 1;">stylus_note</span>';
                 notizElement.title = slotData.kommentar;
-                
-                Object.assign(notizElement.style, {
-                    position: 'absolute',
-                    top: '-2px',
-                    left: '4px',
-                    cursor: 'pointer',
-                    zIndex: '5'
-                });
-                
+                Object.assign(notizElement.style, { position: 'absolute', top: '-2px', left: '4px', cursor: 'pointer', zIndex: '5' });
                 notizElement.onclick = (e) => { 
                     e.stopPropagation(); 
                     if (typeof showNotizDetailPopup === "function") showNotizDetailPopup(slotData.klasse || "", slotData.kommentar); 
