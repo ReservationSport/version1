@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2796,12 +2796,13 @@ function handleReservationUI(time, slot, klasse) {
                         ${h}
                     </div>
                     
+                    // Schloss Bereich: Wir erzwingen Zentrierung mit explizitem Flex-Modell
                     <div class="opt-fix" 
                          style="width: 50px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #444; transition: all 0.2s;"
                          onmouseover="this.style.backgroundColor='#333'; this.querySelector('.material-symbols-outlined').style.color='#e67e22';"
                          onmouseout="this.style.backgroundColor='transparent'; this.querySelector('.material-symbols-outlined').style.color='#fff';"
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
-                        <span class="material-symbols-outlined" style="color: #fff; transition: color 0.2s;">lock</span>
+                        <span class="material-symbols-outlined" style="color: #fff; font-size: 24px; vertical-align: middle;">lock</span>
                     </div>
                 </div>`;
         }
