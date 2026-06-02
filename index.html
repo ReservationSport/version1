@@ -2784,11 +2784,10 @@ function handleReservationUI(time, slot, klasse) {
         const istGesperrt = besetzteHallen.some(b => b.toLowerCase().includes(hClean) || hClean.includes(b.toLowerCase()));
         const istAktiv = (h.trim() === aktuelleHalleInBox);
         
-        // Dezent orange für aktive Halle: background #2a2010 (sehr dezent), Border #e67e22
-        // Ändere diese Zeile in der forEach-Schleife:
-const bgStyle = istAktiv 
-    ? "background: #3d2a10; border: 1px solid #e67e22;" 
-    : "background: #222; border: 1px solid #444;";
+        // Farben für aktive Halle
+        const activeBg = "#3d2a10";
+        const borderColor = istAktiv ? "#e67e22" : "#444";
+        
         const config = window.hallenConfig[h];
         const icon = config?.icon || "meeting_room";
 
@@ -2800,12 +2799,12 @@ const bgStyle = istAktiv
         } else {
             html += `
                 <div class="hallen-option-wrapper" 
-                     style="display: flex; height: 50px; margin-bottom: 8px; ${bgStyle} border-radius: 8px; transition: all 0.2s ease; cursor: pointer; overflow: hidden; align-items: stretch;"
+                     style="display: flex; height: 50px; margin-bottom: 8px; border: 1px solid ${borderColor}; border-radius: 8px; transition: all 0.2s ease; cursor: pointer; overflow: hidden; align-items: stretch;"
                      onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)';" 
-                     onmouseout="this.style.borderColor='${istAktiv ? '#e67e22' : '#444'}'; this.style.transform='scale(1)';"
+                     onmouseout="this.style.borderColor='${borderColor}'; this.style.transform='scale(1)';"
                 >
                     <div class="opt-locker" 
-                         style="flex-grow: 1; display: flex; align-items: center; padding: 0 15px; color: #fff;"
+                         style="flex-grow: 1; display: flex; align-items: center; padding: 0 15px; color: #fff; background: ${istAktiv ? activeBg : '#222'};"
                          onmouseover="this.querySelector('.material-symbols-outlined').style.color='#e67e22';"
                          onmouseout="this.querySelector('.material-symbols-outlined').style.color='#fff';"
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
@@ -2814,14 +2813,14 @@ const bgStyle = istAktiv
                     </div>
                     
                     <div class="opt-fix" 
-                         style="width: 55px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #444; transition: background 0.2s; cursor: pointer;"
+                         style="width: 55px; display: flex; align-items: center; justify-content: center; border-left: 1px solid ${borderColor}; transition: background 0.2s; cursor: pointer; background: ${istAktiv ? activeBg : 'transparent'};"
                          onmouseover="
                             this.style.backgroundColor='#333'; 
                             this.querySelector('.material-symbols-outlined').style.color='#e67e22'; 
                             this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#e67e22';
                          "
                          onmouseout="
-                            this.style.backgroundColor='transparent'; 
+                            this.style.backgroundColor='${istAktiv ? activeBg : 'transparent'}'; 
                             this.querySelector('.material-symbols-outlined').style.color='#fff'; 
                             this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#fff';
                          "
