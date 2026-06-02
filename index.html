@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2365,8 +2365,15 @@ window.openEditor = function(el, time, slot, klasse) {
 window.updateHeader = function(iconName, subtitleText) {
     const iconEl = document.getElementById('dynamic-header-icon');
     const subEl = document.getElementById('dynamic-header-subtitle');
+    
     if (iconEl) iconEl.innerText = iconName;
-    if (subEl) subEl.innerHTML = subtitleText;
+    
+    // NEU: Überschreibe den Untertitel NUR, wenn nicht gerade unsere Doppellektions-Abfrage aktiv ist
+    const isDoppelAbfrage = document.querySelector('.doppel-abfrage-container');
+    
+    if (subEl && !isDoppelAbfrage) {
+        subEl.innerHTML = subtitleText;
+    }
 };
 
 
