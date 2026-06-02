@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1645,7 +1645,7 @@ window.loadPlan = async function() {
    ============================================================ */
 
 window.syncPlan = async function() {
-    if (isSaving) return; // Wenn gerade eine Aktion läuft, Sync pausieren
+    if (isSaving) return; 
 
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
@@ -1654,19 +1654,15 @@ window.syncPlan = async function() {
         const res = await fetch(`${url}?date=${dp.value}&pw=${userPw}&kuerzel=${userKuerzel}`);
         const json = await res.json();
         
-        // Abbruch bei Fehler oder ungültigen Daten
         if (json.sperrMsg || !json.plan) return;
         
-        // Lokalen Datenstand aktualisieren
         window.lastPlanData = json.plan; 
         
-        // Über alle Slots iterieren und UI anpassen
+        // HIER: Falls der Server auch eine neue Config mitschickt, aktualisieren
+        if (json.hallenConfig) window.hallenConfig = json.hallenConfig;
+        
         Object.keys(json.plan).forEach(slot => {
-            // Nur aktualisieren, wenn der User diesen Slot gerade nicht aktiv bearbeitet
-            if (window.syncBlockierteSlots && window.syncBlockierteSlots[slot]) {
-                console.log(`Sync blockiert: Slot ${slot} wird vom User editiert.`);
-                return; 
-            }
+            if (window.syncBlockierteSlots && window.syncBlockierteSlots[slot]) return;
 
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (box) {
@@ -1676,7 +1672,7 @@ window.syncPlan = async function() {
                 const lehrer = data.lehrer || allClassTeachers[klasse] || "";
                 const material = data.material || "";   
                 const kommentar = data.kommentar || ""; 
-                const typ = data.typ || ""; // <-- Status (fix/leer) abholen
+                const typ = data.typ || ""; 
 
                 // Labels aktualisieren
                 const hLabel = box.querySelector('.halle-label');
@@ -1690,35 +1686,31 @@ window.syncPlan = async function() {
                 
                 box.setAttribute('data-notiz', kommentar);
 
-                // Farb-Logik & Ausfall
+                // --- HIER DIE FARB-LOGIK ANPASSEN ---
                 if (halle === "Ausfall") {
                     box.classList.add('ausfall-mode');
                     box.style.backgroundColor = ""; 
                 } else {
                     box.classList.remove('ausfall-mode');
-                    box.style.backgroundColor = configFarben[halle] || "";
+                    // Wir nutzen jetzt hallenConfig statt configFarben
+                    const farbe = (window.hallenConfig && window.hallenConfig[halle]) 
+                                  ? window.hallenConfig[halle].color 
+                                  : "";
+                    box.style.backgroundColor = farbe;
                 }
 
-                // Material-Icon aktualisieren
+                // ... (restlicher Code für Notizen/Locks bleibt gleich)
                 markBoxWithMaterialIcon(box, material, kommentar);
 
-                // Schloss-Icon (Lock-Container) verwalten
                 let lockIcon = box.querySelector('.lock-icon-container');
                 if (!lockIcon) {
                     lockIcon = document.createElement('div');
                     lockIcon.className = 'lock-icon-container';
-                    Object.assign(lockIcon.style, {
-                        position: 'absolute',
-                        right: '-3px',
-                        bottom: '5px',
-                        display: 'flex',
-                        alignItems: 'center'
-                    });
+                    Object.assign(lockIcon.style, { position: 'absolute', right: '-3px', bottom: '5px', display: 'flex', alignItems: 'center' });
                     box.appendChild(lockIcon);
                 }
                 lockIcon.innerHTML = (typ === 'fix') ? '<span class="material-symbols-outlined" style="font-size:14px; color:#ff9800;">lock</span>' : '';
 
-                // Notiz-Icon neu zeichnen
                 const altesNotizIcon = box.querySelector('.box-notiz-icon');
                 if (altesNotizIcon) altesNotizIcon.remove();
 
@@ -1727,20 +1719,10 @@ window.syncPlan = async function() {
                     neuesNotizIcon.className = 'box-notiz-icon';
                     neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 22px; line-height: 1;">stylus_note</span>';
                     neuesNotizIcon.title = kommentar;
-                    
-                    Object.assign(neuesNotizIcon.style, {
-                        position: 'absolute',
-                        top: '-2px',
-                        left: '4px',
-                        cursor: 'pointer',
-                        zIndex: '5'
-                    });
-                    
+                    Object.assign(neuesNotizIcon.style, { position: 'absolute', top: '-2px', left: '4px', cursor: 'pointer', zIndex: '5' });
                     neuesNotizIcon.onclick = function(event) {
                         event.stopPropagation();
-                        if (typeof showNotizDetailPopup === "function") {
-                            showNotizDetailPopup(klasse, kommentar);
-                        }
+                        if (typeof showNotizDetailPopup === "function") showNotizDetailPopup(klasse, kommentar);
                     };
                     box.appendChild(neuesNotizIcon);
                 }
@@ -1748,7 +1730,7 @@ window.syncPlan = async function() {
         });
         
     } catch(e) {
-        console.error("Sync im Hintergrund fehlgeschlagen - Plan bleibt stabil:", e);
+        console.error("Sync fehlgeschlagen:", e);
     }
 };
 
