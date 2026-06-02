@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO4567</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2783,13 +2783,13 @@ function handleReservationUI(time, slot, klasse) {
 
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
-            <button class="eigenesmenu-item" style="color: #ffaaaa; justify-content: center; margin-bottom: 10px;" onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
+            <button class="eigenesmenu-item" style="color: #ffaaaa; justify-content: center; margin-bottom: 10px; background: #332222;" onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
                 ❌ RESERVIERUNG LÖSCHEN
             </button>`;
     }
 
-    // Zugriff auf Konfig (Spalte C enthält bei dir wohl Farbe & Icon-Namen)
-    const hallen = (typeof configFarben !== 'undefined') ? Object.keys(configFarben) : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21", "Aussenplatz"];
+    // HIER: Greife direkt auf die keys der hallenConfig zu, falls vorhanden
+    const hallen = window.hallenConfig ? Object.keys(window.hallenConfig) : [];
     
     hallen.forEach(h => {
         const hClean = h.trim().toLowerCase();
@@ -2801,17 +2801,17 @@ function handleReservationUI(time, slot, klasse) {
         const istAktuelleWahl = h.trim().toLowerCase() === aktuelleHalleInBox.toLowerCase();
         
         // Farbe und Icon aus deiner Config holen
-        const config = window.hallenConfig ? window.hallenConfig[h] : null;
-        const color = config?.color || (typeof configFarben !== 'undefined' ? configFarben[h] : "#444");
-        const icon = config?.icon || "meeting_room"; // Fallback Icon
+        const config = window.hallenConfig[h];
+        const color = config?.color || "#444";
+        const icon = config?.icon || "meeting_room";
 
         if (istGesperrt) {
-            html += `<button class="eigenesmenu-item" style="opacity: 0.3; cursor: not-allowed; justify-content: flex-start;" disabled>
+            html += `<button class="eigenesmenu-item" style="opacity: 0.3; cursor: not-allowed; justify-content: flex-start; margin-bottom: 5px;" disabled>
                         <span class="material-symbols-outlined" style="margin-right:10px;">${icon}</span>${h}
                      </button>`;
         } else {
             html += `
-                <div class="hallen-option-wrapper" style="border-left: 5px solid ${color}; display: flex; margin-bottom: 5px; background: #222;">
+                <div class="hallen-option-wrapper" style="border-left: 5px solid ${color}; display: flex; margin-bottom: 5px; background: #222; transition: transform 0.2s;">
                     <div class="opt-locker ${istAktuelleWahl ? 'active' : ''}" 
                          style="flex-grow: 1; display: flex; align-items: center; padding: 10px; cursor: pointer;"
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
@@ -2819,7 +2819,7 @@ function handleReservationUI(time, slot, klasse) {
                         ${h}
                     </div>
                     <div class="opt-fix ${istAktuelleWahl ? 'active' : ''}" 
-                         style="padding: 10px; cursor: pointer; display: flex; align-items: center;"
+                         style="padding: 10px; cursor: pointer; display: flex; align-items: center; border-left: 1px solid #444;"
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
                         <span class="material-symbols-outlined">lock</span>
                     </div>
