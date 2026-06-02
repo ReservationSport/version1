@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3207,14 +3207,20 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     const endSlot = startSlot + 4;
 
     for (let s = startSlot; s <= endSlot; s++) {
-        // Ignoriere den Partner-Slot selbst (da darf die Halle ja sein)
+        // Ignoriere den Partner-Slot selbst
         if (s === partnerSlot) continue;
 
         const data = window.lastPlanData ? window.lastPlanData[s] : null;
-        if (data && data.halle && data.halle.trim().toLowerCase() === payload.halle.trim().toLowerCase()) {
-            partnerKonfliktKlasse = data.klasse || "jemand anderes";
-            console.warn(`⚠️ Konflikt im Partner-Zeitfenster (Slot ${s}) gefunden: ${partnerKonfliktKlasse}`);
-            break;
+        if (data && data.halle) {
+            const belegteHalle = data.halle.toLowerCase();
+            const wunschHalle = payload.halle.toLowerCase();
+
+            // Prüfung mit includes(), um Kombinations-Hallen wie "Halle 1 + 2" zu erfassen
+            if (belegteHalle.includes(wunschHalle) || wunschHalle.includes(belegteHalle)) {
+                partnerKonfliktKlasse = data.klasse || "jemand anderes";
+                console.warn(`⚠️ Konflikt im Partner-Zeitfenster (Slot ${s}) gefunden: ${partnerKonfliktKlasse}`);
+                break;
+            }
         }
     }
 
@@ -3265,7 +3271,6 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         if (typeof closeEditor === "function") closeEditor();
     };
 };
-
     
 // Interne Hilfsfunktion, die die Payloads nacheinander an saveImmediately übergibt
 function executePayloads(payloadArray, onCompleteVisuals) {
