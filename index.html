@@ -2785,7 +2785,10 @@ function handleReservationUI(time, slot, klasse) {
         const istAktiv = (h.trim() === aktuelleHalleInBox);
         
         // Dezent orange für aktive Halle: background #2a2010 (sehr dezent), Border #e67e22
-        const bgStyle = istAktiv ? "background: #2a2010; border: 1px solid #e67e22;" : "background: #222; border: 1px solid #444;";
+        // Ändere diese Zeile in der forEach-Schleife:
+const bgStyle = istAktiv 
+    ? "background: #3d2a10; border: 1px solid #e67e22;" 
+    : "background: #222; border: 1px solid #444;";
         const config = window.hallenConfig[h];
         const icon = config?.icon || "meeting_room";
 
