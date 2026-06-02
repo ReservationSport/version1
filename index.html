@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3196,16 +3196,15 @@ function getDoppellektionPartnerSlot(currentSlot) {
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
     const container = document.getElementById('menu-options-list');
-    const subtitle = document.getElementById('menu-subtitle'); // Holen des Untertitels
+    const subtitle = document.getElementById('menu-subtitle');
 
-    // Falls keine Doppellektion oder kein Container -> Standard
     if (!partnerSlot || !container) {
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
         return;
     }
 
-    // --- LOGIK: KONFLIKT-PRÜFUNG (Wie gehabt) ---
+    // 1. Konflikt-Prüfung (wie gehabt)
     let partnerKonfliktKlasse = null;
     const rowIndex = Math.floor((partnerSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
@@ -3223,35 +3222,38 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         }
     }
 
-    // --- UI-ANPASSUNG ---
-    // 1. Untertitel ändern
+    // 2. Untertitel ZWANGS-ÜBERSCHREIBEN
     if (subtitle) {
-        subtitle.innerHTML = `<span style="color: #ff9800; font-weight: bold;">Willst du die Aktion für die gesamte Doppellektion durchführen?</span>`;
+        subtitle.innerHTML = `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`;
     }
 
-    // 2. Button-Styling (passend zu .eigenesmenu-item)
-    // Wir nutzen hier Klassen statt hartem Inline-Style, um deinen Style zu wahren
+    // 3. Buttons mit Orange-Style und Hover-Effekt
+    // Hinweis: Wir nutzen ein <style> Tag im Inneren, um den Hover für diese spezifischen Buttons zu steuern
     container.innerHTML = `
+        <style>
+            .doppel-btn { transition: all 0.2s; border: 2px solid transparent !important; }
+            .doppel-btn:hover { border: 2px solid #fff !important; transform: scale(1.02); }
+        </style>
         <div class="doppel-abfrage-container" style="margin-top: 10px;">
             ${partnerKonfliktKlasse ? `
                 <div style="background: #331111; border: 1px solid #ff4444; color: #ffcccc; padding: 12px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85rem;">
                     <strong>⚠️ Blockiert!</strong> ${partnerKonfliktKlasse} belegt im Partner-Slot bereits "${payload.halle}".
                 </div>
             ` : `
-                <button id="btn-doppel-beide" class="eigenesmenu-item" style="background: #27ae60; color: white; border: none; margin-bottom: 10px;">
-                    <span class="material-symbols-outlined" style="margin-right: 8px;">groups</span>
+                <button id="btn-doppel-beide" class="eigenesmenu-item doppel-btn" style="background: #e67e22; color: #fff; margin-bottom: 10px; font-weight: bold;">
+                    <span class="material-symbols-outlined" style="margin-right: 8px;">group</span>
                     Ja, beide Lektionen übernehmen
                 </button>
             `}
             
-            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="background: #34495e; color: white; border: none;">
+            <button id="btn-doppel-einzel" class="eigenesmenu-item doppel-btn" style="background: #d35400; color: #fff;">
                 <span class="material-symbols-outlined" style="margin-right: 8px;">person</span>
                 Nein, nur diese Lektion
             </button>
         </div>
     `;
 
-    // Handler-Logik (bleibt gleich)
+    // Handler...
     const btnBeide = document.getElementById('btn-doppel-beide');
     if (btnBeide) {
         btnBeide.onclick = function() {
