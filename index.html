@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3198,14 +3198,13 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
 
-    // Falls keine Doppellektion oder kein Container -> Standard-Aktion
     if (!partnerSlot || !container) {
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
         return;
     }
 
-    // 1. Logik: Prüfe das Zeitfenster des PARTNERS auf Konflikte mit payload.halle
+    // 1. Konflikt-Logik
     let partnerKonfliktKlasse = null;
     const rowIndex = Math.floor((partnerSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
@@ -3224,14 +3223,19 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         }
     }
 
-    // 2. UI ANPASSUNG: Untertitel setzen und Buttons stylen
-    // Wir nutzen ein kleines Delay für den Untertitel, damit es nicht von anderen Skripten überschrieben wird
-    setTimeout(() => {
-        if (subtitle) {
-            subtitle.innerHTML = `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`;
-        }
-    }, 10);
+    // 2. Untertitel erzwingen (mit Beobachter)
+    if (subtitle) {
+        subtitle.innerHTML = `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`;
+        const observer = new MutationObserver(() => {
+            if (subtitle.innerHTML !== `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`) {
+                subtitle.innerHTML = `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`;
+            }
+        });
+        observer.observe(subtitle, { childList: true, subtree: true });
+        setTimeout(() => observer.disconnect(), 2000);
+    }
 
+    // 3. UI Bauen
     container.innerHTML = `
         <style>
             .doppel-btn { 
@@ -3249,19 +3253,18 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
                 </div>
             ` : `
                 <button id="btn-doppel-beide" class="doppel-btn">
-                    <span class="material-symbols-outlined">groups</span>
-                    Ja, beide Lektionen übernehmen
+                    <span class="material-symbols-outlined">group</span>
+                    Für beide Lektionen
                 </button>
             `}
-            
             <button id="btn-doppel-einzel" class="doppel-btn">
                 <span class="material-symbols-outlined">person</span>
-                Nein, nur diese Lektion
+                Nur für eine Lektion
             </button>
         </div>
     `;
 
-    // 3. Modale Sicherheit & Handler
+    // 4. Handler
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "auto";
     
@@ -3273,7 +3276,6 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
             if (typeof closeEditor === "function") closeEditor();
         };
     }
-
     document.getElementById('btn-doppel-einzel').onclick = function() {
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
