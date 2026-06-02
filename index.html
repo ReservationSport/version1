@@ -2764,10 +2764,11 @@ function handleReservationUI(time, slot, klasse) {
 
     let html = "";
 
+    // RESERVIERUNG LÖSCHEN (Look: nicht fett, passend zum Rest)
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <div class="hallen-option-wrapper" 
-                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa; font-weight: bold;"
+                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa; font-weight: normal;"
                  onmouseover="this.style.borderColor='#ff6666'; this.style.transform='scale(1.02)';" 
                  onmouseout="this.style.borderColor='#553333'; this.style.transform='scale(1)';"
                  onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
@@ -2781,10 +2782,10 @@ function handleReservationUI(time, slot, klasse) {
     hallen.forEach(h => {
         const hClean = h.trim().toLowerCase();
         const istGesperrt = besetzteHallen.some(b => b.toLowerCase().includes(hClean) || hClean.includes(b.toLowerCase()));
-        const istAktiv = (h.trim() === aktuelleHalleInBox); // Prüft, ob dies die aktuelle Halle ist
+        const istAktiv = (h.trim() === aktuelleHalleInBox);
         
-        // Markierung für aktive Halle: dunkles Orange/Braun
-        const bgStyle = istAktiv ? "background: #332211; border-color: #e67e22;" : "background: #222; border: 1px solid #444;";
+        // Dezent orange für aktive Halle: background #2a2010 (sehr dezent), Border #e67e22
+        const bgStyle = istAktiv ? "background: #2a2010; border: 1px solid #e67e22;" : "background: #222; border: 1px solid #444;";
         const config = window.hallenConfig[h];
         const icon = config?.icon || "meeting_room";
 
@@ -2811,8 +2812,16 @@ function handleReservationUI(time, slot, klasse) {
                     
                     <div class="opt-fix" 
                          style="width: 55px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #444; transition: background 0.2s; cursor: pointer;"
-                         onmouseover="this.style.backgroundColor='#333'; this.querySelector('.material-symbols-outlined').style.color='#e67e22'; this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#e67e22';"
-                         onmouseout="this.style.backgroundColor='transparent'; this.querySelector('.material-symbols-outlined').style.color='#fff'; this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#fff';"
+                         onmouseover="
+                            this.style.backgroundColor='#333'; 
+                            this.querySelector('.material-symbols-outlined').style.color='#e67e22'; 
+                            this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#e67e22';
+                         "
+                         onmouseout="
+                            this.style.backgroundColor='transparent'; 
+                            this.querySelector('.material-symbols-outlined').style.color='#fff'; 
+                            this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#fff';
+                         "
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
                         <span class="material-symbols-outlined" style="display: flex; align-items: center; justify-content: center; transition: color 0.2s; font-size: 16px; padding-left: 8px;">lock</span>
                     </div>
@@ -2822,7 +2831,7 @@ function handleReservationUI(time, slot, klasse) {
 
     container.innerHTML = html;
 }
-    
+                         
 
 
 
