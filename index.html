@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO444444444</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2463,9 +2463,9 @@ function openMaterialDetail(materialString, time, slot, klasse) {
                        </div>`;
 }
 
-/* ============================================================
-   ZENTRALE SPEICHER-LOGIK MIT ONCOMPLETEVISUALS
-   ============================================================ */
+/* ==========================================================================
+   MATERIAL-LOGIK: MIT DOPPELLEKTIONS-WEICHE ABGESICHERT
+   ========================================================================== */
 
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     const modal = document.getElementById('eigenesmenu-modal');
@@ -2478,11 +2478,11 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         date: document.getElementById('datePicker')?.value,
         slot: slot,
         klasse: klasse || "",
-        material: mat,           
-        materialDetail: detail || "" 
+        material: mat,            
+        materialDetail: detail || "",
+        halle: "" // WICHTIG: Hier explizit leer lassen, damit die Weiche nicht abstürzt
     };
 
-    // Callback erhält nun das gesamte Payload-Objekt 'p'
     const onCompleteVisuals = (p) => {
         const s = p.slot;
         if (window.lastPlanData?.[s]) {
@@ -2492,12 +2492,15 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         const box = document.querySelector(`[data-slot="${s}"]`);
         if (box) markBoxWithMaterialIcon(box, p.material, p.materialDetail);
         
-        // Editor nur schließen, wenn wir den ursprünglichen Slot bearbeiten
         if (s === slot && typeof closeEditor === 'function') closeEditor();
     };
 
+    // Die Weiche erkennt jetzt, dass keine Halle da ist und überspringt die Konflikt-Prüfung
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
+    } else {
+        // Fallback falls Weiche nicht geladen
+        onCompleteVisuals(payload);
     }
 }
 
@@ -2509,11 +2512,11 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
         date: document.getElementById('datePicker')?.value,
         slot: slot,
         klasse: klasse || "",
-        material: "",           
-        materialDetail: ""
+        material: "",            
+        materialDetail: "",
+        halle: ""
     };
 
-    // Callback erhält nun das gesamte Payload-Objekt 'p'
     const onCompleteVisuals = (p) => {
         const s = p.slot;
         if (window.lastPlanData?.[s]) {
@@ -2528,8 +2531,11 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
 
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
+    } else {
+        onCompleteVisuals(payload);
     }
 }
+
     
 
 /** * 5. Helper (Toggles & Badges)
@@ -3202,9 +3208,16 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
 // DIE UNIVERSELLE WEICHE
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
+    // 1. MATERIAL/NOTIZ-CHECK: Wenn keine Halle da ist, sofort normal ausführen
+    if (!payload.halle || payload.halle.trim() === "") {
+        executePayloads([payload], onCompleteVisuals);
+        if (typeof closeEditor === "function") closeEditor();
+        return;
+    }
+
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
     const container = document.getElementById('menu-options-list');
-    const subtitle = document.getElementById('dynamic-header-subtitle'); // Dein ID aus openEditor
+    const subtitle = document.getElementById('dynamic-header-subtitle');
 
     if (!partnerSlot || !container) {
         executePayloads([payload], onCompleteVisuals);
@@ -3212,7 +3225,7 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         return;
     }
 
-  // 1. Logik: Prüfe das Zeitfenster des PARTNERS auf Konflikte
+    // 2. Konflikt-Logik
     let partnerKonfliktKlasse = null;
     const rowIndex = Math.floor((partnerSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
@@ -3221,13 +3234,9 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     for (let s = startSlot; s <= endSlot; s++) {
         if (s === partnerSlot) continue;
         const data = window.lastPlanData ? window.lastPlanData[s] : null;
-        
-        // Prüfung angepasst: Halle muss existieren UND darf nicht leer sein
         if (data && data.halle && data.halle.trim() !== "") {
             const belegte = data.halle.toLowerCase();
             const wunsch = payload.halle.toLowerCase();
-            
-            // Nur wenn wunsch nicht leer ist (bei Löschung ist payload.halle oft leer)
             if (wunsch !== "" && (belegte.includes(wunsch) || wunsch.includes(belegte))) {
                 partnerKonfliktKlasse = data.klasse || "andere Belegung";
                 break;
@@ -3235,12 +3244,12 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         }
     }
 
-    // UNTERTITEL SETZEN (Wird jetzt dank updateHeader-Fix nicht mehr überschrieben)
+    // 3. Untertitel erzwingen
     if (subtitle) {
         subtitle.innerHTML = `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`;
     }
 
-    // UI & BUTTONS
+    // 4. UI Aufbau
     container.innerHTML = `
         <style>
             .doppel-btn { 
@@ -3255,9 +3264,9 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         <div class="doppel-abfrage-container" style="margin-top: 10px;">
             ${partnerKonfliktKlasse ? `
                 <div style="background: #331111; border: 1px solid #ff4444; color: #ffcccc; padding: 12px; margin-bottom: 15px; border-radius: 4px; font-size: 0.85rem; display: flex; align-items: flex-start;">
-                    <span class="material-symbols-outlined" style="color: #ff4444; margin-right: 10px; font-size: 1.5rem;">warning</span>
+                    <span class="material-symbols-outlined" style="color: #ff4444; margin-right: 10px; font-size: 1.5rem;">settings_alert</span>
                     <div>
-                        <strong>Auswahl für die Doppellektion nicht möglich!</strong><br>
+                        <strong>Auswahl für Doppellektion nicht möglich!</strong><br>
                     </div>
                 </div>
             ` : `
@@ -3273,9 +3282,10 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         </div>
     `;
 
-    // Handler...
+    // 5. Handler
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "auto";
+    
     const btnBeide = document.getElementById('btn-doppel-beide');
     if (btnBeide) btnBeide.onclick = () => {
         executePayloads([payload, { ...payload, slot: partnerSlot.toString() }], onCompleteVisuals);
