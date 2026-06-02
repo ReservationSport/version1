@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2717,14 +2717,13 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 
 
 function handleReservationUI(time, slot, klasse) {
-    const container = document.getElementById('menu-options-list'); // Deine Liste im HTML
+    const container = document.getElementById('menu-options-list');
     const subtitle = document.getElementById('menu-subtitle');
     const root = document.getElementById('eigenesmenu-modal');
     const titleEl = root ? root.querySelector('.eigenesmenu-title') : null;
     
     if (!container) return;
 
-    // Titel & Untertitel
     if (titleEl) {
         titleEl.innerText = "HALLE/RAUM WÄHLEN";
         titleEl.style.color = "#e67e22";
@@ -2733,11 +2732,13 @@ function handleReservationUI(time, slot, klasse) {
         subtitle.innerHTML = `Reservierung für: <b>${klasse}</b>`;
     }
 
-    // Besetzte Hallen Berechnung (Logik bleibt gleich)
+    // Besetzte Hallen Berechnung
     const currentSlot = parseInt(slot);
     const rowIndex = Math.floor((currentSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
     const endSlot = startSlot + 4;
+    
+    // Wir sammeln alle belegten Hallen-Strings
     let besetzteHallen = [];
     for (let s = startSlot; s <= endSlot; s++) {
         if (s === currentSlot) continue;
@@ -2745,7 +2746,6 @@ function handleReservationUI(time, slot, klasse) {
         if (data && data.halle && data.halle !== "Ausfall") {
             const hName = data.halle.trim();
             if (hName.toLowerCase().includes("aussenplatz") || hName.toLowerCase().includes("outdoor")) continue; 
-            if (hName.includes('+')) besetzteHallen.push(...hName.split('+').map(t => t.trim()));
             besetzteHallen.push(hName);
         }
     }
@@ -2753,7 +2753,6 @@ function handleReservationUI(time, slot, klasse) {
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
     let html = "";
 
-    // 1. LÖSCHEN BUTTON (Nutzt .eigenesmenu-item aus dem CSS)
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <button class="eigenesmenu-item" onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
@@ -2761,13 +2760,20 @@ function handleReservationUI(time, slot, klasse) {
             </button>`;
     }
 
-    // 2. HALLEN OPTIONEN (Nutzt .hallen-option-wrapper aus dem CSS)
     const hallen = (typeof configFarben !== 'undefined') ? Object.keys(configFarben) : ["Halle 1", "Halle 2", "Halle 3", "Halle 4", "Halle 5", "U21", "Aussenplatz"];
     
     hallen.forEach(h => {
-        const istGesperrt = besetzteHallen.includes(h.trim());
+        const hClean = h.trim().toLowerCase();
+        
+        // INTELLIGENTE PRÜFUNG: 
+        // Ist die gewählte Halle 'h' Teil einer bereits gebuchten Halle oder umgekehrt?
+        const istGesperrt = besetzteHallen.some(b => {
+            const bClean = b.toLowerCase();
+            return bClean.includes(hClean) || hClean.includes(bClean);
+        });
+
         const istAktuelleWahl = h.trim().toLowerCase() === aktuelleHalleInBox.toLowerCase();
-        const color = configFarben[h] || "#444";
+        const color = (typeof configFarben !== 'undefined' && configFarben[h]) ? configFarben[h] : "#444";
 
         if (istGesperrt) {
             html += `<button class="eigenesmenu-item" style="opacity: 0.3; cursor: not-allowed;" disabled>${h}</button>`;
