@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3188,67 +3188,68 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
 // DIE UNIVERSELLE WEICHE (Mit Absicherung für den Container)
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
-    // 1. Synchronisiere Daten frisch vom Server
-    if (typeof syncPlan === "function") syncPlan();
+    console.log("--- START PROZESS: prozessiereAktion ---");
+    console.log("Payload:", payload);
+
+    if (typeof syncPlan === "function") {
+        console.log("-> Syncing Plan...");
+        syncPlan();
+    }
 
     const partnerSlot = getDoppellektionPartnerSlot(payload.slot);
+    console.log("-> Ermittelter Partner-Slot:", partnerSlot);
+    
     const container = document.getElementById('menu-options-list');
     
-    // --- FUNKTION ZUR KONFLIKTPRÜFUNG ---
-    const checkKonflikt = (slot, halle) => {
-        if (!window.lastPlanData || !window.lastPlanData[slot]) return false;
+    // Debug: Was steht eigentlich in lastPlanData?
+    console.log("-> Aktueller Plan-Datenstand (lastPlanData):", window.lastPlanData);
+
+    const isKonflikt = (slot, gewaehlteHalle) => {
+        if (!window.lastPlanData || !window.lastPlanData[slot]) {
+            console.log(`-> Konflikt-Check für Slot ${slot}: KEINE DATEN VORHANDEN`);
+            return false;
+        }
         const data = window.lastPlanData[slot];
-        // Konflikt, wenn Halle existiert, nicht leer ist und exakt übereinstimmt
-        return data.halle && 
-               data.halle.trim().toLowerCase() === halle.trim().toLowerCase();
+        const partnerHalle = data.halle ? data.halle.trim().toLowerCase() : "LEER";
+        const meineHalle = gewaehlteHalle.trim().toLowerCase();
+        
+        console.log(`-> Konflikt-Check: Vergleich '${meineHalle}' mit Partner-Halle '${partnerHalle}'`);
+        
+        return data.halle && partnerHalle === meineHalle;
     };
 
-    const isHalleConflicting = checkKonflikt(partnerSlot, payload.halle);
+    const isHalleConflicting = isKonflikt(partnerSlot, payload.halle);
+    console.log("-> Endergebnis Konfliktprüfung:", isHalleConflicting);
 
-    // 2. Modal-HTML aufbauen
     container.innerHTML = `
         <div style="text-align: center; padding: 20px;">
-            <p style="font-weight: bold; margin-bottom: 15px;">🔗 Doppellektion: ${payload.klasse}</p>
-            
-            ${isHalleConflicting ? `
-                <div style="background: #2a2a2a; border: 1px solid #ff4444; color: #ff9999; padding: 15px; border-radius: 5px; margin-bottom: 15px; font-size: 0.9rem;">
-                    <strong>⚠️ Blockiert!</strong><br>
-                    Die Halle "${payload.halle}" ist im Partner-Slot (${partnerSlot}) bereits belegt.
-                </div>
-            ` : `
-                <button id="btn-doppel-beide" class="eigenesmenu-item" style="background: #e67e22; width: 100%; padding: 12px; margin-bottom: 12px; border: none; color: white; font-weight: bold;">
-                    👥 Für beide Stunden übernehmen
-                </button>
-            `}
-            
-            <button id="btn-doppel-einzel" class="eigenesmenu-item" style="background: #444; width: 100%; padding: 12px; border: none; color: white;">
-                👤 Nur für diese Stunde
-            </button>
+            <p>Halle: <b>${payload.halle}</b> (Slot ${payload.slot})</p>
+            ${isHalleConflicting ? 
+                `<div style="color: red; padding: 10px; border: 1px solid red;">BLOCKIERT: "${payload.halle}" belegt in Slot ${partnerSlot}</div>` : 
+                `<button id="btn-doppel-beide" style="background: orange; width: 100%; padding: 10px;">👥 Doppellektion</button>`
+            }
+            <button id="btn-doppel-einzel" style="background: #444; color: white; width: 100%; padding: 10px; margin-top: 10px;">👤 Nur Einzel</button>
         </div>
     `;
 
-    // Modal aktivieren
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) modal.style.pointerEvents = "auto";
-
-    // 3. Klick-Handler für "Beide"
-    const btnBeide = document.getElementById('btn-doppel-beide');
-    if (btnBeide) {
-        btnBeide.onclick = function() {
-            // Letzte Sicherheitsprüfung vor dem Senden
-            if (checkKonflikt(partnerSlot, payload.halle)) {
-                alert("Fehler: Die Halle wurde in der Zwischenzeit anderweitig belegt!");
+    if (document.getElementById('btn-doppel-beide')) {
+        document.getElementById('btn-doppel-beide').onclick = function() {
+            console.log("-> User klickt auf 'Beide übernehmen'");
+            // Nochmalige Prüfung
+            if (isKonflikt(partnerSlot, payload.halle)) {
+                console.error("-> BLOCK: Konflikt beim Klick erkannt! Abbruch.");
+                alert("Reservierung abgebrochen: Halle im Partnerslot belegt.");
                 return;
             }
-            
+            console.log("-> Erfolg: Sende Payload an executePayloads");
             const partnerPayload = { ...payload, slot: partnerSlot.toString() };
             executePayloads([payload, partnerPayload], onCompleteVisuals);
             if (typeof closeEditor === "function") closeEditor();
         };
     }
 
-    // 4. Klick-Handler für "Einzel"
     document.getElementById('btn-doppel-einzel').onclick = function() {
+        console.log("-> User klickt auf 'Nur Einzel'");
         executePayloads([payload], onCompleteVisuals);
         if (typeof closeEditor === "function") closeEditor();
     };
