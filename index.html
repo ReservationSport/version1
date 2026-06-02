@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2767,7 +2767,7 @@ function handleReservationUI(time, slot, klasse) {
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <div class="hallen-option-wrapper" 
-                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa; font-weight: bold;"
+                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa;"
                  onmouseover="this.style.borderColor='#ff6666'; this.style.transform='scale(1.02)';" 
                  onmouseout="this.style.borderColor='#553333'; this.style.transform='scale(1)';"
                  onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
