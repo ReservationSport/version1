@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO121435</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2740,9 +2740,7 @@ function handleReservationUI(time, slot, klasse) {
         titleEl.innerText = "HALLE/RAUM WÄHLEN";
         titleEl.style.color = "#e67e22";
     }
-    if (subtitle) {
-        subtitle.innerHTML = `Reservierung für: <b>${klasse}</b>`;
-    }
+    if (subtitle) subtitle.innerHTML = `Reservierung für: <b>${klasse}</b>`;
 
     const currentSlot = parseInt(slot);
     const rowIndex = Math.floor((currentSlot - 1) / 5);
@@ -2791,14 +2789,15 @@ function handleReservationUI(time, slot, klasse) {
                 >
                     <div class="opt-locker" 
                          style="flex-grow: 1; display: flex; align-items: center; padding: 12px; color: #fff;"
-                         onmouseover="this.parentNode.querySelectorAll('.material-symbols-outlined').forEach(i=>i.style.color='#e67e22');"
-                         onmouseout="this.parentNode.querySelectorAll('.material-symbols-outlined').forEach(i=>i.style.color='#fff');"
+                         onmouseover="this.querySelector('.material-symbols-outlined').style.color='#e67e22';"
+                         onmouseout="this.querySelector('.material-symbols-outlined').style.color='#fff';"
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
                         <span class="material-symbols-outlined" style="color: #fff; margin-right: 12px; transition: color 0.2s;">${icon}</span>
                         ${h}
                     </div>
+                    
                     <div class="opt-fix" 
-                         style="width: 60px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #444; transition: all 0.2s;"
+                         style="width: 50px; display: flex; align-items: center; justify-content: center; border-left: 1px solid #444; transition: all 0.2s;"
                          onmouseover="this.style.backgroundColor='#333'; this.querySelector('.material-symbols-outlined').style.color='#e67e22';"
                          onmouseout="this.style.backgroundColor='transparent'; this.querySelector('.material-symbols-outlined').style.color='#fff';"
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
