@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO444444444</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3212,18 +3212,23 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         return;
     }
 
-    // Konflikt-Logik (unverändert)...
+  // 1. Logik: Prüfe das Zeitfenster des PARTNERS auf Konflikte
     let partnerKonfliktKlasse = null;
     const rowIndex = Math.floor((partnerSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
     const endSlot = startSlot + 4;
+
     for (let s = startSlot; s <= endSlot; s++) {
         if (s === partnerSlot) continue;
         const data = window.lastPlanData ? window.lastPlanData[s] : null;
-        if (data && data.halle) {
+        
+        // Prüfung angepasst: Halle muss existieren UND darf nicht leer sein
+        if (data && data.halle && data.halle.trim() !== "") {
             const belegte = data.halle.toLowerCase();
             const wunsch = payload.halle.toLowerCase();
-            if (belegte.includes(wunsch) || wunsch.includes(belegte)) {
+            
+            // Nur wenn wunsch nicht leer ist (bei Löschung ist payload.halle oft leer)
+            if (wunsch !== "" && (belegte.includes(wunsch) || wunsch.includes(belegte))) {
                 partnerKonfliktKlasse = data.klasse || "andere Belegung";
                 break;
             }
