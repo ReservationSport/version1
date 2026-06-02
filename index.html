@@ -2315,23 +2315,23 @@ window.openEditor = function(el, time, slot, klasse) {
                 </p>
             </div>
             <div class="eigenesmenu-liste" id="menu-options-list">
-                <button class="eigenesmenu-item" data-action="reservation" data-icon="room_preferences" data-title="Welche Räumlichkeit willst du für <span style='color: #ff8c00;'>${klasse}</span> reservieren?">
+                <button class="eigenesmenu-item" data-action="reservation" data-icon="room_preferences" data-title="Welche Räumlichkeit willst du für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span> reservieren?">
                     <span class="material-symbols-outlined">room_preferences</span>
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="material" data-icon="trolley" data-title="Aktion: Material für <span style='color: #ff8c00;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="material" data-icon="trolley" data-title="Aktion: Material für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">trolley</span>
                     <span class="btn-text">${hatMaterial ? 'MATERIAL ÄNDERN' : 'MATERIAL BUCHEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="ausfall" data-icon="${isAusfall ? 'settings_backup_restore' : 'block'}" data-title="Aktion: Ausfall für <span style='color: #ff8c00;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="ausfall" data-icon="${isAusfall ? 'settings_backup_restore' : 'block'}" data-title="Aktion: Ausfall für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
                     <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note" data-title="Erfasse eine Notiz für die Klasse <span style='color: #ff8c00;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note" data-title="Erfasse eine Notiz für die Klasse <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">stylus_note</span>
                     <span class="btn-text">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="beendet" data-icon="sports_score" data-title="Aktion: Abschluss für <span style='color: #ff8c00;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="beendet" data-icon="sports_score" data-title="Aktion: Abschluss für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">sports_score</span>
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
@@ -3369,3 +3369,5 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 
 
 </html>
+
+
