@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3205,18 +3205,27 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     console.log("-> Aktueller Plan-Datenstand (lastPlanData):", window.lastPlanData);
 
     const isKonflikt = (slot, gewaehlteHalle) => {
-        if (!window.lastPlanData || !window.lastPlanData[slot]) {
-            console.log(`-> Konflikt-Check für Slot ${slot}: KEINE DATEN VORHANDEN`);
-            return false;
+    // 1. Suche das HTML-Element für den Partner-Slot auf der Seite
+    const slotElement = document.querySelector(`[data-slot="${slot}"]`);
+    
+    if (slotElement) {
+        // Wir suchen das Label, in dem die Halle steht. 
+        // PASSE DIESEN SELECTOR AN, falls deine Halle nicht in .halle-label steht!
+        const label = slotElement.querySelector('.halle-label');
+        if (label) {
+            const belegteHalle = label.innerText.trim().toLowerCase();
+            const meineHalle = gewaehlteHalle.trim().toLowerCase();
+            
+            console.log(`DEBUG: DOM-Check für Slot ${slot}: Gefunden im DOM -> '${belegteHalle}'`);
+            return belegteHalle === meineHalle;
         }
-        const data = window.lastPlanData[slot];
-        const partnerHalle = data.halle ? data.halle.trim().toLowerCase() : "LEER";
-        const meineHalle = gewaehlteHalle.trim().toLowerCase();
-        
-        console.log(`-> Konflikt-Check: Vergleich '${meineHalle}' mit Partner-Halle '${partnerHalle}'`);
-        
-        return data.halle && partnerHalle === meineHalle;
-    };
+    }
+    
+    // Fallback falls DOM-Element nicht gefunden:
+    console.log(`DEBUG: DOM-Check fehlgeschlagen, nutze lastPlanData für Slot ${slot}`);
+    if (!window.lastPlanData || !window.lastPlanData[slot]) return false;
+    return window.lastPlanData[slot].halle.trim().toLowerCase() === gewaehlteHalle.trim().toLowerCase();
+};
 
     const isHalleConflicting = isKonflikt(partnerSlot, payload.halle);
     console.log("-> Endergebnis Konfliktprüfung:", isHalleConflicting);
