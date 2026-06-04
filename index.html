@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO444</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2379,12 +2379,9 @@ window.updateHeader = function(iconName, subtitleText) {
 
     
 /* ==========================================================================
-   MATERIAL
+   MATERIAL - KOMPLETT-LOGIK
    ========================================================================== */
 
-/**
- * Hauptfunktion für die Materialauswahl
- */
 function handleMaterialUI(time, slot, klasse, modalElement) {
     const root = modalElement || document.getElementById('eigenesmenu-modal');
     if (!root) return;
@@ -2407,7 +2404,8 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const hatBereitsMaterial = slotData.material && slotData.material.trim() !== "";
     window.selectedMaterials = []; 
 
-    let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px;">`;
+    // Liste mit Scroll-Container
+    let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1; overflow-y: auto; padding-bottom: 140px;">`;
 
     // 1. LÖSCHEN BUTTON
     if (hatBereitsMaterial) {
@@ -2422,21 +2420,12 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             </div>`;
     }
 
-    // 2. EIGENE SCHREIBBOX (Abstand 8px für Einheitlichkeit)
+    // 2. EIGENE SCHREIBBOX
     html += `
         <div id="custom-material-wrapper" class="hallen-option-wrapper" 
              style="display: flex; height: 50px; margin-bottom: 8px; background: #222; border: 1px solid #444; border-radius: 8px; align-items: center; padding: 0 15px; transition: all 0.2s; cursor: text;"
-             onmouseover="
-                this.style.borderColor='#e67e22'; 
-                this.querySelector('.icon-custom').style.color='#e67e22'; 
-                this.querySelector('.check-indicator').style.color='#e67e22';
-             "
-             onmouseout="
-                const hasText = document.getElementById('customMaterialInput').value.trim() !== '';
-                this.style.borderColor = hasText ? '#e67e22' : '#444';
-                this.querySelector('.icon-custom').style.color = '#fff';
-                this.querySelector('.check-indicator').style.color = hasText ? '#e67e22' : '#666';
-             "
+             onmouseover="this.style.borderColor='#e67e22'; this.querySelector('.icon-custom').style.color='#e67e22'; this.querySelector('.check-indicator').style.color='#e67e22';"
+             onmouseout="const hasText = document.getElementById('customMaterialInput').value.trim() !== ''; this.style.borderColor = hasText ? '#e67e22' : '#444'; this.querySelector('.icon-custom').style.color = '#fff'; this.querySelector('.check-indicator').style.color = hasText ? '#e67e22' : '#666';"
              onclick="this.querySelector('input').focus();">
             <span class="material-symbols-outlined icon-custom" style="margin-right: 12px; color: #fff; transition: color 0.2s;">deployed_code_update</span>
             <input type="text" id="customMaterialInput" placeholder="Eigenes Material eintragen..." 
@@ -2449,77 +2438,76 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     (verfügbareMaterialien || []).forEach(mat => {
         const matClean = mat ? mat.toString().trim() : "";
         if (matClean === "") return;
-        
         html += `
             <div class="hallen-option-wrapper material-selectable" 
                  style="display: flex; height: 50px; margin-bottom: 8px; background: #222; border: 1px solid #444; border-radius: 8px; cursor: pointer; align-items: center; padding: 0 15px; transition: all 0.2s;"
                  onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)'; this.querySelector('.material-symbols-outlined').style.color='#e67e22'; this.querySelector('.check-indicator').style.color='#e67e22';" 
                  onmouseout="this.style.borderColor='#444'; this.style.transform='scale(1)'; this.querySelector('.material-symbols-outlined').style.color='#fff'; this.querySelector('.check-indicator').style.color='#666';"
                  onclick="toggleMaterialSelection('${matClean}', this)">
-                 
                 <span class="material-symbols-outlined" style="margin-right: 12px; color: #fff; transition: color 0.2s;">deployed_code</span> 
                 <span class="btn-text" style="color: #fff;">${matClean}</span>
                 <span class="check-indicator" style="margin-left: auto; color: #666; font-size: 20px; transition: color 0.2s;">○</span>
             </div>`;
     });
 
-    html += `</div>
-             <div id="materialNextStep" style="display: none; margin-top: 15px;">
-                <button class="eigenesmenu-item" style="height: 50px; background: #e67e22; color: white; border-radius: 8px; width: 100%; border: none; font-weight: bold; cursor: pointer;" 
-                        onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-                    DETAILS EINGEBEN ❯
+    html += `</div>`; // Ende Liste
+
+    // 4. FIXIERTER ACTION-CONTAINER (Sticky am unteren Rand)
+    html += `
+        <div id="material-action-container" style="display: none; position: absolute; bottom: 0; left: 0; width: 100%; background: #1a1a1a; padding: 15px; border-top: 1px solid #333; box-sizing: border-box;">
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <button style="flex: 1; height: 50px; background: #27ae60; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
+                        onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}', false)">
+                    SPEICHERN
                 </button>
-             </div>`;
+                <button style="flex: 1; height: 50px; background: #e67e22; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
+                        onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
+                    DETAILS ❯
+                </button>
+            </div>
+            <button style="width: 100%; background: transparent; color: #888; border: none; cursor: pointer; padding: 5px;" 
+                    onclick="if(typeof closeEditor === 'function') closeEditor();">
+                ABBRECHEN
+            </button>
+        </div>`;
 
     liste.innerHTML = html;
 }
 
-/**
- * Logik für eigenen Input: Verhindert Mehrfacheinträge (h, ha, hal...)
- */
-// Wir speichern das Custom-Material global, um es leicht ersetzen zu können
-window.lastCustomMaterial = ""; 
+// Globaler Tracker für Custom Input
+window.lastCustomMaterial = "";
 
 function handleCustomMaterialInput(val) {
     const wrapper = document.getElementById('custom-material-wrapper');
     const check = document.getElementById('custom-check');
     const icon = wrapper.querySelector('.icon-custom');
-    const nextStep = document.getElementById('materialNextStep');
+    const actionContainer = document.getElementById('material-action-container');
 
-    // 1. Entferne das alte eigene Material aus der Auswahl-Liste, falls vorhanden
     if (window.lastCustomMaterial !== "") {
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== window.lastCustomMaterial);
     }
-
     const currentVal = val.trim();
-
     if (currentVal !== "") {
-        // 2. Füge das neue, vollständige Material hinzu
         window.selectedMaterials.push(currentVal);
-        window.lastCustomMaterial = currentVal; // Update des Referenz-Wertes
-
-        // UI-Feedback
+        window.lastCustomMaterial = currentVal;
         wrapper.style.backgroundColor = "#4a2d0a";
         wrapper.style.borderColor = "#e67e22";
         check.innerText = "●";
         check.style.color = "#e67e22";
-        if (nextStep) nextStep.style.display = 'block';
+        icon.style.color = "#e67e22";
     } else {
-        // Leeres Feld
         window.lastCustomMaterial = "";
         wrapper.style.backgroundColor = "#222";
         wrapper.style.borderColor = "#444";
         check.innerText = "○";
         check.style.color = "#666";
-        if (window.selectedMaterials.length === 0) nextStep.style.display = 'none';
+        icon.style.color = "#fff";
     }
+    actionContainer.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
 }
 
-/**
- * Logik für Standard-Button-Auswahl
- */
 function toggleMaterialSelection(mat, btn) {
-    const nextStep = document.getElementById('materialNextStep');
+    const actionContainer = document.getElementById('material-action-container');
     const check = btn.querySelector('.check-indicator');
     const icon = btn.querySelector('.material-symbols-outlined');
 
@@ -2527,23 +2515,54 @@ function toggleMaterialSelection(mat, btn) {
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
         btn.style.background = "#222";
         btn.style.borderColor = "#444";
-        btn.onmouseover = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1.02)"; icon.style.color = "#e67e22"; check.style.color = "#e67e22"; };
-        btn.onmouseout = function() { this.style.borderColor = "#444"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#666"; };
-        if (check) check.innerText = "○";
+        check.innerText = "○";
+        icon.style.color = "#fff";
     } else {
         window.selectedMaterials.push(mat);
         btn.style.background = "#4a2d0a"; 
         btn.style.borderColor = "#e67e22";
-        btn.onmouseover = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1.02)"; icon.style.color = "#e67e22"; check.style.color = "#e67e22"; };
-        btn.onmouseout = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#e67e22"; };
-        if (check) {
-            check.innerText = "●";
-            check.style.color = "#e67e22";
-        }
+        check.innerText = "●";
+        check.style.color = "#e67e22";
+        icon.style.color = "#e67e22";
     }
-    if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
+    actionContainer.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
 }
 
+/**
+ * Zentrale Speicherfunktion für beides (Direkt oder mit Details)
+ */
+async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
+    const modal = document.getElementById('eigenesmenu-modal');
+    if (modal) modal.style.pointerEvents = "none";
+
+    const payload = {
+        action: "saveBooking",
+        pw: typeof userPw !== 'undefined' ? userPw : "",
+        id: `${document.getElementById('datePicker')?.value}_${slot}`,
+        date: document.getElementById('datePicker')?.value,
+        slot: slot,
+        klasse: klasse || "",
+        material: mat,            
+        materialDetail: detail || "",
+        halle: ""
+    };
+
+    const onCompleteVisuals = (p) => {
+        if (window.lastPlanData?.[p.slot]) {
+            window.lastPlanData[p.slot].material = p.material;
+            window.lastPlanData[p.slot].materialDetail = p.materialDetail;
+        }
+        const box = document.querySelector(`[data-slot="${p.slot}"]`);
+        if (box) markBoxWithMaterialIcon(box, p.material, p.materialDetail);
+        if (typeof closeEditor === 'function') closeEditor();
+    };
+
+    if (typeof window.prozessiereAktion === 'function') {
+        window.prozessiereAktion(payload, onCompleteVisuals);
+    } else {
+        onCompleteVisuals(payload);
+    }
+}
     
 
 
@@ -2568,46 +2587,8 @@ function openMaterialDetail(materialString, time, slot, klasse) {
                        </div>`;
 }
 
-/* ==========================================================================
-   MATERIAL-LOGIK: MIT DOPPELLEKTIONS-WEICHE ABGESICHERT
-   ========================================================================== */
 
-async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) modal.style.pointerEvents = "none";
 
-    const payload = {
-        action: "saveBooking",
-        pw: typeof userPw !== 'undefined' ? userPw : "",
-        id: `${document.getElementById('datePicker')?.value}_${slot}`,
-        date: document.getElementById('datePicker')?.value,
-        slot: slot,
-        klasse: klasse || "",
-        material: mat,            
-        materialDetail: detail || "",
-        halle: "" // WICHTIG: Hier explizit leer lassen, damit die Weiche nicht abstürzt
-    };
-
-    const onCompleteVisuals = (p) => {
-        const s = p.slot;
-        if (window.lastPlanData?.[s]) {
-            window.lastPlanData[s].material = p.material;
-            window.lastPlanData[s].materialDetail = p.materialDetail;
-        }
-        const box = document.querySelector(`[data-slot="${s}"]`);
-        if (box) markBoxWithMaterialIcon(box, p.material, p.materialDetail);
-        
-        if (s === slot && typeof closeEditor === 'function') closeEditor();
-    };
-
-    // Die Weiche erkennt jetzt, dass keine Halle da ist und überspringt die Konflikt-Prüfung
-    if (typeof window.prozessiereAktion === 'function') {
-        window.prozessiereAktion(payload, onCompleteVisuals);
-    } else {
-        // Fallback falls Weiche nicht geladen
-        onCompleteVisuals(payload);
-    }
-}
 
 
     
