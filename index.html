@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -664,16 +664,43 @@ body {
 .opt-locker {
     flex: 1; display: flex; align-items: center;
     padding-left: 15px; cursor: pointer;
+    transition: background 0.3s ease;
 }
 
 .opt-fix {
     width: 50px; display: flex; align-items: center; justify-content: center;
     cursor: pointer; border-left: 1px solid #444; background: #2a2a2a;
+    transition: background 0.3s ease;
 }
 
-.opt-locker.active { background: #442d11 !important; color: #ffca88 !important; font-weight: bold; }
-.opt-fix.active { background: #66441a !important; }
+/* Schloss-Icon: Farbe nur ändern bei direktem Hover auf opt-fix */
+.opt-fix .material-symbols-outlined {
+    transition: color 0.3s ease;
+    color: #eee;
+}
 
+.opt-fix:hover .material-symbols-outlined {
+    color: #e67e22 !important;
+}
+
+/* Zustände (Aktiv) */
+.opt-locker.active { 
+    background: #442d11 !important; 
+    color: #ffca88 !important; 
+    font-weight: bold; 
+}
+
+.opt-fix.active { 
+    background: #66441a !important; 
+}
+
+/* Damit der Hallen-Text beim Hover des gesamten Wrappers nicht vom Schloss-Hover gestört wird */
+.hallen-option-wrapper:hover .opt-locker {
+    background: #3d3d3d;
+}
+
+
+    
 /* --- LOADER --- */
 .eigenesmenu-loader {
     position: absolute; right: 18px; width: 18px; height: 18px;
