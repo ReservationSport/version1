@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -659,6 +659,14 @@ body {
     width: 100%; height: 60px; display: flex;
     border-radius: 10px; border: 1px solid #444;
     background: #333; overflow: hidden;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+/* Hover-Effekt: Gesamter Wrapper vergrößert sich und bekommt Rahmen */
+.hallen-option-wrapper:hover {
+    transform: scale(1.02);
+    border-color: #e67e22 !important;
 }
 
 .opt-locker {
@@ -673,7 +681,7 @@ body {
     transition: background 0.3s ease;
 }
 
-/* Schloss-Icon: Farbe nur ändern bei direktem Hover auf opt-fix */
+/* Schloss-Icon: NUR bei direktem Hover auf opt-fix orange werden */
 .opt-fix .material-symbols-outlined {
     transition: color 0.3s ease;
     color: #eee;
@@ -683,37 +691,24 @@ body {
     color: #e67e22 !important;
 }
 
-/* Zustände (Aktiv) */
-.opt-locker.active { 
+/* Zustände */
+.opt-locker.active, .hallen-option-wrapper.selected .opt-locker { 
     background: #442d11 !important; 
     color: #ffca88 !important; 
     font-weight: bold; 
 }
 
-.opt-fix.active { 
+.opt-fix.active, .hallen-option-wrapper.selected .opt-fix { 
     background: #66441a !important; 
 }
 
-/* Damit der Hallen-Text beim Hover des gesamten Wrappers nicht vom Schloss-Hover gestört wird */
+/* Spezielle Hover-Hintergründe innerhalb der Elemente */
 .hallen-option-wrapper:hover .opt-locker {
     background: #3d3d3d;
 }
 
-
     
-/* --- LOADER --- */
-.eigenesmenu-loader {
-    position: absolute; right: 18px; width: 18px; height: 18px;
-    border: 2px solid rgba(230, 126, 34, 0.2);
-    border-top: 2px solid #e67e22;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-
-
+    
 
 /* Container für die Buttons im Footer */
 .menu-footer-container {
@@ -811,32 +806,7 @@ body {
     margin-top: 20px !important;   /* Mehr Abstand zum Textfeld */
     flex: 0 0 65px !important;     /* Verhindert das Stauchen durch Flexbox */
 }
-
-
-/* --- 4. LISTE AUSWAHL-BUTTONS --- */
-.hallen-option-wrapper {
-    transition: all 0.25s ease;
-    border: 1px solid #444;
-    cursor: pointer;
-}
-
-.hallen-option-wrapper:hover {
-    transform: scale(1.02);
-    border-color: #e67e22 !important;
-}
-
-.hallen-option-wrapper:hover .material-symbols-outlined,
-.hallen-option-wrapper:hover .check-indicator {
-    color: #e67e22 !important;
-}
-
-.hallen-option-wrapper.selected {
-    background: #4a2d0a !important;
-    border-color: #e67e22 !important;
-}
-
-
-    
+   
 
 .material-icon {
     position: absolute; /* Absolut innerhalb der .box */
