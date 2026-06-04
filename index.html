@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2450,18 +2450,18 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     html += `</div>`; // Ende Scroll-Liste
 
-    // 2. FIXIERTER SPEICHER-FOOTER (Immer sichtbar)
-    html += `
-        <div id="material-fixed-footer" style="padding: 15px; border-top: 1px solid #333; background: #1a1a1a; display: flex; gap: 10px;">
-            <button style="flex: 1; height: 50px; background: #27ae60; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
-                    onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
-                SPEICHERN
-            </button>
-            <button id="materialNextStep" style="flex: 1; height: 50px; background: #e67e22; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; display: none;" 
-                    onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-                DETAILS ❯
-            </button>
-        </div>`;
+    // 2. FIXIERTER SPEICHER-FOOTER (Initial ausgeblendet)
+html += `
+    <div id="material-fixed-footer" style="padding: 15px; border-top: 1px solid #333; background: #1a1a1a; display: none; gap: 10px;">
+        <button id="saveBtn" style="flex: 1; height: 50px; background: #27ae60; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
+                onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
+            SPEICHERN
+        </button>
+        <button id="materialNextStep" style="flex: 1; height: 50px; background: #e67e22; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
+                onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
+            DETAILS ❯
+        </button>
+    </div>`;
 
     liste.innerHTML = html;
 }
@@ -2469,18 +2469,16 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     
 /**
- * Logik für eigenen Input: Verhindert Mehrfacheinträge (h, ha, hal...)
+ * Logik für eigenen Input: Verhindert Mehrfacheinträge
  */
-// Wir speichern das Custom-Material global, um es leicht ersetzen zu können
 window.lastCustomMaterial = ""; 
 
 function handleCustomMaterialInput(val) {
     const wrapper = document.getElementById('custom-material-wrapper');
     const check = document.getElementById('custom-check');
-    const icon = wrapper.querySelector('.icon-custom');
-    const nextStep = document.getElementById('materialNextStep');
+    const footer = document.getElementById('material-fixed-footer');
 
-    // 1. Entferne das alte eigene Material aus der Auswahl-Liste, falls vorhanden
+    // 1. Entferne altes eigenes Material aus der Auswahl-Liste
     if (window.lastCustomMaterial !== "") {
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== window.lastCustomMaterial);
     }
@@ -2488,16 +2486,15 @@ function handleCustomMaterialInput(val) {
     const currentVal = val.trim();
 
     if (currentVal !== "") {
-        // 2. Füge das neue, vollständige Material hinzu
+        // 2. Füge neues Material hinzu
         window.selectedMaterials.push(currentVal);
-        window.lastCustomMaterial = currentVal; // Update des Referenz-Wertes
+        window.lastCustomMaterial = currentVal;
 
         // UI-Feedback
         wrapper.style.backgroundColor = "#4a2d0a";
         wrapper.style.borderColor = "#e67e22";
         check.innerText = "●";
         check.style.color = "#e67e22";
-        if (nextStep) nextStep.style.display = 'block';
     } else {
         // Leeres Feld
         window.lastCustomMaterial = "";
@@ -2505,7 +2502,11 @@ function handleCustomMaterialInput(val) {
         wrapper.style.borderColor = "#444";
         check.innerText = "○";
         check.style.color = "#666";
-        if (window.selectedMaterials.length === 0) nextStep.style.display = 'none';
+    }
+
+    // Footer Steuerung: Einblenden wenn Auswahl existiert
+    if (footer) {
+        footer.style.display = window.selectedMaterials.length > 0 ? 'flex' : 'none';
     }
 }
 
@@ -2513,11 +2514,12 @@ function handleCustomMaterialInput(val) {
  * Logik für Standard-Button-Auswahl
  */
 function toggleMaterialSelection(mat, btn) {
-    const nextStep = document.getElementById('materialNextStep');
+    const footer = document.getElementById('material-fixed-footer');
     const check = btn.querySelector('.check-indicator');
     const icon = btn.querySelector('.material-symbols-outlined');
 
     if (window.selectedMaterials.includes(mat)) {
+        // Abwählen
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
         btn.style.background = "#222";
         btn.style.borderColor = "#444";
@@ -2525,6 +2527,7 @@ function toggleMaterialSelection(mat, btn) {
         btn.onmouseout = function() { this.style.borderColor = "#444"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#666"; };
         if (check) check.innerText = "○";
     } else {
+        // Auswählen
         window.selectedMaterials.push(mat);
         btn.style.background = "#4a2d0a"; 
         btn.style.borderColor = "#e67e22";
@@ -2535,9 +2538,12 @@ function toggleMaterialSelection(mat, btn) {
             check.style.color = "#e67e22";
         }
     }
-    if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
-}
 
+    // Footer Steuerung: Einblenden wenn Auswahl existiert
+    if (footer) {
+        footer.style.display = window.selectedMaterials.length > 0 ? 'flex' : 'none';
+    }
+}
     
 
 
