@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1211</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -740,9 +740,60 @@ body {
 .eigenesmenu-cancel:hover { color: #888; }
 
 
+/* ============================================================
+   10. MATERIAL BUCHEN
+   ============================================================ */
+
+
+
+/* Styling für das Material-Menü */
+.menu-action-btn {
+    flex: 1;
+    height: 55px;
+    border-radius: 12px;
+    border: 1px solid #333;
+    background: #1e1e1e;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     
+    /* Flexbox für perfekte Zentrierung */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
     
-/* 10. MATERIAL-VISUALS & TOOLTIPS */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    padding: 0 15px;
+}
+
+.menu-action-btn:hover {
+    transform: translateY(-2px);
+    background: #2a2a2a;
+    border-color: #e67e22;
+    color: #e67e22;
+}
+
+.menu-action-btn .material-symbols-outlined {
+    font-size: 24px;
+    transition: color 0.25s ease;
+}
+
+.menu-action-btn:hover .material-symbols-outlined {
+    color: #e67e22;
+}
+
+
+
+
+    
+
+    
+
 .material-icon {
     position: absolute; /* Absolut innerhalb der .box */
     top: 5px;
@@ -2382,9 +2433,6 @@ window.updateHeader = function(iconName, subtitleText) {
    MATERIAL
    ========================================================================== */
 
-/**
- * Hauptfunktion für die Materialauswahl
- */
 function handleMaterialUI(time, slot, klasse, modalElement) {
     const root = modalElement || document.getElementById('eigenesmenu-modal');
     if (!root) return;
@@ -2407,7 +2455,6 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const hatBereitsMaterial = slotData.material && slotData.material.trim() !== "";
     window.selectedMaterials = []; 
 
-    // 1. SCROLLBARER BEREICH
     let html = `<div class="eigenesmenu-liste-scroll" style="flex-grow: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px;">`;
 
     // LÖSCHEN BUTTON
@@ -2448,68 +2495,25 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             </div>`;
     });
 
-    html += `</div>`; // Ende Scroll-Liste
+    html += `</div>`; 
 
     // 2. FIXIERTER SPEICHER-FOOTER
     html += `
     <div id="material-fixed-footer" style="padding: 15px; border-top: 1px solid #333; background: #1a1a1a; display: none; gap: 10px;">
         <button class="menu-action-btn save" 
                 onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
-            <span class="material-symbols-outlined" style="margin-right: 8px;">trolley</span> MATERIAL BUCHEN
+            <span class="material-symbols-outlined">trolley</span> MATERIAL BUCHEN
         </button>
         <button class="menu-action-btn details" 
                 onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-            <span class="material-symbols-outlined" style="margin-right: 8px;">edit_note</span> DETAILS ERFASSEN
+            <span class="material-symbols-outlined">edit_note</span> DETAILS ERFASSEN
         </button>
-    </div>
-
-   <style>
-    .menu-action-btn {
-        flex: 1;
-        height: 55px;
-        border-radius: 12px;
-        border: 1px solid #333;
-        background: #1e1e1e;
-        color: #fff;
-        font-weight: 600;
-        font-size: 13px;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        
-        /* WICHTIG: Flexbox für zentriertes Layout */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px; /* Erzeugt einen konstanten Abstand zwischen Icon und Text */
-        
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        padding: 0 15px; /* Etwas Puffer zum Rand */
-    }
-    
-    .menu-action-btn:hover {
-        transform: translateY(-2px);
-        background: #2a2a2a;
-        border-color: #e67e22;
-        color: #e67e22;
-    }
-
-    .menu-action-btn .material-symbols-outlined {
-        font-size: 24px;
-        margin-right: 0 !important; /* Entfernt den alten starren Margin */
-        transition: color 0.25s ease;
-    }
-    
-    .menu-action-btn:hover .material-symbols-outlined {
-        color: #e67e22;
-    }
-</style>
+    </div>`;
 
     liste.innerHTML = html;
 
-    // Sicherstellen, dass der Footer bei bereits existierenden Materialien eingeblendet ist
-    const footer = liste.parentElement.querySelector('#material-fixed-footer');
+    // Footer Status prüfen
+    const footer = root.querySelector('#material-fixed-footer');
     if (footer && window.selectedMaterials.length > 0) {
         footer.style.display = 'flex';
     }
