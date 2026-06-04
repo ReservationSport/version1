@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO546678</title>
+    <title>Reservation Sport - BBZO54</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -741,9 +741,6 @@ body {
 .eigenesmenu-cancel:hover { color: #888; }
 
 
-/* ============================================================
-   10. MATERIAL BUCHEN
-   ============================================================ */
 
 /* ============================================================
    10. MATERIAL BUCHEN
@@ -792,11 +789,13 @@ body {
 
 /* --- 2. SPEZIELLE BUTTON-ANPASSUNGEN --- */
 
-/* Für das Detail-Fenster: Größerer Button */
+/* Spezielle Anpassung NUR für den Speichern-Button im Detail-Fenster */
 .menu-action-btn.save-details {
-    height: 60px !important;
-    font-size: 14px;
-    margin-top: 10px;
+    height: 65px !important;       /* Noch etwas höher */
+    font-size: 15px !important;    /* Schrift etwas größer */
+    padding: 0 25px !important;    /* Mehr Luft an den Seiten */
+    margin-top: 20px !important;   /* Mehr Abstand zum Textfeld */
+    flex: 0 0 65px !important;     /* Verhindert das Stauchen durch Flexbox */
 }
 
 /* --- 3. HEADER ICON (Detail Fenster) --- */
@@ -2655,17 +2654,15 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     const liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
     const header = root.querySelector('.eigenesmenu-header');
 
-    // Header mit dem zentralen Icon-Style
+    // Header bereinigt: Kein zusätzliches DIV, sondern direkt Inhalt in den header
     if (header) {
         header.innerHTML = `
-            <div class="eigenesmenu-header">
-                <h3 class="eigenesmenu-title" style="margin: 0; font-size: 1.1em; color: #e67e22;">DETAILS ERFASSEN</h3>
-                <p class="eigenesmenu-subtitle" style="color: #888; margin: 2px 0 0 0; font-size: 0.85em;">Nenne die Details deiner Materialbuchung</p>
-                <span class="material-symbols-outlined header-icon">trolley</span>
-            </div>`;
+            <h3 class="eigenesmenu-title" style="margin: 0; font-size: 1.1em; color: #e67e22;">DETAILS ERFASSEN</h3>
+            <p class="eigenesmenu-subtitle" style="color: #888; margin: 2px 0 0 0; font-size: 0.85em;">Nenne die Details deiner Materialbuchung</p>
+            <span class="material-symbols-outlined header-icon">trolley</span>`;
     }
 
-    // Body mit dem speziellen "save-details" Button
+    // Body: Button mit der korrekten Klasse für die Höhe
     liste.innerHTML = `
         <div style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
             <textarea id="material-detail-input" 
