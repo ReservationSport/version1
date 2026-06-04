@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2405,12 +2405,13 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px;">`;
 
-    // LÖSCHEN BUTTON (Look: Hallen-Löschen-Button)
+    // LÖSCHEN BUTTON
     if (hatBereitsMaterial) {
         html += `
             <div class="hallen-option-wrapper" 
-                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa;"
-                 onmouseover="this.style.borderColor='#ff6666';" onmouseout="this.style.borderColor='#553333';"
+                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa; transition: all 0.2s;"
+                 onmouseover="this.style.borderColor='#ff6666'; this.style.transform='scale(1.02)';" 
+                 onmouseout="this.style.borderColor='#553333'; this.style.transform='scale(1)';"
                  onclick="applyMaterialDelete('${time}', '${currentSlot}', '${klasse}', this)">
                 <span class="material-symbols-outlined" style="margin-right: 10px;">delete</span>
                 MATERIALBUCHUNG LÖSCHEN
@@ -2421,11 +2422,11 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         const matClean = mat ? mat.toString().trim() : "";
         if (matClean === "") return;
         
-        // Material Button Look (wie Hallen-Optionen)
         html += `
             <div class="hallen-option-wrapper material-selectable" 
-                 style="display: flex; height: 50px; background: #222; border: 1px solid #444; border-radius: 8px; cursor: pointer; align-items: center; padding: 0 15px; transition: all 0.2s;"
-                 onmouseover="this.style.borderColor='#e67e22';" onmouseout="this.style.borderColor='#444';"
+                 style="display: flex; height: 50px; margin-bottom: 8px; background: #222; border: 1px solid #444; border-radius: 8px; cursor: pointer; align-items: center; padding: 0 15px; transition: all 0.2s;"
+                 onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)';" 
+                 onmouseout="this.style.borderColor='#444'; this.style.transform='scale(1)';"
                  onclick="toggleMaterialSelection('${matClean}', this)">
                  
                 <span class="material-symbols-outlined" style="margin-right: 12px; color: #fff;">deployed_code</span> 
@@ -2455,13 +2456,17 @@ function toggleMaterialSelection(mat, btn) {
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
         btn.style.background = "#222";
         btn.style.borderColor = "#444";
+        // Reset hover event logic: zurück zum Standard-Hover
+        btn.onmouseout = function() { this.style.borderColor = "#444"; this.style.transform = "scale(1)"; };
         if (check) check.innerText = "○";
     } else {
         window.selectedMaterials.push(mat);
-        // Orange Markierung für ausgewählt
-        btn.style.background = "#3d2a10";
+        // Orange Markierung: Helleres Orange statt Braun
+        btn.style.background = "#4a2d0a"; 
         btn.style.borderColor = "#e67e22";
-        if (check) check.innerText = "●"; // Auffälligerer Punkt
+        // Sicherstellen, dass das Orange beim Hover-Exit erhalten bleibt
+        btn.onmouseout = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1)"; };
+        if (check) check.innerText = "●";
     }
     if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
 }
