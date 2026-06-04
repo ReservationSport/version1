@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2445,30 +2445,22 @@ window.openEditor = function(el, time, slot, klasse) {
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
             </div>
-
-            <div class="menu-footer-container">
-                <button class="footer-btn cancel" onclick="closeEditor()">
-                    <span class="material-symbols-outlined">close</span> ABBRECHEN
-                </button>
-            </div>
+            ${renderFooter([{ text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }])}
         </div>
     `;
 
+    // Event Delegation...
     backdrop.querySelector('.eigenesmenu-liste').addEventListener('click', (e) => {
         const btn = e.target.closest('.eigenesmenu-item');
         if (!btn) return;
-        const action = btn.getAttribute('data-action');
-        const icon = btn.getAttribute('data-icon');
-        const title = btn.getAttribute('data-title');
-        window.updateHeader(icon, title);
-        window.handleMenuChoice(action, time, absoluteSlot, klasse);
+        window.updateHeader(btn.getAttribute('data-icon'), btn.getAttribute('data-title'));
+        window.handleMenuChoice(btn.getAttribute('data-action'), time, absoluteSlot, klasse);
     });
 
     document.body.appendChild(backdrop);
     requestAnimationFrame(() => {
         backdrop.style.opacity = "1";
-        const container = backdrop.querySelector('.eigenesmenu-container');
-        if(container) container.style.transform = "translateY(0)";
+        backdrop.querySelector('.eigenesmenu-container').style.transform = "translateY(0)";
     });
 };
     
