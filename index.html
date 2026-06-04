@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2450,16 +2450,16 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     html += `</div>`; // Ende Scroll-Liste
 
-// 2. FIXIERTER SPEICHER-FOOTER (Orange Style & Icons)
+// 2. FIXIERTER SPEICHER-FOOTER (Angepasste Icons & Beschriftungen)
 html += `
     <div id="material-fixed-footer" style="padding: 15px; border-top: 1px solid #333; background: #1a1a1a; display: none; gap: 10px;">
         <button class="menu-action-btn save" 
                 onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
-            <span class="material-symbols-outlined" style="margin-right: 8px;">trolley</span> SPEICHERN
+            <span class="material-symbols-outlined" style="margin-right: 8px;">trolley</span> MATERIAL BUCHEN
         </button>
         <button class="menu-action-btn details" 
                 onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-            <span class="material-symbols-outlined" style="margin-right: 8px;">trolley</span> DETAILS ❯
+            <span class="material-symbols-outlined" style="margin-right: 8px;">edit_note</span> DETAILS ERFASSEN ❯
         </button>
     </div>
 
@@ -2472,6 +2472,7 @@ html += `
             background: #262626;
             color: #eee;
             font-weight: bold;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1px;
             cursor: pointer;
