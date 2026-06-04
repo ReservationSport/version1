@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO457658</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2426,14 +2426,21 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     html += `
         <div id="custom-material-wrapper" class="hallen-option-wrapper" 
              style="display: flex; height: 50px; margin-bottom: 15px; background: #222; border: 1px solid #444; border-radius: 8px; align-items: center; padding: 0 15px; transition: all 0.2s; cursor: text;"
-             onmouseover="if(this.style.backgroundColor !== 'rgb(74, 45, 10)') { this.style.borderColor='#e67e22'; this.querySelector('.icon-custom').style.color='#e67e22'; }"
-             onmouseout="if(this.style.backgroundColor !== 'rgb(74, 45, 10)') { this.style.borderColor='#444'; this.querySelector('.icon-custom').style.color='#fff'; }"
+             onmouseover="
+                this.style.borderColor='#e67e22'; 
+                this.querySelector('.icon-custom').style.color='#e67e22'; 
+                this.querySelector('.check-indicator').style.color='#e67e22';
+             "
+             onmouseout="
+                const hasText = document.getElementById('customMaterialInput').value.trim() !== '';
+                this.style.borderColor = hasText ? '#e67e22' : '#444';
+                this.querySelector('.icon-custom').style.color = '#fff';
+                this.querySelector('.check-indicator').style.color = hasText ? '#e67e22' : '#666';
+             "
              onclick="this.querySelector('input').focus();">
             <span class="material-symbols-outlined icon-custom" style="margin-right: 12px; color: #fff; transition: color 0.2s;">deployed_code_update</span>
             <input type="text" id="customMaterialInput" placeholder="Eigenes Material eintragen..." 
                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 14px;"
-                   onfocus="this.parentNode.style.borderColor='#e67e22'; this.parentNode.querySelector('.icon-custom').style.color='#e67e22';"
-                   onblur="if(this.value === '') this.parentNode.style.borderColor='#444';"
                    oninput="handleCustomMaterialInput(this.value)">
             <span id="custom-check" class="check-indicator" style="margin-left: auto; color: #666; font-size: 20px; transition: color 0.2s;">○</span>
         </div>`;
@@ -2477,19 +2484,17 @@ function handleCustomMaterialInput(val) {
     const nextStep = document.getElementById('materialNextStep');
 
     if (val.trim() !== "") {
-        wrapper.style.borderColor = "#e67e22";
+        window.selectedMaterials.push(val.trim());
         wrapper.style.backgroundColor = "#4a2d0a";
+        wrapper.style.borderColor = "#e67e22";
         check.innerText = "●";
         check.style.color = "#e67e22";
-        icon.style.color = "#e67e22";
         if (nextStep) nextStep.style.display = 'block';
     } else {
-        wrapper.style.borderColor = "#444";
         wrapper.style.backgroundColor = "#222";
+        wrapper.style.borderColor = "#444";
         check.innerText = "○";
         check.style.color = "#666";
-        icon.style.color = "#fff";
-        // Nur verbergen, wenn keine anderen Materialien gewählt wurden
         if (window.selectedMaterials.length === 0) nextStep.style.display = 'none';
     }
 }
