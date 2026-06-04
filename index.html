@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO6666</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -576,9 +576,10 @@ body {
 
 
 /* ============================================================
-   9. EIGENES KONTEXT-MENÜ (FINALER CLEAN LOOK - OPTIMIERT)
+   9. EIGENES KONTEXT-MENÜ (FINALER CLEAN LOOK - VOLLSTÄNDIG)
    ============================================================ */
 
+/* Der Backdrop legt das Menü über alles */
 .eigenesmenu-backdrop {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -593,22 +594,25 @@ body {
     transition: opacity 0.3s ease;
 }
 
+/* Der Container ist das scrollbare Fenster */
 .eigenesmenu-container {
     width: 100%;
     max-width: 380px;
-    max-height: 90vh; 
+    max-height: 90vh; /* Begrenzt die Höhe, damit der Container nicht aus dem Screen ragt */
     display: flex;
     flex-direction: column;
     background: #1a1a1a;
     border: 1px solid #333;
     border-radius: 16px;
     box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-    overflow: hidden;
+    overflow: hidden; /* WICHTIG: Container selbst scrollt nicht */
     transform: translateY(20px);
     transition: transform 0.3s ease-out;
 }
 
+/* Header bleibt immer oben fixiert */
 .eigenesmenu-header {
+    flex-shrink: 0;
     position: relative;
     padding: 20px;
     background: #1a1a1a;
@@ -639,25 +643,27 @@ body {
     margin: 8px 0 0 0;
 }
 
+/* Die Liste ist der scrollbare Bereich in der Mitte */
 .eigenesmenu-liste {
     padding: 15px;
-    overflow-y: auto;
+    overflow-y: auto; /* Aktiviert das Scrollen NUR hier */
     flex-grow: 1;
     display: flex;
     flex-direction: column;
     gap: 10px;
     box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
 }
 
-/* --- BUTTONS & WRAPPER EINHEITLICH AUF 60px --- */
+/* Buttons & Wrapper */
 .eigenesmenu-item, .hallen-option-wrapper {
     width: 100%;
-    height: 60px !important;
-    min-height: 60px !important;
-    box-sizing: border-box !important;
+    height: 60px;
+    min-height: 60px;
+    flex-shrink: 0; /* Button darf nicht schrumpfen */
+    box-sizing: border-box;
     border-radius: 10px;
     overflow: hidden;
-    margin-bottom: 0; /* Abstand wird über 'gap' im Container gesteuert */
     display: flex;
     align-items: stretch;
 }
@@ -680,7 +686,7 @@ body {
     background: #2d2d2d;
 }
 
-/* Hallen-Optionen (70/30) */
+/* Hallen-Optionen Layout */
 .hallen-option-wrapper {
     border: 1px solid #444;
     background: #333;
@@ -708,11 +714,10 @@ body {
     background: #2a2a2a;
 }
 
-/* Zustände */
 .opt-locker.active { background: #442d11 !important; color: #ffca88 !important; font-weight: bold; }
 .opt-fix.active { background: #66441a !important; }
 
-/* --- LOADER & SONSTIGES --- */
+/* Loader Animation */
 .eigenesmenu-loader {
     position: absolute; right: 18px; width: 18px; height: 18px;
     border: 2px solid rgba(230, 126, 34, 0.2);
@@ -723,7 +728,9 @@ body {
 
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
+/* Abbrechen-Button unten fixiert */
 .eigenesmenu-cancel {
+    flex-shrink: 0;
     width: 100%;
     background: #111;
     color: #555;
@@ -740,6 +747,15 @@ body {
 .eigenesmenu-cancel:hover { color: #888; }
 
 
+
+
+
+
+
+
+
+
+    
     
     
 /* 10. MATERIAL-VISUALS & TOOLTIPS */
@@ -2277,10 +2293,15 @@ window.openEditor = function(el, time, slot, klasse) {
     const halleLabel = el.querySelector('.halle-label')?.innerText.trim() || "";
     const hatReservierung = !isAusfall && halleLabel !== "";
 
-    // Daten-Check: Priorität auf lastPlanData, Fallback auf das HTML-Attribut der Box
+    // SICHERERE DATEN-PRÜFUNG:
+    // Wir prüfen nicht nur, ob das Attribut da ist, sondern ob es einen "echten" Wert hat.
     const slotData = (window.lastPlanData && window.lastPlanData[absoluteSlot]) || {};
-    const boxMaterial = el.getAttribute('data-material') || "";
-    const hatMaterial = (slotData.material && slotData.material.trim() !== "") || (boxMaterial.trim() !== "");
+    const boxMaterial = el.getAttribute('data-material');
+    
+    // hatMaterial ist wahr, wenn im Cache was steht ODER das Attribut existiert und nicht leer ist
+    const hatMaterial = (slotData.material && slotData.material.trim() !== "") || 
+                        (boxMaterial !== null && boxMaterial.trim() !== "");
+    
     const hatNotiz = slotData.kommentar && slotData.kommentar.trim() !== "";
 
     const backdrop = document.createElement('div');
@@ -2299,6 +2320,11 @@ window.openEditor = function(el, time, slot, klasse) {
                 box-shadow: 0 10px 25px rgba(0,0,0,0.5);
                 display: flex;
                 flex-direction: column;
+                max-height: 90vh; /* Wichtig für Scroll-Verhalten */
+            }
+            .eigenesmenu-liste {
+                overflow-y: auto; /* Sorgt dafür, dass es scrollt */
+                flex-grow: 1;
             }
             .eigenesmenu-item {
                 transition: all 0.25s ease !important;
@@ -2335,6 +2361,7 @@ window.openEditor = function(el, time, slot, klasse) {
                 text-transform: uppercase;
                 letter-spacing: 1px;
                 transition: color 0.2s ease;
+                margin-top: 10px;
             }
             .eigenesmenu-cancel:hover { color: #888; }
         </style>
@@ -2372,10 +2399,14 @@ window.openEditor = function(el, time, slot, klasse) {
         const btn = e.target.closest('.eigenesmenu-item');
         if (!btn) return;
         const action = btn.getAttribute('data-action');
+        // Wir übergeben hier keine hardcodierten Icons/Titles mehr, 
+        // da sie ja direkt im Menü-Item stehen könnten, 
+        // oder deine updateHeader Funktion greift sie sich.
         window.handleMenuChoice(action, time, absoluteSlot, klasse);
     });
 
     document.body.appendChild(backdrop);
+    // Animation starten
     requestAnimationFrame(() => {
         backdrop.style.opacity = "1";
         const container = backdrop.querySelector('.eigenesmenu-container');
@@ -2556,7 +2587,8 @@ function toggleMaterialSelection(mat, btn) {
 
     
 /**
- * Zentrale Speicherfunktion für Material (Direkt oder mit Details)
+ * Zentrale Speicherfunktion für Material
+ * Erkennt automatisch, ob eine Buchung angelegt oder gelöscht wird.
  */
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     const modal = document.getElementById('eigenesmenu-modal');
@@ -2575,26 +2607,38 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     };
 
     const onCompleteVisuals = (p) => {
-        // 1. Lokalen Cache aktualisieren
-        if (!window.lastPlanData[p.slot]) window.lastPlanData[p.slot] = {};
-        window.lastPlanData[p.slot].material = p.material;
-        window.lastPlanData[p.slot].materialDetail = p.materialDetail;
-
-        // 2. DOM-Attribut synchronisieren
-        // Dadurch erkennt window.openEditor sofort den neuen Status ("Ändern")
         const box = document.querySelector(`[data-slot="${p.slot}"]`);
-        if (box) {
-            box.setAttribute('data-material', p.material);
+        
+        // 1. Cache & DOM-Status synchronisieren
+        if (!window.lastPlanData[p.slot]) window.lastPlanData[p.slot] = {};
+        
+        // Prüfen, ob Material gelöscht wurde (leer ist)
+        if (!p.material || p.material.trim() === "") {
+            // Buchung wurde entfernt: Daten aus Cache löschen und Attribut entfernen
+            delete window.lastPlanData[p.slot].material;
+            delete window.lastPlanData[p.slot].materialDetail;
             
-            // Icon im Plan aktualisieren
-            markBoxWithMaterialIcon(box, p.material, p.materialDetail);
+            if (box) {
+                box.removeAttribute('data-material');
+                // Deine Funktion zum Entfernen des Icons aufrufen
+                markBoxWithMaterialIcon(box, "", ""); 
+            }
+        } else {
+            // Buchung wurde erstellt oder aktualisiert
+            window.lastPlanData[p.slot].material = p.material;
+            window.lastPlanData[p.slot].materialDetail = p.materialDetail;
+            
+            if (box) {
+                box.setAttribute('data-material', p.material);
+                markBoxWithMaterialIcon(box, p.material, p.materialDetail);
+            }
         }
 
         // 3. Editor schließen
         if (typeof closeEditor === 'function') closeEditor();
     };
 
-    // Aktion ausführen (mit Fallback)
+    // Aktion ausführen
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
     } else {
