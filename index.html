@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO7777777777</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2400,7 +2400,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px;">`;
 
-    // 1. LÖSCHEN BUTTON (Ganz oben)
+    // 1. LÖSCHEN BUTTON
     if (hatBereitsMaterial) {
         html += `
             <div class="hallen-option-wrapper" 
@@ -2413,17 +2413,17 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             </div>`;
     }
 
-    // 2. EIGENES MATERIAL EINGEBEN (Integrierter Button-Look)
+    // 2. EIGENES MATERIAL (mit Hover-Effekt und Toggle-Status)
     html += `
-        <div class="hallen-option-wrapper" 
+        <div id="custom-material-wrapper" class="hallen-option-wrapper" 
              style="display: flex; height: 50px; margin-bottom: 15px; background: #222; border: 1px solid #444; border-radius: 8px; align-items: center; padding: 0 15px; transition: all 0.2s;"
-             onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)';" 
-             onmouseout="this.style.borderColor='#444'; this.style.transform='scale(1)';"
-        >
-            <span class="material-symbols-outlined" style="margin-right: 12px; color: #fff;">edit_square</span>
-            <input type="text" placeholder="Eigenes Material eintragen..." 
+             onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)'; this.querySelector('.icon-custom').style.color='#e67e22';"
+             onmouseout="this.style.borderColor=window.selectedMaterials.length > 0 ? '#e67e22' : '#444'; this.style.transform='scale(1)'; this.querySelector('.icon-custom').style.color=window.selectedMaterials.length > 0 ? '#e67e22' : '#fff';">
+            <span class="material-symbols-outlined icon-custom" style="margin-right: 12px; color: #fff; transition: color 0.2s;">deployed_code_update</span>
+            <input type="text" id="customMaterialInput" placeholder="Eigenes Material eintragen..." 
                    style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 14px;"
                    oninput="handleCustomMaterialInput(this.value)">
+            <span id="custom-check" class="check-indicator" style="margin-left: auto; color: #666; font-size: 20px; transition: color 0.2s;">○</span>
         </div>`;
 
     // 3. MATERIAL LISTE
@@ -2455,24 +2455,36 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     liste.innerHTML = html;
 }
 
-// NEUE LOGIK: Live-Erfassung ohne Enter-Taste
+
+
+    
+// Angepasste Logik für Live-Update des Custom-Buttons
 function handleCustomMaterialInput(val) {
+    const wrapper = document.getElementById('custom-material-wrapper');
+    const check = document.getElementById('custom-check');
+    const icon = wrapper.querySelector('.icon-custom');
     const nextStep = document.getElementById('materialNextStep');
+
     if (val.trim() !== "") {
-        // Wir nehmen an, der letzte Wert ist das eigene Material
-        window.selectedMaterials = window.selectedMaterials.filter(m => !isStandardMaterial(m));
         window.selectedMaterials.push(val.trim());
+        wrapper.style.borderColor = "#e67e22";
+        wrapper.style.background = "#4a2d0a";
+        check.innerText = "●";
+        check.style.color = "#e67e22";
+        icon.style.color = "#e67e22";
         if (nextStep) nextStep.style.display = 'block';
     } else {
-        window.selectedMaterials = window.selectedMaterials.filter(m => isStandardMaterial(m));
+        wrapper.style.borderColor = "#444";
+        wrapper.style.background = "#222";
+        check.innerText = "○";
+        check.style.color = "#666";
+        icon.style.color = "#fff";
         if (window.selectedMaterials.length === 0) nextStep.style.display = 'none';
     }
 }
 
-// Helper, um Standard- von eigenen Materialien zu unterscheiden
-function isStandardMaterial(mat) {
-    return (typeof verfügbareMaterialien !== 'undefined' && verfügbareMaterialien.includes(mat));
-}
+
+    
 
 
     
