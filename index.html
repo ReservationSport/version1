@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2382,8 +2382,7 @@ window.updateHeader = function(iconName, subtitleText) {
    MATERIAL-LOGIK: EINHEITLICH & SAUBER (ZENTRALE STEUERUNG)
    ========================================================================== */
 
-/** * 1. Menü-UI: Materialauswahl anzeigen 
- */
+/** * 1. Menü-UI: Materialauswahl anzeigen */
 function handleMaterialUI(time, slot, klasse, modalElement) {
     const root = modalElement || document.getElementById('eigenesmenu-modal');
     if (!root) return;
@@ -2393,7 +2392,10 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const title = root.querySelector('.eigenesmenu-title');
     const subtitle = root.querySelector('#menu-subtitle') || root.querySelector('.eigenesmenu-subtitle');
 
-    if (title) title.innerText = "MATERIAL WÄHLEN";
+    if (title) {
+        title.innerText = "MATERIAL WÄHLEN";
+        title.style.color = "#e67e22";
+    }
     if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
 
     const currentSlot = slot || window.currentEditSlot;
@@ -2401,46 +2403,72 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const hatBereitsMaterial = slotData.material && slotData.material.trim() !== "";
     window.selectedMaterials = []; 
 
-    let html = `<div class="eigenesmenu-liste-scroll" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">`;
+    let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px;">`;
 
+    // LÖSCHEN BUTTON (Look: Hallen-Löschen-Button)
     if (hatBereitsMaterial) {
-        html += `<button class="eigenesmenu-item" style="justify-content: center; background: #442222; border: 1px solid #663333; margin-bottom: 12px;" onclick="applyMaterialDelete('${time}', '${currentSlot}', '${klasse}', this)">
-                    <span class="btn-text" style="color: #ffaaaa; font-weight: bold;">❌ MATERIALBUCHUNG LÖSCHEN</span>
-                 </button>`;
+        html += `
+            <div class="hallen-option-wrapper" 
+                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa;"
+                 onmouseover="this.style.borderColor='#ff6666';" onmouseout="this.style.borderColor='#553333';"
+                 onclick="applyMaterialDelete('${time}', '${currentSlot}', '${klasse}', this)">
+                <span class="material-symbols-outlined" style="margin-right: 10px;">delete</span>
+                MATERIALBUCHUNG LÖSCHEN
+            </div>`;
     }
 
     (verfügbareMaterialien || []).forEach(mat => {
         const matClean = mat ? mat.toString().trim() : "";
         if (matClean === "") return;
-        html += `<button class="eigenesmenu-item material-selectable" style="background: #333;" onclick="toggleMaterialSelection('${matClean}', this)">
-                    <span class="eigenesmenu-icon">📦</span> 
-                    <span class="btn-text">${matClean}</span>
-                    <span class="check-indicator" style="margin-left: auto; color: #666; font-weight: bold;">○</span>
-                 </button>`;
+        
+        // Material Button Look (wie Hallen-Optionen)
+        html += `
+            <div class="hallen-option-wrapper material-selectable" 
+                 style="display: flex; height: 50px; background: #222; border: 1px solid #444; border-radius: 8px; cursor: pointer; align-items: center; padding: 0 15px; transition: all 0.2s;"
+                 onmouseover="this.style.borderColor='#e67e22';" onmouseout="this.style.borderColor='#444';"
+                 onclick="toggleMaterialSelection('${matClean}', this)">
+                 
+                <span class="material-symbols-outlined" style="margin-right: 12px; color: #fff;">deployed_code</span> 
+                <span class="btn-text" style="color: #fff;">${matClean}</span>
+                <span class="check-indicator" style="margin-left: auto; color: #e67e22; font-size: 20px;">○</span>
+            </div>`;
     });
 
     html += `</div>
              <div id="materialNextStep" style="display: none; margin-top: 15px;">
-                <button class="eigenesmenu-item" style="background: #e67e22; color: white; justify-content: center; font-weight: bold;" 
+                <button class="eigenesmenu-item" style="height: 50px; background: #e67e22; color: white; border-radius: 8px; width: 100%; border: none; font-weight: bold; cursor: pointer;" 
                         onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-                    <span class="btn-text">DETAILS EINGEBEN ❯</span>
+                    DETAILS EINGEBEN ❯
                 </button>
              </div>`;
 
     liste.innerHTML = html;
-    
-    // Zurück-Funktion
-    const backBtn = root.querySelector('.eigenesmenu-cancel');
-    if (backBtn) {
-        backBtn.innerText = "← ZURÜCK";
-        backBtn.onclick = () => {
-            const box = document.querySelector(`[data-slot="${currentSlot}"]`);
-            if (typeof openEditor === 'function' && box) openEditor(box, time, currentSlot, klasse);
-            else if (typeof closeEditor === 'function') closeEditor();
-        };
-    }
 }
 
+/** * 5. Helper (Toggles & Badges) */
+function toggleMaterialSelection(mat, btn) {
+    const root = document.getElementById('eigenesmenu-modal');
+    const nextStep = root.querySelector('#materialNextStep');
+    const check = btn.querySelector('.check-indicator');
+
+    if (window.selectedMaterials.includes(mat)) {
+        window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
+        btn.style.background = "#222";
+        btn.style.borderColor = "#444";
+        if (check) check.innerText = "○";
+    } else {
+        window.selectedMaterials.push(mat);
+        // Orange Markierung für ausgewählt
+        btn.style.background = "#3d2a10";
+        btn.style.borderColor = "#e67e22";
+        if (check) check.innerText = "●"; // Auffälligerer Punkt
+    }
+    if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
+}
+
+
+
+    
 /** * 2. UI: Detail-Eingabe Maske
  */
 function openMaterialDetail(materialString, time, slot, klasse) {
@@ -2502,6 +2530,8 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     }
 }
 
+
+    
 async function applyMaterialDelete(time, slot, klasse, btn) {
     const payload = {
         action: "saveBooking",
@@ -2536,24 +2566,7 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
 
     
 
-/** * 5. Helper (Toggles & Badges)
- */
-function toggleMaterialSelection(mat, btn) {
-    const root = document.getElementById('eigenesmenu-modal');
-    const nextStep = root.querySelector('#materialNextStep');
-    const check = btn.querySelector('.check-indicator');
 
-    if (window.selectedMaterials.includes(mat)) {
-        window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
-        btn.style.background = "transparent";
-        if (check) check.innerText = "○";
-    } else {
-        window.selectedMaterials.push(mat);
-        btn.style.background = "rgba(255, 140, 0, 0.1)";
-        if (check) check.innerText = "●";
-    }
-    if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
-}
 
     
 function markBoxWithMaterialIcon(box, material, detail) {
