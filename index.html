@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -625,23 +625,23 @@ body {
     display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;
 }
 
-/* --- BUTTONS: UNIVERSAL (Doppellektion & Taskmanager) --- */
+/* --- BUTTONS: UNIVERSAL (Doppel-Btn & Taskmanager-Item) --- */
 .doppel-btn, .eigenesmenu-item {
     display: flex; align-items: center; justify-content: center;
     padding: 0 20px; width: 100%; height: 60px;
     cursor: pointer; border-radius: 12px;
     background: #262626; color: #eee;
     border: 1px solid #333;
-    font-size: 14px; font-weight: 400;
+    font-size: 14px; 
+    font-weight: 600; /* Konsistent, kein Wechsel mehr */
     transition: all 0.3s ease;
 }
 
-/* Hover-Effekt: Fett, Orange, Vergrößert */
+/* Hover-Effekt: Nur noch Farbe und Skalierung, kein Ruckeln */
 .doppel-btn:hover, .eigenesmenu-item:hover {
     border-color: #e67e22;
     transform: scale(1.02);
     background: #2d2d2d;
-    font-weight: 700;
 }
 
 /* Icon-Farbumschlag bei Hover */
@@ -663,7 +663,6 @@ body {
     cursor: pointer;
 }
 
-/* Hover-Effekt: Gesamter Wrapper vergrößert sich und bekommt Rahmen */
 .hallen-option-wrapper:hover {
     transform: scale(1.02);
     border-color: #e67e22 !important;
@@ -681,32 +680,26 @@ body {
     transition: background 0.3s ease;
 }
 
-/* Schloss-Icon: NUR bei direktem Hover auf opt-fix orange werden */
+/* Schloss-Icon: Nur Orange bei direktem Hover */
 .opt-fix .material-symbols-outlined {
     transition: color 0.3s ease;
     color: #eee;
 }
-
 .opt-fix:hover .material-symbols-outlined {
     color: #e67e22 !important;
 }
 
-/* Zustände */
+/* Zustände (Active/Selected) */
 .opt-locker.active, .hallen-option-wrapper.selected .opt-locker { 
     background: #442d11 !important; 
     color: #ffca88 !important; 
-    font-weight: bold; 
 }
-
 .opt-fix.active, .hallen-option-wrapper.selected .opt-fix { 
     background: #66441a !important; 
 }
-
-/* Spezielle Hover-Hintergründe innerhalb der Elemente */
 .hallen-option-wrapper:hover .opt-locker {
     background: #3d3d3d;
 }
-
     
     
 
