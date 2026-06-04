@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO123</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2396,7 +2396,8 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         title.innerText = "MATERIAL WÄHLEN";
         title.style.color = "#e67e22";
     }
-    if (subtitle) subtitle.innerHTML = `Was braucht <span style="color:#ff8c00; font-weight: bold;">${klasse}</span>?`;
+    // Neuer Untertitel-Text
+    if (subtitle) subtitle.innerHTML = `Welches Material möchtest du für <b>${klasse}</b> buchen?`;
 
     const currentSlot = slot || window.currentEditSlot;
     const slotData = (window.lastPlanData && window.lastPlanData[currentSlot]) || {};
@@ -2405,7 +2406,6 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px;">`;
 
-    // LÖSCHEN BUTTON
     if (hatBereitsMaterial) {
         html += `
             <div class="hallen-option-wrapper" 
@@ -2425,13 +2425,13 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         html += `
             <div class="hallen-option-wrapper material-selectable" 
                  style="display: flex; height: 50px; margin-bottom: 8px; background: #222; border: 1px solid #444; border-radius: 8px; cursor: pointer; align-items: center; padding: 0 15px; transition: all 0.2s;"
-                 onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)';" 
-                 onmouseout="this.style.borderColor='#444'; this.style.transform='scale(1)';"
+                 onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)'; this.querySelector('.material-symbols-outlined').style.color='#e67e22'; this.querySelector('.check-indicator').style.color='#e67e22';" 
+                 onmouseout="this.style.borderColor='#444'; this.style.transform='scale(1)'; this.querySelector('.material-symbols-outlined').style.color='#fff'; this.querySelector('.check-indicator').style.color='#666';"
                  onclick="toggleMaterialSelection('${matClean}', this)">
                  
-                <span class="material-symbols-outlined" style="margin-right: 12px; color: #fff;">deployed_code</span> 
+                <span class="material-symbols-outlined" style="margin-right: 12px; color: #fff; transition: color 0.2s;">deployed_code</span> 
                 <span class="btn-text" style="color: #fff;">${matClean}</span>
-                <span class="check-indicator" style="margin-left: auto; color: #e67e22; font-size: 20px;">○</span>
+                <span class="check-indicator" style="margin-left: auto; color: #666; font-size: 20px; transition: color 0.2s;">○</span>
             </div>`;
     });
 
@@ -2451,22 +2451,27 @@ function toggleMaterialSelection(mat, btn) {
     const root = document.getElementById('eigenesmenu-modal');
     const nextStep = root.querySelector('#materialNextStep');
     const check = btn.querySelector('.check-indicator');
+    const icon = btn.querySelector('.material-symbols-outlined');
 
     if (window.selectedMaterials.includes(mat)) {
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
         btn.style.background = "#222";
         btn.style.borderColor = "#444";
-        // Reset hover event logic: zurück zum Standard-Hover
-        btn.onmouseout = function() { this.style.borderColor = "#444"; this.style.transform = "scale(1)"; };
+        // Zurück zur Standard-Hover-Logik
+        btn.onmouseover = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1.02)"; icon.style.color = "#e67e22"; check.style.color = "#e67e22"; };
+        btn.onmouseout = function() { this.style.borderColor = "#444"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#666"; };
         if (check) check.innerText = "○";
     } else {
         window.selectedMaterials.push(mat);
-        // Orange Markierung: Helleres Orange statt Braun
         btn.style.background = "#4a2d0a"; 
         btn.style.borderColor = "#e67e22";
-        // Sicherstellen, dass das Orange beim Hover-Exit erhalten bleibt
-        btn.onmouseout = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1)"; };
-        if (check) check.innerText = "●";
+        // Dauerhaftes Orange nach Auswahl
+        btn.onmouseover = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1.02)"; icon.style.color = "#e67e22"; check.style.color = "#e67e22"; };
+        btn.onmouseout = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#e67e22"; };
+        if (check) {
+            check.innerText = "●";
+            check.style.color = "#e67e22";
+        }
     }
     if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
 }
