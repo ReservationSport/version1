@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -678,20 +678,21 @@ body {
     width: 55px; 
     display: flex; 
     align-items: center; 
-    /* Hier ändern: */
-    justify-content: flex-end; 
-    padding-right: 15px; /* Hier steuerst du den Abstand zum rechten Rand */
+    justify-content: center; /* Zentriert das Icon perfekt */
     cursor: pointer; 
     border-left: 1px solid #444; 
     background: #2a2a2a;
     transition: background 0.3s ease;
 }
 
-/* Schloss-Icon: Nur Orange bei direktem Hover */
+/* Schloss-Icon kleiner und nicht fett */
 .opt-fix .material-symbols-outlined {
+    font-size: 20px !important;    /* Etwas kleiner */
+    font-weight: 300 !important;   /* Nicht fett */
     transition: color 0.3s ease;
     color: #eee;
 }
+
 .opt-fix:hover .material-symbols-outlined {
     color: #e67e22 !important;
 }
@@ -3025,7 +3026,8 @@ function handleReservationUI(time, slot, klasse) {
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
                         <span class="material-symbols-outlined" style="margin-right: 12px;">${icon}</span> <span>${h}</span>
                     </div>
-                    <div class="opt-fix" style="width: 55px; display: flex; align-items: center; justify-content: center; border-left: 1px solid ${borderColor}; background: ${istAktiv ? '#3d2a10' : 'transparent'};" 
+                    <div class="opt-fix" 
+                         style="width: 55px; border-left: 1px solid ${borderColor}; background: ${istAktiv ? '#3d2a10' : 'transparent'};" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
                         <span class="material-symbols-outlined">lock</span>
                     </div>
