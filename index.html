@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2450,18 +2450,44 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     html += `</div>`; // Ende Scroll-Liste
 
-    // 2. FIXIERTER SPEICHER-FOOTER (Initial ausgeblendet)
-html += `
+    // 2. FIXIERTER SPEICHER-FOOTER
+    html += `
     <div id="material-fixed-footer" style="padding: 15px; border-top: 1px solid #333; background: #1a1a1a; display: none; gap: 10px;">
-        <button id="saveBtn" style="flex: 1; height: 50px; background: #27ae60; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
+        <button class="menu-action-btn save" 
                 onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
             SPEICHERN
         </button>
-        <button id="materialNextStep" style="flex: 1; height: 50px; background: #e67e22; color: white; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;" 
+        <button class="menu-action-btn details" 
                 onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
             DETAILS ❯
         </button>
-    </div>`;
+    </div>
+
+    <style>
+        .menu-action-btn {
+            flex: 1;
+            height: 50px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #262626;
+            color: #eee;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .menu-action-btn:hover {
+            transform: scale(1.02);
+            border-color: #e67e22;
+            background: #333;
+            color: #e67e22;
+        }
+        .menu-action-btn.save:hover {
+            border-color: #27ae60;
+            color: #27ae60;
+        }
+    </style>`;
 
     liste.innerHTML = html;
 }
