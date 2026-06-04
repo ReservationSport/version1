@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -724,61 +724,48 @@ body {
 
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-.eigenesmenu-cancel {
-    width: 100%;
+
+
+
+/* Container für die Buttons im Footer */
+.menu-footer-container {
+    display: flex;
+    border-top: 1px solid #222; /* Übernommen aus deinem alten Style */
+    background: #111;           /* Übernommen aus deinem alten Style */
+}
+
+/* Der neue Button-Style (basiert auf deinem alten .eigenesmenu-cancel) */
+.footer-btn {
+    flex: 1;
     background: #111;
     color: #555;
     border: none;
-    border-top: 1px solid #222;
     padding: 15px;
     cursor: pointer;
     font-weight: bold;
     text-transform: uppercase;
     letter-spacing: 1px;
-    transition: color 0.2s ease;
-}
-
-.eigenesmenu-cancel:hover { color: #888; }
-
-
-
-
-/* Container für den fixierten Footer */
-.menu-footer-container {
-    display: flex;
-    gap: 10px;
-    padding: 15px;
-    border-top: 1px solid #333;
-    background: #1a1a1a;
-}
-
-/* Basis für alle Footer-Buttons */
-.footer-btn {
-    flex: 1; /* Teilt sich den Platz automatisch */
-    height: 50px;
-    border-radius: 12px;
-    border: 1px solid #444;
-    background: #222;
-    color: #fff;
-    cursor: pointer;
+    transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: all 0.2s;
 }
 
 .footer-btn:hover {
-    background: #333;
-    border-color: #e67e22;
+    color: #888;
+    background: #161616;
 }
 
-/* Spezielle Farben */
-.footer-btn.back { background: #333; }
-.footer-btn.cancel { background: #442222; color: #ffaaaa; }
+/* Trennlinie zwischen zwei Buttons, falls nötig */
+.footer-btn:not(:last-child) {
+    border-right: 1px solid #222;
+}
 
-    
-
+/* Spezielle Farbe für Abbrechen, falls gewünscht */
+.footer-btn.cancel:hover {
+    color: #cc5555; /* Ein sanfter roter Ton beim Hover */
+}
     
 
 /* ============================================================
@@ -1260,7 +1247,6 @@ body {
                 <p id="menuSubtitle">Slot bearbeiten</p>
             </div>
             <div id="menuOptions" class="eigenesmenu-liste"></div>
-            <button class="eigenesmenu-cancel" onclick="closeCustomMenu()">Abbrechen</button>
         </div>
     </div>
 
