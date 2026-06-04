@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO234</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2464,37 +2464,38 @@ html += `
     </div>
 
     <style>
-        .menu-action-btn {
-            flex: 1;
-            height: 50px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            background: #262626;
-            color: #eee;
-            font-weight: bold;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .menu-action-btn:hover {
-            transform: scale(1.02);
-            border-color: #e67e22;
-            background: #333;
-            color: #e67e22;
-        }
-        .menu-action-btn .material-symbols-outlined {
-            font-size: 20px;
-            transition: color 0.3s ease;
-        }
-        .menu-action-btn:hover .material-symbols-outlined {
-            color: #e67e22;
-        }
-    </style>`;
+    .menu-action-btn {
+        flex: 1;
+        height: 55px; /* Etwas höher für bessere Bedienbarkeit */
+        border-radius: 12px; /* Weichere Ecken */
+        border: 1px solid #333;
+        background: #1e1e1e; /* Tieferes Dunkelgrau */
+        color: #fff;
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+    
+    .menu-action-btn:hover {
+        transform: translateY(-2px); /* Sanftes Anheben */
+        background: #2a2a2a;
+        border-color: #e67e22;
+        color: #e67e22;
+    }
+
+    .menu-action-btn .material-symbols-outlined {
+        font-size: 24px; /* Icons etwas größer für bessere Optik */
+        margin-right: 12px !important;
+        transition: color 0.25s ease;
+    }
+</style>
 
     liste.innerHTML = html;
 }
