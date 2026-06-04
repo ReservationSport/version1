@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2450,16 +2450,16 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     html += `</div>`; // Ende Scroll-Liste
 
-    // 2. FIXIERTER SPEICHER-FOOTER
-    html += `
+// 2. FIXIERTER SPEICHER-FOOTER (Orange Style & Icons)
+html += `
     <div id="material-fixed-footer" style="padding: 15px; border-top: 1px solid #333; background: #1a1a1a; display: none; gap: 10px;">
         <button class="menu-action-btn save" 
                 onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
-            SPEICHERN
+            <span class="material-symbols-outlined" style="margin-right: 8px;">trolley</span> SPEICHERN
         </button>
         <button class="menu-action-btn details" 
                 onclick="openMaterialDetail(window.selectedMaterials.join(', '), '${time}', '${currentSlot}', '${klasse}')">
-            DETAILS ❯
+            <span class="material-symbols-outlined" style="margin-right: 8px;">trolley</span> DETAILS ❯
         </button>
     </div>
 
@@ -2476,6 +2476,9 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             letter-spacing: 1px;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .menu-action-btn:hover {
             transform: scale(1.02);
@@ -2483,9 +2486,12 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             background: #333;
             color: #e67e22;
         }
-        .menu-action-btn.save:hover {
-            border-color: #27ae60;
-            color: #27ae60;
+        .menu-action-btn .material-symbols-outlined {
+            font-size: 20px;
+            transition: color 0.3s ease;
+        }
+        .menu-action-btn:hover .material-symbols-outlined {
+            color: #e67e22;
         }
     </style>`;
 
