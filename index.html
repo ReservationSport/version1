@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO44444</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2379,10 +2379,12 @@ window.updateHeader = function(iconName, subtitleText) {
 
     
 /* ==========================================================================
-   MATERIAL-LOGIK: EINHEITLICH & SAUBER (ZENTRALE STEUERUNG)
+   MATERIAL
    ========================================================================== */
 
 /** * 1. Menü-UI: Materialauswahl anzeigen */
+/** * 1. Menü-UI: Materialauswahl anzeigen (Komplett)
+ */
 function handleMaterialUI(time, slot, klasse, modalElement) {
     const root = modalElement || document.getElementById('eigenesmenu-modal');
     if (!root) return;
@@ -2396,8 +2398,6 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         title.innerText = "MATERIAL WÄHLEN";
         title.style.color = "#e67e22";
     }
-    
-    // Untertitel mit oranger Klasse
     if (subtitle) {
         subtitle.innerHTML = `Welches Material möchtest du für <span style="color:#e67e22; font-weight: bold;">${klasse}</span> buchen?`;
     }
@@ -2409,6 +2409,17 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     let html = `<div class="eigenesmenu-liste-scroll" style="display: flex; flex-direction: column; gap: 8px;">`;
 
+    // A. EIGENES MATERIAL EINGEBEN (Custom Input)
+    html += `
+        <div class="hallen-option-wrapper" 
+             style="display: flex; height: 50px; margin-bottom: 15px; background: #222; border: 1px dashed #e67e22; border-radius: 8px; align-items: center; padding: 0 15px;">
+            <span class="material-symbols-outlined" style="margin-right: 12px; color: #e67e22;">edit_square</span>
+            <input type="text" id="customMaterialInput" placeholder="Eigenes Material eintragen..." 
+                   style="background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 14px;"
+                   onkeyup="if(event.key === 'Enter') addCustomMaterial(this.value)">
+        </div>`;
+
+    // B. LÖSCHEN BUTTON
     if (hatBereitsMaterial) {
         html += `
             <div class="hallen-option-wrapper" 
@@ -2421,6 +2432,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
             </div>`;
     }
 
+    // C. MATERIAL LISTE
     (verfügbareMaterialien || []).forEach(mat => {
         const matClean = mat ? mat.toString().trim() : "";
         if (matClean === "") return;
@@ -2449,7 +2461,8 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     liste.innerHTML = html;
 }
 
-/** * 5. Helper (Toggles & Badges) */
+/** * 2. Helper: Auswahl Logik
+ */
 function toggleMaterialSelection(mat, btn) {
     const root = document.getElementById('eigenesmenu-modal');
     const nextStep = root.querySelector('#materialNextStep');
@@ -2460,7 +2473,6 @@ function toggleMaterialSelection(mat, btn) {
         window.selectedMaterials = window.selectedMaterials.filter(m => m !== mat);
         btn.style.background = "#222";
         btn.style.borderColor = "#444";
-        // Zurück zur Standard-Hover-Logik
         btn.onmouseover = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1.02)"; icon.style.color = "#e67e22"; check.style.color = "#e67e22"; };
         btn.onmouseout = function() { this.style.borderColor = "#444"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#666"; };
         if (check) check.innerText = "○";
@@ -2468,7 +2480,6 @@ function toggleMaterialSelection(mat, btn) {
         window.selectedMaterials.push(mat);
         btn.style.background = "#4a2d0a"; 
         btn.style.borderColor = "#e67e22";
-        // Dauerhaftes Orange nach Auswahl
         btn.onmouseover = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1.02)"; icon.style.color = "#e67e22"; check.style.color = "#e67e22"; };
         btn.onmouseout = function() { this.style.borderColor = "#e67e22"; this.style.transform = "scale(1)"; icon.style.color = "#fff"; check.style.color = "#e67e22"; };
         if (check) {
@@ -2477,6 +2488,23 @@ function toggleMaterialSelection(mat, btn) {
         }
     }
     if (nextStep) nextStep.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
+}
+
+/** * 3. Helper: Custom Material hinzufügen 
+ */
+function addCustomMaterial(val) {
+    if (!val || val.trim() === "") return;
+    const mat = val.trim();
+    
+    // Fügt das Material zur Liste hinzu (ohne doppelte)
+    if (!window.selectedMaterials.includes(mat)) {
+        window.selectedMaterials.push(mat);
+        // UI Feedback: Hier könntest du die Liste neu rendern oder nur den Button anzeigen
+        alert("Material '" + mat + "' für die Buchung vorgemerkt.");
+        const nextStep = document.getElementById('materialNextStep');
+        if (nextStep) nextStep.style.display = 'block';
+    }
+    document.getElementById('customMaterialInput').value = "";
 }
 
 
