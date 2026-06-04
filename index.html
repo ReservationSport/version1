@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO54</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -741,6 +741,45 @@ body {
 .eigenesmenu-cancel:hover { color: #888; }
 
 
+
+
+/* Container für den fixierten Footer */
+.menu-footer-container {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    border-top: 1px solid #333;
+    background: #1a1a1a;
+}
+
+/* Basis für alle Footer-Buttons */
+.footer-btn {
+    flex: 1; /* Teilt sich den Platz automatisch */
+    height: 50px;
+    border-radius: 12px;
+    border: 1px solid #444;
+    background: #222;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.footer-btn:hover {
+    background: #333;
+    border-color: #e67e22;
+}
+
+/* Spezielle Farben */
+.footer-btn.back { background: #333; }
+.footer-btn.cancel { background: #442222; color: #ffaaaa; }
+
+    
+
+    
 
 /* ============================================================
    10. MATERIAL BUCHEN
@@ -2361,6 +2400,12 @@ window.triggerNewsWrapper = async function(aktion, slot, klasse, kuerzel) {
     
 
 
+
+/* ============================================================
+   10. TASK MANAGER
+   ============================================================ */
+    
+
     
 window.openEditor = function(el, time, slot, klasse) {
     closeEditor();
@@ -2383,33 +2428,15 @@ window.openEditor = function(el, time, slot, klasse) {
     backdrop.onclick = closeEditor;
 
     backdrop.innerHTML = `
-        <style>
-            .eigenesmenu-item {
-                transition: all 0.25s ease !important;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-            }
-            .eigenesmenu-item:hover {
-                transform: translateX(8px) scale(1.02);
-                background: #333 !important;
-                border-left: 4px solid #e67e22 !important;
-            }
-            .eigenesmenu-item:hover .material-symbols-outlined {
-                color: #e67e22 !important;
-            }
-            .eigenesmenu-item .material-symbols-outlined {
-                transition: color 0.2s ease;
-            }
-        </style>
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
-                <span class="material-symbols-outlined header-icon" id="dynamic-header-icon" style="color: #e67e22;">settings</span>
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle" id="dynamic-header-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
+                <p class="eigenesmenu-subtitle" id="dynamic-header-subtitle" style="color: #fff; margin: 5px 0 0 0; font-size: 0.9em; opacity: 0.8;">
                     Wähle eine Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
                 </p>
+                <span class="material-symbols-outlined header-icon" id="dynamic-header-icon">settings</span>
             </div>
+
             <div class="eigenesmenu-liste" id="menu-options-list">
                 <button class="eigenesmenu-item" data-action="reservation" data-icon="room_preferences" data-title="Welche Räumlichkeit willst du für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span> reservieren?">
                     <span class="material-symbols-outlined">room_preferences</span>
@@ -2432,7 +2459,12 @@ window.openEditor = function(el, time, slot, klasse) {
                     <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
             </div>
-            <button class="eigenesmenu-cancel" onclick="closeEditor()">Abbrechen</button>
+
+            <div class="menu-footer-container">
+                <button class="footer-btn cancel" onclick="closeEditor()">
+                    <span class="material-symbols-outlined">close</span> ABBRECHEN
+                </button>
+            </div>
         </div>
     `;
 
@@ -2453,7 +2485,6 @@ window.openEditor = function(el, time, slot, klasse) {
         if(container) container.style.transform = "translateY(0)";
     });
 };
-
     
 
 window.updateHeader = function(iconName, subtitleText) {
@@ -2472,6 +2503,21 @@ window.updateHeader = function(iconName, subtitleText) {
 };
 
 
+
+
+function renderFooter(buttons) {
+    // buttons ist ein Array von Objekten: [{text: 'ZURÜCK', class: 'back', onclick: '...'}, ...]
+    let html = `<div class="menu-footer-container">`;
+    buttons.forEach(btn => {
+        html += `<button class="footer-btn ${btn.class}" onclick="${btn.onclick}">
+                    ${btn.icon ? `<span class="material-symbols-outlined">${btn.icon}</span>` : ''}
+                    ${btn.text}
+                 </button>`;
+    });
+    html += `</div>`;
+    return html;
+}
+    
 
     
 /* ==========================================================================
@@ -2929,6 +2975,10 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
 };
     
 
+/* ============================================================
+   15. HALLEN-RESERVATION
+   ============================================================ */
+    
 
 function handleReservationUI(time, slot, klasse) {
     const container = document.getElementById('menu-options-list');
@@ -2948,7 +2998,6 @@ function handleReservationUI(time, slot, klasse) {
 
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
     
-    // ... (Logik für besetzteHallen bleibt gleich)
     const currentSlot = parseInt(slot);
     const rowIndex = Math.floor((currentSlot - 1) / 5);
     const startSlot = (rowIndex * 5) + 1;
@@ -2964,15 +3013,18 @@ function handleReservationUI(time, slot, klasse) {
         }
     }
 
-    let html = "";
+    // --- Start der HTML-Generierung ---
+    let html = `
+        <style>
+            .scroll-wrapper { flex: 1; overflow-y: auto; padding: 15px; }
+        </style>
+        <div class="scroll-wrapper">`;
 
-    // RESERVIERUNG LÖSCHEN (Look: nicht fett, passend zum Rest)
+    // RESERVIERUNG LÖSCHEN
     if (aktuelleHalleInBox !== "" && aktuelleHalleInBox !== "---") {
         html += `
             <div class="hallen-option-wrapper" 
-                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; transition: transform 0.2s ease, border-color 0.2s ease; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa; font-weight: normal;"
-                 onmouseover="this.style.borderColor='#ff6666'; this.style.transform='scale(1.02)';" 
-                 onmouseout="this.style.borderColor='#553333'; this.style.transform='scale(1)';"
+                 style="display: flex; height: 50px; margin-bottom: 15px; background: #332222; border: 1px solid #553333; border-radius: 8px; cursor: pointer; align-items: center; justify-content: center; color: #ffaaaa;"
                  onclick="applyHalleSelection('', '${time}', '${slot}', '${klasse}', this, '')">
                 <span class="material-symbols-outlined" style="margin-right: 10px;">delete</span>
                 RESERVIERUNG LÖSCHEN
@@ -2980,18 +3032,11 @@ function handleReservationUI(time, slot, klasse) {
     }
 
     const hallen = window.hallenConfig ? Object.keys(window.hallenConfig) : [];
-    
     hallen.forEach(h => {
-        const hClean = h.trim().toLowerCase();
-        const istGesperrt = besetzteHallen.some(b => b.toLowerCase().includes(hClean) || hClean.includes(b.toLowerCase()));
+        const istGesperrt = besetzteHallen.some(b => b.toLowerCase().includes(h.trim().toLowerCase()) || h.trim().toLowerCase().includes(b.toLowerCase()));
         const istAktiv = (h.trim() === aktuelleHalleInBox);
-        
-        // Farben für aktive Halle
-        const activeBg = "#3d2a10";
         const borderColor = istAktiv ? "#e67e22" : "#444";
-        
-        const config = window.hallenConfig[h];
-        const icon = config?.icon || "meeting_room";
+        const icon = window.hallenConfig[h]?.icon || "meeting_room";
 
         if (istGesperrt) {
             html += `
@@ -3000,38 +3045,31 @@ function handleReservationUI(time, slot, klasse) {
                 </div>`;
         } else {
             html += `
-                <div class="hallen-option-wrapper" 
-                     style="display: flex; height: 50px; margin-bottom: 8px; border: 1px solid ${borderColor}; border-radius: 8px; transition: all 0.2s ease; cursor: pointer; overflow: hidden; align-items: stretch;"
-                     onmouseover="this.style.borderColor='#e67e22'; this.style.transform='scale(1.02)';" 
-                     onmouseout="this.style.borderColor='${borderColor}'; this.style.transform='scale(1)';"
-                >
-                    <div class="opt-locker" 
-                         style="flex-grow: 1; display: flex; align-items: center; padding: 0 15px; color: #fff; background: ${istAktiv ? activeBg : '#222'};"
-                         onmouseover="this.querySelector('.material-symbols-outlined').style.color='#e67e22';"
-                         onmouseout="this.querySelector('.material-symbols-outlined').style.color='#fff';"
+                <div class="hallen-option-wrapper" style="display: flex; height: 50px; margin-bottom: 8px; border: 1px solid ${borderColor}; border-radius: 8px; cursor: pointer; overflow: hidden; align-items: stretch;">
+                    <div class="opt-locker" style="flex-grow: 1; display: flex; align-items: center; padding: 0 15px; color: #fff; background: ${istAktiv ? '#3d2a10' : '#222'};" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, '')">
-                        <span class="material-symbols-outlined" style="display: flex; align-items: center; justify-content: center; margin-right: 12px; transition: color 0.2s; font-size: 24px;">${icon}</span>
-                        <span>${h}</span>
+                        <span class="material-symbols-outlined" style="margin-right: 12px;">${icon}</span> <span>${h}</span>
                     </div>
-                    
-                    <div class="opt-fix" 
-                         style="width: 55px; display: flex; align-items: center; justify-content: center; border-left: 1px solid ${borderColor}; transition: background 0.2s; cursor: pointer; background: ${istAktiv ? activeBg : 'transparent'};"
-                         onmouseover="
-                            this.style.backgroundColor='#333'; 
-                            this.querySelector('.material-symbols-outlined').style.color='#e67e22'; 
-                            this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#e67e22';
-                         "
-                         onmouseout="
-                            this.style.backgroundColor='${istAktiv ? activeBg : 'transparent'}'; 
-                            this.querySelector('.material-symbols-outlined').style.color='#fff'; 
-                            this.parentNode.querySelector('.opt-locker .material-symbols-outlined').style.color='#fff';
-                         "
+                    <div class="opt-fix" style="width: 55px; display: flex; align-items: center; justify-content: center; border-left: 1px solid ${borderColor}; background: ${istAktiv ? '#3d2a10' : 'transparent'};" 
                          onclick="applyHalleSelection('${h}', '${time}', '${slot}', '${klasse}', this, 'fix')">
-                        <span class="material-symbols-outlined" style="display: flex; align-items: center; justify-content: center; transition: color 0.2s; font-size: 16px; padding-left: 8px;">lock</span>
+                        <span class="material-symbols-outlined">lock</span>
                     </div>
                 </div>`;
         }
     });
+
+    html += `</div>`; // Ende Scroll-Bereich
+
+    // Footer Bereich
+    html += `
+        <div class="menu-footer-container">
+            <button class="footer-btn back" onclick="window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')">
+                <span class="material-symbols-outlined">arrow_back</span> ZURÜCK
+            </button>
+            <button class="footer-btn cancel" onclick="closeEditor()">
+                <span class="material-symbols-outlined">close</span> ABBRECHEN
+            </button>
+        </div>`;
 
     container.innerHTML = html;
 }
