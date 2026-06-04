@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO6666</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2277,8 +2277,10 @@ window.openEditor = function(el, time, slot, klasse) {
     const halleLabel = el.querySelector('.halle-label')?.innerText.trim() || "";
     const hatReservierung = !isAusfall && halleLabel !== "";
 
+    // Daten-Check: Priorität auf lastPlanData, Fallback auf das HTML-Attribut der Box
     const slotData = (window.lastPlanData && window.lastPlanData[absoluteSlot]) || {};
-    const hatMaterial = slotData.material && slotData.material.trim() !== "";
+    const boxMaterial = el.getAttribute('data-material') || "";
+    const hatMaterial = (slotData.material && slotData.material.trim() !== "") || (boxMaterial.trim() !== "");
     const hatNotiz = slotData.kommentar && slotData.kommentar.trim() !== "";
 
     const backdrop = document.createElement('div');
@@ -2288,11 +2290,30 @@ window.openEditor = function(el, time, slot, klasse) {
 
     backdrop.innerHTML = `
         <style>
+            .eigenesmenu-container {
+                background: #1a1a1a;
+                border-radius: 12px;
+                padding: 20px;
+                width: 90%;
+                max-width: 400px;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+                display: flex;
+                flex-direction: column;
+            }
             .eigenesmenu-item {
                 transition: all 0.25s ease !important;
                 display: flex;
                 align-items: center;
                 gap: 12px;
+                background: #222;
+                border: 1px solid #444;
+                border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 8px;
+                color: #fff;
+                width: 100%;
+                cursor: pointer;
+                text-align: left;
             }
             .eigenesmenu-item:hover {
                 transform: translateX(8px) scale(1.02);
@@ -2302,38 +2323,45 @@ window.openEditor = function(el, time, slot, klasse) {
             .eigenesmenu-item:hover .material-symbols-outlined {
                 color: #e67e22 !important;
             }
-            .eigenesmenu-item .material-symbols-outlined {
+            .eigenesmenu-cancel {
+                width: 100%;
+                background: #111;
+                color: #555;
+                border: none;
+                border-top: 1px solid #222;
+                padding: 15px;
+                cursor: pointer;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 1px;
                 transition: color 0.2s ease;
             }
+            .eigenesmenu-cancel:hover { color: #888; }
         </style>
         <div class="eigenesmenu-container" onclick="event.stopPropagation()">
             <div class="eigenesmenu-header">
-                <span class="material-symbols-outlined header-icon" id="dynamic-header-icon" style="color: #e67e22;">settings</span>
+                <span class="material-symbols-outlined header-icon" style="color: #e67e22; font-size: 24px;">settings</span>
                 <h3 class="eigenesmenu-title" style="margin:0; font-size: 1.1em; color: #e67e22; letter-spacing: 1px;">TASK MANAGER</h3>
-                <p class="eigenesmenu-subtitle" id="dynamic-header-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
+                <p class="eigenesmenu-subtitle" style="color: #fff; margin: 10px 0 0 0; font-size: 0.9em; opacity: 0.8;">
                     Wähle eine Aktion für <span style="color: #ff8c00; font-weight: bold;">${klasse}</span> 
                 </p>
             </div>
             <div class="eigenesmenu-liste" id="menu-options-list">
-                <button class="eigenesmenu-item" data-action="reservation" data-icon="room_preferences" data-title="Welche Räumlichkeit willst du für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span> reservieren?">
+                <button class="eigenesmenu-item" data-action="reservation" data-icon="room_preferences">
                     <span class="material-symbols-outlined">room_preferences</span>
                     <span class="btn-text">${hatReservierung ? 'HALLE ÄNDERN' : 'HALLE RESERVIEREN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="material" data-icon="trolley" data-title="Aktion: Material für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="material" data-icon="trolley">
                     <span class="material-symbols-outlined">trolley</span>
                     <span class="btn-text">${hatMaterial ? 'MATERIAL ÄNDERN' : 'MATERIAL BUCHEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="ausfall" data-icon="${isAusfall ? 'settings_backup_restore' : 'block'}" data-title="Aktion: Ausfall für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="ausfall" data-icon="${isAusfall ? 'settings_backup_restore' : 'block'}">
                     <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
                     <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note" data-title="Erfasse eine Notiz für die Klasse <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
+                <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note">
                     <span class="material-symbols-outlined">stylus_note</span>
                     <span class="btn-text">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
-                </button>
-                <button class="eigenesmenu-item" data-action="beendet" data-icon="sports_score" data-title="Aktion: Abschluss für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
-                    <span class="material-symbols-outlined">sports_score</span>
-                    <span class="btn-text">KLASSE ABKLEBEN</span>
                 </button>
             </div>
             <button class="eigenesmenu-cancel" onclick="closeEditor()">Abbrechen</button>
@@ -2344,9 +2372,6 @@ window.openEditor = function(el, time, slot, klasse) {
         const btn = e.target.closest('.eigenesmenu-item');
         if (!btn) return;
         const action = btn.getAttribute('data-action');
-        const icon = btn.getAttribute('data-icon');
-        const title = btn.getAttribute('data-title');
-        window.updateHeader(icon, title);
         window.handleMenuChoice(action, time, absoluteSlot, klasse);
     });
 
@@ -2357,7 +2382,6 @@ window.openEditor = function(el, time, slot, klasse) {
         if(container) container.style.transform = "translateY(0)";
     });
 };
-
     
 
 window.updateHeader = function(iconName, subtitleText) {
@@ -2528,8 +2552,11 @@ function toggleMaterialSelection(mat, btn) {
     actionContainer.style.display = window.selectedMaterials.length > 0 ? 'block' : 'none';
 }
 
+
+
+    
 /**
- * Zentrale Speicherfunktion für beides (Direkt oder mit Details)
+ * Zentrale Speicherfunktion für Material (Direkt oder mit Details)
  */
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     const modal = document.getElementById('eigenesmenu-modal');
@@ -2548,22 +2575,32 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     };
 
     const onCompleteVisuals = (p) => {
-        if (window.lastPlanData?.[p.slot]) {
-            window.lastPlanData[p.slot].material = p.material;
-            window.lastPlanData[p.slot].materialDetail = p.materialDetail;
-        }
+        // 1. Lokalen Cache aktualisieren
+        if (!window.lastPlanData[p.slot]) window.lastPlanData[p.slot] = {};
+        window.lastPlanData[p.slot].material = p.material;
+        window.lastPlanData[p.slot].materialDetail = p.materialDetail;
+
+        // 2. DOM-Attribut synchronisieren
+        // Dadurch erkennt window.openEditor sofort den neuen Status ("Ändern")
         const box = document.querySelector(`[data-slot="${p.slot}"]`);
-        if (box) markBoxWithMaterialIcon(box, p.material, p.materialDetail);
+        if (box) {
+            box.setAttribute('data-material', p.material);
+            
+            // Icon im Plan aktualisieren
+            markBoxWithMaterialIcon(box, p.material, p.materialDetail);
+        }
+
+        // 3. Editor schließen
         if (typeof closeEditor === 'function') closeEditor();
     };
 
+    // Aktion ausführen (mit Fallback)
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
     } else {
         onCompleteVisuals(payload);
     }
 }
-    
 
 
     
