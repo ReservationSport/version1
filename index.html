@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2931,13 +2931,17 @@ function openMaterialDetail(materialString, time, slot, klasse) {
     
 
 /* ==========================================================================
-   MATERIAL-LOGIK: MIT DOPPELLEKTIONS-WEICHE ABGESICHERT
+   MATERIAL-LOGIK: MIT MERGE-PRINZIP GEGEN DATENVERLUST ABGESICHERT
    ========================================================================== */
 
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     const modal = document.getElementById('eigenesmenu-modal');
     if (modal) modal.style.pointerEvents = "none";
 
+    // 1. Hole den aktuellen Stand des Slots, um existierende Felder (wie "fix" oder "kommentar") zu erhalten
+    const currentSlotData = (window.lastPlanData && window.lastPlanData[slot]) ? window.lastPlanData[slot] : {};
+
+    // 2. Erstelle das Payload als Merge aus bestehenden Daten und den neuen Material-Angaben
     const payload = {
         action: "saveBooking",
         pw: typeof userPw !== 'undefined' ? userPw : "",
@@ -2945,28 +2949,35 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         date: document.getElementById('datePicker')?.value,
         slot: slot,
         klasse: klasse || "",
-        material: mat,            
+        ...currentSlotData,    // <--- WICHTIG: Erhält alle existierenden Felder (fix, kommentar etc.)
+        material: mat,         // Überschreibt/setzt nur das Material neu
         materialDetail: detail || "",
-        halle: "" // WICHTIG: Hier explizit leer lassen, damit die Weiche nicht abstürzt
+        halle: currentSlotData.halle || "" // Behält die Halle bei, falls sie im Datensatz existiert
     };
 
     const onCompleteVisuals = (p) => {
         const s = p.slot;
-        if (window.lastPlanData?.[s]) {
-            window.lastPlanData[s].material = p.material;
-            window.lastPlanData[s].materialDetail = p.materialDetail;
+        
+        // 3. Update der lokalen Datenstruktur unter Erhalt anderer Felder
+        if (window.lastPlanData) {
+            if (!window.lastPlanData[s]) window.lastPlanData[s] = {};
+            window.lastPlanData[s] = {
+                ...window.lastPlanData[s], // Behält existierende Werte
+                material: p.material,      // Aktualisiert nur das Material
+                materialDetail: p.materialDetail
+            };
         }
+
         const box = document.querySelector(`[data-slot="${s}"]`);
         if (box) markBoxWithMaterialIcon(box, p.material, p.materialDetail);
         
         if (s === slot && typeof closeEditor === 'function') closeEditor();
     };
 
-    // Die Weiche erkennt jetzt, dass keine Halle da ist und überspringt die Konflikt-Prüfung
+    // Die Weiche verarbeitet nun das vollständige Objekt
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
     } else {
-        // Fallback falls Weiche nicht geladen
         onCompleteVisuals(payload);
     }
 }
@@ -3485,7 +3496,7 @@ window.loescheNotizVomModal = function(slot, klasse) {
 
     
 /**
- * 🔥 Phase 2: Korrigierte Klammerstruktur
+ * 🔥 Phase 2: Korrigierte Klammerstruktur & Daten-Merge zur Wahrung bestehender Felder
  */
 window.speichereNotizVomModal = async function(slot, klasse) {
     const textFeld = document.getElementById('notiz-text-feld');
@@ -3500,6 +3511,10 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         saveBtn.style.pointerEvents = "none";
     }
 
+    // 1. Hole das existierende Datenobjekt des Slots, um existierende Felder (wie "fix") zu erhalten
+    const currentSlotData = (window.lastPlanData && window.lastPlanData[slot]) ? window.lastPlanData[slot] : {};
+
+    // 2. Erstelle das Payload als Merge aus bestehenden Daten und den neuen Änderungen
     const payload = {
         action: "saveBooking",
         pw: userPw,
@@ -3507,7 +3522,8 @@ window.speichereNotizVomModal = async function(slot, klasse) {
         date: dateVal,
         slot: slot.toString(),
         klasse: klasse,
-        kommentar: notizText
+        ...currentSlotData,    // <--- WICHTIG: Erhält existierende Felder wie 'fix' (Spalte J)
+        kommentar: notizText   // <--- Überschreibt/setzt nur den Kommentar neu
     };
 
     const onCompleteVisuals = function(p) {
@@ -3547,15 +3563,20 @@ window.speichereNotizVomModal = async function(slot, klasse) {
             }
         }
 
+        // Update der lokalen Datenstruktur unter Erhalt anderer Felder
         if (window.lastPlanData) {
             if (!window.lastPlanData[s]) window.lastPlanData[s] = {};
-            window.lastPlanData[s].kommentar = n;
+            // Auch hier nutzen wir den Merge für das lokale Objekt
+            window.lastPlanData[s] = {
+                ...window.lastPlanData[s],
+                kommentar: n
+            };
         }
 
         if (s === slot.toString() && typeof closeEditor === 'function') {
             closeEditor();
         }
-    }; // <--- HIER war die Klammer gefehlt hat!
+    };
 
     if (typeof window.prozessiereAktion === "function") {
         window.prozessiereAktion(payload, onCompleteVisuals);
@@ -3707,7 +3728,29 @@ window.saveImmediately = async function(payload, options = {}) {
    
 
 
+/**
+ * Mischt bestehende Daten mit neuen Änderungen
+ * @param {string} slotID - Der Slot, der geändert wird
+ * @param {object} newData - Nur die Felder, die sich ändern (z.B. { material: "..." })
+ */
+window.getMergedPayload = function(slotID, newData) {
+    // 1. Hole das existierende Objekt (oder leeres Objekt als Fallback)
+    const currentData = window.lastPlanData[slotID] || {};
+    
+    // 2. Mische alt und neu
+    const mergedData = {
+        ...currentData, // Nimmt alles, was schon da war (auch fix, klasse, time, etc.)
+        ...newData      // Überschreibt nur die spezifischen neuen Felder
+    };
+    
+    // 3. Gib das komplette Objekt zurück
+    return {
+        slot: slotID,
+        data: mergedData
+    };
+};
 
+    
 
 /**
  * Interne Hilfsfunktion: Hält die News-Logik sauber
