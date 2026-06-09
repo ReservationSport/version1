@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2985,6 +2985,10 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
 
     
 async function applyMaterialDelete(time, slot, klasse, btn) {
+    // 1. Hole den aktuellen Stand des Slots
+    const currentSlotData = (window.lastPlanData && window.lastPlanData[slot]) ? window.lastPlanData[slot] : {};
+
+    // 2. Erstelle das Payload unter Beibehaltung der bestehenden Daten (außer Material)
     const payload = {
         action: "saveBooking",
         pw: typeof userPw !== 'undefined' ? userPw : "",
@@ -2992,17 +2996,25 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
         date: document.getElementById('datePicker')?.value,
         slot: slot,
         klasse: klasse || "",
-        material: "",            
-        materialDetail: "",
-        halle: ""
+        ...currentSlotData, // <--- Erhält existierende Werte (Halle, Fix, Notizen etc.)
+        material: "",       // Löscht NUR das Material
+        materialDetail: ""  // Löscht NUR das Detail
+        // WICHTIG: 'halle' wird hier NICHT explizit mit "" gesetzt, 
+        // sondern aus currentSlotData übernommen!
     };
 
     const onCompleteVisuals = (p) => {
         const s = p.slot;
+        
+        // 3. Update der lokalen Datenstruktur
         if (window.lastPlanData?.[s]) {
-            window.lastPlanData[s].material = "";
-            window.lastPlanData[s].materialDetail = "";
+            window.lastPlanData[s] = {
+                ...window.lastPlanData[s],
+                material: "",
+                materialDetail: ""
+            };
         }
+        
         const box = document.querySelector(`[data-slot="${s}"]`);
         if (box) markBoxWithMaterialIcon(box, "", "");
         
