@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOdsfasdf</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2701,11 +2701,10 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const existingFooter = root.querySelector('.modal-footer') || root.querySelector('.menu-footer-container');
     if (existingFooter) { existingFooter.remove(); }
 
-    // 2. Datenquelle: Nur noch aus dem Sheet (via window.appMaterialien)
-    // Wenn window.appMaterialien leer oder nicht definiert ist, bleibt die Liste leer.
-    let materialQuelle = (window.appMaterialien && Array.isArray(window.appMaterialien)) 
-                         ? window.appMaterialien 
-                         : [];
+  // 2. Datenquelle: Nutzt deine existierende globale Variable
+let materialQuelle = (typeof verfügbareMaterialien !== 'undefined' && Array.isArray(verfügbareMaterialien)) 
+                     ? verfügbareMaterialien 
+                     : [];
 
     // 3. Container-Struktur sicherstellen
     let liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
