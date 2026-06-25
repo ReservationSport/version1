@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3271,20 +3271,28 @@ function handleReservationUI(time, slot, klasse) {
     const aktuelleHalleInBox = window.currentEditBox?.querySelector('.halle-label')?.innerText.trim() || "";
     
     // Logik für besetzte Hallen
-    const currentSlot = parseInt(slot);
-    const rowIndex = Math.floor((currentSlot - 1) / 5);
-    const startSlot = (rowIndex * 5) + 1;
-    const endSlot = startSlot + 4;
-    let besetzteHallen = [];
-    for (let s = startSlot; s <= endSlot; s++) {
-        if (s === currentSlot) continue;
-        const data = window.lastPlanData ? window.lastPlanData[s] : null;
-        if (data && data.halle && data.halle !== "Ausfall") {
-            const hName = data.halle.trim();
-            if (hName.toLowerCase().includes("badi") || hName.toLowerCase().includes("outdoor")) continue; 
-            besetzteHallen.push(hName);
+const currentSlot = parseInt(slot);
+const rowIndex = Math.floor((currentSlot - 1) / 5);
+const startSlot = (rowIndex * 5) + 1;
+const endSlot = startSlot + 4;
+let besetzteHallen = [];
+
+for (let s = startSlot; s <= endSlot; s++) {
+    if (s === currentSlot) continue;
+    
+    const data = window.lastPlanData ? window.lastPlanData[s] : null;
+    if (data && data.halle && data.halle !== "Ausfall") {
+        const hName = data.halle.trim();
+        const lowerName = hName.toLowerCase();
+        
+        // "outdoor" und "badi" werden ignoriert (nicht als besetzt gezählt)
+        if (lowerName.includes("outdoor") || lowerName.includes("badi")) {
+            continue;
         }
+        
+        besetzteHallen.push(hName);
     }
+}
 
     let html = `
         <div class="eigenesmenu-liste" id="menu-options-list">
