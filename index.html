@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2936,13 +2936,17 @@ function openMaterialDetail(materialString, time, slot, klasse) {
    ========================================================================== */
 
 async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
-    const modal = document.getElementById('eigenesmenu-modal');
-    if (modal) modal.style.pointerEvents = "none";
+    // 1. Gezielte Button-Blockierung statt Fenster-Blockierung
+    if (btn) {
+        btn.style.pointerEvents = "none";
+        btn.style.opacity = "0.6";
+        btn.innerHTML = `<span class="material-symbols-outlined">trolley</span> Speichere...`;
+    }
 
-    // 1. Hole den aktuellen Stand des Slots, um existierende Felder (wie "fix" oder "kommentar") zu erhalten
+    // 2. Hole den aktuellen Stand des Slots
     const currentSlotData = (window.lastPlanData && window.lastPlanData[slot]) ? window.lastPlanData[slot] : {};
 
-    // 2. Erstelle das Payload als Merge aus bestehenden Daten und den neuen Material-Angaben
+    // 3. Erstelle das Payload
     const payload = {
         action: "saveBooking",
         pw: typeof userPw !== 'undefined' ? userPw : "",
@@ -2950,21 +2954,27 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         date: document.getElementById('datePicker')?.value,
         slot: slot,
         klasse: klasse || "",
-        ...currentSlotData,    // <--- WICHTIG: Erhält alle existierenden Felder (fix, kommentar etc.)
-        material: mat,         // Überschreibt/setzt nur das Material neu
+        ...currentSlotData, 
+        material: mat,
         materialDetail: detail || "",
-        halle: currentSlotData.halle || "" // Behält die Halle bei, falls sie im Datensatz existiert
+        halle: currentSlotData.halle || ""
     };
 
     const onCompleteVisuals = (p) => {
+        // Button wieder freigeben
+        if (btn) {
+            btn.style.pointerEvents = "auto";
+            btn.style.opacity = "1";
+        }
+
         const s = p.slot;
         
-        // 3. Update der lokalen Datenstruktur unter Erhalt anderer Felder
+        // Lokale Datenstruktur aktualisieren
         if (window.lastPlanData) {
             if (!window.lastPlanData[s]) window.lastPlanData[s] = {};
             window.lastPlanData[s] = {
-                ...window.lastPlanData[s], // Behält existierende Werte
-                material: p.material,      // Aktualisiert nur das Material
+                ...window.lastPlanData[s],
+                material: p.material,
                 materialDetail: p.materialDetail
             };
         }
@@ -2975,7 +2985,6 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
         if (s === slot && typeof closeEditor === 'function') closeEditor();
     };
 
-    // Die Weiche verarbeitet nun das vollständige Objekt
     if (typeof window.prozessiereAktion === 'function') {
         window.prozessiereAktion(payload, onCompleteVisuals);
     } else {
@@ -2983,13 +2992,15 @@ async function saveMaterialSelection(mat, detail, time, slot, klasse, btn) {
     }
 }
 
-
-    
 async function applyMaterialDelete(time, slot, klasse, btn) {
-    // 1. Hole den aktuellen Stand des Slots
+    // Gezielte Button-Blockierung
+    if (btn) {
+        btn.style.pointerEvents = "none";
+        btn.style.opacity = "0.6";
+    }
+
     const currentSlotData = (window.lastPlanData && window.lastPlanData[slot]) ? window.lastPlanData[slot] : {};
 
-    // 2. Erstelle das Payload unter Beibehaltung der bestehenden Daten (außer Material)
     const payload = {
         action: "saveBooking",
         pw: typeof userPw !== 'undefined' ? userPw : "",
@@ -2997,17 +3008,20 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
         date: document.getElementById('datePicker')?.value,
         slot: slot,
         klasse: klasse || "",
-        ...currentSlotData, // <--- Erhält existierende Werte (Halle, Fix, Notizen etc.)
-        material: "",       // Löscht NUR das Material
-        materialDetail: ""  // Löscht NUR das Detail
-        // WICHTIG: 'halle' wird hier NICHT explizit mit "" gesetzt, 
-        // sondern aus currentSlotData übernommen!
+        ...currentSlotData,
+        material: "",
+        materialDetail: ""
     };
 
     const onCompleteVisuals = (p) => {
+        // Button wieder freigeben
+        if (btn) {
+            btn.style.pointerEvents = "auto";
+            btn.style.opacity = "1";
+        }
+
         const s = p.slot;
         
-        // 3. Update der lokalen Datenstruktur
         if (window.lastPlanData?.[s]) {
             window.lastPlanData[s] = {
                 ...window.lastPlanData[s],
@@ -3028,7 +3042,6 @@ async function applyMaterialDelete(time, slot, klasse, btn) {
         onCompleteVisuals(payload);
     }
 }
-
     
 
 
