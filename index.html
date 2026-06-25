@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOwerwerwer</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3873,7 +3873,7 @@ function getDoppellektionPartnerSlot(currentSlot) {
 
 
 /* ============================================================
-   11. DOPPELLEKTIONS-ABFRAGE (Bereinigt & CSS-basiert)
+   11. DOPPELLEKTIONS-ABFRAGE (Bereinigt, CSS-basiert & Echtzeit-Sync)
    ============================================================ */
 
 window.prozessiereAktion = function(payload, onCompleteVisuals) {
@@ -3881,14 +3881,17 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
     const modalContainer = document.querySelector('.eigenesmenu-container');
     const subtitle = document.getElementById('dynamic-header-subtitle');
 
-    // Wenn kein Partner-Slot existiert oder Modal fehlt, direkt ausführen
+    // 1. Wenn kein Partner-Slot existiert oder Modal fehlt, direkt ausführen
     if (!partnerSlot || !modalContainer) {
-        executePayloads([payload], onCompleteVisuals);
+        executePayloads([payload], (p) => {
+            if (onCompleteVisuals) onCompleteVisuals(p);
+            if (typeof syncPlan === 'function') syncPlan();
+        });
         if (typeof closeEditor === "function") closeEditor();
         return;
     }
 
-    // 1. Konflikt-Logik
+    // 2. Konflikt-Logik
     let partnerKonfliktKlasse = null;
     if (payload.halle && payload.halle.trim() !== "") {
         const rowIndex = Math.floor((partnerSlot - 1) / 5);
@@ -3909,17 +3912,16 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         }
     }
 
-    // 2. Untertitel aktualisieren
+    // 3. Untertitel aktualisieren
     if (subtitle) {
         subtitle.innerHTML = `Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?`;
     }
 
-    // 3. DOM-Säuberung (Header behalten, Inhalt ersetzen)
+    // 4. DOM-Säuberung & UI Aufbau
     const header = modalContainer.querySelector('.eigenesmenu-header');
     modalContainer.innerHTML = '';
     modalContainer.appendChild(header);
 
-    // 4. UI Aufbau (CSS-Klassen statt Inline-Styles)
     let html = `
         <div class="eigenesmenu-liste" id="menu-options-list">
             <div class="doppel-abfrage-container">
@@ -3940,7 +3942,6 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
         </div>
     `;
 
-    // 5. Navigation: "Zurück" dynamisch steuern
     const backFn = (payload.origin === 'handleReservationUI') 
         ? `window.handleReservationUI('${payload.time}', '${payload.slot}', '${payload.klasse}')` 
         : `window.openEditor(window.currentEditBox, '${payload.time}', '${payload.slot}', '${payload.klasse}')`;
@@ -3952,21 +3953,26 @@ window.prozessiereAktion = function(payload, onCompleteVisuals) {
 
     modalContainer.insertAdjacentHTML('beforeend', html);
 
-    // 6. Event Listener (Delegation nicht nötig, da IDs im DOM)
+    // 5. Wrapper für die Ausführung inkl. Echtzeit-Sync
+    const executeMitSync = (payloads) => {
+        executePayloads(payloads, (p) => {
+            // Erst lokales UI-Update für den geklickten Slot
+            if (onCompleteVisuals) onCompleteVisuals(p);
+            // Danach Sofort-Sync für alle Nutzer im Plan
+            if (typeof syncPlan === 'function') syncPlan();
+        });
+        if (typeof closeEditor === "function") closeEditor();
+    };
+
+    // 6. Event Listener
     const btnBeide = document.getElementById('btn-doppel-beide');
     if (btnBeide) {
-        btnBeide.onclick = () => {
-            executePayloads([payload, { ...payload, slot: partnerSlot.toString() }], onCompleteVisuals);
-            if (typeof closeEditor === "function") closeEditor();
-        };
+        btnBeide.onclick = () => executeMitSync([payload, { ...payload, slot: partnerSlot.toString() }]);
     }
     
     const btnEinzel = document.getElementById('btn-doppel-einzel');
     if (btnEinzel) {
-        btnEinzel.onclick = () => {
-            executePayloads([payload], onCompleteVisuals);
-            if (typeof closeEditor === "function") closeEditor();
-        };
+        btnEinzel.onclick = () => executeMitSync([payload]);
     }
 };
 
