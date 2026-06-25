@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOdsfasdf</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2701,8 +2701,11 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     const existingFooter = root.querySelector('.modal-footer') || root.querySelector('.menu-footer-container');
     if (existingFooter) { existingFooter.remove(); }
 
-    // 2. Datenquelle
-    let materialQuelle = (typeof getVerfuegbareMaterialien === 'function') ? getVerfuegbareMaterialien() : ["Beamer", "Laptop", "Whiteboard", "Flipchart", "Mikrofon", "Stühle", "Tische"];
+    // 2. Datenquelle: Nur noch aus dem Sheet (via window.appMaterialien)
+    // Wenn window.appMaterialien leer oder nicht definiert ist, bleibt die Liste leer.
+    let materialQuelle = (window.appMaterialien && Array.isArray(window.appMaterialien)) 
+                         ? window.appMaterialien 
+                         : [];
 
     // 3. Container-Struktur sicherstellen
     let liste = root.querySelector('#menu-options-list') || root.querySelector('.eigenesmenu-liste');
@@ -2753,7 +2756,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
     });
     html += `</div>`; 
 
-    // 6. DYNAMISCHER ACTION-FOOTER (Ohne renderFooter, direkt mit menu-action-btn)
+    // 6. DYNAMISCHER ACTION-FOOTER
     html += `
     <div id="material-fixed-footer" style="display: none; padding: 15px; border-top: 1px solid #333; background: #1a1a1a; gap: 10px;">
         <button class="menu-action-btn save" style="flex: 1; height: 55px; cursor: pointer;" onclick="saveMaterialSelection(window.selectedMaterials.join(', '), '', '${time}', '${currentSlot}', '${klasse}')">
@@ -2764,7 +2767,7 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
         </button>
     </div>`;
 
-    // 7. STATISCHER STANDARD-FOOTER (Nutzt weiterhin renderFooter)
+    // 7. STATISCHER STANDARD-FOOTER
     const staticButtons = [
         { text: "ZURÜCK", icon: "arrow_back", class: "back", onclick: `window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')` },
         { text: "ABBRECHEN", icon: "close", class: "cancel", onclick: "closeEditor()" }
@@ -2773,7 +2776,6 @@ function handleMaterialUI(time, slot, klasse, modalElement) {
 
     liste.innerHTML = html;
 
-    // Initialer Check: Falls Material gewählt, Footer einblenden
     const footer = root.querySelector('#material-fixed-footer');
     if (footer && (window.selectedMaterials.length > 0 || (document.getElementById('customMaterialInput')?.value.trim().length > 0))) {
         footer.classList.add('is-visible');
