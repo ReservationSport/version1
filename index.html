@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3174,7 +3174,7 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
     
 
 window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
-    console.log("handleAusfallClick (Weichenmodus) getriggert. Modus:", mode);
+    console.log("handleAusfallClick getriggert. Modus:", mode);
 
     const zielHalle = (mode === 'LOESCHEN') ? "" : "Ausfall";
     
@@ -3188,10 +3188,16 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         halle: zielHalle
     };
 
-    // Callback bekommt nun das komplette Payload-Objekt 'p'
+    // Callback: Wird aufgerufen, wenn der Server die Änderung bestätigt hat
     const visuelleAktualisierung = function(p) {
+        // Sicherstellen, dass das UI wieder freigegeben wird
+        if (btn) {
+            btn.style.pointerEvents = "auto";
+            btn.style.opacity = "1";
+        }
+        
         const s = p.slot;
-        const h = p.halle; // Wert sicher aus dem Payload p
+        const h = p.halle;
         
         const targetBox = document.querySelector(`[data-slot="${s}"]`);
         
@@ -3210,8 +3216,9 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
                 targetBox.style.backgroundColor = ""; 
             } else {
                 targetBox.classList.remove('ausfall-mode');
-                if (typeof configFarben !== 'undefined' && configFarben[h]) {
-                    targetBox.style.backgroundColor = configFarben[h];
+                // Nutze deine globale Konfigurationsvariable
+                if (typeof hallenConfig !== 'undefined' && hallenConfig[h]) {
+                    targetBox.style.backgroundColor = hallenConfig[h].color;
                 } else {
                     targetBox.style.backgroundColor = "";
                 }
@@ -3219,10 +3226,10 @@ window.handleAusfallClick = function(mode, time, slot, klasse, btn) {
         }
     };
 
-    // UI-Loader (bleibt gleich)
+    // UI-Loader & Button-Blockierung statt Fenster-Blockierung
     if (btn) {
-        const modal = document.getElementById('eigenesmenu-modal');
-        if (modal) modal.style.pointerEvents = "none";
+        btn.style.pointerEvents = "none"; // Nur diesen Button kurzzeitig sperren
+        btn.style.opacity = "0.6";
         const originalText = btn.querySelector('.btn-text')?.innerText || btn.innerText;
         btn.innerHTML = `<span class="btn-text">${originalText}</span> <div class="inline-loader-container"><div class="eigenesmenu-loader" style="width:14px; height:14px; border-width:2px;"></div></div>`;
     }
