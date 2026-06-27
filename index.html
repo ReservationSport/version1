@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2218,16 +2218,17 @@ window.zeigePasswortFuerAbkleben = function(klasse, time, slot, isDoppel) {
         ? `window.starteAbklebenWorkflow('${time}', '${slot}', '${klasse}')` 
         : `window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')`;
 
-    // 1. Header mit Standard-Größe und orangem Klassennamen
+    // 1. Header exakt nach deiner Vorgabe:
+    // Titel in Orange, 1.2em, fett. Untertitel mit orangem Klassennamen.
     const headerHtml = `
         <div class="eigenesmenu-header">
-            <div id="dynamic-header-title" style="color: #e67e22; font-weight: bold; margin-bottom: 5px;">KLASSE ABKLEBEN</div>
+            <div id="dynamic-header-title" style="color: #e67e22; font-size: 1.2em; font-weight: bold;">KLASSE ABKLEBEN</div>
             <div id="dynamic-header-subtitle">Willst du <span style="color: #e67e22;"><b>${klasse}</b></span> dauerhaft entfernen?</div>
             <span class="material-symbols-outlined header-icon" style="color: #e67e22; font-size: 24px;">sports_score</span>
         </div>
     `;
 
-    // 2. Inhalt mit einheitlichen Buttons
+    // 2. Inhalt
     let html = `
         <div class="eigenesmenu-liste" id="menu-options-list">
             <div style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
@@ -2253,7 +2254,6 @@ window.zeigePasswortFuerAbkleben = function(klasse, time, slot, isDoppel) {
     pwInput?.focus();
     pwInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') window.fuehreAbklebenAus(klasse); });
 };
-
 
 
 
