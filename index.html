@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2137,50 +2137,65 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 
 
 /* ============================================================
-   9. KLASSE ABKLEBEN (DYNAMIC WORKFLOW - EINHEITLICHER STYLE)
+   9. KLASSE ABKLEBEN (INTEGRIERTER WORKFLOW)
    ============================================================ */
 
 window.starteAbklebenWorkflow = function(time, slot, klasse) {
-    const container = document.querySelector('.eigenesmenu-container');
-    const header = container?.querySelector('.eigenesmenu-header');
-    if (!container || !header) return;
+    const modalContainer = document.querySelector('.eigenesmenu-container');
+    if (!modalContainer) return;
 
     const currentSlot = parseInt(slot);
     const aktuelleHalle = (window.lastPlanData && window.lastPlanData[currentSlot]?.halle) || "";
-    window.slotsToClear = [currentSlot];
+    
+    // Doppellektions-Partner suchen (analog zu getDoppellektionPartnerSlot)
+    const nextSlot = currentSlot + 5;
+    const prevSlot = currentSlot - 5;
+    const nextSlotData = (window.lastPlanData && window.lastPlanData[nextSlot]) || {};
+    const prevSlotData = (window.lastPlanData && window.lastPlanData[prevSlot]) || {};
 
-    const nextSlotData = (window.lastPlanData && window.lastPlanData[currentSlot + 5]) || {};
-    const prevSlotData = (window.lastPlanData && window.lastPlanData[currentSlot - 5]) || {};
+    let partnerSlot = null;
+    if (nextSlotData.klasse === klasse && nextSlotData.halle === aktuelleHalle) partnerSlot = nextSlot;
+    else if (prevSlotData.klasse === klasse && prevSlotData.halle === aktuelleHalle) partnerSlot = prevSlot;
 
-    let targetSlot = null;
-    if (nextSlotData.klasse === klasse && nextSlotData.halle === aktuelleHalle && klasse?.trim()) targetSlot = currentSlot + 5;
-    else if (prevSlotData.klasse === klasse && prevSlotData.halle === aktuelleHalle && klasse?.trim()) targetSlot = currentSlot - 5;
-
-    // Header für den Workflow
+    // Header & Subtitle
     const headerHtml = `
         <div class="eigenesmenu-header">
-            <div id="dynamic-header-title" style="color: #e67e22;">${targetSlot ? "⚠️ DOPPELLEKTION" : "KLASSE ABKLEBEN"}</div>
-            <div id="dynamic-header-subtitle">Klasse <b>${klasse}</b> dauerhaft entfernen?</div>
+            <div id="dynamic-header-title">KLASSE ABKLEBEN</div>
+            <div id="dynamic-header-subtitle">Willst du die <b>gesamte Doppellektion</b> abkleben?</div>
         </div>
     `;
 
-    if (targetSlot) {
-        let html = `
-            <div class="eigenesmenu-liste" id="menu-options-list">
-                <div class="doppel-abfrage-container" style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-                    <button class="doppel-btn" style="background: #e67e22;" onclick="window.slotsToClear.push(${targetSlot}); window.zeigePasswortFuerAbkleben('${klasse}', '${time}', '${slot}', true);">
-                        <span class="material-symbols-outlined">delete_sweep</span> BEIDE STUNDEN LÖSCHEN
+    // UI-Aufbau (Einheitliche Buttons)
+    let html = `
+        <div class="eigenesmenu-liste" id="menu-options-list">
+            <div class="doppel-abfrage-container" style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+                ${partnerSlot ? `
+                    <button id="btn-doppel-beide" class="doppel-btn">
+                        <span class="material-symbols-outlined">group</span> Beide Lektionen abkleben
                     </button>
-                    <button class="doppel-btn" style="background: #333;" onclick="window.zeigePasswortFuerAbkleben('${klasse}', '${time}', '${slot}', true);">
-                        Nur diese eine Lektion löschen
-                    </button>
-                </div>
-            </div>`;
-        html += renderFooter([{ text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }]);
-        container.innerHTML = headerHtml + html;
-    } else {
-        window.zeigePasswortFuerAbkleben(klasse, time, slot, false);
-    }
+                ` : ''}
+                <button id="btn-doppel-einzel" class="doppel-btn">
+                    <span class="material-symbols-outlined">person</span> Nur eine Lektion abkleben
+                </button>
+            </div>
+        </div>
+    `;
+
+    html += renderFooter([
+        { text: 'ZURÜCK', class: 'back', icon: 'arrow_back', onclick: `window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')` },
+        { text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }
+    ]);
+
+    modalContainer.innerHTML = headerHtml + html;
+
+    // Event Handler für Abkleben (Passwort-Schutz Workflow triggern)
+    const initAbkleben = (slots) => {
+        window.slotsToClear = slots;
+        window.zeigePasswortFuerAbkleben(klasse, time, slot);
+    };
+
+    document.getElementById('btn-doppel-beide')?.addEventListener('click', () => initAbkleben([currentSlot, partnerSlot]));
+    document.getElementById('btn-doppel-einzel')?.addEventListener('click', () => initAbkleben([currentSlot]));
 };
 
 window.zeigePasswortFuerAbkleben = function(klasse, time, slot, isDoppel) {
