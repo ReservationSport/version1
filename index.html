@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2538,9 +2538,19 @@ window.closeNews = () => {
  */
 window.triggerNewsWrapper = async function(aktion, slot, klasse, kuerzel) {
     if (typeof triggerNews !== "function") return;
+    
     try {
-        let newsTyp = aktion.toLowerCase().includes("outdoor") ? "outdoor" : (aktion.toLowerCase() === "beendet" ? "beendet" : "");
-        
+        const aktionLower = aktion.toLowerCase();
+        let newsTyp = "";
+
+        if (aktionLower.includes("outdoor")) {
+            newsTyp = "outdoor";
+        } else if (aktionLower.includes("badi")) {
+            newsTyp = "badi";
+        } else if (aktionLower === "beendet" || aktionLower === "abgeklebt") {
+            newsTyp = "beendet";
+        }
+
         // Wir übergeben das Kürzel als 4. Argument an die Funktion triggerNews
         await triggerNews(newsTyp, parseInt(slot), klasse, kuerzel);
     } catch (error) { 
