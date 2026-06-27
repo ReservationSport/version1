@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2298,9 +2298,22 @@ window.fuehreAbklebenAus = async function(klasse) {
         const result = await response.json();
 
         if (result.status === "success") {
+            // 1. SOFORT: Boxen visuell leeren und Klicks deaktivieren
+            window.slotsToClear.forEach(slot => {
+                const box = document.querySelector(`.stunden-box[data-slot="${slot}"]`);
+                if (box) {
+                    box.innerHTML = ""; 
+                    box.style.pointerEvents = "none"; // Blockiert Klicks
+                    box.style.backgroundColor = "transparent"; // Visuelles Feedback
+                }
+            });
+
+            // 2. Hintergrundprozesse
             for (const s of window.slotsToClear) await window.triggerNewsWrapper("Abkleben", s, klasse);
+            
+            // 3. Editor schließen & Sync
             closeEditor();
-            if (typeof syncPlan === 'function') syncPlan(); // ECHTZEIT-SYNC
+            if (typeof syncPlan === 'function') syncPlan();
         } else {
             throw new Error(result.msg || "Fehler.");
         }
