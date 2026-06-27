@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2137,7 +2137,7 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 
 
 /* ============================================================
-   9. KLASSE ABKLEBEN (INTEGRIERTER WORKFLOW - LOGIK-OPTIMIERT)
+   9. KLASSE ABKLEBEN (IDENTISCHES UI-DESIGN)
    ============================================================ */
 
 window.starteAbklebenWorkflow = function(time, slot, klasse) {
@@ -2147,7 +2147,7 @@ window.starteAbklebenWorkflow = function(time, slot, klasse) {
     const currentSlot = parseInt(slot);
     const aktuelleHalle = (window.lastPlanData && window.lastPlanData[currentSlot]?.halle) || "";
     
-    // 1. Suche nach Partner-Slot für Doppellektion
+    // Partner-Suche
     const nextSlot = currentSlot + 5;
     const prevSlot = currentSlot - 5;
     const nextSlotData = (window.lastPlanData && window.lastPlanData[nextSlot]) || {};
@@ -2157,34 +2157,37 @@ window.starteAbklebenWorkflow = function(time, slot, klasse) {
     if (nextSlotData.klasse === klasse && nextSlotData.halle === aktuelleHalle) partnerSlot = nextSlot;
     else if (prevSlotData.klasse === klasse && prevSlotData.halle === aktuelleHalle) partnerSlot = prevSlot;
 
-    // 2. LOGIK-WEICHE: Wenn kein Partner, direkt zum Security Check
+    // 1. Direkt zum Security Check, wenn keine Doppellektion
     if (!partnerSlot) {
         window.slotsToClear = [currentSlot];
         window.zeigePasswortFuerAbkleben(klasse, time, slot, false);
         return;
     }
 
-    // 3. Wenn Doppellektion vorhanden: UI für Abfrage anzeigen
+    // 2. Header im identischen Design wie andere Tasks
     const headerHtml = `
         <div class="eigenesmenu-header">
-            <div id="dynamic-header-title">DOPPELLEKTION</div>
-            <div id="dynamic-header-subtitle">Willst du die <b>gesamte Doppellektion</b> abkleben?</div>
+            <div id="dynamic-header-title">KLASSE ABKLEBEN</div>
+            <div id="dynamic-header-subtitle">Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?</div>
+            <span class="material-symbols-outlined header-icon">block</span>
         </div>
     `;
 
+    // 3. Buttons im einheitlichen Stil
     let html = `
         <div class="eigenesmenu-liste" id="menu-options-list">
             <div class="doppel-abfrage-container" style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
                 <button id="btn-doppel-beide" class="doppel-btn">
-                    <span class="material-symbols-outlined">group</span> Beide Lektionen abkleben
+                    <span class="material-symbols-outlined">group</span> Für beide Lektionen
                 </button>
                 <button id="btn-doppel-einzel" class="doppel-btn">
-                    <span class="material-symbols-outlined">person</span> Nur diese Lektion abkleben
+                    <span class="material-symbols-outlined">person</span> Nur für eine Lektion
                 </button>
             </div>
         </div>
     `;
 
+    // 4. Standard Footer
     html += renderFooter([
         { text: 'ZURÜCK', class: 'back', icon: 'arrow_back', onclick: `window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')` },
         { text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }
@@ -2192,12 +2195,12 @@ window.starteAbklebenWorkflow = function(time, slot, klasse) {
 
     modalContainer.innerHTML = headerHtml + html;
 
-    // Event Listener für die Abfrage
+    // 5. Events
     document.getElementById('btn-doppel-beide')?.addEventListener('click', () => {
         window.slotsToClear = [currentSlot, partnerSlot];
         window.zeigePasswortFuerAbkleben(klasse, time, slot, true);
     });
-
+    
     document.getElementById('btn-doppel-einzel')?.addEventListener('click', () => {
         window.slotsToClear = [currentSlot];
         window.zeigePasswortFuerAbkleben(klasse, time, slot, true);
