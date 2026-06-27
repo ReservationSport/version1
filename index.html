@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO1111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2141,228 +2141,140 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
    ============================================================ */
 
 window.starteAbklebenWorkflow = function(time, slot, klasse) {
-    console.log("Abkleben Workflow gestartet für:", klasse);
-    
-    const root = document.getElementById('eigenesmenu-modal');
-    if (!root) return;
+    const container = document.querySelector('.eigenesmenu-container');
+    const header = container?.querySelector('.eigenesmenu-header');
+    if (!container || !header) return;
 
     const currentSlot = parseInt(slot);
     const aktuelleHalle = (window.lastPlanData && window.lastPlanData[currentSlot]?.halle) || "";
-    
     window.slotsToClear = [currentSlot];
 
-    const nextSlot = currentSlot + 5;
-    const nextSlotData = (window.lastPlanData && window.lastPlanData[nextSlot]) || {};
-    const prevSlot = currentSlot - 5;
-    const prevSlotData = (window.lastPlanData && window.lastPlanData[prevSlot]) || {};
+    const nextSlotData = (window.lastPlanData && window.lastPlanData[currentSlot + 5]) || {};
+    const prevSlotData = (window.lastPlanData && window.lastPlanData[currentSlot - 5]) || {};
 
     let targetSlot = null;
-    if (nextSlotData.klasse === klasse && nextSlotData.halle === aktuelleHalle && klasse && klasse.trim() !== "") {
-        targetSlot = nextSlot;
-    } else if (prevSlotData.klasse === klasse && prevSlotData.halle === aktuelleHalle && klasse && klasse.trim() !== "") {
-        targetSlot = prevSlot;
-    }
+    if (nextSlotData.klasse === klasse && nextSlotData.halle === aktuelleHalle && klasse?.trim()) targetSlot = currentSlot + 5;
+    else if (prevSlotData.klasse === klasse && prevSlotData.halle === aktuelleHalle && klasse?.trim()) targetSlot = currentSlot - 5;
+
+    // Header für den Workflow
+    const headerHtml = `
+        <div class="eigenesmenu-header">
+            <div id="dynamic-header-title" style="color: #e67e22;">${targetSlot ? "⚠️ DOPPELLEKTION" : "KLASSE ABKLEBEN"}</div>
+            <div id="dynamic-header-subtitle">Klasse <b>${klasse}</b> dauerhaft entfernen?</div>
+        </div>
+    `;
 
     if (targetSlot) {
-        const liste = root.querySelector('#menu-options-list');
-        const title = root.querySelector('.eigenesmenu-title');
-        const subtitle = root.querySelector('#menu-subtitle');
-
-        if (title) {
-            title.innerText = "⚠️ DOPPELLEKTION ERKANNT";
-            title.style.color = "#e67e22";
-        }
-        if (subtitle) subtitle.innerHTML = `Die Klasse <b>${klasse}</b> hat eine Doppellektion.`;
-
-        // 1. Inhalt bauen (Scrollbarer Bereich mit doppel-btn)
         let html = `
-            <div class="scroll-wrapper" style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
-                <div class="doppel-btn" style="background: #e67e22; border: none; justify-content: center;" 
-                     onclick="window.slotsToClear.push(${targetSlot}); window.zeigePasswortFuerAbkleben('${klasse}', '${time}', '${slot}');">
-                    <span class="material-symbols-outlined">delete_sweep</span> BEIDE STUNDEN LÖSCHEN
-                </div>
-                
-                <div class="doppel-btn" style="background: #222; border: 1px solid #444; justify-content: center;" 
-                     onclick="window.zeigePasswortFuerAbkleben('${klasse}', '${time}', '${slot}');">
-                    Nur diese eine Lektion löschen
+            <div class="eigenesmenu-liste" id="menu-options-list">
+                <div class="doppel-abfrage-container" style="padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+                    <button class="doppel-btn" style="background: #e67e22;" onclick="window.slotsToClear.push(${targetSlot}); window.zeigePasswortFuerAbkleben('${klasse}', '${time}', '${slot}', true);">
+                        <span class="material-symbols-outlined">delete_sweep</span> BEIDE STUNDEN LÖSCHEN
+                    </button>
+                    <button class="doppel-btn" style="background: #333;" onclick="window.zeigePasswortFuerAbkleben('${klasse}', '${time}', '${slot}', true);">
+                        Nur diese eine Lektion löschen
+                    </button>
                 </div>
             </div>`;
-
-        // 2. Footer (fixiert am unteren Rand)
-        html += renderFooter([
-            { text: 'ZURÜCK', class: 'back', icon: 'arrow_back', onclick: `window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')` },
-            { text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }
-        ]);
-
-        if (liste) liste.innerHTML = html;
-
+        html += renderFooter([{ text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }]);
+        container.innerHTML = headerHtml + html;
     } else {
-        window.zeigePasswortFuerAbkleben(klasse, time, slot);
+        window.zeigePasswortFuerAbkleben(klasse, time, slot, false);
     }
 };
 
+window.zeigePasswortFuerAbkleben = function(klasse, time, slot, isDoppel) {
+    const container = document.querySelector('.eigenesmenu-container');
+    if (!container) return;
 
+    const backAction = isDoppel 
+        ? `window.starteAbklebenWorkflow('${time}', '${slot}', '${klasse}')` 
+        : `window.openEditor(window.currentEditBox, '${time}', '${slot}', '${klasse}')`;
 
-
-window.zeigePasswortFuerAbkleben = function(klasse, time, slot) {
-    const modalContainer = document.querySelector('.eigenesmenu-container');
-    const header = modalContainer ? modalContainer.querySelector('.eigenesmenu-header') : null;
-    const liste = modalContainer ? modalContainer.querySelector('#menu-options-list') : null;
-    if (!modalContainer || !header) return;
-
-    // Header aktualisieren
-    const titleEl = modalContainer.querySelector('.eigenesmenu-title');
-    const subtitle = document.getElementById('menu-subtitle');
-    if (titleEl) { titleEl.innerText = "🔒 SECURITY CHECK"; titleEl.style.color = "#e67e22"; }
-    if (subtitle) { subtitle.innerHTML = `Passwort eingeben, um <b>${klasse}</b> dauerhaft abzukleben.`; }
-
-    // 1. Inhalt bauen (Scrollbarer Bereich)
-    let html = `
+    const html = `
+        <div class="eigenesmenu-header">
+            <div id="dynamic-header-title" style="color: #e67e22;">🔒 SECURITY CHECK</div>
+            <div id="dynamic-header-subtitle">Passwort für <b>${klasse}</b> eingeben:</div>
+        </div>
         <div class="eigenesmenu-liste" id="menu-options-list">
-            <div class="scroll-wrapper" style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
+            <div style="padding: 15px; display: flex; flex-direction: column; gap: 15px;">
                 <input type="password" id="abkleben-pw-field" placeholder="Lehrer-Passwort..." 
-                       style="width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; text-align: center; font-size: 14px; border-radius: 8px; box-sizing: border-box;">
-                
-                <div class="doppel-btn" style="background: #cc2222; border: none; justify-content: center;" 
-                     onclick="window.fuehreAbklebenAus('${klasse}')">
+                       style="width: 100%; padding: 12px; background: #222; border: 1px solid #444; color: white; border-radius: 8px; box-sizing: border-box; text-align: center;">
+                <button id="btn-final-perma-delete" class="doppel-btn" style="background: #cc2222;" onclick="window.fuehreAbklebenAus('${klasse}')">
                     <span class="material-symbols-outlined">lock_open</span> JA, PERMANENT ABKLEBEN
-                </div>
+                </button>
             </div>
-        </div>`;
+        </div>
+        ${renderFooter([
+            { text: 'ZURÜCK', class: 'back', icon: 'arrow_back', onclick: backAction },
+            { text: 'ABBRECHEN', class: 'cancel', icon: 'close', onclick: 'closeEditor()' }
+        ])}`;
 
-    // 2. Footer (Standard-Buttons "Zurück" und "Abbrechen")
-    html += renderFooter([
-        { 
-            text: 'ZURÜCK', 
-            class: 'back', 
-            icon: 'arrow_back', 
-            onclick: `window.starteAbklebenWorkflow('${time}', '${slot}', '${klasse}')` 
-        },
-        { 
-            text: 'ABBRECHEN', 
-            class: 'cancel', 
-            icon: 'close', 
-            onclick: 'closeEditor()' 
-        }
-    ]);
-
-    // 3. UI neu aufbauen
-    modalContainer.innerHTML = '';
-    modalContainer.appendChild(header);
-    modalContainer.insertAdjacentHTML('beforeend', html);
-
-    // Fokus und Enter-Taste Handler
+    container.innerHTML = html;
     const pwInput = document.getElementById('abkleben-pw-field');
-    if (pwInput) {
-        pwInput.focus();
-        pwInput.onkeydown = function(e) {
-            if (e.key === 'Enter') {
-                window.fuehreAbklebenAus('${klasse}');
-            }
-        };
-    }
+    pwInput?.focus();
+    pwInput?.addEventListener('keydown', (e) => { if (e.key === 'Enter') window.fuehreAbklebenAus(klasse); });
 };
-   
 
-
-
-
-/**
- * 🔥 PHASE 3: SENDER KOMPLETT GEÄNDERT! Absenden via POST als strukturiertes JSON an die doPost
- */
 window.fuehreAbklebenAus = async function(klasse) {
     const pwFeld = document.getElementById('abkleben-pw-field');
     const deleteBtn = document.getElementById('btn-final-perma-delete');
     
-    if (!pwFeld || !pwFeld.value.trim()) {
-        alert("Bitte Passwort eingeben!");
-        return;
-    }
-
-    const eingegebenesPw = pwFeld.value.trim();
-
-    // 1. Passwort-Check im Frontend
-    if (eingegebenesPw !== userPw) {
+    if (!pwFeld?.value.trim()) { alert("Bitte Passwort eingeben!"); return; }
+    if (pwFeld.value.trim() !== userPw) {
         pwFeld.style.borderColor = "#c0392b";
         pwFeld.value = "";
         pwFeld.placeholder = "Falsches Passwort!";
-        pwFeld.focus();
         return;
     }
 
-    // 2. Button in Ladezustand versetzen
     if (deleteBtn) {
         deleteBtn.innerHTML = '<div class="eigenesmenu-loader" style="margin: 0 auto;"></div>';
         deleteBtn.style.pointerEvents = "none";
     }
     
-    // Grid sperren (visueller Schutz während der Server arbeitet)
     const gridContainer = document.querySelector('.stundentafel-container') || document.body;
     gridContainer.style.opacity = "0.6";
     gridContainer.style.pointerEvents = "none";
 
-    // 3. Payload für POST-Anfrage als sauberes JavaScript-Objekt vorbereiten
-    const dateVal = document.getElementById('datePicker').value;
-    const slotsParamString = window.slotsToClear.join(","); // Erzeugt z.B. "13" oder "13,18"
-    
     const payload = {
         action: "permaDelete",
-        pw: eingegebenesPw,
+        pw: pwFeld.value.trim(),
         kuerzel: userKuerzel,
         klasse: klasse,
-        slot: slotsParamString, 
-        startDate: dateVal
+        slot: window.slotsToClear.join(","), 
+        startDate: document.getElementById('datePicker').value
     };
 
     try {
-        console.log("Sende Löschbefehl via POST an Google Script für Slots:", slotsParamString);
-
-        // Anfrage umschalten auf Methode POST mit JSON-Body
         const response = await fetch(url, {
             method: "POST",
-            mode: "cors",
-            headers: {
-                "Content-Type": "text/plain;charset=utf-8" // Verhindert CORS-Preflight-Fehler bei Apps Script
-            },
+            headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         });
-
         const result = await response.json();
-        console.log("Server-Antwort erhalten:", result);
 
         if (result.status === "success") {
-            console.log(`Klasse ${klasse} erfolgreich aus DB entfernt.`);
-            
-            // --- NEU: News triggern, da die Klasse nun abgeklebt/gelöscht wurde ---
-            // Da 'slotsParamString' eine Liste wie "13,18" sein kann, 
-            // müssen wir die News für jeden Slot einzeln auslösen:
-            const betroffeneSlots = slotsParamString.split(",");
-            for (const s of betroffeneSlots) {
-                await window.triggerNewsWrapper("Abkleben", s, klasse);
-            }
-
-            closeEditor(); 
-            await loadPlan(); 
+            for (const s of window.slotsToClear) await window.triggerNewsWrapper("Abkleben", s, klasse);
+            closeEditor();
+            if (typeof syncPlan === 'function') syncPlan(); // ECHTZEIT-SYNC
         } else {
-            // Greift jetzt sauber auf result.msg aus deiner doPost zurück
-            throw new Error(result.msg || "Fehler von der Datenbank.");
+            throw new Error(result.msg || "Fehler.");
         }
-
     } catch (e) {
-        console.error("PermaDelete Error:", e);
         alert("Löschvorgang fehlgeschlagen: " + e.message);
-        
-        // Bei Fehler: Button wieder reaktivieren
         if (deleteBtn) {
-            deleteBtn.innerHTML = '<span class="btn-text" style="font-weight: bold; color:#fff;">JA, PERMANENT ABKLEBEN</span>';
+            deleteBtn.innerHTML = '<span class="material-symbols-outlined">lock_open</span> JA, PERMANENT ABKLEBEN';
             deleteBtn.style.pointerEvents = "auto";
         }
     } finally {
-        // Grid wieder freigeben
         gridContainer.style.opacity = "1";
         gridContainer.style.pointerEvents = "auto";
     }
 };
+
+
+    
 
 /* ============================================================
    10. NEWS-ZENTRALE & AUTOMATISCHE NOTIFIKATIONEN
