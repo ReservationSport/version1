@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2411,6 +2411,8 @@ window.showNews = function() {
             displayText = `<b>${news.verfasser || ''}</b> hat einen <b>Ausfall</b> für die Klasse <b>${news.klasse || ''}</b> eingetragen!`;
         } else if (newsTextLower.includes("outdoor")) {
             displayText = `<b>${news.verfasser || ''}</b> ist mit der Klasse <b>${news.klasse || ''}</b> "outdoor"!`;
+        } else if (newsTextLower.includes("badi")) { // <-- NEUE LOGIK
+            displayText = `<b>${news.verfasser || ''}</b> ist mit der Klasse <b>${news.klasse || ''}</b> in der <b>Badi</b>!`;
         } else if (newsTextLower.includes("beendet") || newsTextLower.includes("abgeklebt")) {
             displayText = `<b>${news.verfasser || ''}</b> hat die Klasse <b>${news.klasse || ''}</b> abgeklebt!`;
         } else {
@@ -2442,6 +2444,8 @@ window.showNews = function() {
     updateNewsDot();
 };
 
+
+    
 /**
  * Öffnet die Zentrale und aktualisiert im Hintergrund die Daten.
  */
