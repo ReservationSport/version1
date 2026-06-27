@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2137,7 +2137,7 @@ function prepareUpdateData(slotId, neueHalle, neueKlasse, neuesMaterial, neuerKo
 
 
 /* ============================================================
-   9. KLASSE ABKLEBEN (IDENTISCHES UI-DESIGN)
+   9. KLASSE ABKLEBEN (IDENTISCHES UI-DESIGN - FINAL)
    ============================================================ */
 
 window.starteAbklebenWorkflow = function(time, slot, klasse) {
@@ -2164,12 +2164,12 @@ window.starteAbklebenWorkflow = function(time, slot, klasse) {
         return;
     }
 
-    // 2. Header im identischen Design wie andere Tasks
+    // 2. Header im orangenen "Zielflaggen"-Design
     const headerHtml = `
         <div class="eigenesmenu-header">
-            <div id="dynamic-header-title">KLASSE ABKLEBEN</div>
+            <div id="dynamic-header-title" style="color: #e67e22; font-size: 1.2em; font-weight: bold;">KLASSE ABKLEBEN</div>
             <div id="dynamic-header-subtitle">Willst du die Aktion für die <b>gesamte Doppellektion</b> durchführen?</div>
-            <span class="material-symbols-outlined header-icon">block</span>
+            <span class="material-symbols-outlined header-icon" style="color: #e67e22;">flag_circle</span>
         </div>
     `;
 
@@ -2206,6 +2206,9 @@ window.starteAbklebenWorkflow = function(time, slot, klasse) {
         window.zeigePasswortFuerAbkleben(klasse, time, slot, true);
     });
 };
+
+
+    
 
 window.zeigePasswortFuerAbkleben = function(klasse, time, slot, isDoppel) {
     const container = document.querySelector('.eigenesmenu-container');
