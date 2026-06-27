@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1234</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3652,6 +3652,9 @@ function showNotizDetailPopup(klasse, notizText) {
     overlay.className = 'material-info-overlay';
     overlay.onclick = () => overlay.remove();
 
+    // Den Text mit .trim() bereinigen
+    const saubererText = (notizText || '').trim();
+
     overlay.innerHTML = `
     <div class="material-info-content" onclick="event.stopPropagation()" 
          style="width: 400px; border: 1px solid #ff9800; background: #222; padding: 25px; border-radius: 12px; color: #fff; text-align: left !important;">
@@ -3662,9 +3665,7 @@ function showNotizDetailPopup(klasse, notizText) {
         </div>
         
         <div style="background: #1a1a1a; padding: 15px; border-radius: 8px; border: 1px solid #444; border-left: 3px solid #ff9800; text-align: left !important;">
-            <div style="font-size: 1rem; color: #fff; word-wrap: break-word; white-space: pre-wrap; text-align: left !important; display: block;">
-                ${(notizText || '').trim()}
-            </div>
+            <div style="font-size: 1rem; color: #fff; word-wrap: break-word; white-space: pre-wrap; text-align: left !important; display: block;">${saubererText}</div>
         </div>
 
         <div style="height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 8px; border: 1px solid #444; background: #222; color: #aaa; margin-top: 20px;"
