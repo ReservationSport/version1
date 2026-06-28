@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1904,7 +1904,6 @@ window.loadPlan = async function() {
                 const slotData = plan[absoluteSlot] || {};
                 const klasse = slotData.klasse || "";
                 
-                // --- VERSCHOBEN-STATUS ---
                 if (klasse.trim().toLowerCase() === "verschoben") {
                     html += `<div class="box empty" data-slot="${absoluteSlot}" data-time="${zeitStr}"></div>`;
                     continue; 
@@ -1912,16 +1911,20 @@ window.loadPlan = async function() {
 
                 const halle = slotData.halle || "";
                 const typ = slotData.typ || ""; 
-                const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
                 const isAusfall = (halle === "Ausfall");
                 const isKlasseLeer = klasse.trim() === "";
                 
-                // Berechtigungsprüfung
-                const canEdit = !isKlasseLeer && myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase());
+                // --- NEUE LOGIK: VERFASSER-PRIORITÄT ---
+                // 1. Verfasser (Spalte K) aus Datenbank, falls vorhanden
+                // 2. data.lehrer aus Datenbank
+                // 3. Fallback auf Master-Liste (allClassTeachers)
+                const verfasser = slotData.verfasser || "";
+                const lehrerDaten = slotData.lehrer || "";
+                const lehrer = (verfasser !== "") ? verfasser : (lehrerDaten !== "" ? lehrerDaten : (allClassTeachers[klasse] || ""));
                 
+                const canEdit = !isKlasseLeer && myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase());
                 const bgFarbe = (window.hallenConfig[halle] && !isAusfall) ? window.hallenConfig[halle].color : '';
                 
-                // CSS Klassen dynamisch erstellen
                 const classList = [
                     "box",
                     isKlasseLeer ? "empty" : "",
@@ -1944,16 +1947,13 @@ window.loadPlan = async function() {
         });
         container.innerHTML = html;
 
-        // Icons nachladen
+        // Icons nachladen (Rest wie gehabt...)
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
             if (slotData.klasse && slotData.klasse.trim().toLowerCase() === "verschoben") return;
-
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (!box) return;
-
             if (slotData.material && slotData.material.trim() !== "") markBoxWithMaterialIcon(box, slotData.material, slotData.kommentar || "");
-
             if (slotData.kommentar && slotData.kommentar.trim() !== "") {
                 const notizElement = document.createElement('span');
                 notizElement.className = 'box-notiz-icon';
@@ -1995,7 +1995,6 @@ window.syncPlan = async function() {
         window.lastPlanData = json.plan; 
         if (json.hallenConfig) window.hallenConfig = json.hallenConfig;
         
-        // Wichtig: Berechtigungen bei Sync aktualisieren
         const userClasses = json.userClasses || [];
         
         Object.keys(json.plan).forEach(slot => {
@@ -2006,7 +2005,7 @@ window.syncPlan = async function() {
                 const data = json.plan[slot] || {};
                 const klasse = data.klasse || "";
                 
-                // 1. VERSCHOBEN-STATUS: 
+                // 1. VERSCHOBEN-STATUS
                 if (klasse.trim().toLowerCase() === "verschoben") {
                     box.innerHTML = ""; 
                     box.classList.remove('is-mine', 'not-mine', 'ausfall-mode');
@@ -2027,16 +2026,20 @@ window.syncPlan = async function() {
                     const isKlasseLeer = klasse.trim() === "";
                     const canEdit = !isKlasseLeer && userClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase());
                     
-                    // Berechtigungs-Klassen setzen (WICHTIG für CSS pointer-events)
                     box.classList.remove('is-mine', 'not-mine');
                     box.classList.add(isKlasseLeer ? 'empty' : (canEdit ? 'is-mine' : 'not-mine'));
                     box.style.cursor = canEdit ? 'pointer' : 'default';
 
                     const halle = data.halle || "";
-                    const lehrer = data.lehrer || allClassTeachers[klasse] || "";
                     const material = data.material || "";   
                     const kommentar = data.kommentar || ""; 
                     const typ = data.typ || ""; 
+
+                    // --- NEUE LOGIK: VERFASSER-PRIORITÄT ---
+                    // Priorität: 1. Verfasser (Spalte K), 2. Daten-Lehrer, 3. Master-Kürzel
+                    const verfasser = data.verfasser || "";
+                    const lehrerDaten = data.lehrer || "";
+                    const lehrer = (verfasser !== "") ? verfasser : (lehrerDaten !== "" ? lehrerDaten : (allClassTeachers[klasse] || ""));
 
                     const kLabel = box.querySelector('.klasse-label');
                     if (kLabel) kLabel.innerText = klasse;
@@ -2060,7 +2063,6 @@ window.syncPlan = async function() {
                                                     : "";
                     }
 
-                    // Material-Icons
                     markBoxWithMaterialIcon(box, material, kommentar);
 
                     // Lock-Icon
@@ -2093,11 +2095,9 @@ window.syncPlan = async function() {
             }
         });
 
-        // WICHTIG: Nach dem DOM-Update die Auswahl-Markierungen neu setzen
         if (typeof highlightFreeSlots === 'function') {
             highlightFreeSlots();
         }
-        
     } catch(e) {
         console.error("Sync fehlgeschlagen:", e);
     }
@@ -3230,14 +3230,10 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             break;
 
         case 'verschieben':
-    // Wir holen den aktuellen Lehrer direkt aus der bearbeiteten Box
-    const aktuellerLehrer = window.currentEditBox ? window.currentEditBox.querySelector('.lehrer-info').innerText : "";
-
-    // 1. Modus aktivieren inkl. Lehrer
     window.moveMode = { 
         sourceSlot: slot, 
         klasse: klasse, 
-        lehrer: aktuellerLehrer, // <--- HIER SPEICHERN WIR DEN LEHRER
+        verfasser: userKuerzel, // Wir speichern den Akteur
         date: document.getElementById('datePicker').value 
     };
     
@@ -4150,14 +4146,14 @@ window.handleMoveConfirm = async function(targetSlot) {
     const payloadOld = { ...payloadClear, slot: window.moveMode.sourceSlot, klasse: "verschoben" };
 
     // C. Schritt: Ziel-Slot mit NEUEN Daten füllen
-    const payloadNew = {
-        action: "saveBooking",
-        date: window.moveMode.date,
-        slot: targetSlot,
-        klasse: window.moveMode.klasse,
-        lehrer: window.moveMode.lehrer, // Dein mitgeführter Lehrer
-        pw: userPw
-    };
+   const payloadNew = {
+    action: "saveBooking",
+    date: window.moveMode.date,
+    slot: targetSlot,
+    klasse: window.moveMode.klasse,
+    verfasser: window.moveMode.verfasser, // Speichere den Verfasser in Spalte K
+    pw: userPw
+};
 
     try {
         // Reihenfolge: Erst Ziel leeren, dann Quelle leeren, dann Ziel belegen
