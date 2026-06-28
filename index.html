@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOhbngfhnhn</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3230,22 +3230,24 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             break;
 
         case 'verschieben':
-                    // 1. Modus aktivieren
-                    window.moveMode = { 
-                        sourceSlot: slot, 
-                        klasse: klasse, 
-                        date: document.getElementById('datePicker').value 
-                    };
-                    
-                    // 2. UI-Feedback: Editor schließen
-                    closeEditor();
-                    
-                    // 3. Markiere verfügbare Boxen
-                    highlightFreeSlots();
-                    
-                    // 4. Kurze Benachrichtigung
-                    alert("Wähle nun ein freies Zeitfenster für " + klasse);
-                    break;
+    // Wir holen den aktuellen Lehrer direkt aus der bearbeiteten Box
+    const aktuellerLehrer = window.currentEditBox ? window.currentEditBox.querySelector('.lehrer-info').innerText : "";
+
+    // 1. Modus aktivieren inkl. Lehrer
+    window.moveMode = { 
+        sourceSlot: slot, 
+        klasse: klasse, 
+        lehrer: aktuellerLehrer, // <--- HIER SPEICHERN WIR DEN LEHRER
+        date: document.getElementById('datePicker').value 
+    };
+    
+    closeEditor();
+    
+    // 2. Markiere verfügbare Boxen
+    highlightFreeSlots();
+    
+    alert("Wähle nun ein freies Zeitfenster für " + klasse);
+    break;
             
         case 'nachricht':
             // 🔥 NEU: Kein prompt() mehr! Wir laden das UI direkt ins Modal
@@ -4142,13 +4144,14 @@ window.handleMoveConfirm = async function(targetSlot) {
     };
 
     // 2. Request: Den neuen Slot mit der richtigen Klasse belegen
-    const payloadNew = {
-        action: "saveBooking",
-        date: window.moveMode.date,
-        slot: targetSlot,
-        klasse: window.moveMode.klasse,
-        pw: userPw
-    };
+   const payloadNew = {
+    action: "saveBooking",
+    date: window.moveMode.date,
+    slot: targetSlot,
+    klasse: window.moveMode.klasse,
+    lehrer: window.moveMode.lehrer || "", // Sende den aktuellen Lehrer aktiv mit!
+    pw: userPw
+};
 
     try {
         // Beide Requests nacheinander ausführen
