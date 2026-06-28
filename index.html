@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOhbngfhnhn</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -4075,27 +4075,32 @@ function executePayloads(payloadArray, onCompleteVisuals) {
    ============================================================ */
 
     
-   window.highlightFreeSlots = function() {
-    // Wir holen uns alle Boxen
+window.highlightFreeSlots = function() {
+    // ABBRUCH, wenn kein Verschieben aktiv ist
+    if (!window.moveMode) {
+        // Entferne alle Markierungen, falls der Modus beendet wurde
+        document.querySelectorAll('.box.is-selectable').forEach(box => {
+            box.classList.remove('is-selectable');
+            box.style.cursor = "default";
+            box.onclick = null;
+        });
+        return;
+    }
+
     const boxes = document.querySelectorAll('.box');
-    
     boxes.forEach(box => {
-        // Logik: Markiere alles, was 'empty' ist ODER keine Klassen wie 'is-mine'/'not-mine' hat
-        // (außer Header und Divider)
-        const isHeaderOrDivider = box.classList.contains('header-row') || box.classList.contains('divider-thin') || box.classList.contains('divider-thick');
+        const isHeaderOrDivider = box.classList.contains('header-row') || 
+                                  box.classList.contains('divider-thin') || 
+                                  box.classList.contains('divider-thick');
         
+        // Markiere nur, wenn 'empty' und kein Header
         if (box.classList.contains('empty') && !isHeaderOrDivider) {
             box.classList.add('is-selectable');
             box.style.cursor = "crosshair";
             
-            // WICHTIG: Event-Listener überschreiben/neu setzen
             box.onclick = function() {
                 handleMoveConfirm(box.getAttribute('data-slot'));
             };
-        } else {
-            // Falls eine Box nicht leer ist, entfernen wir die Markierung (falls sie vorher eine hatte)
-            box.classList.remove('is-selectable');
-            box.style.cursor = "default";
         }
     });
 };
@@ -4107,10 +4112,10 @@ window.handleMoveConfirm = async function(targetSlot) {
 
     // 1. Request: Den alten Slot auf "verschoben" setzen
     const payloadOld = {
-        action: "saveBooking", // Wir nutzen die bewährte Funktion!
+        action: "saveBooking",
         date: window.moveMode.date,
         slot: window.moveMode.sourceSlot,
-        klasse: "verschoben", // Das markiert den alten Platz
+        klasse: "verschoben",
         pw: userPw
     };
 
@@ -4119,7 +4124,7 @@ window.handleMoveConfirm = async function(targetSlot) {
         action: "saveBooking",
         date: window.moveMode.date,
         slot: targetSlot,
-        klasse: window.moveMode.klasse, // Die echte Klasse kommt hierher
+        klasse: window.moveMode.klasse,
         pw: userPw
     };
 
@@ -4130,16 +4135,24 @@ window.handleMoveConfirm = async function(targetSlot) {
 
         console.log("Verschieben erfolgreich abgeschlossen.");
         
-        // UI aufräumen
-        window.moveMode = null;
+        // --- UI AUFRÄUMEN ---
+        window.moveMode = null; // Modus beenden
+        
+        // Markierungen sofort entfernen, bevor der Plan neu lädt
         document.querySelectorAll('.is-selectable').forEach(b => {
             b.classList.remove('is-selectable');
+            b.style.cursor = "default";
             b.onclick = null;
         });
         
+        // Plan neu laden
         await loadPlan(); 
+        
     } catch (err) {
         console.error("Fehler beim Verschieben via saveBooking:", err);
+        // Falls Fehler, Modus sicherheitshalber zurücksetzen
+        window.moveMode = null;
+        highlightFreeSlots();
     }
 };
     
