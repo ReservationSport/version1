@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1898,10 +1898,12 @@ window.loadPlan = async function() {
                 const slotData = plan[absoluteSlot] || {};
                 const klasse = slotData.klasse || "";
                 
-                // --- NEUE LOGIK: VERSCHOBEN-STATUS ---
+                // --- KORRIGIERTE LOGIK: VERSCHOBEN-STATUS ---
+                // Wir zeichnen sie als "empty", entfernen aber "not-mine", 
+                // damit sie für den Move-Modus als wählbar erscheinen.
                 if (klasse.trim().toLowerCase() === "verschoben") {
-                    html += `<div class="box empty not-mine" data-slot="${absoluteSlot}" data-time="${zeitStr}"></div>`;
-                    continue; // Überspringt den Rest für diesen Slot
+                    html += `<div class="box empty" data-slot="${absoluteSlot}" data-time="${zeitStr}"></div>`;
+                    continue; 
                 }
 
                 const halle = slotData.halle || "";
@@ -1927,10 +1929,9 @@ window.loadPlan = async function() {
         });
         container.innerHTML = html;
 
-        // Icons nachladen (Notizen & Materialien)
+        // Icons nachladen
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
-            // Wir überspringen Icons, falls der Slot verschoben ist
             if (slotData.klasse && slotData.klasse.trim().toLowerCase() === "verschoben") return;
 
             const box = container.querySelector(`[data-slot="${slot}"]`);
@@ -1959,7 +1960,7 @@ window.loadPlan = async function() {
 
 
 /* ============================================================
-   SYNC PLAN - ROBUSTE VERSION (mit dynamischem Layout-Fix)
+   SYNC PLAN - OPTIMIERTE VERSION (Wählbar-Status bleibt erhalten)
    ============================================================ */
 window.syncPlan = async function() {
     if (isSaving) return; 
@@ -1987,17 +1988,19 @@ window.syncPlan = async function() {
                 const data = json.plan[slot] || {};
                 const klasse = data.klasse || "";
                 
-                // 1. VERSCHOBEN-STATUS: Alles leeren
+                // 1. VERSCHOBEN-STATUS: 
+                // Wir leeren den Inhalt, behalten aber die Box-Struktur bei, 
+                // damit die CSS-Klassen und das DOM-Element für die Auswahl erhalten bleiben.
                 if (klasse.trim().toLowerCase() === "verschoben") {
                     box.innerHTML = ""; 
-                    box.className = "box empty not-mine"; 
+                    box.className = "box empty"; // "not-mine" entfernt, damit sie wählbar bleibt!
                     box.style.backgroundColor = ""; 
                     return; 
                 }
 
-                // 2. LAYOUT-REPARATUR: Falls Box vorher "empty" war, Struktur einfügen
+                // 2. LAYOUT-REPARATUR: Falls Box vorher "empty" war, Struktur für neue Daten einfügen
                 if (box.classList.contains('empty') && klasse !== "") {
-                    box.className = "box is-mine"; // Basis-Klasse setzen
+                    box.className = "box is-mine"; 
                     box.innerHTML = `
                         <div class="klasse-label"></div>
                         <div class="lehrer-info"></div>
