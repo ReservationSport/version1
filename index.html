@@ -1942,7 +1942,7 @@ window.loadPlan = async function() {
 
 
 /* ============================================================
-   SYNC PLAN - VOLLSTÄNDIGE VERSION
+   SYNC PLAN - VOLLSTÄNDIGE VERSION (mit Verschiebe-Logik)
    ============================================================ */
 window.syncPlan = async function() {
     if (isSaving) return; 
@@ -1950,7 +1950,6 @@ window.syncPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
     
-    // Wir nutzen die gleiche Weiche wie in loadPlan
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const fetchUrl = isLocal ? 'data.json' : `${url}?date=${dp.value}&pw=${userPw}&kuerzel=${userKuerzel}`;
     
@@ -1970,13 +1969,22 @@ window.syncPlan = async function() {
             if (box) {
                 const data = json.plan[slot] || {};
                 const klasse = data.klasse || "";
+                
+                // --- NEUE LOGIK: VERSCHOBEN-STATUS ---
+                if (klasse.trim().toLowerCase() === "verschoben") {
+                    box.innerHTML = ""; // Alles entfernen
+                    box.className = "box empty not-mine"; // Klassen zurücksetzen
+                    box.style.backgroundColor = ""; // Farbe entfernen
+                    return; // Nichts weiter tun für diesen Slot
+                }
+
                 const halle = data.halle || "";
                 const lehrer = data.lehrer || allClassTeachers[klasse] || "";
                 const material = data.material || "";   
                 const kommentar = data.kommentar || ""; 
                 const typ = data.typ || ""; 
 
-                // Labels aktualisieren
+                // Labels aktualisieren (nur wenn nicht verschoben)
                 const hLabel = box.querySelector('.halle-label');
                 if (hLabel) hLabel.innerText = halle;
                 
@@ -1995,8 +2003,8 @@ window.syncPlan = async function() {
                 } else {
                     box.classList.remove('ausfall-mode');
                     const farbe = (window.hallenConfig && window.hallenConfig[halle]) 
-                                  ? window.hallenConfig[halle].color 
-                                  : "";
+                                    ? window.hallenConfig[halle].color 
+                                    : "";
                     box.style.backgroundColor = farbe;
                 }
 
@@ -2036,7 +2044,6 @@ window.syncPlan = async function() {
         console.error("Sync fehlgeschlagen:", e);
     }
 };
-
 
 
 
