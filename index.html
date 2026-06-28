@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOvbbsdbsfb</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -4144,12 +4144,16 @@ window.handleMoveConfirm = async function(targetSlot) {
     };
 
     // 2. Request: Den neuen Slot mit der richtigen Klasse belegen
-   const payloadNew = {
+  
+const payloadNew = {
     action: "saveBooking",
     date: window.moveMode.date,
     slot: targetSlot,
     klasse: window.moveMode.klasse,
-    lehrer: window.moveMode.lehrer || "", // Sende den aktuellen Lehrer aktiv mit!
+    lehrer: window.moveMode.lehrer, // Dein fix mitgegebenes Kürzel
+    material: "",                   // WICHTIG: Überschreibe altes Material
+    kommentar: "",                  // WICHTIG: Überschreibe alten Kommentar
+    typ: "",                        // WICHTIG: Status zurücksetzen
     pw: userPw
 };
 
