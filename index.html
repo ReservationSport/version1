@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1959,7 +1959,7 @@ window.loadPlan = async function() {
 
 
 /* ============================================================
-   SYNC PLAN - VOLLSTÄNDIGE VERSION (mit Verschiebe-Logik)
+   SYNC PLAN - ROBUSTE VERSION (mit dynamischem Layout-Fix)
    ============================================================ */
 window.syncPlan = async function() {
     if (isSaving) return; 
@@ -1987,29 +1987,39 @@ window.syncPlan = async function() {
                 const data = json.plan[slot] || {};
                 const klasse = data.klasse || "";
                 
-                // --- NEUE LOGIK: VERSCHOBEN-STATUS ---
+                // 1. VERSCHOBEN-STATUS: Alles leeren
                 if (klasse.trim().toLowerCase() === "verschoben") {
-                    box.innerHTML = ""; // Alles entfernen
-                    box.className = "box empty not-mine"; // Klassen zurücksetzen
-                    box.style.backgroundColor = ""; // Farbe entfernen
-                    return; // Nichts weiter tun für diesen Slot
+                    box.innerHTML = ""; 
+                    box.className = "box empty not-mine"; 
+                    box.style.backgroundColor = ""; 
+                    return; 
                 }
 
+                // 2. LAYOUT-REPARATUR: Falls Box vorher "empty" war, Struktur einfügen
+                if (box.classList.contains('empty') && klasse !== "") {
+                    box.className = "box is-mine"; // Basis-Klasse setzen
+                    box.innerHTML = `
+                        <div class="klasse-label"></div>
+                        <div class="lehrer-info"></div>
+                        <div class="halle-label"></div>
+                    `;
+                }
+
+                // 3. DATEN AKTUALISIEREN
                 const halle = data.halle || "";
                 const lehrer = data.lehrer || allClassTeachers[klasse] || "";
                 const material = data.material || "";   
                 const kommentar = data.kommentar || ""; 
                 const typ = data.typ || ""; 
 
-                // Labels aktualisieren (nur wenn nicht verschoben)
-                const hLabel = box.querySelector('.halle-label');
-                if (hLabel) hLabel.innerText = halle;
-                
                 const kLabel = box.querySelector('.klasse-label');
                 if (kLabel) kLabel.innerText = klasse;
                 
                 const lLabel = box.querySelector('.lehrer-info');
                 if (lLabel) lLabel.innerText = lehrer;
+                
+                const hLabel = box.querySelector('.halle-label');
+                if (hLabel) hLabel.innerText = halle;
                 
                 box.setAttribute('data-notiz', kommentar);
 
@@ -2019,10 +2029,9 @@ window.syncPlan = async function() {
                     box.style.backgroundColor = ""; 
                 } else {
                     box.classList.remove('ausfall-mode');
-                    const farbe = (window.hallenConfig && window.hallenConfig[halle]) 
-                                    ? window.hallenConfig[halle].color 
-                                    : "";
-                    box.style.backgroundColor = farbe;
+                    box.style.backgroundColor = (window.hallenConfig && window.hallenConfig[halle]) 
+                                                ? window.hallenConfig[halle].color 
+                                                : "";
                 }
 
                 // Material-Icons
