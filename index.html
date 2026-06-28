@@ -4146,12 +4146,13 @@ window.handleMoveConfirm = async function(targetSlot) {
     const payloadOld = { ...payloadClear, slot: window.moveMode.sourceSlot, klasse: "verschoben" };
 
     // C. Schritt: Ziel-Slot mit NEUEN Daten füllen
-   const payloadNew = {
+ const payloadNew = {
     action: "saveBooking",
     date: window.moveMode.date,
     slot: targetSlot,
     klasse: window.moveMode.klasse,
-    verfasser: window.moveMode.verfasser, // Speichere den Verfasser in Spalte K
+    lehrer: window.moveMode.lehrer, 
+    verfasser: userKuerzel, // <--- HIER MUSS DEIN KÜRZEL STEHEN
     pw: userPw
 };
 
