@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -54,7 +54,8 @@ body {
     grid-template-columns: 120px repeat(5, 1fr); 
     gap: 2px; 
     max-width: 1000px; 
-    margin: auto; 
+    margin: auto;
+    pointer-events: auto;
 }
 
 
@@ -263,6 +264,7 @@ body {
     cursor: default; 
     overflow: hidden;
     transition: none !important;
+    pointer-events: auto !important;
 }
 
 .box.empty { pointer-events: none; opacity: 0.5; }
@@ -1309,6 +1311,9 @@ body {
 .is-selectable {
     border: 2px dashed #ff9800 !important;
     animation: pulse 1.5s infinite;
+    pointer-events: auto !important;
+    cursor: crosshair !important;
+    z-index: 100 !important;
 }
 @keyframes pulse {
     0% { opacity: 1; }
