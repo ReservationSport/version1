@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2620,13 +2620,17 @@ window.openEditor = function(el, time, slot, klasse) {
                     <span class="material-symbols-outlined">trolley</span>
                     <span class="btn-text">${hatMaterial ? 'MATERIAL ÄNDERN' : 'MATERIAL BUCHEN'}</span>
                 </button>
-                <button class="eigenesmenu-item" data-action="ausfall" data-icon="${isAusfall ? 'settings_backup_restore' : 'block'}" data-title="Aktion: Ausfall für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
-                    <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
-                    <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
-                </button>
                 <button class="eigenesmenu-item" data-action="nachricht" data-icon="stylus_note" data-title="Erfasse eine Notiz für die Klasse <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">stylus_note</span>
                     <span class="btn-text">${hatNotiz ? 'NOTIZ BEARBEITEN' : 'NOTIZ HINZUFÜGEN'}</span>
+                </button>
+                <button class="eigenesmenu-item" data-action="verschieben" data-icon="swap_horiz" data-title="Verschiebe <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span> auf ein neues Zeitfenster">
+                    <span class="material-symbols-outlined">move_item</span>
+                    <span class="btn-text">LEKTION VERSCHIEBEN</span>
+                </button>
+                <button class="eigenesmenu-item" data-action="ausfall" data-icon="${isAusfall ? 'settings_backup_restore' : 'block'}" data-title="Aktion: Ausfall für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
+                    <span class="material-symbols-outlined">${isAusfall ? 'settings_backup_restore' : 'block'}</span>
+                    <span class="btn-text">${isAusfall ? 'AUSFALL AUFHEBEN' : 'AUSFALL EINTRAGEN'}</span>
                 </button>
                 <button class="eigenesmenu-item" data-action="beendet" data-icon="sports_score" data-title="Aktion: Abschluss für <span style='color: #ff8c00; font-weight: bold;'>${klasse}</span>">
                     <span class="material-symbols-outlined">sports_score</span>
