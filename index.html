@@ -4077,51 +4077,24 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 window.handleMoveConfirm = async function(targetSlot) {
     if (!window.moveMode) return;
 
-    // Payload vervollständigt mit Passwort und korrekten Feldern
     const payload = {
         action: "moveLektion",
-        pw: userPw, // WICHTIG: Passwort muss mit!
-        klasse: window.moveMode.klasse,
+        klasse: window.moveMode.klasse, // Prüfe: Ist dieser Wert korrekt?
         vonSlot: window.moveMode.sourceSlot,
         zuSlot: targetSlot,
-        date: window.moveMode.date
+        date: window.moveMode.date,
+        pw: userPw // WICHTIG: Hast du das Passwort mitgeschickt?
     };
 
-    try {
-        // Server-Call mit Header, damit Apps Script den JSON-Inhalt versteht
-        const response = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
+    const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }, // Sehr wichtig!
+        body: JSON.stringify(payload)
+    });
 
-        const result = await response.json();
-        console.log("Server Antwort:", result);
-
-        if (result.status !== "success") {
-            alert("Fehler beim Verschieben: " + (result.msg || "Unbekannter Fehler"));
-            return;
-        }
-
-        // Modus beenden und UI aufräumen
-        window.moveMode = null;
-        document.querySelectorAll('.is-selectable').forEach(b => {
-            b.classList.remove('is-selectable');
-            b.onclick = null;
-        });
-        
-        // Plan neu laden
-        await loadPlan(); 
-
-    } catch (err) {
-        console.error("Netzwerkfehler:", err);
-        alert("Verbindungsfehler beim Speichern.");
-    }
+    const result = await response.json();
+    console.log("Server Antwort:", result);
 };
-
-
-
-
     
 
 </script>
