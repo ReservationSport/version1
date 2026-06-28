@@ -306,6 +306,12 @@ body {
     z-index: 100;
 }
 
+.box.not-mine {
+    pointer-events: none; /* Blockiert Klicks komplett */
+    cursor: default !important;
+}
+
+    
 .material-indicator {
     transition: transform 0.2s ease; /* Macht den Übergang weich */
 }
@@ -1845,7 +1851,7 @@ function getFetchUrl(dateVal) {
 
 
 /* ============================================================
-   LOAD PLAN - VOLLSTÄNDIGE VERSION (mit Verschiebe-Logik)
+   LOAD PLAN - VOLLSTÄNDIGE & ROBUSTE VERSION
    ============================================================ */
 window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
@@ -1898,9 +1904,7 @@ window.loadPlan = async function() {
                 const slotData = plan[absoluteSlot] || {};
                 const klasse = slotData.klasse || "";
                 
-                // --- KORRIGIERTE LOGIK: VERSCHOBEN-STATUS ---
-                // Wir zeichnen sie als "empty", entfernen aber "not-mine", 
-                // damit sie für den Move-Modus als wählbar erscheinen.
+                // --- VERSCHOBEN-STATUS ---
                 if (klasse.trim().toLowerCase() === "verschoben") {
                     html += `<div class="box empty" data-slot="${absoluteSlot}" data-time="${zeitStr}"></div>`;
                     continue; 
@@ -1910,12 +1914,23 @@ window.loadPlan = async function() {
                 const typ = slotData.typ || ""; 
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
                 const isAusfall = (halle === "Ausfall");
-                const canEdit = myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase() && klasse.trim() !== "");
+                const isKlasseLeer = klasse.trim() === "";
+                
+                // Berechtigungsprüfung
+                const canEdit = !isKlasseLeer && myClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase());
                 
                 const bgFarbe = (window.hallenConfig[halle] && !isAusfall) ? window.hallenConfig[halle].color : '';
                 
+                // CSS Klassen dynamisch erstellen
+                const classList = [
+                    "box",
+                    isKlasseLeer ? "empty" : "",
+                    canEdit ? "is-mine" : "not-mine",
+                    isAusfall ? "ausfall-mode" : ""
+                ].filter(Boolean).join(" ");
+                
                 html += `
-                <div class="box ${klasse.trim() === "" ? 'empty' : ''} ${!canEdit ? 'not-mine' : 'is-mine'} ${isAusfall ? 'ausfall-mode' : ''}" 
+                <div class="${classList}" 
                         data-slot="${absoluteSlot}" data-time="${zeitStr}" 
                         style="background-color: ${bgFarbe}; cursor: ${canEdit ? 'pointer' : 'default'}">
                         <div class="klasse-label">${klasse}</div>
@@ -1980,6 +1995,9 @@ window.syncPlan = async function() {
         window.lastPlanData = json.plan; 
         if (json.hallenConfig) window.hallenConfig = json.hallenConfig;
         
+        // Wichtig: Berechtigungen bei Sync aktualisieren
+        const userClasses = json.userClasses || [];
+        
         Object.keys(json.plan).forEach(slot => {
             if (window.syncBlockierteSlots && window.syncBlockierteSlots[slot]) return;
 
@@ -1989,18 +2007,15 @@ window.syncPlan = async function() {
                 const klasse = data.klasse || "";
                 
                 // 1. VERSCHOBEN-STATUS: 
-                // Wir leeren den Inhalt, entfernen alte Klassen, aber lassen is-selectable in Ruhe.
                 if (klasse.trim().toLowerCase() === "verschoben") {
                     box.innerHTML = ""; 
                     box.classList.remove('is-mine', 'not-mine', 'ausfall-mode');
                     box.classList.add('empty'); 
                     box.style.backgroundColor = ""; 
-                    // Kein 'return' hier, damit wir weiter unten ggf. Icons entfernen können
                 } else {
-                    // 2. LAYOUT-REPARATUR: Falls Box vorher "empty" war, Struktur für neue Daten einfügen
+                    // 2. LAYOUT-REPARATUR
                     if (box.classList.contains('empty') && klasse !== "") {
                         box.classList.remove('empty');
-                        box.classList.add('is-mine');
                         box.innerHTML = `
                             <div class="klasse-label"></div>
                             <div class="lehrer-info"></div>
@@ -2008,7 +2023,15 @@ window.syncPlan = async function() {
                         `;
                     }
 
-                    // 3. DATEN AKTUALISIEREN
+                    // 3. DATEN AKTUALISIEREN & BERECHTIGUNG PRÜFEN
+                    const isKlasseLeer = klasse.trim() === "";
+                    const canEdit = !isKlasseLeer && userClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase());
+                    
+                    // Berechtigungs-Klassen setzen (WICHTIG für CSS pointer-events)
+                    box.classList.remove('is-mine', 'not-mine');
+                    box.classList.add(isKlasseLeer ? 'empty' : (canEdit ? 'is-mine' : 'not-mine'));
+                    box.style.cursor = canEdit ? 'pointer' : 'default';
+
                     const halle = data.halle || "";
                     const lehrer = data.lehrer || allClassTeachers[klasse] || "";
                     const material = data.material || "";   
@@ -2070,7 +2093,7 @@ window.syncPlan = async function() {
             }
         });
 
-        // WICHTIG: Nach dem DOM-Update die Auswahl-Markierungen und Klick-Events neu setzen
+        // WICHTIG: Nach dem DOM-Update die Auswahl-Markierungen neu setzen
         if (typeof highlightFreeSlots === 'function') {
             highlightFreeSlots();
         }
@@ -2079,7 +2102,6 @@ window.syncPlan = async function() {
         console.error("Sync fehlgeschlagen:", e);
     }
 };
-
 
 
 
