@@ -1828,13 +1828,12 @@ function getFetchUrl(dateVal) {
 
 
 /* ============================================================
-   LOAD PLAN - VOLLSTÄNDIGE VERSION
+   LOAD PLAN - VOLLSTÄNDIGE VERSION (mit Verschiebe-Logik)
    ============================================================ */
 window.loadPlan = async function() {
     const dp = document.getElementById('datePicker');
     const container = document.getElementById('plan-container'); 
     
-    // 1. Lokale/Online-Weiche: Nutzt data.json, wenn du lokal arbeitest
     const isLocal = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
     const dateVal = dp.value;
     const fetchUrl = isLocal ? 'data.json' : `${url}?date=${dateVal}&pw=${userPw}&kuerzel=${userKuerzel}`;
@@ -1844,7 +1843,6 @@ window.loadPlan = async function() {
     container.innerHTML = ""; 
     if (typeof updateNavButtons === 'function') updateNavButtons();
 
-    // Wochenende-Check
     const dateObj = new Date(dateVal.replace(/-/g, "/")); 
     if (dateObj.getDay() === 0 || dateObj.getDay() === 6) { 
         container.innerHTML = `<div class="box info-box" style="grid-column: span 6; background: #333; color: #e67e22; padding: 40px; font-size: 1.2rem;">Mach mal Pause! Es ist Wochenende...</div>`; 
@@ -1860,7 +1858,6 @@ window.loadPlan = async function() {
             return; 
         }
         
-        // Zuweisungen
         if (json.verfügbareMaterialien) verfügbareMaterialien = json.verfügbareMaterialien;
         window.hallenConfig = json.hallenConfig || {}; 
         const plan = json.plan || {}; 
@@ -1883,6 +1880,13 @@ window.loadPlan = async function() {
                 const absoluteSlot = (rowIndex * 5) + i; 
                 const slotData = plan[absoluteSlot] || {};
                 const klasse = slotData.klasse || "";
+                
+                // --- NEUE LOGIK: VERSCHOBEN-STATUS ---
+                if (klasse.trim().toLowerCase() === "verschoben") {
+                    html += `<div class="box empty not-mine" data-slot="${absoluteSlot}" data-time="${zeitStr}"></div>`;
+                    continue; // Überspringt den Rest für diesen Slot
+                }
+
                 const halle = slotData.halle || "";
                 const typ = slotData.typ || ""; 
                 const lehrer = slotData.lehrer || allClassTeachers[klasse] || "";
@@ -1909,6 +1913,9 @@ window.loadPlan = async function() {
         // Icons nachladen (Notizen & Materialien)
         Object.keys(plan).forEach(slot => {
             const slotData = plan[slot] || {};
+            // Wir überspringen Icons, falls der Slot verschoben ist
+            if (slotData.klasse && slotData.klasse.trim().toLowerCase() === "verschoben") return;
+
             const box = container.querySelector(`[data-slot="${slot}"]`);
             if (!box) return;
 
