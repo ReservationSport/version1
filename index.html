@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOadsdasdsd</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1343,19 +1343,14 @@ body {
 }
 
 
-/* Alles im Container ist nicht klickbar */
-.move-mode-active .box {
+/* 1. Wenn Modus aktiv: Der gesamte Container blockiert Klicks */
+.move-mode-active #plan-container {
     pointer-events: none;
 }
 
-/* Nur die leeren, anwählbaren Boxen werden für die Maus freigeschaltet */
+/* 2. Wir erlauben Klicks NUR für Boxen mit der Klasse .is-selectable */
 .move-mode-active .box.is-selectable {
     pointer-events: auto !important;
-}
-
-/* Die Quell-Box soll auch nicht klickbar sein, um versehentliches "auf sich selbst klicken" zu verhindern */
-.move-mode-active .box.is-being-moved {
-    pointer-events: none !important;
 }
 
 
@@ -4135,36 +4130,44 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 
     
 window.highlightFreeSlots = function() {
-    // 1. ABBRUCH-LOGIK
+    const boxes = document.querySelectorAll('.box');
+
+    // 1. ABBRUCH-LOGIK (Reset)
     if (!window.moveMode) {
-        document.querySelectorAll('.box').forEach(box => {
+        boxes.forEach(box => {
             box.classList.remove('is-selectable', 'is-being-moved');
             box.style.cursor = "default";
+            box.style.pointerEvents = "auto"; // Wieder freigeben
             box.onclick = null;
         });
         return;
     }
 
     // 2. AKTIVIERUNGS-LOGIK
-    const boxes = document.querySelectorAll('.box');
-    const sourceSlot = window.moveMode.sourceSlot; // Hier den Slot der aktiven Box abgreifen
+    const sourceSlot = window.moveMode.sourceSlot;
 
     boxes.forEach(box => {
         const isHeaderOrDivider = box.classList.contains('header-row') || 
                                   box.classList.contains('divider-thin') || 
                                   box.classList.contains('divider-thick');
         
-        // A) Ist das die Box, die verschoben wird? -> Leuchten!
+        // A) Quell-Box: Leuchten, aber Klicks blockieren
         if (box.getAttribute('data-slot') == sourceSlot) {
             box.classList.add('is-being-moved');
+            box.style.pointerEvents = "none"; // Hier kann man nicht klicken
         } 
-        // B) Ist es eine freie Box? -> Anwählbar machen
+        // B) Freie Box: Anwählbar machen
         else if (box.classList.contains('empty') && !isHeaderOrDivider) {
             box.classList.add('is-selectable');
             box.style.cursor = "crosshair";
+            box.style.pointerEvents = "auto"; // Klicks erlauben
             box.onclick = function() {
                 handleMoveConfirm(box.getAttribute('data-slot'));
             };
+        }
+        // C) Alle anderen (Belegt oder Header): Blockieren
+        else {
+            box.style.pointerEvents = "none"; // Alle anderen Klicks töten
         }
     });
 };
