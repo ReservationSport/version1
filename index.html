@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOhfghfghf</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2687,7 +2687,16 @@ window.triggerNewsWrapper = async function(aktion, slot, klasse, kuerzel) {
 
     
 window.openEditor = function(el, time, slot, klasse) {
+    // --- NEUER TÜRSTEHER ---
+    // Wenn der Verschiebemodus aktiv ist, darf sich der Editor für NICHTS öffnen!
+    if (window.moveMode) {
+        console.log("Verschiebemodus aktiv: Editor blockiert.");
+        return; 
+    }
+    // -----------------------
+
     closeEditor();
+    // ... restlicher Code ...
 
     const absoluteSlot = el.getAttribute('data-slot') || slot;
     window.currentEditSlot = absoluteSlot;
