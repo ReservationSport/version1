@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZOfasdfasdas</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -3278,26 +3278,28 @@ window.handleMenuChoice = function(action, time, slot, klasse) {
             break;
 
         case 'verschieben':
-            // 1. Modus aktivieren
-            window.moveMode = { 
-                sourceSlot: slot, 
-                klasse: klasse, 
-                verfasser: userKuerzel, 
-                date: document.getElementById('datePicker').value 
-            };
-            
-            // Schutz: Alle Boxen im Plan deaktivieren, außer die Ziel-Boxen
-            // Die CSS-Klasse 'move-mode-active' sorgt für pointer-events: none auf allen Boxen
-            document.getElementById('plan-container').classList.add('move-mode-active');
-            
-            closeEditor();
-            
-            // 2. Markiere verfügbare Boxen (fügt 'is-selectable' hinzu, 
-            // welche durch CSS wieder 'pointer-events: auto' erhält)
-            highlightFreeSlots();
-            
-            alert("Wähle nun ein freies Zeitfenster für " + klasse);
-            break;
+    // Wir holen uns die aktuellen Daten der Box, die wir verschieben wollen
+    // Gehe davon aus, dass du das Box-Element oder die Daten dazu hast:
+    const boxElement = document.querySelector(`[data-slot="${slot}"]`);
+    
+    window.moveMode = { 
+        sourceSlot: slot, 
+        klasse: klasse, 
+        verfasser: userKuerzel, 
+        date: document.getElementById('datePicker').value,
+        // HIER DIE DATEN RETTEN:
+        halle: boxElement.dataset.halle || "",
+        lehrer: boxElement.dataset.lehrer || "",
+        material: boxElement.dataset.material || "",
+        kommentar: boxElement.dataset.kommentar || "",
+        typ: boxElement.dataset.typ || ""
+    };
+    
+    document.getElementById('plan-container').classList.add('move-mode-active');
+    closeEditor();
+    highlightFreeSlots();
+    alert("Wähle nun ein freies Zeitfenster für " + klasse);
+    break;
             
         case 'nachricht':
             // 🔥 NEU: Kein prompt() mehr! Wir laden das UI direkt ins Modal
