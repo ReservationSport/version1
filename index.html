@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2019,6 +2019,26 @@ window.loadPlan = async function() {
 };
 
 
+
+/* ============================================================
+   ZENTRALE KLICK-STEUERUNG
+   ============================================================ */
+window.setBoxClick = function(box, klasse, slot, canEdit) {
+    box.onclick = function(e) {
+        // 1. Wenn Verschiebemodus aktiv: Klick komplett blockieren
+        if (window.moveMode) {
+            e.stopPropagation();
+            return;
+        }
+        
+        // 2. Wenn keine Berechtigung: Nichts tun
+        if (!canEdit) return;
+
+        // 3. Erst hier den Editor öffnen
+        openEditor(box, null, slot, klasse);
+    };
+};
+
 /* ============================================================
    SYNC PLAN - ROBUSTE VERSION
    ============================================================ */
@@ -2049,19 +2069,18 @@ window.syncPlan = async function() {
             if (box) {
                 const data = json.plan[slot] || {};
                 const klasse = data.klasse || "";
-                
-                // Status prüfen
                 const isLeer = (klasse.trim() === "" || klasse.trim().toLowerCase() === "verschoben");
 
                 if (isLeer) {
-                    // --- BOX KOMPLETT LEER MACHEN ---
+                    // LEERE BOX
                     box.innerHTML = ""; 
                     box.classList.remove('is-mine', 'not-mine', 'ausfall-mode');
                     box.classList.add('empty'); 
                     box.style.backgroundColor = ""; 
                     box.style.cursor = "default";
+                    box.onclick = null; // Klick entfernen
                 } else {
-                    // --- BOX BELEGEN / LAYOUT REPARIEREN ---
+                    // BELEGTE BOX
                     if (box.classList.contains('empty')) {
                         box.classList.remove('empty');
                         box.innerHTML = `
@@ -2071,14 +2090,16 @@ window.syncPlan = async function() {
                         `;
                     }
 
-                    // Berechtigung prüfen
                     const canEdit = userClasses.some(c => klasse.trim().toLowerCase() === c.trim().toLowerCase());
                     
                     box.classList.remove('is-mine', 'not-mine');
                     box.classList.add(canEdit ? 'is-mine' : 'not-mine');
                     box.style.cursor = canEdit ? 'pointer' : 'default';
 
-                    // Daten setzen
+                    // Klick-Handler zentral setzen (schützt vor unberechtigten Klicks)
+                    setBoxClick(box, klasse, slot, canEdit);
+
+                    // ... [Rest der Datenbefüllung identisch] ...
                     const halle = data.halle || "";
                     const material = data.material || "";   
                     const kommentar = data.kommentar || ""; 
@@ -2105,7 +2126,7 @@ window.syncPlan = async function() {
 
                     markBoxWithMaterialIcon(box, material, kommentar);
 
-                    // Icons (Lock & Notiz)
+                    // Icons
                     let lockIcon = box.querySelector('.lock-icon-container');
                     if (!lockIcon) {
                         lockIcon = document.createElement('div');
@@ -2123,9 +2144,9 @@ window.syncPlan = async function() {
                         neuesNotizIcon.className = 'box-notiz-icon';
                         neuesNotizIcon.innerHTML = '<span class="material-symbols-outlined" style="color: #ff9800; font-size: 22px; line-height: 1;">stylus_note</span>';
                         Object.assign(neuesNotizIcon.style, { position: 'absolute', top: '-2px', left: '4px', cursor: 'pointer', zIndex: '5' });
-                        neuesNotizIcon.onclick = function(event) {
-                            event.stopPropagation();
-                            if (typeof showNotizDetailPopup === "function") showNotizDetailPopup(klasse, kommentar);
+                        neuesNotizIcon.onclick = function(e) { 
+                            e.stopPropagation(); 
+                            if (typeof showNotizDetailPopup === "function") showNotizDetailPopup(klasse, kommentar); 
                         };
                         box.appendChild(neuesNotizIcon);
                     }
@@ -2133,15 +2154,17 @@ window.syncPlan = async function() {
             }
         });
 
-        if (typeof highlightFreeSlots === 'function') {
-            highlightFreeSlots();
-        }
+        // Nach dem Sync wieder den Verschiebemodus-Schutz auffrischen
+        if (typeof highlightFreeSlots === 'function') highlightFreeSlots();
     } catch(e) {
         console.error("Sync fehlgeschlagen:", e);
     }
 };
 
 
+
+
+    
 
 // Variable außerhalb der Funktion definieren
 let isNavigating = false; 
