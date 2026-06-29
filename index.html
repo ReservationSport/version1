@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -4202,52 +4202,52 @@ window.highlightFreeSlots = function() {
 window.handleMoveConfirm = async function(targetSlot) {
     if (!window.moveMode) return;
 
-    // 1. CSS-Blockade sofort aufheben, damit der Plan wieder normal reagiert
-    document.getElementById('plan-container').classList.remove('move-mode-active');
-
-    // A. Schritt: Ziel-Slot leeren (Hard Reset)
+    // A. Ziel-Slot leeren (Hard Reset)
     const payloadClear = {
         action: "saveBooking",
         date: window.moveMode.date,
         slot: targetSlot,
-        klasse: "",
-        halle: "",
-        lehrer: "",
-        material: "",
-        kommentar: "",
-        typ: "",
+        klasse: "", halle: "", lehrer: "", material: "", kommentar: "", typ: "",
         pw: userPw
     };
 
-    // B. Schritt: Alten Slot leeren
+    // B. Alten Slot leeren
     const payloadOld = { 
         ...payloadClear, 
-        slot: window.moveMode.sourceSlot, 
-        klasse: "" // Auf "" setzen statt "verschoben", um keine Geister-Daten zu erzeugen
+        slot: window.moveMode.sourceSlot 
     };
 
-    // C. Schritt: Ziel-Slot mit NEUEN Daten füllen
+    // C. Ziel-Slot belegen (Vollständiger Datensatz!)
+    // ACHTUNG: Hier musst du sicherstellen, dass alle Felder aus window.moveMode kommen,
+    // falls du die Daten der alten Buchung mitnimmst.
     const payloadNew = {
         action: "saveBooking",
         date: window.moveMode.date,
         slot: targetSlot,
         klasse: window.moveMode.klasse,
+        halle: window.moveMode.halle || "",        // Sicherstellen, dass diese Felder dabei sind
+        lehrer: window.moveMode.lehrer || "",
+        material: window.moveMode.material || "",
+        kommentar: window.moveMode.kommentar || "",
+        typ: window.moveMode.typ || "",
         verfasser: window.moveMode.verfasser,
         pw: userPw
     };
 
     try {
-        // Die Reihenfolge: Erst Quelle leeren, dann Ziel leeren, dann Ziel belegen
-        // Das verhindert, dass Daten bei Ziel-Kollisionen falsch überschrieben werden
+        // Erst Quelle leeren, dann Ziel leeren, dann Ziel neu beschreiben
         await fetch(url, { method: "POST", body: JSON.stringify(payloadOld) });
         await fetch(url, { method: "POST", body: JSON.stringify(payloadClear) });
         await fetch(url, { method: "POST", body: JSON.stringify(payloadNew) });
 
+        // ERST NACH erfolgreichem Fetch Modus beenden und UI säubern
         window.moveMode = null;
-        await loadPlan(); // Lädt den Plan neu und bereinigt alle CSS-Zustände (leuchten/blinkend)
+        document.getElementById('plan-container').classList.remove('move-mode-active');
+        
+        await loadPlan(); 
     } catch (err) {
         console.error("Fehler beim Verschieben:", err);
-        // Fallback: Wenn ein Fehler passiert, trotzdem den Modus zurücksetzen
+        // Aufräumen bei Fehler
         document.getElementById('plan-container').classList.remove('move-mode-active');
         window.moveMode = null;
         loadPlan();
