@@ -1393,9 +1393,9 @@ body {
 <body>
 
     <div id="loadingOverlay">
-        <div class="spinner"></div>
-        <p>Stundenplan wird geladen...</p>
-    </div>
+    <div class="spinner"></div>
+    <p id="loadingText">Stundenplan wird geladen...</p>
+</div>
     
     <div id="global-loader" class="global-loader" style="display:none;"></div>
 
@@ -1910,6 +1910,41 @@ function getFetchUrl(dateVal) {
 }
 
 
+
+
+/* ============================================================
+   LADE-OVERLAY
+   ============================================================ */
+
+    
+window.showLoading = function(mode) {
+    const overlay = document.getElementById('loadingOverlay');
+    const textEl = overlay.querySelector('p');
+    const spinner = overlay.querySelector('.spinner');
+
+    // Mappings für deine vier gewünschten Modi
+    const statusText = {
+        'initial': 'Stundenplan wird geladen...',
+        'refresh': 'Stundenplan wird aktualisiert...',
+        'saving': 'Änderung wird gespeichert...',
+        'day': 'Gewählter Tag wird geladen...'
+    };
+
+    // Text setzen (Fallback auf 'initial', falls Modus unbekannt)
+    textEl.innerText = statusText[mode] || statusText['initial'];
+    
+    // Sicherstellen, dass der Spinner sichtbar ist
+    spinner.style.display = 'block';
+    
+    // Overlay einblenden
+    overlay.classList.add('is-visible');
+};
+
+window.hideLoading = function() {
+    document.getElementById('loadingOverlay').classList.remove('is-visible');
+};
+
+    
 
 /* ============================================================
    LOAD PLAN - VOLLSTÄNDIGE & ROBUSTE VERSION
@@ -4270,6 +4305,9 @@ window.highlightFreeSlots = function() {
 window.handleMoveConfirm = async function(targetSlot) {
     if (!window.moveMode) return;
 
+    // 1. Overlay mit dem Status 'saving' starten
+    showLoading('saving');
+
     // A. Ziel vorbereiten (alles leer machen)
     const payloadClear = {
         action: "saveBooking",
@@ -4280,39 +4318,41 @@ window.handleMoveConfirm = async function(targetSlot) {
     };
 
     // B. Quell-Slot leeren
-    // WICHTIG: Wenn du in der DB sehen willst, dass dort verschoben wurde, 
-    // setze klasse: "verschoben"
     const payloadOld = { 
         ...payloadClear, 
         slot: window.moveMode.sourceSlot,
-        klasse: "verschoben" // So siehst du in der DB, was passiert ist
+        klasse: "verschoben" 
     };
 
     // C. Ziel-Slot belegen
     const payloadNew = {
-        ...window.moveMode, // Hier kopieren wir ALLES aus moveMode direkt rein
+        ...window.moveMode, 
         action: "saveBooking",
-        slot: targetSlot,   // Slot überschreiben (da Ziel-Slot)
+        slot: targetSlot,  
         pw: userPw
     };
 
     try {
-        // 1. Quelle markieren/leeren
+        // Sequentielle Abarbeitung der API-Calls
         await fetch(url, { method: "POST", body: JSON.stringify(payloadOld) });
-        // 2. Ziel sicher leeren (falls dort schon was war)
         await fetch(url, { method: "POST", body: JSON.stringify(payloadClear) });
-        // 3. Ziel mit den alten Daten des Quell-Slots neu belegen
         await fetch(url, { method: "POST", body: JSON.stringify(payloadNew) });
 
-        // Cleanup
+        // Cleanup des Modus
         window.moveMode = null;
         document.getElementById('plan-container').classList.remove('move-mode-active');
+        
+        // Finales Laden des Plans (lädt das Overlay wieder aus, wenn es fertig ist)
         await loadPlan(); 
+        
     } catch (err) {
         console.error("Fehler beim Verschieben:", err);
         document.getElementById('plan-container').classList.remove('move-mode-active');
         window.moveMode = null;
-        loadPlan();
+        await loadPlan();
+    } finally {
+        // Sicherstellen, dass das Overlay in jedem Fall verschwindet
+        hideLoading();
     }
 };
     
