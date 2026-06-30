@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO11111111111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1462,7 +1462,7 @@ body {
     </div>
 
     <div class="nav-section nav-right">
-        <button class="refresh-btn" onclick="changeDayAndLoad(document.getElementById('datePicker').value)" title="Aktualisieren">
+        <button class="refresh-btn" onclick="changeDayAndLoad(document.getElementById('datePicker').value, 'refresh')" title="Aktualisieren">
             <span class="material-symbols-outlined">refresh</span>
         </button>
     </div>
@@ -2238,14 +2238,15 @@ let isNavigating = false;
 // Stelle sicher, dass diese Variable global existiert
 window.isNavigating = window.isNavigating || false;
 
-async function changeDayAndLoad(zielDatum) {
+
+    
+async function changeDayAndLoad(zielDatum, mode = 'initial') {
     // 1. Schutz gegen Doppel-Klicks
     if (window.isNavigating) return;
     window.isNavigating = true;
 
-    // UI-Elemente finden
+    // UI-Elemente
     const dp = document.getElementById('datePicker');
-    const overlay = document.getElementById('loadingOverlay');
     
     // Datum setzen
     if (dp) {
@@ -2257,13 +2258,10 @@ async function changeDayAndLoad(zielDatum) {
         window.updateDateText(zielDatum);
     }
     
-    // UI Feedback
+    // 2. Lotse: Overlay aktivieren (mit dem gewünschten Modus)
+    // Die 300ms-Verzögerung ist hier nicht mehr nötig, da der Lotse direkt reagiert.
+    showLoading(mode);
     document.body.style.opacity = "0.7"; 
-    
-    // 2. Timer: Overlay erst nach 300ms zeigen
-    const timer = setTimeout(() => {
-        if (overlay) overlay.classList.add('is-visible');
-    }, 300); 
 
     try {
         // Sicherstellen, dass loadPlan existiert
@@ -2277,20 +2275,18 @@ async function changeDayAndLoad(zielDatum) {
         alert("Der Plan konnte nicht geladen werden. Bitte versuche es erneut.");
     } finally {
         // 3. Immer aufräumen
-        clearTimeout(timer);
-        if (overlay) overlay.classList.remove('is-visible');
+        hideLoading();
         document.body.style.opacity = "1";
         
         // WICHTIG: Sperre IMMER aufheben, egal was passiert
         window.isNavigating = false;
         
-        // Navigation-Buttons nach dem Laden aktualisieren (Sichtbarkeit prüfen)
+        // Navigation-Buttons nach dem Laden aktualisieren
         if (typeof updateNavButtons === 'function') {
             updateNavButtons();
         }
     }
 }
-
 
     
 /* ============================================================
