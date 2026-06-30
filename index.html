@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZOsdvdsvvwv</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1322,7 +1322,6 @@ body {
    ============================================================ */
 
 /* 1. Die freie Box (Ziel): Pulsieren und Crosshair */
-/* Wir fügen .move-mode-highlight hinzu, damit sie nicht abgedunkelt wird */
 .is-selectable.move-mode-highlight {
     border: 2px dashed #ff9800 !important;
     animation: pulse 1.5s infinite;
@@ -1360,13 +1359,19 @@ body {
     pointer-events: auto;
 }
 
-/* 4. Hover-Blockade und Abdunkelung */
+/* 4. Hover-Blockade: Verhindert Standard-Effekte im Modus */
 .move-mode-active *:hover {
     cursor: default !important;
     box-shadow: none !important;
 }
 
-/* WICHTIG: Die Abdunkelung greift nur, wenn die Klasse .move-mode-highlight FEHLT */
+/* Freigabe für das Crosshair auf den Ziel-Boxen */
+/* Spezifischer Selektor, damit diese Regel gegen das globale * überschreibt */
+.move-mode-active .box.move-mode-highlight:hover {
+    cursor: crosshair !important;
+}
+
+/* Abdunkelung aller anderen Boxen */
 .move-mode-active .box:not(.move-mode-highlight) {
     opacity: 0.3 !important;
     pointer-events: none !important;
