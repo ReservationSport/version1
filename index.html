@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -2023,25 +2023,34 @@ window.loadPlan = async function() {
 /* ============================================================
    ZENTRALE KLICK-STEUERUNG
    ============================================================ */
+// Ändere diese Funktion so um, dass sie nicht mehr die Eigenschaft überschreibt, 
+// sondern eine Ebene tiefer prüft:
+
 window.setBoxClick = function(box, klasse, slot, canEdit) {
-    box.onclick = function(e) {
-        // 1. Wenn Verschiebemodus aktiv: Klick komplett blockieren
+    // Statt box.onclick = ... nutzen wir einen Event-Listener
+    // Wir entfernen den alten, bevor wir den neuen setzen, 
+    // aber wir behalten die Logik in einer geschlossenen Funktion
+    
+    const handler = function(e) {
         if (window.moveMode) {
             e.stopPropagation();
             return;
         }
-        
-        // 2. Wenn keine Berechtigung: Nichts tun
-        if (!canEdit) return;
-
-        // 3. Erst hier den Editor öffnen
+        if (!canEdit) {
+            e.stopPropagation(); // Blockiert Klicks auf "fremde" Boxen
+            return;
+        }
         openEditor(box, null, slot, klasse);
     };
+
+    box.replaceWith(box.cloneNode(true)); // Entfernt ALLE alten Listener (Achtung: braucht ggf. Rekonfiguration)
+    // BESSER:
+    box.onclick = handler; 
 };
 
 /* ============================================================
    SYNC PLAN - ROBUSTE VERSION
-   ============================================================ 
+   ============================================================ */
 window.syncPlan = async function() {
     if (isSaving) return; 
 
@@ -2161,7 +2170,7 @@ window.syncPlan = async function() {
     }
 };
 
-*/
+
 
 
 
@@ -4186,12 +4195,12 @@ function createMoveOverlay() {
     document.body.classList.add('move-mode-active');
 }
 
+    
 window.highlightFreeSlots = function() {
     const boxes = document.querySelectorAll('.box');
 
     // 1. ABBRUCH-LOGIK (Reset)
     if (!window.moveMode) {
-        // Overlay entfernen
         const overlay = document.getElementById('move-overlay');
         if (overlay) overlay.remove();
         document.body.classList.remove('move-mode-active');
@@ -4201,14 +4210,26 @@ window.highlightFreeSlots = function() {
             box.style.cursor = "default";
             box.style.pointerEvents = "auto"; 
             box.style.opacity = "1";
-            // Standard-Verhalten wiederherstellen
-            box.onclick = function() { openEditor(box, null, box.getAttribute('data-slot')); }; 
+
+            // FIX: Wir setzen den Klick nicht mehr hart auf openEditor,
+            // sondern holen uns die Infos aus dem DOM und nutzen unsere zentrale setBoxClick-Logik.
+            const slot = box.getAttribute('data-slot');
+            const klasse = box.querySelector('.klasse-label') ? box.querySelector('.klasse-label').innerText : "";
+            const isMine = box.classList.contains('is-mine');
+            
+            // Zentralen Handler wiederherstellen, statt hart openEditor zu erzwingen
+            // Falls die Box leer ist, machen wir sie nicht klickbar
+            if (box.classList.contains('empty')) {
+                box.onclick = null;
+            } else {
+                setBoxClick(box, klasse, slot, isMine);
+            }
         });
         return;
     }
 
     // 2. AKTIVIERUNGS-LOGIK
-    createMoveOverlay(); // Globales Overlay einblenden
+    createMoveOverlay(); 
     const sourceSlot = window.moveMode.sourceSlot;
 
     boxes.forEach(box => {
@@ -4216,13 +4237,13 @@ window.highlightFreeSlots = function() {
                                   box.classList.contains('divider-thin') || 
                                   box.classList.contains('divider-thick');
         
-        // A) Quell-Box: Hervorheben, Z-Index für Overlay-Durchbruch
+        // A) Quell-Box
         if (box.getAttribute('data-slot') == sourceSlot) {
             box.classList.add('is-being-moved', 'move-mode-highlight');
             box.style.pointerEvents = "none";
             box.onclick = null;
         } 
-        // B) Freie Box: Anwählbar, Z-Index für Overlay-Durchbruch
+        // B) Freie Box: Anwählbar
         else if (box.classList.contains('empty') && !isHeaderOrDivider) {
             box.classList.add('is-selectable', 'move-mode-highlight');
             box.style.pointerEvents = "auto";
@@ -4233,9 +4254,9 @@ window.highlightFreeSlots = function() {
         // C) Belegte Boxen / Header: Blockieren
         else {
             box.classList.remove('move-mode-highlight');
-            box.style.pointerEvents = "none";
+            box.style.pointerEvents = "none"; // Hier wird der Klick im Move-Modus blockiert
             box.style.opacity = "0.3";
-            box.onclick = null;
+            box.onclick = null; // Handler entfernen
         }
     });
 };
