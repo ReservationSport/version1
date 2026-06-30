@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO11111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1349,14 +1349,14 @@ body {
     50% { box-shadow: 0 0 15px 5px #ff9800; }
 }
 
-/* 3. Das globale Overlay */
+/* 3. Das globale Overlay: Klicks gehen durch (außer auf das Panel) */
 .move-mode-overlay {
     position: fixed;
     top: 0; left: 0;
     width: 100vw; height: 100vh;
     background: rgba(0, 0, 0, 0.2);
     z-index: 9998;
-    pointer-events: auto;
+    pointer-events: none; /* WICHTIG: Erlaubt das Klicken auf Boxen darunter */
 }
 
 /* 4. Hover-Blockade: Verhindert Standard-Effekte im Modus */
@@ -1366,7 +1366,6 @@ body {
 }
 
 /* Freigabe für das Crosshair auf den Ziel-Boxen */
-/* Spezifischer Selektor, damit diese Regel gegen das globale * überschreibt */
 .move-mode-active .box.move-mode-highlight:hover {
     cursor: crosshair !important;
 }
@@ -1381,6 +1380,34 @@ body {
 .move-mode-highlight {
     opacity: 1 !important;
     pointer-events: auto !important;
+}
+
+/* 5. Das Abbruch-Panel */
+.move-panel {
+    pointer-events: auto; /* WICHTIG: Button muss klickbar sein */
+    display: flex; 
+    position: fixed; 
+    top: 20px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    background: #e67e22; 
+    color: white; 
+    padding: 10px 20px; 
+    border-radius: 25px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 9999; 
+    align-items: center; 
+    gap: 15px;
+}
+
+.btn-cancel {
+    background: white; 
+    color: #e67e22; 
+    border: none;
+    padding: 5px 15px; 
+    border-radius: 15px; 
+    cursor: pointer; 
+    font-weight: bold;
 }
     
     
@@ -1503,6 +1530,14 @@ body {
 
     <div id="plan-container">
         <div class="move-overlay"></div> </div>
+
+
+<div id="moveModePanel" class="move-panel">
+    <span>Verschiebe-Modus aktiv. Wähle ein freies Feld!</span>
+    <button onclick="cancelMoveMode()" class="btn-cancel">Abbrechen</button>
+</div>
+
+
 
     
 </body>
@@ -4231,19 +4266,34 @@ function executePayloads(payloadArray, onCompleteVisuals) {
    15. Lektion verschieben
    ============================================================ */
 
-// Hilfsfunktion zum Erstellen des globalen Overlays
+// Hilfsfunktion zum Erstellen des globalen Overlays mit Abbrechen-Button
 function createMoveOverlay() {
-    // Verhindere Duplikate
     if (document.getElementById('move-overlay')) return;
     
     const overlay = document.createElement('div');
     overlay.className = 'move-mode-overlay';
     overlay.id = 'move-overlay';
+    
+    // Abbrechen-Panel in das Overlay einfügen
+    overlay.innerHTML = `
+        <div class="move-panel">
+            <span>Verschiebe-Modus aktiv: Wähle ein freies Feld!</span>
+            <button onclick="cancelMoveMode()" class="btn-cancel">Abbrechen</button>
+        </div>
+    `;
+    
     document.body.appendChild(overlay);
     document.body.classList.add('move-mode-active');
 }
 
+
     
+// Funktion zum Abbrechen (wird vom Button im Overlay aufgerufen)
+window.cancelMoveMode = function() {
+    window.moveMode = null; // Modus zurücksetzen
+    highlightFreeSlots();   // UI-Reset auslösen
+};
+
 window.highlightFreeSlots = function() {
     const boxes = document.querySelectorAll('.box');
 
@@ -4251,10 +4301,9 @@ window.highlightFreeSlots = function() {
     if (!window.moveMode) {
         const overlay = document.getElementById('move-overlay');
         if (overlay) overlay.remove();
-        document.body.classList.remove('move-mode-active'); // CSS-Klasse für globalen Status
+        document.body.classList.remove('move-mode-active');
         
         boxes.forEach(box => {
-            // Nur Klassen entfernen, keine harten Styles setzen
             box.classList.remove('is-selectable', 'is-being-moved', 'move-mode-highlight');
             
             const slot = box.getAttribute('data-slot');
@@ -4271,7 +4320,7 @@ window.highlightFreeSlots = function() {
     }
 
     // 2. AKTIVIERUNGS-LOGIK
-    document.body.classList.add('move-mode-active'); // CSS regelt jetzt das Abdunkeln!
+    document.body.classList.add('move-mode-active');
     createMoveOverlay(); 
     const sourceSlot = window.moveMode.sourceSlot;
 
@@ -4280,7 +4329,6 @@ window.highlightFreeSlots = function() {
                                   box.classList.contains('divider-thin') || 
                                   box.classList.contains('divider-thick');
         
-        // Klassen setzen, Styles kommen aus deinem CSS
         if (box.getAttribute('data-slot') == sourceSlot) {
             box.classList.add('is-being-moved', 'move-mode-highlight');
             box.onclick = null;
@@ -4352,6 +4400,11 @@ window.handleMoveConfirm = async function(targetSlot) {
         hideLoading();
     }
 };
+
+
+
+
+
     
 
 </script>
