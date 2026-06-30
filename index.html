@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO</title>
+    <title>Reservation Sport - BBZO111111</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -249,10 +249,11 @@ body {
 /* ============================================================
    3. BOXEN & ZELLEN-DESIGN
    ============================================================ */
+/* 1. Die GRUND-BOX (Belegte Boxen) - etwas heller */
 .box { 
     border: 1px solid #444; 
     padding: 5px; 
-    background: #262626; /* Dein Basis-Schwarz/Dunkelgrau */
+    background: #262626; /* Dein bisheriger "belegter" Ton */
     min-height: 50px; 
     display: flex; 
     flex-direction: column; 
@@ -267,11 +268,12 @@ body {
     pointer-events: auto !important;
 }
 
-/* LEERE BOXEN: Jetzt explizit Schwarz und klickbar, keine Opacity mehr */
+/* 2. Die LEERE BOX - jetzt DEUTLICH DUNKLER */
 .box.empty { 
-    background-color: #262626 !important; 
+    background-color: #1a1a1a !important; /* Hier ein noch dunklerer Ton (fast Schwarz) */
     opacity: 1 !important; 
     pointer-events: auto !important; 
+    border: 1px solid #333 !important;   /* Auch den Rand etwas dezenter für den Dark-Look */
 }
     
 .zeit-box {
