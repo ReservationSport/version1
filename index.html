@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO1111111111</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -4255,19 +4255,16 @@ function executePayloads(payloadArray, onCompleteVisuals) {
 
 
 /* ============================================================
-   15. Lektion verschieben
+   15. Lektion verschieben (Optimiert & Vollständig)
    ============================================================ */
 
 function createMoveOverlay() {
-    // Falls das Overlay schon existiert, machen wir nichts
     if (document.getElementById('move-overlay')) return;
     
     const overlay = document.createElement('div');
     overlay.className = 'move-mode-overlay';
     overlay.id = 'move-overlay';
     
-    // Das Panel ist hier drin, aber durch das CSS (siehe oben) 
-    // erst sichtbar, wenn .move-mode-active gesetzt ist.
     overlay.innerHTML = `
         <div class="move-panel">
             <span>Verschiebe-Modus aktiv: Wähle ein freies Feld!</span>
@@ -4278,12 +4275,9 @@ function createMoveOverlay() {
     document.body.appendChild(overlay);
 }
 
-
-    
-// Funktion zum Abbrechen (wird vom Button im Overlay aufgerufen)
 window.cancelMoveMode = function() {
-    window.moveMode = null; // Modus zurücksetzen
-    highlightFreeSlots();   // UI-Reset auslösen
+    window.moveMode = null; 
+    highlightFreeSlots();   
 };
 
 window.highlightFreeSlots = function() {
@@ -4302,6 +4296,7 @@ window.highlightFreeSlots = function() {
             const klasse = box.querySelector('.klasse-label')?.innerText || "";
             const isMine = box.classList.contains('is-mine');
             
+            // WICHTIG: Hier für JEDE Box den Klick-Status anhand des Inhalts wiederherstellen
             if (box.classList.contains('empty')) {
                 box.onclick = null;
             } else {
@@ -4321,16 +4316,19 @@ window.highlightFreeSlots = function() {
                                   box.classList.contains('divider-thin') || 
                                   box.classList.contains('divider-thick');
         
+        // Quelle markieren
         if (box.getAttribute('data-slot') == sourceSlot) {
             box.classList.add('is-being-moved', 'move-mode-highlight');
-            box.onclick = null;
+            box.onclick = null; // Während Verschieben nicht erneut anklickbar
         } 
+        // Ziel-Slots als wählbar markieren
         else if (box.classList.contains('empty') && !isHeaderOrDivider) {
             box.classList.add('is-selectable', 'move-mode-highlight');
             box.onclick = function() {
                 handleMoveConfirm(box.getAttribute('data-slot'));
             };
         }
+        // Andere Boxen im Verschiebemodus komplett sperren
         else {
             box.classList.remove('move-mode-highlight');
             box.onclick = null; 
