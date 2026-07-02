@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reservation Sport - BBZO123425</title>
+    <title>Reservation Sport - BBZO</title>
 
    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 
@@ -1385,29 +1385,51 @@ body {
 /* 5. Das Abbruch-Panel */
 /* Ersetze deinen .move-panel Block damit: */
 .move-panel {
-    display: none; /* Standard: Ausgeblendet */
     pointer-events: auto;
-    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-    background: #e67e22;
-    color: white; padding: 10px 20px; border-radius: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-    z-index: 9999; align-items: center; gap: 15px;
-}
-
-/* Wenn der Modus aktiv ist, zeigen wir das Panel */
-.move-mode-active .move-panel {
-    display: flex;
+    display: flex; 
+    position: fixed; 
+    top: 20px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    
+    /* NEU: Breite angepasst, damit es breiter ist */
+    width: 80%;            /* Nimmt 80% der Bildschirmbreite ein */
+    max-width: 800px;      /* Begrenzung, damit es auf sehr großen Bildschirmen nicht zu riesig wird */
+    min-height: 60px;      /* Mehr Platz in der Höhe */
+    
+    background: #e67e22; 
+    color: white; 
+    padding: 15px 30px; 
+    border-radius: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    z-index: 9999; 
+    
+    /* Flex-Box Einstellungen für die Anordnung */
+    align-items: center; 
+    justify-content: space-between; /* Text links, Button rechts */
+    gap: 20px;
 }
 
 .btn-cancel {
     background: white; 
     color: #e67e22; 
     border: none;
-    padding: 5px 15px; 
-    border-radius: 15px; 
+    padding: 8px 25px; 
+    border-radius: 20px; 
     cursor: pointer; 
     font-weight: bold;
+    white-space: nowrap; /* Verhindert, dass der Text im Button umbricht */
 }
+
+
+
+    
+/* Wenn der Modus aktiv ist, zeigen wir das Panel */
+.move-mode-active .move-panel {
+    display: flex;
+}
+
+
     
     
 </style>
